@@ -184,17 +184,6 @@
   남은 근거는 편의성과 Slot offset이 밀리고 당겨지는 케이스뿐이라
   우선순위가 더 내려감 — `state:Flatten()`류 콤비네이터 아이디어는
   그대로 백로그. 상세는 `research/operator-sugar-plan.md` 마지막 절.
-- **[신설, 2026-08-14 리뷰] `AttributeGroupHandler.process`의 부분 실패
-  롤백** — 이름 순회 도중 소유권 충돌 error가 나면 그 전에 등록된 이름들이
-  이 사이클엔 회수되지 않음(클로저가 안 만들어짐). 피해는 그 인스턴스
-  수명으로 한정되고 재현도 시끄럽게 반복돼서 **지금은 별도 장치 없이
-  문서화만** 했는데(`base/attribute-plan.md` "메커니즘" 절), 원자적
-  롤백(그룹 `process`에만 국소적인 unwind)을 넣을지는 열어둠. 지금 결정
-  불필요 — M10 구현 시점에 판단.
-  **[2026-09-03 현황]** M10 quad-base 절반이 fork 편입으로 구현됐는데
-  (`quad-base/src/Attribute.luau`) **fork도 롤백 없이 문서화 노선을
-  유지**했다(round16 원장에 별도 발견 없음 — 충돌 error 자체는 spec이
-  검증). 판단 시점은 M10 잔여(quad-roblox 엔진 축) 마감 때로 이월.
 - **`quad-debug` 세부 API 이름** — `research/debug-tooling-plan.md` 참고.
   채널 실현 가능성(BindableEvent/Function이 플러그인↔Play 중 게임 경계를
   넘는지)까지 사용자가 Studio에서 직접 실측 검증 완료 — 기술적 불확실성은
@@ -234,8 +223,23 @@
   물리 op(`nativeInsert` 등)·`elementOwner` Relate 키잉까지는 돌지만,
   실물 Roblox에선 **claim 안 된 userdata의 동일성 구멍**(`H-293`/
   lifecycle-pattern (0))이 그대로 적용된다 — "받아진다"와 "안전하다"가
-  갈리는 자리. v1-compat 착수 전 사용자 결정 필요(fork 통합 보고서의
-  후행 목록에 등재).
+  갈리는 자리. **[2026-09-03 사용자 회신 — 방향은 잡혔고 갈래만 회신 대기]**
+  사용자: *"quad외부의 것의 움직임은 사실, quad 자체가 인스턴스의 죽음 까지
+  추적을 하는 부분이고, 임의로 Destroy 를 걸면 안 되는지라, claim 이 반
+  강제가 될 순 있어. 그런데 생각해보면, 미 claim 이라고 해도 Slot 자체가
+  strong 하게 홀드하지 않아?"* — 맞다: `_elements`는 평범한 배열(weak 아님)
+  이라 Slot이 요소를 강하게 쥔다 → 요소가 Slot 안에 있는 동안 userdata
+  참조가 살아 있어 **동일성 구멍(H-293 계열)은 Slot 요소엔 적용되지 않는다**
+  (claim의 gcconn 고정은 "Lua 참조가 하나도 없을 때"를 위한 것). 남는 건
+  **죽음 추적**뿐 — 미claim 요소엔 `bindLifetime`이 fail-fast(`H-290`)라
+  그 요소 위의 leaf 바인딩이 불가능하다. 갈래: (a) **Slot이 `Add` 시
+  미claim 요소를 자동 claim**(반강제 — "이미 claim됐는가" 술어 또는
+  claim-if-needed op 하나가 필요, 새 주입 op라 사용자 결정) / (b) 사용자가
+  먼저 claim해야 하고 미claim이면 `Add`에서 error(명시적) / (c) 현행 유지
+  (미claim도 받되 leaf 바인딩만 불가). **권고 (a)** — 사용자 논지("죽음까지
+  quad가 추적, 임의 Destroy 금지")를 Slot이 자동으로 보장하고, 요소가 강하게
+  잡혀 있어 claim 시점의 동일성도 안전하다. v1-compat 착수 전이면 되는
+  결정이라 급하지 않음.
 
 > **⚠️ 번호는 재사용된다 — 옛 문서가 가리키는 번호를 그대로 믿지 말 것.**
 > 예전 "0번(추가 프리미티브)"과 "2번(구현 착수 직전 감사 결과)"은 전원
