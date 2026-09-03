@@ -245,7 +245,8 @@ type State<T> = {
   작동해 0번 대전제로 채택 안 함.
   **[2026-08-15 후속 조사, 같은 폴더 REPORT 11번 절]** `/code-review`
   지적으로 이중 꺾쇠 명시 인스턴스화(`state:Compute<<T,U>>(fn)`, 코퍼스에
-  이미 `AttributeKey<<T>>`류로 존재하는 문법)도 재검토 — **leaf(비-중첩)
+  `store:Of<<T>>`류로 존재하는 문법 — 당시 예시였던 `AttributeKey<<T>>`는
+  2026-09-03에 제네릭을 벗었다)도 재검토 — **leaf(비-중첩)
   호출에 한해 콜백 파라미터 무주석 추론이 실제로 성립하고 sound함을
   확인**(②쪼개기 + `Get` 필드의 명시 `read` modifier + 매 호출 T·U 전부
   명시가 함께 필요, 셋 중 하나라도 빠지면 스퓨리어스 진단이나 duck-typing
@@ -378,7 +379,10 @@ RFC가 순수 내부 변경이고 우리 선언이 이미 그 대상 모양이�
 
 **우리가 하는 것**: `base/attribute-plan.md`가 이미 예비해둔 fallback을
 채택 — 정적 체크가 필요하면 `BooleanAttribute` 같은 **타입 패밀리**가
-유일하게 믿을 수 있는 경로.
+유일하게 믿을 수 있는 경로. **[2026-09-03 종결]** 그 결론이 표면으로 굳었다:
+`AttributeKey`는 제네릭을 벗고 무타입 프리미티브가 됐고, 패밀리는 배열부
+슈가 `BooleanAttribute(name, value: boolean | State<boolean> | None)`로
+타입을 시그니처에서 진다(`attribute-plan.md` 머리 배너, round16 `H10-15`).
 
 ---
 
@@ -635,8 +639,20 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
 한도를 더 올려도(200000) 안 풀린다 — 경계에서 `:: any` 캐스트 한 번이
 정답(`spec.robloxfactory.luau`의 주석 달린 자리). 에디터(luau-lsp) 쪽도
 같은 한도를 쓰므로 증상이 나면 `.vscode/settings.json`의 fflags에 같은
-키를 얹을 것(9번의 솔버 설정 항목과 같은 자리 — **[2026-09-02 기준]
-아직 안 얹음**, 에디터에서 실제로 아픈지 확인 후).
+키를 얹을 것(9번의 솔버 설정 항목과 같은 자리 — **[2026-09-03 기준]
+아직 안 얹음**, 사용자 결정: 문서화만 해두고 에디터에서 실제로 아프면
+그때). **증상이 나면 이렇게** — `scripts/test.sh`가 싣는 값 그대로:
+
+```json
+"luau-lsp.fflags.override": {
+	"LuauTarjanChildLimit": "40000",
+	"LuauSubtypingIterationLimit": "100000"
+}
+```
+
+(둘째는 8.7절 — Color3/string 콜백의 `OnChange` 유니언 대조. Studio의
+스크립트 분석기는 플래그를 못 만지므로 거기선 같은 진단이 떠도 실행엔
+영향 없다.)
 
 ---
 

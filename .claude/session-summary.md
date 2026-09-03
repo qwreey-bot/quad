@@ -2289,3 +2289,14 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   test.sh `LuauSubtypingIterationLimit`(typing-limits 8.7). `H10-11` ✅,
   `H10-12` OnChange 몫 ✅(AttributeKey 몫 잔여), `H10-14`, 옛 모양은
   `archive/onchange-hash-key-reversed.md`.
+
+- `session/2026-09-03-06-attribute-sugar.md` **[`AttributeKey` 무타입화 +
+  타입드 스칼라 슈가 — 사용자 확정 "한 발 얹기"]** `H10-12`의 AttributeKey
+  몫을 (c) 변형으로: `AttributeKey(name)`는 제네릭을 벗은 무타입
+  프리미티브(엔진 고유 타입용, 해시부 그대로), `StringAttribute(name, value)`류는
+  배열부 슈가 = `Attribute({ [name] = value })`(새 핸들러 0 — 그룹의 개인
+  키·위치 claim·dedup·StoreBind 상속), raw 타입 검사·nil 거부는 슈가 몫.
+  quad-types `AttributeSugar<T>`, quad-roblox `NewChild`에 `Tag`/`Attribute`
+  합류(strict `D` children). spec.attribute 10절, Studio 실측, round16
+  `H10-15`. 에디터 fflags는 문서화만(typing-limits 8.5 스니펫). 다음은 M7
+  규약 문항지.

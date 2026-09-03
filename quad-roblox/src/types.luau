@@ -21,7 +21,8 @@
 	(claim-plan §7-12). M5-era union: what actually works through
 	`drive` by the end of this milestone — a static child Instance
 	(InstanceChildHandler, unit ③) or a reactive one (StoreBind → unwrap).
-	Later milestones WIDEN this union as their handlers land (M6 Slot, M8
+	Later milestones WIDEN this union as their handlers land (M10 did on
+	2026-09-03 — Tag/Attribute, see the declaration comment; M6 Slot, M8
 	Ref/PreRef/PostRef — the round14 `H-298` (a) "Ref류" mention is that
 	planned widening, kept out now so the type never promises a runtime path
 	that does not exist yet; same false-surface logic as `H-297`).
@@ -46,7 +47,19 @@ export type Tween<T> = {
 	Override: any?, -- Tween.Cancel (default) | Tween.Finish — sentinels arrive in M11
 }
 
-export type NewChild = Instance | QuadTypes.State<Instance> | QuadTypes.None
+-- [2026-09-03 M10 widening] the quad-base array-part VALUES join here: `Tag(...)`
+-- and `Attribute(...)` (the typed scalar sugar `StringAttribute(name, v)` etc.
+-- returns an `Attribute`, so it rides the same member) + their State forms
+-- (StoreBind unwraps array elements). OnChange descriptors are NOT here — they
+-- are per-class (`<Class>Elem` in the generated D, `base/onchange-plan.md`).
+export type NewChild =
+	Instance
+	| QuadTypes.State<Instance>
+	| QuadTypes.None
+	| QuadTypes.Tag
+	| QuadTypes.State<QuadTypes.Tag>
+	| QuadTypes.Attribute
+	| QuadTypes.State<QuadTypes.Attribute>
 
 -- `OnChange(name, fn)` descriptor (M10, `base/onchange-plan.md` — array-part
 -- value since the 2026-09-03 reversal): frozen `{ Name, Callback }`,

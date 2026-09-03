@@ -35,7 +35,18 @@ local function _neverCalled()
 	local g = D.UIGradient({ OnChange("Color", function(v: ColorSequence) end) })
 	-- Mapper 쪽 E에도 같은 유니언
 	local m = D.Mapper.Frame("Body")({ OnChange("Visible", function(v: boolean) end) })
-	return f, s, g, m
+	-- NewChild 확장(2026-09-03): quad-base 배열부 값 — Tag / Attribute 그룹 /
+	-- 타입드 스칼라 슈가(Attribute를 돌려줌) / 그 State 형태
+	local tagState = q.Source(q.Tag("a", "b"))
+	local a = D.Frame({
+		q.Tag("x"),
+		tagState,
+		q.Attribute({ Hp = 3 }),
+		q.StringAttribute("Title", "quad"),
+		q.NumberAttribute("Hp", q.Source(1)),
+		q.BooleanAttribute("Alive", q.None),
+	})
+	return f, s, g, m, a
 end
 
 print("=== ALL PASS ===")

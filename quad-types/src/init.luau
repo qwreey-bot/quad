@@ -114,9 +114,10 @@ export type Blocker = {
 -- 값 모양은 `base/tag-plan.md` "값 모양" / `base/attribute-plan.md` "채택안"
 -- 절이 정본. 생성자들은 콜러블 네임스페이스(호출 = 생성, 필드 = 합성)라
 -- `setmetatable<A, B>` 표기로 선언한다(`H10-3`/`H10-4` (d) — 교집합은
--- 무거주라 값 캐스트·제네릭 흐름이 깨진다, typing-limits 8.6절). `AttributeKey<<T>>`의 제네릭 파라미터는
--- 런타임 무영향인 순수 정적 트릭이고 값 좁힘 성립 여부가 미실측이라([실측
--- 필요, M0/M10] — attribute-plan) 여기선 비제네릭 키 객체 타입만 둔다.
+-- 무거주라 값 캐스트·제네릭 흐름이 깨진다, typing-limits 8.6절). `AttributeKey`는
+-- [2026-09-03 사용자 확정] 제네릭 자체가 폐기된 무타입 프리미티브다(값 타입은
+-- 배열부 슈가 `AttributeSugar<T>`가 진다 — attribute-plan 머리 배너); 옛 "제네릭
+-- 파라미터 값 좁힘 미실측" 항목은 닫혔다(typing-limits §3).
 export type Tag = {
 	Added: (self: Tag, nameOrList: string | { string }) -> Tag,
 	Removed: (self: Tag, nameOrList: string | { string }) -> Tag,
@@ -136,7 +137,12 @@ export type AttributeConstructor = setmetatable<{
 }, { __call: (self: any, ...any) -> Attribute }>
 
 export type AttributeKeyObject = { Name: string }
+-- [2026-09-03 사용자 확정] AttributeKey는 무타입 프리미티브(값 타입을 모른다 —
+-- 패밀리가 못 덮는 엔진 고유 타입은 이걸로, 검증은 백엔드 setAttribute 몫)
 export type AttributeKeyConstructor = (name: string) -> AttributeKeyObject
+-- 타입드 스칼라 슈가 — 배열부 값(단일 항목 그룹 `Attribute({ [name] = value })`).
+-- 값은 T | State<T> | None(삭제); nil은 거부(런타임 검증)
+export type AttributeSugar<T> = (name: string, value: T | State<T> | None) -> Attribute
 
 export type State<T> = StateData<T> & {
 	-- deps는 `...any`다 — 타입팩 `D...`로 위치 인자를 좁히는 형태는 strict에서 콜백 dep
@@ -404,9 +410,9 @@ export type Quad = {
 	Tag: TagConstructor,
 	Attribute: AttributeConstructor,
 	AttributeKey: AttributeKeyConstructor,
-	StringAttribute: AttributeKeyConstructor,
-	NumberAttribute: AttributeKeyConstructor,
-	BooleanAttribute: AttributeKeyConstructor,
+	StringAttribute: AttributeSugar<string>,
+	NumberAttribute: AttributeSugar<number>,
+	BooleanAttribute: AttributeSugar<boolean>,
 }
 
 --[[

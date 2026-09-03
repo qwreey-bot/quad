@@ -83,9 +83,11 @@ local function New(): Quad
 		Tag = TagModule.Tag,
 		Attribute = AttributeModule.Attribute,
 		AttributeKey = AttributeKeyModule.AttributeKey,
-		StringAttribute = AttributeKeyModule.StringAttribute,
-		NumberAttribute = AttributeKeyModule.NumberAttribute,
-		BooleanAttribute = AttributeKeyModule.BooleanAttribute,
+		-- [2026-09-03 사용자 확정] 스칼라 패밀리는 그룹 위의 타입드 슈가
+		-- (`Attribute({ [name] = value })`) — AttributeKey는 무타입 프리미티브
+		StringAttribute = AttributeModule.StringAttribute,
+		NumberAttribute = AttributeModule.NumberAttribute,
+		BooleanAttribute = AttributeModule.BooleanAttribute,
 	} :: Quad
 
 	function module.RunInit(self, initFn)

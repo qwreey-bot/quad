@@ -25,6 +25,18 @@ CollectionService 심)가 같은 단언을 한다.
 
 최종 마커: 7/7 PASS, FAIL 0 (`check()` 단언 수).
 
+## 후속 실측 — 타입드 스칼라 슈가 (같은 날, round16 `H10-15`)
+
+`D.Frame { StringAttribute("Title", "quad"), NumberAttribute("Hp", src), BooleanAttribute("Alive", true), [AttributeKey "Tint"] = Color3 }`:
+
+| 항목 | 관측 |
+|---|---|
+| 초기 | `Title=quad Hp=3 Alive=true Tint=1, 0, 0` — 슈가 셋(그룹 경로)과 무타입 `AttributeKey`(Color3, 엔진 고유 타입)가 같이 앉음 |
+| `src:Set(4)` / `src:Set(None)` | `Hp=4` → `Hp=nil`(삭제) — StoreBind 반응형·None 삭제가 그룹 위임 경로 그대로 |
+| `NumberAttribute("X", "nope")` | `AssistantCommand:26: NumberAttribute("X"): value must be a number (or State/None), got string` — 사용자 줄 blame |
+| `StringAttribute("X", nil)` | `…:27: StringAttribute("X"): value must not be nil — use None to delete` |
+| 같은 이름 슈가 둘 | `…:28: attribute "Dup" is already bound by another owner` — 그룹의 개인 키 claim 그대로 |
+
 ## 잔여·부수
 
 - `ServerStorage.QuadTestRun`은 실측 산출물(다음 실측이 시작 때 지운다).

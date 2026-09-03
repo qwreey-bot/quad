@@ -964,9 +964,10 @@ Fallback Handler들도 존재하지 않아**, 위 "매치 실패는 즉시 `erro
     (부분 생성 후 예외로 생긴 Instance 자체의 회수 문제는 **백로그** —
     `Fallback`/`Traceback`이 그 경로를 계속 살려두는 걸 존재 이유로 삼는
     대표 사용처라 그 둘을 구현할 때 같이 다룬다.)
-- **타입 패밀리는 백엔드 몫**: `AttributeKey<<T>>` 제네릭 생성자와
-  스칼라 편의 패밀리(`StringAttribute`/`NumberAttribute`/`BooleanAttribute`)
-  까지가 base이고, `Color3Attribute`류처럼 **엔진 고유 타입**에 묶인
+- **타입 패밀리는 백엔드 몫**: `AttributeKey(name)` 생성자(**[2026-09-03]** 무타입
+  프리미티브 — 제네릭 폐기)와 스칼라 슈가(`StringAttribute(name, value)`/
+  `NumberAttribute`/`BooleanAttribute` — 배열부 단일 항목 그룹, `attribute-plan.md`
+  머리 배너)까지가 base이고, `Color3Attribute`류처럼 **엔진 고유 타입**에 묶인
   패밀리는 그 백엔드(quad-roblox의 `D` 층)가 자기 것으로 추가함 —
   "이 값이 이 백엔드에서 표현 가능한가"라는 검증도 base가 아니라 주입된
   `setAttribute`의 몫(`base/attribute-plan.md` "패키지 배치" 절).

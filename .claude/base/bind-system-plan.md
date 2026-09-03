@@ -68,7 +68,9 @@ Signal 미채택, Ref 역할)과 소스 트리 상 패키지 경계(디스패치
   전부 그쪽에 확정 반영돼 있음. **[2026-08-11 아홉 번째 세션]**
   `attribute-plan.md`에 여러 Store를 한 번에 attribute로 묶는 그룹
   `Attribute(...)` 프리미티브(`Tag`와 동형)가 추가되며, 단일 키 생성자는
-  이름 충돌 방지로 `AttributeKey<<T>>`로 리네임됨.
+  이름 충돌 방지로 `AttributeKey<<T>>`로 리네임됨(**[2026-09-03]** 그 뒤
+  제네릭을 벗고 무타입 `AttributeKey(name)`가 됐고, 타입은 배열부 슈가
+  `BooleanAttribute(name, value)`류가 진다 — `attribute-plan.md` 머리 배너).
 
 ## 확정된 것 (더 이상 열린 질문 아님)
 
@@ -221,7 +223,11 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
   optional(`?`) — `nil` disconnect는 optional이 표현한다(`event-plan.md`).
 - **children 원소(`NewChild`)**: `Instance | State<Instance> | None` — **M5 시점
   유니언**이고, **이후 마일스톤이 자기 핸들러가 도착할 때 유니언을
-  확장한다**(확장 규칙 — M6 Slot, M8 `Ref`/`PreRef`/`PostRef`). `H-298` (a)
+  확장한다**(확장 규칙 — M6 Slot, M8 `Ref`/`PreRef`/`PostRef`; **[2026-09-03
+  M10 확장 실행]** `Tag | State<Tag> | Attribute | State<Attribute>` 합류 —
+  타입드 스칼라 슈가는 `Attribute`를 돌려주므로 같은 멤버, `H10-15`. `OnChange`
+  디스크립터는 여기가 아니라 클래스별 생성 별칭 `<Class>Elem`에 들어간다 —
+  `onchange-plan.md`). `H-298` (a)
   회신문의 "Ref류"는 그 예고로 해석해 M5 유니언에서 뺐다 — `Ref` leaf
   핸들러가 M8이라 지금 실으면 런타임이 없는 거짓 표면이 된다(`H-297`과
   같은 논리; 이 해석이 틀렸다면 사용자가 뒤집을 것). 정의 실물은

@@ -5,13 +5,15 @@
 
 	  AttributeKey(name) -> key            -- per-name weak cache: same name =
 	                                       -- same object while anything holds it
-	  StringAttribute / NumberAttribute / BooleanAttribute
-	                                       -- scalar convenience family — SAME
-	                                       -- cache, runtime-identical objects
-	                                       -- (the generic parameter is purely
-	                                       -- static; engine-specific families
-	                                       -- like Color3Attribute live in the
-	                                       -- backend's D layer, not here)
+
+	[2026-09-03 사용자 확정] AttributeKey is the UNTYPED primitive (`[AttributeKey
+	"x"] = v` — the value's type is not checked, "타입이 몰라도 되는 존재");
+	the typed scalar family `StringAttribute(name, value)` etc. is array-part
+	SUGAR over the group (`Attribute({ [name] = value })`) and lives in
+	Attribute.luau — the old aliases (`StringAttribute = AttributeKey`) are
+	gone. Use AttributeKey directly for value types the family does not cover
+	(engine-specific: Color3, UDim2, Instance …); the backend's setAttribute is
+	what validates the value then.
 
 	Handler ("AttributeKeyFallbackHandler", FALLBACK priority, registered by
 	InitAttributeKey — `H-278` idiom, see Tag.luau header): matches on the KEY
@@ -60,16 +62,12 @@ local function AttributeKey(name: string): any
 	cache[name] = key
 	return key
 end
--- `H-238`: public constructor tagged (aliases share the same function object)
+-- `H-238`: public constructor tagged (the scalar sugar family lives in
+-- Attribute.luau and tags itself there)
 Err.setFuncLevel(AttributeKey, SURFACE)
 
 local module = {
 	AttributeKey = AttributeKey,
-	-- runtime-identical aliases (same cache, same objects) — the generic/type
-	-- distinction is purely static (attribute-plan "동등성" 1번 bullet)
-	StringAttribute = AttributeKey,
-	NumberAttribute = AttributeKey,
-	BooleanAttribute = AttributeKey,
 	_newUncachedKey = newKeyObject, -- group delegation only (private)
 }
 
@@ -92,9 +90,6 @@ local InitDispatch = require("./Dispatch")
 
 function module.Init(quad: any)
 	quad.AttributeKey = AttributeKey
-	quad.StringAttribute = AttributeKey
-	quad.NumberAttribute = AttributeKey
-	quad.BooleanAttribute = AttributeKey
 	if quad.setAttribute == nil then
 		quad.setAttribute = notInstalled("setAttribute")
 	end

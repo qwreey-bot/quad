@@ -48,9 +48,13 @@
    `OnChange` 배열부 역전 — 사용자 제안]** `OnChange(name, fn)` 디스크립터로
    재구현(`session/2026-09-03-05-onchange-array-reversal.md`, `H10-14`):
    초기값 발화 계약(사용자 확정), 생성 `OnChangeFn` 타이핑(오타·콜백 타입·
-   무주석 추론 — typing-limits 8.7), `H10-11` 닫힘. **사용자 회신 대기
-   하나**(급하지 않음): `H10-12`의 `AttributeKey` 몫 — 해시부 키가 strict
-   `<Class>Param<E>`에 타입으로 못 들어감(round16 표의 갈래). **다음 단위: M10 잔여는
+   무주석 추론 — typing-limits 8.7), `H10-11` 닫힘. **[같은 날 `H10-12`
+   AttributeKey 몫도 사용자 확정 — "한 발 얹기"]** `AttributeKey(name)`는
+   무타입 프리미티브(제네릭 폐기), 타입은 배열부 슈가
+   `StringAttribute(name, value)`류(= 단일 항목 그룹)가 진다
+   (`session/2026-09-03-06-attribute-sugar.md`, `H10-15`) — round16 §표 열린
+   문항 0. 에디터 fflags는 문서화만(typing-limits 8.5). **사용자 지시: 다음은
+   M7 규약 문항지.** **M10 잔여는
    InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
    목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
    (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지

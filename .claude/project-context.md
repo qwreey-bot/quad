@@ -34,9 +34,11 @@ fork 둘이 worktree에서 M6/M10을 mock 축으로 선행 구현했고 **메인
 `Handlers/OnChange.luau`, 확장 `{ D, OnChange }`, `H10-13`; **같은 날
 `OnChange`는 사용자 제안으로 배열부 값 `OnChange(name, fn)`으로 역전·재구현
 `H10-14`** — 초기값 발화 계약, 생성 `OnChangeFn` 타이핑, 옛 키 형태는
-`archive/onchange-hash-key-reversed.md`; 잔여 문항은 `H10-12`의
-`AttributeKey` 몫뿐, round16 표가 소스)까지 — M10 잔여 목록은 ROADMAP
-M10 배너가 소스(남은 건 InstanceShorthand, M11 이후 권고)** —
+`archive/onchange-hash-key-reversed.md`; 이어서 **`AttributeKey` 무타입화 +
+타입드 스칼라 슈가 `StringAttribute(name, value)`**(= 단일 항목 그룹,
+`H10-15`, `attribute-plan.md` 머리 배너)로 round16 열린 문항 0)까지 — M10
+잔여 목록은 ROADMAP M10 배너가 소스(남은 건 InstanceShorthand, M11 이후
+권고); **다음은 사용자 지시로 M7 규약 문항지** —
 **M4도 같은 방식의 자율 구간으로 2026-09-01 착수·종결**(사용자 조건부
 승인으로 규약 `qa-request/m4-implementation-round13-brief.md` §0 전량 (a)
 확정, 발견 `-round13.md`(`H-287`~; §4 열린 문항 0) — 단위 하나:

@@ -1767,8 +1767,10 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > `OnChange`는 사용자 제안으로 배열부 값 `OnChange(name, fn)`으로 역전·재구현
 > — `H10-14`, `base/onchange-plan.md` 재작성, 옛 키 형태는
 > `archive/onchange-hash-key-reversed.md`. 그 역전이 `H10-11`(순서 → 초기값
-> 발화 계약)과 `H10-12`의 OnChange 몫(생성 `E` 확장)을 닫았고 `H10-12`의
-> `AttributeKey` 몫만 문항으로 남는다), **InstanceShorthand**(아래 체크박스 — 그
+> 발화 계약)과 `H10-12`의 OnChange 몫(생성 `E` 확장)을 닫았고, `H10-12`의
+> `AttributeKey` 몫도 같은 날 사용자 확정 "한 발 얹기"(`H10-15` — `AttributeKey`
+> 무타입 프리미티브 + 배열부 슈가 `StringAttribute(name, value)`)로 닫혀
+> round16 열린 문항 0), **InstanceShorthand**(아래 체크박스 — 그
 > 항목이 스스로 "M11(Tween) 이후"를 권한다).
 > **[2026-09-03 아침 회신]** ① `AttributeGroupHandler` 부분 실패 롤백은
 > **닫혔다**(사용자 동의 — 문서화로 관리 안 함, `attribute-plan.md` 말미 확정
@@ -1817,11 +1819,12 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `clearTimeout`도 예정돼 있다. **주입 op 전체 목록의 소스는
       `base/architecture.md`의 소스 트리 안 `EngineOps.luau` 줄** — 여기서
       세지 않는다.
-- [x] **[2026-09-03 편입]** `quad-base/AttributeKey.luau`(단일 키 `AttributeKey<<T>>(name)` +
-      이름별 weak 캐시로 동등성 보장 + 스칼라 편의 패밀리
-      `String`/`Number`/`BooleanAttribute` — 엔진 고유 타입 패밀리
-      (`Color3Attribute`류)만 quad-roblox의 `D`(Declarative) 층에서 각자 추가.
-      타입 파라미터화 이름만 착수 전 확인, `base/attribute-plan.md`)
+- [x] **[2026-09-03 편입; 같은 날 후속 — 사용자 확정으로 `AttributeKey`는 무타입 프리미티브(제네릭 폐기), 스칼라 패밀리는 `Attribute.luau`의 배열부 슈가 `StringAttribute(name, value)`(단일 항목 그룹)로 이동 — `attribute-plan.md` 머리 배너, round16 `H10-15`]** `quad-base/AttributeKey.luau`(단일 키 `AttributeKey(name)` — 무타입,
+      이름별 weak 캐시로 동등성 보장) + `quad-base/Attribute.luau`의 타입드
+      스칼라 슈가 `StringAttribute(name, value)`/`Number…`/`Boolean…`(단일
+      항목 그룹, raw 값 타입 검사) — 엔진 고유 타입 패밀리(`Color3Attribute`류)는
+      같은 슈가 모양으로 quad-roblox가 얹는다(백로그, 아직 없음).
+      `base/attribute-plan.md` 머리 배너)
 - [x] **[2026-09-03 편입 — `H10-1`: `AttributeKey.luau`에 흡수]** `quad-base/Dispatch/AttributeKey.luau`(`AttributeKeyHandler` —
       `setAttribute(inst,name,v)`를 `v`가 뭐든 무조건 호출 + **이름
       claim**(`nameClaims` Relate, 다른 키 객체가 같은 이름에 들어오면
