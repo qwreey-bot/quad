@@ -359,14 +359,17 @@ construction에 재사용**하는 것("이미 한 번 fire된 PreRef 객체를 �
 ## 이름 컨벤션
 
 - **`On` 접두 자체는 이미 선례가 있음** — `base/onchange-plan.md`의
-  `OnChange(name)`(`GetPropertyChangedSignal` 바인딩용 특수 키). 단
-  **메커니즘은 다름**: `OnChange`는 이름을 인자로 받아 캐시된 키 객체를
-  반환하는 **해시 파트 특수 키 팩토리**(`base/onchange-plan.md` "확정"
-  절)인 반면, 이 문서의 `OnCreated`/`OnRendered`/`OnDestroyed`는 **배열
-  파트에 놓이는 값(`PreRef`/`PostRef`/`EffectHandle`)을 만드는 팩토리**라
-  이름 패턴만
-  같고 소속 카테고리가 다름 — `OnChange` 쪽 "다른 특수 키와의 대조"
-  표에 이 둘을 끼워 넣을 필요는 없어 보임(별도 표로 다루는 게 맞음).
+  `OnChange(name, fn)`(`GetPropertyChangedSignal` 바인딩). **[2026-09-03
+  정정]** 예전엔 "메커니즘이 다르다(`OnChange`는 해시 파트 특수 키 팩토리)"
+  고 적었으나 `OnChange`가 그날 **배열 파트 값**으로 역전돼
+  (`archive/onchange-hash-key-reversed.md`) 이제 둘 다 **배열 파트에 놓이는
+  값을 만드는 팩토리**다 — 사용자가 역전을 제안하며 든 선례가 바로 이
+  훅들이었다(*"테그나 OnCreated 같은 것이 했던것 처럼"*). 소속 카테고리는
+  여전히 다르다: `OnChange`는 자기 핸들러가 붙는 프로퍼티 시그널 바인딩,
+  이 문서의 셋은 `PreRef`/`PostRef`/`EffectHandle`을 만드는 생명주기 슈가.
+  대조 표는 계속 별도로 둔다(`onchange-plan.md`의 "다른 특수 표면과의
+  대조" 표에 이 둘을 끼워 넣지 않음 — 표의 축이 "바인딩 소스"라 훅과
+  맞지 않는다).
 - `OnCreated`/`OnDestroyed` **이름 확정** — 다만 v1이 이미
   `OnCreated`라는 이름을 다른 메커니즘(특수 키)으로 썼던 전례가
   있어 위 "①" 절의 대조 설명 없이 이름만 보면 헷갈릴 수 있음, 문서화

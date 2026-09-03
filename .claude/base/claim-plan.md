@@ -61,17 +61,23 @@ local cloned = Claim(template:Clone(), M.Frame(M.Root) {   -- 루트는 이름 �
 
   ```luau
   type FrameParam<E> = { [number]: E, … }                    -- §7-12: 원소 타입이 파라미터
-  D.Frame        :: (FrameParam<NewChild>) -> Frame            -- NewChild = 기존 children 유니언
-  D.Mapper.Frame :: (key: string | MapperRoot) -> (FrameParam<NewChild | MapperDescriptor>) -> MapperDescriptor
+  D.Frame        :: (FrameParam<FrameElem>) -> Frame            -- FrameElem = NewChild | <OnChange 디스크립터 유니언>…
+  D.Mapper.Frame :: (key: string | MapperRoot) -> (FrameParam<FrameMapperElem>) -> MapperDescriptor  -- = FrameElem | MapperDescriptor
   Claim          :: <T>(inst: T, desc: MapperDescriptor) -> T   -- T는 inst에서 그대로
   ```
+
+  **[2026-09-03 표기 갱신]** 원소 유니언은 생성기가 클래스당 별칭
+  `<Class>Elem`/`<Class>MapperElem`으로 찍고 타입과 런타임 캐스트가 같은 별칭을
+  참조한다 — 별칭의 실제 구성(`NewChild` + 배열부 디스크립터 유니언 +
+  그 `State`)은 `base/onchange-plan.md` "타이핑" 절 3번이 정본. 이 절의 요지
+  ("`E`만 파라미터, 매퍼는 `| MapperDescriptor`")는 그대로다.
 
   **⚠️ [2026-08-28 `/code-review`] 배열 파트는 그대로 공유할 수 없다** — `New`의
   children 배열엔 `MapperDescriptor`가 올 수 없고(오면 런타임 "매치 핸들러 없음"),
   매퍼의 배열엔 와야 한다(§2 예시의 `M.TextLabel "Title" {…}`). 사용자 인용은
   **필드 파트의 타입 공유**를 승인한 것이고 배열 파트를 어떻게 가를지는 정하지
   않았다 → **[같은 날 확정, §7-12] 원소 타입을 파라미터로**: `type FrameParam<E> =
-  { [number]: E, …필드 }`, `D.Frame`은 `E` = 기존 children 원소 유니언(Instance·Slot·
+  { [number]: E, …필드 }`, `D.Frame`은 `E` = children 원소 유니언(생성 별칭 `<Class>Elem` — Instance·Slot·
   State…), `D.Mapper.Frame`은 거기에 `| MapperDescriptor`. `base/bind-system-plan.md`의
   `D` 생성기 절엔 포인터만 — 생성기 구현(`ROADMAP.md` M5 `D/init.luau`)이 이 문서를 본다.
 
@@ -295,8 +301,10 @@ derive 를 걸어야해. 이건 derive 에선 구현하지 않고, 그 위의 �
     생성기 범위에 컨테이너를 넣을 일도 없다(`D`와 같은 범위).
 12. **`type <Class>Param`의 배열 파트 — 원소 타입을 파라미터로.** 사용자: *"내가
     생각한게 원소를 파라미터로 받는거였어. 거기에 Instance 또는 Instance|MapperDescriptor
-    가 오는거지"*. `FrameParam<E>` — `D.Frame`은 `E` = 기존 children 원소 유니언,
-    `D.Mapper.Frame`은 `E` = 그것 `| MapperDescriptor`(§2). 실제 Luau에서 도는지는
+    가 오는거지"*. `FrameParam<E>` — `D.Frame`은 `E` = children 원소 유니언(생성 별칭
+    `FrameElem`, **[2026-09-03]** 배열부 `OnChange` 디스크립터가 합류 —
+    `onchange-plan.md`), `D.Mapper.Frame`은 `E` = 그것 `| MapperDescriptor`
+    (`FrameMapperElem`, §2). 실제 Luau에서 도는지는
     `luau-analyze` 스파이크로(§9). **[2026-09-02]** 그 스파이크는
     `luau-test/done/28-type-class-param-shared-generic.luau`로 통과했다
     (기대 음성 3건만 — 상태는 `STATUS.md`).

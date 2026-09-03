@@ -8,10 +8,10 @@
 (M10 엔진 축 둘째 단위, round16 `H10-13`) — 아래 두 절 그대로. 판별 API는
 `ReflectionService:GetEventsOfClass`(디스크립터 `.Name`, 상속 포함,
 `GetPropertiesOfClass`와 집합이 겹치지 않음 — Studio 실측
-`audit/m10-events-studio-2026-09-03.md`). **같은 props 안에서 프로퍼티 대입과
-바인딩의 상대 순서는 계약 밖**이라는 점이 `OnChange` 쪽에서 문항으로 올라가
-있다(round16 `H10-11`) — 이벤트 자체는 프로퍼티 대입으로 발화하지 않아
-여기엔 영향 없음.
+`audit/m10-events-studio-2026-09-03.md`). 같은 props 안에서 프로퍼티 대입과
+이 해시부 바인딩의 상대 순서는 계약 밖(해시 파트 안 순서는 약속하지 않는다)
+— 이벤트는 프로퍼티 대입으로 발화하지 않아 영향 없음. `OnChange`는 그 순서가
+문제라 같은 날 배열부 값으로 역전됐다(`base/onchange-plan.md`).
 
 **여기 없는 이벤트 관련 결정 하나**: 이벤트 *네이밍* 인체공학
 (`On.EventName` 도트액세스를 안 쓰고 평범한 문자열 키 + reflection을

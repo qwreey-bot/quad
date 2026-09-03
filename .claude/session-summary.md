@@ -2278,3 +2278,14 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   props의 초기 대입이 OnChange를 깨우는지는 해시 순서)·`H10-12`(특수 키가
   strict `<Class>Param<E>`에 안 들어감 — AttributeKey/Tag도 동일). M10 잔여는
   InstanceShorthand(M11 이후 권고)뿐.
+
+- `session/2026-09-03-05-onchange-array-reversal.md` **[`OnChange` 배열부
+  값으로 역전 — 사용자 제안·동의]** 키 형태 커밋 몇 시간 만에 사용자가
+  "설계 단위 이슈"로 되돌림: `OnChange(name, fn)` 디스크립터(Tag와 같은
+  자리) → 해시 순서 비결정이 **초기값 발화 계약**으로("프로퍼티 셋 이전에
+  바운딩"), 같은 이름 둘 다 바인딩, `State<디스크립터>`. 스파이크 30으로
+  타이핑 경계 실측 — `K & keyof<PropTypes>`/`index<PropTypes, K>`만 통과하고
+  무주석 추론까지 됨, 큰 싱글톤 유니언·오버로드 교집합은 too complex,
+  test.sh `LuauSubtypingIterationLimit`(typing-limits 8.7). `H10-11` ✅,
+  `H10-12` OnChange 몫 ✅(AttributeKey 몫 잔여), `H10-14`, 옛 모양은
+  `archive/onchange-hash-key-reversed.md`.

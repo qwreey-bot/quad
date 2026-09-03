@@ -7,6 +7,9 @@
 > 대면 델타만 본다. 관용구는 `m5-unit5-first-render-2026-09-02.md`(패키지
 > 클론 → `require(clone.src)`, `Quad.New():UseProvider(QuadRoblox)`).
 > Deferred 시그널 환경이라(`H-291`) 콜백 관측은 두 번째 `execute_luau`에서.
+> **⚠️ 1절의 OnChange 항목(2·3·4·5번)은 같은 날 역전된 옛 해시부 키 형태
+> (`[q.OnChange "Text"] = fn`, `archive/onchange-hash-key-reversed.md`)의
+> 실측이다** — 현행 배열부 값 `OnChange(name, fn)`의 실측은 **3절**.
 
 ## 0. 선행 실측 — 리플렉션 API
 
@@ -38,3 +41,12 @@
 확인하니 **둘 다 자식 셋 그대로**(파괴 판정 pcall도 생존) — 재현되지 않아
 결론 없음. 이벤트 바인딩과 무관할 가능성이 크고(1차 관측의 콜백은 정상
 배달됐음) 사람이 Studio에서 GC 사이클을 두고 볼 항목으로만 남긴다.
+
+## 3. 배열부 역전 뒤 재실측 — `OnChange(name, fn)` (같은 날, `H10-14`)
+
+| # | 항목 | 관측 |
+|---|---|---|
+| 1 | 초기값 발화 계약 — `TextButton { Text = "init", OnChange("Text", a), OnChange("Text", b), child }` 뒤 `Text = "later"` | 동기 시점 콜백 0(Deferred), 2차 호출에서 **a·b 각 2회 배달**(초기 `init` 쓰기 + `later` 쓰기 — 배열부 Connect가 해시부 대입보다 먼저 산다는 계약 확인), 값은 둘 다 배달 시점의 `later`(1절 2번과 같은 Deferred 특성). 같은 이름 둘 다 바인딩됨 |
+| 2 | 길이 0 말단 | 디스크립터 둘 사이의 정적 자식 `Kid`가 정상 부착(`children == 1`), 오프셋 산술 무영향 |
+| 3 | `State<디스크립터>` — `Source(OnChange(...))`를 배열에, `Text = "x"` → `Set(None)` → `"y"` → `Set(OnChange(...))` → `"z"` | 합계 **100**: `x`의 지연 배달은 `Set(None)`의 Disconnect가 먼저 와서 드롭(1절 3번과 동일), `None` 구간 `y` 무호출·무에러(NilHandler 경로), 재연결 뒤 `z`만 `+100` |
+| 4 | 거부 셋 | `OnChange(42, fn)` → `AssistantCommand:33: OnChange: property name must be a string`(사용자 줄 blame) / `OnChange("Text", "nope")` → `…:34: OnChange("Text"): callback must be a function` / `Frame { OnChange("Bogus", fn) }` → **`Bogus is not a valid property name.`**(엔진 원시 에러가 `process` 안에서, blame 접두 없음 — 생성 `OnChangeFn`이 정적으로 먼저 잡는 것이 방어, onchange-plan) |

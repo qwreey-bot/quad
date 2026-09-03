@@ -44,11 +44,13 @@
    7/7 — `session/2026-09-03-03-m10-engine-axis.md`). **[같은 날 둘째
    단위 완료]** Event/OnChange 핸들러(`Handlers/Event.luau`·`OnChange.luau`,
    `H-27`, 확장 `{ D, OnChange }`, `spec.events`, Studio 8/8 —
-   `session/2026-09-03-04-m10-events.md`, round16 `H10-13`). **사용자 회신
-   대기 둘**(round16 표가 소스, 급하지 않음 — 둘 다 새 계약·타입 표면):
-   `H10-11` 같은 props의 초기 프로퍼티 대입이 `OnChange` 콜백을 깨우는지
-   (권고 (a) 계약 문서화) / `H10-12` 특수 키(`OnChange`/`AttributeKey`/`Tag`)
-   가 strict `<Class>Param<E>`에 타입으로 못 들어감. **다음 단위: M10 잔여는
+   `session/2026-09-03-04-m10-events.md`, round16 `H10-13`). **[같은 날
+   `OnChange` 배열부 역전 — 사용자 제안]** `OnChange(name, fn)` 디스크립터로
+   재구현(`session/2026-09-03-05-onchange-array-reversal.md`, `H10-14`):
+   초기값 발화 계약(사용자 확정), 생성 `OnChangeFn` 타이핑(오타·콜백 타입·
+   무주석 추론 — typing-limits 8.7), `H10-11` 닫힘. **사용자 회신 대기
+   하나**(급하지 않음): `H10-12`의 `AttributeKey` 몫 — 해시부 키가 strict
+   `<Class>Param<E>`에 타입으로 못 들어감(round16 표의 갈래). **다음 단위: M10 잔여는
    InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
    목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
    (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지

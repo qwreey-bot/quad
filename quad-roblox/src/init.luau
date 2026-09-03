@@ -37,10 +37,14 @@ export type Tween<T> = Types.Tween<T>
 export type NewChild = Types.NewChild
 export type D = DModule.D
 export type DMapper = DModule.DMapper
-export type OnChangeKey = Types.OnChangeKey
--- M10: `OnChange(name)` rides the same extension merge as `D` — `q.OnChange`
--- is fully typed through `Self & P` (Handlers/OnChange.luau is the source)
-export type RobloxExtension = { D: DModule.D, OnChange: (name: string) -> OnChangeKey }
+export type OnChangeDescriptor = Types.OnChangeDescriptor
+export type PropTypes = DModule.PropTypes
+export type OnChangeFn = DModule.OnChangeFn
+-- M10: `OnChange(name, fn)` rides the same extension merge as `D` — the
+-- runtime (Handlers/OnChange.luau) is untyped, the GENERATED `OnChangeFn`
+-- (name → callback parameter type via `index<PropTypes, K>`, luau-test `30`)
+-- is what `q.OnChange` carries through `Self & P`
+export type RobloxExtension = { D: DModule.D, OnChange: OnChangeFn }
 
 local function QuadRoblox<T>(quad: T): RobloxExtension
 	local q = quad :: any

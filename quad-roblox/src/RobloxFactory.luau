@@ -37,8 +37,8 @@ local function RobloxFactory(module: any): any
 	-- `UseProvider`의 확장 병합으로 실린다 — 반환 테이블이 그 확장이고,
 	-- `RobloxExtension` 타입(init.luau)이 이 모양의 정본. 사용법은 동일:
 	-- `local D = quad.D`(병합 후) 또는 반환 교집합에서 바로 `q.D`.
-	-- `OnChange`(M10)도 같은 병합으로 실린다 — 키 팩토리는 모듈 레벨(이름별
-	-- weak 캐시)이라 quad 인스턴스마다 새로 만들지 않는다.
+	-- `OnChange`(M10)도 같은 병합으로 실린다 — 디스크립터 팩토리는 모듈
+	-- 레벨, 타입은 생성 `OnChangeFn`(init.luau `RobloxExtension`)이 입힌다.
 	return { D = InitD(module), OnChange = OnChangeModule.OnChange }
 end
 

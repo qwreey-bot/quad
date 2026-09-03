@@ -13,8 +13,12 @@
 	(round14 `H-298` (a)). `Override` stays `any` until M11 gives the sentinel
 	values a type.
 
-	`NewChild` — the children-array element union `D.<Class>Param<E>`
-	instantiates (claim-plan §7-12). M5-era union: what actually works through
+	`NewChild` — the backend-agnostic core of the children-array element
+	union. Since 2026-09-03 the generated `D.<Class>Param<E>` is instantiated
+	with a per-class alias `<Class>Elem = NewChild | <Class>OnChange |
+	State<<Class>OnChange>` (src/D, `base/onchange-plan.md` "타이핑" 절) —
+	array-part descriptor kinds join THAT alias, not this union
+	(claim-plan §7-12). M5-era union: what actually works through
 	`drive` by the end of this milestone — a static child Instance
 	(InstanceChildHandler, unit ③) or a reactive one (StoreBind → unwrap).
 	Later milestones WIDEN this union as their handlers land (M6 Slot, M8
@@ -44,10 +48,11 @@ export type Tween<T> = {
 
 export type NewChild = Instance | QuadTypes.State<Instance> | QuadTypes.None
 
--- `OnChange(name)` key object (M10, `base/onchange-plan.md`) — frozen
--- `{ Name }`, identity-cached per name (Handlers/OnChange.luau). Values bound
--- to it are `(newValue) -> ()` callbacks (or State/None of one); the
--- parameter type is written inline by the caller — no generic here by canon.
-export type OnChangeKey = { read Name: string }
+-- `OnChange(name, fn)` descriptor (M10, `base/onchange-plan.md` — array-part
+-- value since the 2026-09-03 reversal): frozen `{ Name, Callback }`,
+-- Handlers/OnChange.luau. This is the RUNTIME shape; the checked factory
+-- type (`OnChangeFn`, name → callback parameter via `index<PropTypes, K>`)
+-- and the per-class descriptor unions are generated (src/D).
+export type OnChangeDescriptor = { read Name: string, read Callback: (any) -> () }
 
 return {}

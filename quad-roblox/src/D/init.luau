@@ -8,6 +8,11 @@
 	이벤트 콜백 | State<콜백> | None (None 표현은 H-300 (a) — QuadTypes.None).
 	이벤트 필드의 런타임 핸들러는 Handlers/Event.luau(M10, 2026-09-03 구현됨 —
 	`base/event-plan.md`); M5엔 타입이 먼저 왔다(ROADMAP M5 체크박스의 계약).
+	OnChange(M10, 2026-09-03 역전 — base/onchange-plan.md): 배열부 디스크립터.
+	PropTypes(스코프 전체 프로퍼티 이름 → 타입, 클래스 간 충돌 이름은 any) +
+	OnChangeFn(`K & keyof<PropTypes>` / `index<PropTypes, K>` — 이름 오타·콜백
+	타입·무주석 추론까지, luau-test 30) + 클래스별 <Class>OnChange 유니언이 E에
+	합류(클래스 밖 이름은 생성자 자리에서 거부).
 ]]
 
 local QuadTypes = require("../luau_packages/quad_types")
@@ -1390,77 +1395,1205 @@ export type WorldModelParam<E> = {
 	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
 }
 
+-- OnChange — PropTypes(D 스코프 전체 프로퍼티 이름 → 타입; 클래스 간 충돌은 any)
+export type PropTypes = {
+	ActivatedCursorIcon: Content,
+	ActivatedCursorIconContent: Content,
+	Active: boolean,
+	Adornee: Instance,
+	AlwaysOnTop: boolean,
+	Ambient: Color3,
+	AnchorPoint: Vector2,
+	Animated: boolean,
+	ApplyStrokeMode: Enum.ApplyStrokeMode,
+	Archivable: boolean,
+	AspectRatio: number,
+	AspectType: Enum.AspectType,
+	AutoButtonColor: boolean,
+	AutoLocalize: boolean,
+	AutomaticCanvasSize: Enum.AutomaticSize,
+	AutomaticSize: Enum.AutomaticSize,
+	BackgroundColor3: Color3,
+	BackgroundTransparency: number,
+	BlurRadius: UDim,
+	BorderColor3: Color3,
+	BorderMode: Enum.BorderMode,
+	BorderOffset: UDim,
+	BorderSizePixel: number,
+	BorderStrokePosition: Enum.BorderStrokePosition,
+	BottomImage: Content,
+	BottomImageContent: Content,
+	BottomLeftRadius: UDim,
+	BottomRightRadius: UDim,
+	BoundingBehavior: Enum.UIDragDetectorBoundingBehavior,
+	BoundingUI: GuiBase2d,
+	Brightness: number,
+	CFrame: CFrame,
+	CameraSubject: Instance,
+	CameraType: Enum.CameraType,
+	CanvasPosition: Vector2,
+	CanvasSize: any,
+	Capabilities: SecurityCapabilities,
+	CellPadding: UDim2,
+	CellSize: UDim2,
+	Circular: boolean,
+	ClearTextOnFocus: boolean,
+	ClipToDeviceSafeArea: boolean,
+	ClipsDescendants: boolean,
+	Color: any,
+	CornerRadius: UDim,
+	CurrentCamera: Camera,
+	CursorIcon: Content,
+	CursorIconContent: Content,
+	CursorPosition: number,
+	DiagonalFieldOfView: number,
+	DisplayOrder: number,
+	DistanceStep: number,
+	DominantAxis: Enum.DominantAxis,
+	DragAxis: Vector2,
+	DragRelativity: Enum.UIDragDetectorDragRelativity,
+	DragRotation: number,
+	DragSpace: Enum.UIDragDetectorDragSpace,
+	DragStyle: Enum.UIDragDetectorDragStyle,
+	DragUDim2: UDim2,
+	EasingDirection: Enum.EasingDirection,
+	EasingStyle: Enum.EasingStyle,
+	ElasticBehavior: Enum.ElasticBehavior,
+	Enabled: boolean,
+	ExtentsOffset: Vector3,
+	ExtentsOffsetWorldSpace: Vector3,
+	Face: Enum.NormalId,
+	FieldOfView: number,
+	FieldOfViewMode: Enum.FieldOfViewMode,
+	FillDirection: Enum.FillDirection,
+	FillDirectionMaxCells: number,
+	FillEmptySpaceColumns: boolean,
+	FillEmptySpaceRows: boolean,
+	FlexMode: Enum.UIFlexMode,
+	Focus: CFrame,
+	FontFace: Font,
+	GamepadInputEnabled: boolean,
+	GroupColor3: Color3,
+	GroupTransparency: number,
+	GrowRatio: number,
+	HeadLocked: boolean,
+	HeadScale: number,
+	HorizontalAlignment: Enum.HorizontalAlignment,
+	HorizontalFlex: Enum.UIFlexAlignment,
+	HorizontalScrollBarInset: Enum.ScrollBarInset,
+	HoverHapticEffect: HapticEffect,
+	HoverImage: Content,
+	HoverImageContent: Content,
+	IgnoreGuiInset: boolean,
+	Image: Content,
+	ImageColor3: Color3,
+	ImageContent: Content,
+	ImageRectOffset: Vector2,
+	ImageRectSize: Vector2,
+	ImageTransparency: number,
+	InputSink: Enum.InputSink,
+	Inset: boolean,
+	Interactable: boolean,
+	ItemLineAlignment: Enum.ItemLineAlignment,
+	LayoutOrder: number,
+	LightColor: Color3,
+	LightDirection: Vector3,
+	LightInfluence: number,
+	LineHeight: number,
+	LineJoinMode: Enum.LineJoinMode,
+	Looped: boolean,
+	MajorAxis: Enum.TableMajorAxis,
+	MaxAxisFieldOfView: number,
+	MaxDistance: number,
+	MaxDragAngle: number,
+	MaxDragTranslation: UDim2,
+	MaxSize: Vector2,
+	MaxTextSize: number,
+	MaxVisibleGraphemes: number,
+	MidImage: Content,
+	MidImageContent: Content,
+	MinDragAngle: number,
+	MinDragTranslation: UDim2,
+	MinSize: Vector2,
+	MinTextSize: number,
+	Modal: boolean,
+	ModelStreamingMode: Enum.ModelStreamingMode,
+	MultiLine: boolean,
+	Name: string,
+	NextSelectionDown: GuiObject,
+	NextSelectionLeft: GuiObject,
+	NextSelectionRight: GuiObject,
+	NextSelectionUp: GuiObject,
+	Offset: any,
+	OpenTypeFeatures: string,
+	Padding: any,
+	PaddingBottom: UDim,
+	PaddingLeft: UDim,
+	PaddingRight: UDim,
+	PaddingTop: UDim,
+	PixelsPerStud: number,
+	PlaceholderColor3: Color3,
+	PlaceholderText: string,
+	PlayerToHideFrom: Instance,
+	Playing: boolean,
+	Position: UDim2,
+	PressHapticEffect: HapticEffect,
+	PressedImage: Content,
+	PressedImageContent: Content,
+	PrimaryPart: BasePart,
+	ReferenceUIInstance: GuiObject,
+	ResampleMode: Enum.ResamplerMode,
+	ResetOnSpawn: boolean,
+	ResponseStyle: Enum.UIDragDetectorResponseStyle,
+	RichText: boolean,
+	RollOffMaxDistance: number,
+	RollOffMinDistance: number,
+	RollOffMode: Enum.RollOffMode,
+	RootLocalizationTable: LocalizationTable,
+	Rotation: number,
+	SafeAreaCompatibility: Enum.SafeAreaCompatibility,
+	Sandboxed: boolean,
+	Scale: number,
+	ScaleType: Enum.ScaleType,
+	ScreenInsets: Enum.ScreenInsets,
+	ScrollBarImageColor3: Color3,
+	ScrollBarImageTransparency: number,
+	ScrollBarThickness: number,
+	ScrollWheelInputEnabled: boolean,
+	ScrollingDirection: Enum.ScrollingDirection,
+	ScrollingEnabled: boolean,
+	Selectable: boolean,
+	Selected: boolean,
+	SelectionBehaviorDown: Enum.SelectionBehavior,
+	SelectionBehaviorLeft: Enum.SelectionBehavior,
+	SelectionBehaviorRight: Enum.SelectionBehavior,
+	SelectionBehaviorUp: Enum.SelectionBehavior,
+	SelectionGroup: boolean,
+	SelectionImageObject: GuiObject,
+	SelectionModeDragSpeed: UDim2,
+	SelectionModeRotateSpeed: number,
+	SelectionOrder: number,
+	SelectionStart: number,
+	ShowBehindParent: boolean,
+	ShowNativeInput: boolean,
+	ShrinkRatio: number,
+	Size: UDim2,
+	SizeConstraint: Enum.SizeConstraint,
+	SizeOffset: Vector2,
+	SizingMode: Enum.SurfaceGuiSizingMode,
+	SliceCenter: Rect,
+	SliceScale: number,
+	SortOrder: Enum.SortOrder,
+	Spread: UDim2,
+	StartCorner: Enum.StartCorner,
+	StrokeSizingMode: Enum.StrokeSizingMode,
+	StudsOffset: Vector3,
+	StudsOffsetWorldSpace: Vector3,
+	Style: any,
+	Text: string,
+	TextColor3: Color3,
+	TextDirection: Enum.TextDirection,
+	TextEditable: boolean,
+	TextScaled: boolean,
+	TextSize: number,
+	TextStrokeColor3: Color3,
+	TextStrokeTransparency: number,
+	TextTransparency: number,
+	TextTruncate: Enum.TextTruncate,
+	TextWrapped: boolean,
+	TextXAlignment: Enum.TextXAlignment,
+	TextYAlignment: Enum.TextYAlignment,
+	Thickness: number,
+	TileMode: Enum.GradientTileMode,
+	TileSize: UDim2,
+	TimePosition: number,
+	ToolPunchThroughDistance: number,
+	TopImage: Content,
+	TopImageContent: Content,
+	TopLeftRadius: UDim,
+	TopRightRadius: UDim,
+	TouchInputEnabled: boolean,
+	Transparency: any,
+	TweenTime: number,
+	Type: Enum.GradientType,
+	UIDragSpeedAxisMapping: Enum.UIDragSpeedAxisMapping,
+	UseWorkspaceCollisionGroups: boolean,
+	VRTiltAndRollEnabled: boolean,
+	VerticalAlignment: Enum.VerticalAlignment,
+	VerticalFlex: Enum.UIFlexAlignment,
+	VerticalScrollBarInset: Enum.ScrollBarInset,
+	VerticalScrollBarPosition: Enum.VerticalScrollBarPosition,
+	Video: Content,
+	VideoContent: Content,
+	Visible: boolean,
+	Volume: number,
+	WorldPivot: CFrame,
+	Wraps: boolean,
+	ZIndex: number,
+	ZIndexBehavior: Enum.ZIndexBehavior,
+	ZOffset: number,
+}
+export type OnChangeDescriptor<K> = { Name: K, Callback: (index<PropTypes, K>) -> () }
+export type OnChangeFn = <K>(name: K & keyof<PropTypes>, fn: (index<PropTypes, K>) -> ()) -> OnChangeDescriptor<K>
+
+export type BillboardGuiOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "Adornee", Callback: (Instance) -> () }
+	| 	{ Name: "AlwaysOnTop", Callback: (boolean) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "Brightness", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "DistanceStep", Callback: (number) -> () }
+	| 	{ Name: "Enabled", Callback: (boolean) -> () }
+	| 	{ Name: "ExtentsOffset", Callback: (Vector3) -> () }
+	| 	{ Name: "ExtentsOffsetWorldSpace", Callback: (Vector3) -> () }
+	| 	{ Name: "LightInfluence", Callback: (number) -> () }
+	| 	{ Name: "MaxDistance", Callback: (number) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "PlayerToHideFrom", Callback: (Instance) -> () }
+	| 	{ Name: "ResetOnSpawn", Callback: (boolean) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeOffset", Callback: (Vector2) -> () }
+	| 	{ Name: "StudsOffset", Callback: (Vector3) -> () }
+	| 	{ Name: "StudsOffsetWorldSpace", Callback: (Vector3) -> () }
+	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
+export type BillboardGuiElem = NewChild | BillboardGuiOnChange | State<BillboardGuiOnChange>
+export type BillboardGuiMapperElem = BillboardGuiElem | MapperDescriptor
+
+export type CameraOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "CFrame", Callback: (CFrame) -> () }
+	| 	{ Name: "CameraSubject", Callback: (Instance) -> () }
+	| 	{ Name: "CameraType", Callback: (Enum.CameraType) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "DiagonalFieldOfView", Callback: (number) -> () }
+	| 	{ Name: "FieldOfView", Callback: (number) -> () }
+	| 	{ Name: "FieldOfViewMode", Callback: (Enum.FieldOfViewMode) -> () }
+	| 	{ Name: "Focus", Callback: (CFrame) -> () }
+	| 	{ Name: "HeadLocked", Callback: (boolean) -> () }
+	| 	{ Name: "HeadScale", Callback: (number) -> () }
+	| 	{ Name: "MaxAxisFieldOfView", Callback: (number) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "VRTiltAndRollEnabled", Callback: (boolean) -> () }
+export type CameraElem = NewChild | CameraOnChange | State<CameraOnChange>
+export type CameraMapperElem = CameraElem | MapperDescriptor
+
+export type CanvasGroupOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "GroupColor3", Callback: (Color3) -> () }
+	| 	{ Name: "GroupTransparency", Callback: (number) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type CanvasGroupElem = NewChild | CanvasGroupOnChange | State<CanvasGroupOnChange>
+export type CanvasGroupMapperElem = CanvasGroupElem | MapperDescriptor
+
+export type FolderOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type FolderElem = NewChild | FolderOnChange | State<FolderOnChange>
+export type FolderMapperElem = FolderElem | MapperDescriptor
+
+export type FrameOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "Style", Callback: (Enum.FrameStyle) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type FrameElem = NewChild | FrameOnChange | State<FrameOnChange>
+export type FrameMapperElem = FrameElem | MapperDescriptor
+
+export type ImageButtonOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoButtonColor", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "HoverHapticEffect", Callback: (HapticEffect) -> () }
+	| 	{ Name: "HoverImage", Callback: (Content) -> () }
+	| 	{ Name: "HoverImageContent", Callback: (Content) -> () }
+	| 	{ Name: "Image", Callback: (Content) -> () }
+	| 	{ Name: "ImageColor3", Callback: (Color3) -> () }
+	| 	{ Name: "ImageContent", Callback: (Content) -> () }
+	| 	{ Name: "ImageRectOffset", Callback: (Vector2) -> () }
+	| 	{ Name: "ImageRectSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ImageTransparency", Callback: (number) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "Modal", Callback: (boolean) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "PressHapticEffect", Callback: (HapticEffect) -> () }
+	| 	{ Name: "PressedImage", Callback: (Content) -> () }
+	| 	{ Name: "PressedImageContent", Callback: (Content) -> () }
+	| 	{ Name: "ResampleMode", Callback: (Enum.ResamplerMode) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ScaleType", Callback: (Enum.ScaleType) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "Selected", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "SliceCenter", Callback: (Rect) -> () }
+	| 	{ Name: "SliceScale", Callback: (number) -> () }
+	| 	{ Name: "Style", Callback: (Enum.ButtonStyle) -> () }
+	| 	{ Name: "TileSize", Callback: (UDim2) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type ImageButtonElem = NewChild | ImageButtonOnChange | State<ImageButtonOnChange>
+export type ImageButtonMapperElem = ImageButtonElem | MapperDescriptor
+
+export type ImageLabelOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "Image", Callback: (Content) -> () }
+	| 	{ Name: "ImageColor3", Callback: (Color3) -> () }
+	| 	{ Name: "ImageContent", Callback: (Content) -> () }
+	| 	{ Name: "ImageRectOffset", Callback: (Vector2) -> () }
+	| 	{ Name: "ImageRectSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ImageTransparency", Callback: (number) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "ResampleMode", Callback: (Enum.ResamplerMode) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ScaleType", Callback: (Enum.ScaleType) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "SliceCenter", Callback: (Rect) -> () }
+	| 	{ Name: "SliceScale", Callback: (number) -> () }
+	| 	{ Name: "TileSize", Callback: (UDim2) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type ImageLabelElem = NewChild | ImageLabelOnChange | State<ImageLabelOnChange>
+export type ImageLabelMapperElem = ImageLabelElem | MapperDescriptor
+
+export type ScreenGuiOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipToDeviceSafeArea", Callback: (boolean) -> () }
+	| 	{ Name: "DisplayOrder", Callback: (number) -> () }
+	| 	{ Name: "Enabled", Callback: (boolean) -> () }
+	| 	{ Name: "IgnoreGuiInset", Callback: (boolean) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "ResetOnSpawn", Callback: (boolean) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "SafeAreaCompatibility", Callback: (Enum.SafeAreaCompatibility) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ScreenInsets", Callback: (Enum.ScreenInsets) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
+export type ScreenGuiElem = NewChild | ScreenGuiOnChange | State<ScreenGuiOnChange>
+export type ScreenGuiMapperElem = ScreenGuiElem | MapperDescriptor
+
+export type ScrollingFrameOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticCanvasSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "BottomImage", Callback: (Content) -> () }
+	| 	{ Name: "BottomImageContent", Callback: (Content) -> () }
+	| 	{ Name: "CanvasPosition", Callback: (Vector2) -> () }
+	| 	{ Name: "CanvasSize", Callback: (UDim2) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "ElasticBehavior", Callback: (Enum.ElasticBehavior) -> () }
+	| 	{ Name: "HorizontalScrollBarInset", Callback: (Enum.ScrollBarInset) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "MidImage", Callback: (Content) -> () }
+	| 	{ Name: "MidImageContent", Callback: (Content) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ScrollBarImageColor3", Callback: (Color3) -> () }
+	| 	{ Name: "ScrollBarImageTransparency", Callback: (number) -> () }
+	| 	{ Name: "ScrollBarThickness", Callback: (number) -> () }
+	| 	{ Name: "ScrollingDirection", Callback: (Enum.ScrollingDirection) -> () }
+	| 	{ Name: "ScrollingEnabled", Callback: (boolean) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "TopImage", Callback: (Content) -> () }
+	| 	{ Name: "TopImageContent", Callback: (Content) -> () }
+	| 	{ Name: "VerticalScrollBarInset", Callback: (Enum.ScrollBarInset) -> () }
+	| 	{ Name: "VerticalScrollBarPosition", Callback: (Enum.VerticalScrollBarPosition) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type ScrollingFrameElem = NewChild | ScrollingFrameOnChange | State<ScrollingFrameOnChange>
+export type ScrollingFrameMapperElem = ScrollingFrameElem | MapperDescriptor
+
+export type SurfaceGuiOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "Adornee", Callback: (Instance) -> () }
+	| 	{ Name: "AlwaysOnTop", Callback: (boolean) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "Brightness", Callback: (number) -> () }
+	| 	{ Name: "CanvasSize", Callback: (Vector2) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "Enabled", Callback: (boolean) -> () }
+	| 	{ Name: "Face", Callback: (Enum.NormalId) -> () }
+	| 	{ Name: "LightInfluence", Callback: (number) -> () }
+	| 	{ Name: "MaxDistance", Callback: (number) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "PixelsPerStud", Callback: (number) -> () }
+	| 	{ Name: "ResetOnSpawn", Callback: (boolean) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SizingMode", Callback: (Enum.SurfaceGuiSizingMode) -> () }
+	| 	{ Name: "ToolPunchThroughDistance", Callback: (number) -> () }
+	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
+	| 	{ Name: "ZOffset", Callback: (number) -> () }
+export type SurfaceGuiElem = NewChild | SurfaceGuiOnChange | State<SurfaceGuiOnChange>
+export type SurfaceGuiMapperElem = SurfaceGuiElem | MapperDescriptor
+
+export type TextBoxOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClearTextOnFocus", Callback: (boolean) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "CursorPosition", Callback: (number) -> () }
+	| 	{ Name: "FontFace", Callback: (Font) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "LineHeight", Callback: (number) -> () }
+	| 	{ Name: "MaxVisibleGraphemes", Callback: (number) -> () }
+	| 	{ Name: "MultiLine", Callback: (boolean) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "OpenTypeFeatures", Callback: (string) -> () }
+	| 	{ Name: "PlaceholderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "PlaceholderText", Callback: (string) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "RichText", Callback: (boolean) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "SelectionStart", Callback: (number) -> () }
+	| 	{ Name: "ShowNativeInput", Callback: (boolean) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "Text", Callback: (string) -> () }
+	| 	{ Name: "TextColor3", Callback: (Color3) -> () }
+	| 	{ Name: "TextDirection", Callback: (Enum.TextDirection) -> () }
+	| 	{ Name: "TextEditable", Callback: (boolean) -> () }
+	| 	{ Name: "TextScaled", Callback: (boolean) -> () }
+	| 	{ Name: "TextSize", Callback: (number) -> () }
+	| 	{ Name: "TextStrokeColor3", Callback: (Color3) -> () }
+	| 	{ Name: "TextStrokeTransparency", Callback: (number) -> () }
+	| 	{ Name: "TextTransparency", Callback: (number) -> () }
+	| 	{ Name: "TextTruncate", Callback: (Enum.TextTruncate) -> () }
+	| 	{ Name: "TextWrapped", Callback: (boolean) -> () }
+	| 	{ Name: "TextXAlignment", Callback: (Enum.TextXAlignment) -> () }
+	| 	{ Name: "TextYAlignment", Callback: (Enum.TextYAlignment) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type TextBoxElem = NewChild | TextBoxOnChange | State<TextBoxOnChange>
+export type TextBoxMapperElem = TextBoxElem | MapperDescriptor
+
+export type TextButtonOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoButtonColor", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "FontFace", Callback: (Font) -> () }
+	| 	{ Name: "HoverHapticEffect", Callback: (HapticEffect) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "LineHeight", Callback: (number) -> () }
+	| 	{ Name: "MaxVisibleGraphemes", Callback: (number) -> () }
+	| 	{ Name: "Modal", Callback: (boolean) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "OpenTypeFeatures", Callback: (string) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "PressHapticEffect", Callback: (HapticEffect) -> () }
+	| 	{ Name: "RichText", Callback: (boolean) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "Selected", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "Style", Callback: (Enum.ButtonStyle) -> () }
+	| 	{ Name: "Text", Callback: (string) -> () }
+	| 	{ Name: "TextColor3", Callback: (Color3) -> () }
+	| 	{ Name: "TextDirection", Callback: (Enum.TextDirection) -> () }
+	| 	{ Name: "TextScaled", Callback: (boolean) -> () }
+	| 	{ Name: "TextSize", Callback: (number) -> () }
+	| 	{ Name: "TextStrokeColor3", Callback: (Color3) -> () }
+	| 	{ Name: "TextStrokeTransparency", Callback: (number) -> () }
+	| 	{ Name: "TextTransparency", Callback: (number) -> () }
+	| 	{ Name: "TextTruncate", Callback: (Enum.TextTruncate) -> () }
+	| 	{ Name: "TextWrapped", Callback: (boolean) -> () }
+	| 	{ Name: "TextXAlignment", Callback: (Enum.TextXAlignment) -> () }
+	| 	{ Name: "TextYAlignment", Callback: (Enum.TextYAlignment) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type TextButtonElem = NewChild | TextButtonOnChange | State<TextButtonOnChange>
+export type TextButtonMapperElem = TextButtonElem | MapperDescriptor
+
+export type TextLabelOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "FontFace", Callback: (Font) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "LineHeight", Callback: (number) -> () }
+	| 	{ Name: "MaxVisibleGraphemes", Callback: (number) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "OpenTypeFeatures", Callback: (string) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "RichText", Callback: (boolean) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "Text", Callback: (string) -> () }
+	| 	{ Name: "TextColor3", Callback: (Color3) -> () }
+	| 	{ Name: "TextDirection", Callback: (Enum.TextDirection) -> () }
+	| 	{ Name: "TextScaled", Callback: (boolean) -> () }
+	| 	{ Name: "TextSize", Callback: (number) -> () }
+	| 	{ Name: "TextStrokeColor3", Callback: (Color3) -> () }
+	| 	{ Name: "TextStrokeTransparency", Callback: (number) -> () }
+	| 	{ Name: "TextTransparency", Callback: (number) -> () }
+	| 	{ Name: "TextTruncate", Callback: (Enum.TextTruncate) -> () }
+	| 	{ Name: "TextWrapped", Callback: (boolean) -> () }
+	| 	{ Name: "TextXAlignment", Callback: (Enum.TextXAlignment) -> () }
+	| 	{ Name: "TextYAlignment", Callback: (Enum.TextYAlignment) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type TextLabelElem = NewChild | TextLabelOnChange | State<TextLabelOnChange>
+export type TextLabelMapperElem = TextLabelElem | MapperDescriptor
+
+export type UIAspectRatioConstraintOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AspectRatio", Callback: (number) -> () }
+	| 	{ Name: "AspectType", Callback: (Enum.AspectType) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "DominantAxis", Callback: (Enum.DominantAxis) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type UIAspectRatioConstraintElem = NewChild | UIAspectRatioConstraintOnChange | State<UIAspectRatioConstraintOnChange>
+export type UIAspectRatioConstraintMapperElem = UIAspectRatioConstraintElem | MapperDescriptor
+
+export type UICornerOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "BottomLeftRadius", Callback: (UDim) -> () }
+	| 	{ Name: "BottomRightRadius", Callback: (UDim) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "CornerRadius", Callback: (UDim) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "TopLeftRadius", Callback: (UDim) -> () }
+	| 	{ Name: "TopRightRadius", Callback: (UDim) -> () }
+export type UICornerElem = NewChild | UICornerOnChange | State<UICornerOnChange>
+export type UICornerMapperElem = UICornerElem | MapperDescriptor
+
+export type UIDragDetectorOnChange =
+	{ Name: "ActivatedCursorIcon", Callback: (Content) -> () }
+	| 	{ Name: "ActivatedCursorIconContent", Callback: (Content) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "BoundingBehavior", Callback: (Enum.UIDragDetectorBoundingBehavior) -> () }
+	| 	{ Name: "BoundingUI", Callback: (GuiBase2d) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "CursorIcon", Callback: (Content) -> () }
+	| 	{ Name: "CursorIconContent", Callback: (Content) -> () }
+	| 	{ Name: "DragAxis", Callback: (Vector2) -> () }
+	| 	{ Name: "DragRelativity", Callback: (Enum.UIDragDetectorDragRelativity) -> () }
+	| 	{ Name: "DragRotation", Callback: (number) -> () }
+	| 	{ Name: "DragSpace", Callback: (Enum.UIDragDetectorDragSpace) -> () }
+	| 	{ Name: "DragStyle", Callback: (Enum.UIDragDetectorDragStyle) -> () }
+	| 	{ Name: "DragUDim2", Callback: (UDim2) -> () }
+	| 	{ Name: "Enabled", Callback: (boolean) -> () }
+	| 	{ Name: "MaxDragAngle", Callback: (number) -> () }
+	| 	{ Name: "MaxDragTranslation", Callback: (UDim2) -> () }
+	| 	{ Name: "MinDragAngle", Callback: (number) -> () }
+	| 	{ Name: "MinDragTranslation", Callback: (UDim2) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "ReferenceUIInstance", Callback: (GuiObject) -> () }
+	| 	{ Name: "ResponseStyle", Callback: (Enum.UIDragDetectorResponseStyle) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionModeDragSpeed", Callback: (UDim2) -> () }
+	| 	{ Name: "SelectionModeRotateSpeed", Callback: (number) -> () }
+	| 	{ Name: "UIDragSpeedAxisMapping", Callback: (Enum.UIDragSpeedAxisMapping) -> () }
+export type UIDragDetectorElem = NewChild | UIDragDetectorOnChange | State<UIDragDetectorOnChange>
+export type UIDragDetectorMapperElem = UIDragDetectorElem | MapperDescriptor
+
+export type UIFlexItemOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "FlexMode", Callback: (Enum.UIFlexMode) -> () }
+	| 	{ Name: "GrowRatio", Callback: (number) -> () }
+	| 	{ Name: "ItemLineAlignment", Callback: (Enum.ItemLineAlignment) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ShrinkRatio", Callback: (number) -> () }
+export type UIFlexItemElem = NewChild | UIFlexItemOnChange | State<UIFlexItemOnChange>
+export type UIFlexItemMapperElem = UIFlexItemElem | MapperDescriptor
+
+export type UIGradientOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "Color", Callback: (ColorSequence) -> () }
+	| 	{ Name: "Enabled", Callback: (boolean) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Offset", Callback: (Vector2) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "Scale", Callback: (number) -> () }
+	| 	{ Name: "TileMode", Callback: (Enum.GradientTileMode) -> () }
+	| 	{ Name: "Transparency", Callback: (NumberSequence) -> () }
+	| 	{ Name: "Type", Callback: (Enum.GradientType) -> () }
+export type UIGradientElem = NewChild | UIGradientOnChange | State<UIGradientOnChange>
+export type UIGradientMapperElem = UIGradientElem | MapperDescriptor
+
+export type UIGridLayoutOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "CellPadding", Callback: (UDim2) -> () }
+	| 	{ Name: "CellSize", Callback: (UDim2) -> () }
+	| 	{ Name: "FillDirection", Callback: (Enum.FillDirection) -> () }
+	| 	{ Name: "FillDirectionMaxCells", Callback: (number) -> () }
+	| 	{ Name: "HorizontalAlignment", Callback: (Enum.HorizontalAlignment) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "SortOrder", Callback: (Enum.SortOrder) -> () }
+	| 	{ Name: "StartCorner", Callback: (Enum.StartCorner) -> () }
+	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+export type UIGridLayoutElem = NewChild | UIGridLayoutOnChange | State<UIGridLayoutOnChange>
+export type UIGridLayoutMapperElem = UIGridLayoutElem | MapperDescriptor
+
+export type UIListLayoutOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "FillDirection", Callback: (Enum.FillDirection) -> () }
+	| 	{ Name: "HorizontalAlignment", Callback: (Enum.HorizontalAlignment) -> () }
+	| 	{ Name: "HorizontalFlex", Callback: (Enum.UIFlexAlignment) -> () }
+	| 	{ Name: "ItemLineAlignment", Callback: (Enum.ItemLineAlignment) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Padding", Callback: (UDim) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "SortOrder", Callback: (Enum.SortOrder) -> () }
+	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+	| 	{ Name: "VerticalFlex", Callback: (Enum.UIFlexAlignment) -> () }
+	| 	{ Name: "Wraps", Callback: (boolean) -> () }
+export type UIListLayoutElem = NewChild | UIListLayoutOnChange | State<UIListLayoutOnChange>
+export type UIListLayoutMapperElem = UIListLayoutElem | MapperDescriptor
+
+export type UIPaddingOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "PaddingBottom", Callback: (UDim) -> () }
+	| 	{ Name: "PaddingLeft", Callback: (UDim) -> () }
+	| 	{ Name: "PaddingRight", Callback: (UDim) -> () }
+	| 	{ Name: "PaddingTop", Callback: (UDim) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type UIPaddingElem = NewChild | UIPaddingOnChange | State<UIPaddingOnChange>
+export type UIPaddingMapperElem = UIPaddingElem | MapperDescriptor
+
+export type UIPageLayoutOnChange =
+	{ Name: "Animated", Callback: (boolean) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "Circular", Callback: (boolean) -> () }
+	| 	{ Name: "EasingDirection", Callback: (Enum.EasingDirection) -> () }
+	| 	{ Name: "EasingStyle", Callback: (Enum.EasingStyle) -> () }
+	| 	{ Name: "FillDirection", Callback: (Enum.FillDirection) -> () }
+	| 	{ Name: "GamepadInputEnabled", Callback: (boolean) -> () }
+	| 	{ Name: "HorizontalAlignment", Callback: (Enum.HorizontalAlignment) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Padding", Callback: (UDim) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ScrollWheelInputEnabled", Callback: (boolean) -> () }
+	| 	{ Name: "SortOrder", Callback: (Enum.SortOrder) -> () }
+	| 	{ Name: "TouchInputEnabled", Callback: (boolean) -> () }
+	| 	{ Name: "TweenTime", Callback: (number) -> () }
+	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+export type UIPageLayoutElem = NewChild | UIPageLayoutOnChange | State<UIPageLayoutOnChange>
+export type UIPageLayoutMapperElem = UIPageLayoutElem | MapperDescriptor
+
+export type UIScaleOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "Scale", Callback: (number) -> () }
+export type UIScaleElem = NewChild | UIScaleOnChange | State<UIScaleOnChange>
+export type UIScaleMapperElem = UIScaleElem | MapperDescriptor
+
+export type UIShadowOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "BlurRadius", Callback: (UDim) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "Color", Callback: (Color3) -> () }
+	| 	{ Name: "Enabled", Callback: (boolean) -> () }
+	| 	{ Name: "Inset", Callback: (boolean) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Offset", Callback: (UDim2) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ShowBehindParent", Callback: (boolean) -> () }
+	| 	{ Name: "Spread", Callback: (UDim2) -> () }
+	| 	{ Name: "Transparency", Callback: (number) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type UIShadowElem = NewChild | UIShadowOnChange | State<UIShadowOnChange>
+export type UIShadowMapperElem = UIShadowElem | MapperDescriptor
+
+export type UISizeConstraintOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "MaxSize", Callback: (Vector2) -> () }
+	| 	{ Name: "MinSize", Callback: (Vector2) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type UISizeConstraintElem = NewChild | UISizeConstraintOnChange | State<UISizeConstraintOnChange>
+export type UISizeConstraintMapperElem = UISizeConstraintElem | MapperDescriptor
+
+export type UIStrokeOnChange =
+	{ Name: "ApplyStrokeMode", Callback: (Enum.ApplyStrokeMode) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "BorderOffset", Callback: (UDim) -> () }
+	| 	{ Name: "BorderStrokePosition", Callback: (Enum.BorderStrokePosition) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "Color", Callback: (Color3) -> () }
+	| 	{ Name: "Enabled", Callback: (boolean) -> () }
+	| 	{ Name: "LineJoinMode", Callback: (Enum.LineJoinMode) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "StrokeSizingMode", Callback: (Enum.StrokeSizingMode) -> () }
+	| 	{ Name: "Thickness", Callback: (number) -> () }
+	| 	{ Name: "Transparency", Callback: (number) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type UIStrokeElem = NewChild | UIStrokeOnChange | State<UIStrokeOnChange>
+export type UIStrokeMapperElem = UIStrokeElem | MapperDescriptor
+
+export type UITableLayoutOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "FillDirection", Callback: (Enum.FillDirection) -> () }
+	| 	{ Name: "FillEmptySpaceColumns", Callback: (boolean) -> () }
+	| 	{ Name: "FillEmptySpaceRows", Callback: (boolean) -> () }
+	| 	{ Name: "HorizontalAlignment", Callback: (Enum.HorizontalAlignment) -> () }
+	| 	{ Name: "MajorAxis", Callback: (Enum.TableMajorAxis) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Padding", Callback: (UDim2) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "SortOrder", Callback: (Enum.SortOrder) -> () }
+	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+export type UITableLayoutElem = NewChild | UITableLayoutOnChange | State<UITableLayoutOnChange>
+export type UITableLayoutMapperElem = UITableLayoutElem | MapperDescriptor
+
+export type UITextSizeConstraintOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "MaxTextSize", Callback: (number) -> () }
+	| 	{ Name: "MinTextSize", Callback: (number) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type UITextSizeConstraintElem = NewChild | UITextSizeConstraintOnChange | State<UITextSizeConstraintOnChange>
+export type UITextSizeConstraintMapperElem = UITextSizeConstraintElem | MapperDescriptor
+
+export type VideoFrameOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "Looped", Callback: (boolean) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "Playing", Callback: (boolean) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "RollOffMaxDistance", Callback: (number) -> () }
+	| 	{ Name: "RollOffMinDistance", Callback: (number) -> () }
+	| 	{ Name: "RollOffMode", Callback: (Enum.RollOffMode) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "TimePosition", Callback: (number) -> () }
+	| 	{ Name: "Video", Callback: (Content) -> () }
+	| 	{ Name: "VideoContent", Callback: (Content) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "Volume", Callback: (number) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type VideoFrameElem = NewChild | VideoFrameOnChange | State<VideoFrameOnChange>
+export type VideoFrameMapperElem = VideoFrameElem | MapperDescriptor
+
+export type ViewportFrameOnChange =
+	{ Name: "Active", Callback: (boolean) -> () }
+	| 	{ Name: "Ambient", Callback: (Color3) -> () }
+	| 	{ Name: "AnchorPoint", Callback: (Vector2) -> () }
+	| 	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "AutoLocalize", Callback: (boolean) -> () }
+	| 	{ Name: "AutomaticSize", Callback: (Enum.AutomaticSize) -> () }
+	| 	{ Name: "BackgroundColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BackgroundTransparency", Callback: (number) -> () }
+	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
+	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
+	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
+	| 	{ Name: "CurrentCamera", Callback: (Camera) -> () }
+	| 	{ Name: "ImageColor3", Callback: (Color3) -> () }
+	| 	{ Name: "ImageTransparency", Callback: (number) -> () }
+	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
+	| 	{ Name: "Interactable", Callback: (boolean) -> () }
+	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
+	| 	{ Name: "LightColor", Callback: (Color3) -> () }
+	| 	{ Name: "LightDirection", Callback: (Vector3) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionLeft", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionRight", Callback: (GuiObject) -> () }
+	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
+	| 	{ Name: "Position", Callback: (UDim2) -> () }
+	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
+	| 	{ Name: "Rotation", Callback: (number) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "Selectable", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionBehaviorDown", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorLeft", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorRight", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
+	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
+	| 	{ Name: "SelectionImageObject", Callback: (GuiObject) -> () }
+	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
+	| 	{ Name: "Size", Callback: (UDim2) -> () }
+	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
+	| 	{ Name: "Visible", Callback: (boolean) -> () }
+	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type ViewportFrameElem = NewChild | ViewportFrameOnChange | State<ViewportFrameOnChange>
+export type ViewportFrameMapperElem = ViewportFrameElem | MapperDescriptor
+
+export type WorldModelOnChange =
+	{ Name: "Archivable", Callback: (boolean) -> () }
+	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
+	| 	{ Name: "ModelStreamingMode", Callback: (Enum.ModelStreamingMode) -> () }
+	| 	{ Name: "Name", Callback: (string) -> () }
+	| 	{ Name: "PrimaryPart", Callback: (BasePart) -> () }
+	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "UseWorkspaceCollisionGroups", Callback: (boolean) -> () }
+	| 	{ Name: "WorldPivot", Callback: (CFrame) -> () }
+export type WorldModelElem = NewChild | WorldModelOnChange | State<WorldModelOnChange>
+export type WorldModelMapperElem = WorldModelElem | MapperDescriptor
+
 -- D 네임스페이스 타입(H-305 (d′)) — `UseProvider` 확장 `RobloxExtension`이
 -- 싣는 풀 타입 표면. 아래 런타임 별칭 캐스트와 1:1 — 손 나열 금지 계약대로
 -- 생성기가 같이 찍는다.
 export type DMapper = {
 	Root: MapperRoot,
-	BillboardGui: (key: string | MapperRoot) -> (BillboardGuiParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	Camera: (key: string | MapperRoot) -> (CameraParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	CanvasGroup: (key: string | MapperRoot) -> (CanvasGroupParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	Folder: (key: string | MapperRoot) -> (FolderParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	Frame: (key: string | MapperRoot) -> (FrameParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	ImageButton: (key: string | MapperRoot) -> (ImageButtonParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	ImageLabel: (key: string | MapperRoot) -> (ImageLabelParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	ScreenGui: (key: string | MapperRoot) -> (ScreenGuiParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	ScrollingFrame: (key: string | MapperRoot) -> (ScrollingFrameParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	SurfaceGui: (key: string | MapperRoot) -> (SurfaceGuiParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	TextBox: (key: string | MapperRoot) -> (TextBoxParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	TextButton: (key: string | MapperRoot) -> (TextButtonParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	TextLabel: (key: string | MapperRoot) -> (TextLabelParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIAspectRatioConstraint: (key: string | MapperRoot) -> (UIAspectRatioConstraintParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UICorner: (key: string | MapperRoot) -> (UICornerParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIDragDetector: (key: string | MapperRoot) -> (UIDragDetectorParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIFlexItem: (key: string | MapperRoot) -> (UIFlexItemParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIGradient: (key: string | MapperRoot) -> (UIGradientParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIGridLayout: (key: string | MapperRoot) -> (UIGridLayoutParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIListLayout: (key: string | MapperRoot) -> (UIListLayoutParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIPadding: (key: string | MapperRoot) -> (UIPaddingParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIPageLayout: (key: string | MapperRoot) -> (UIPageLayoutParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIScale: (key: string | MapperRoot) -> (UIScaleParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIShadow: (key: string | MapperRoot) -> (UIShadowParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UISizeConstraint: (key: string | MapperRoot) -> (UISizeConstraintParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UIStroke: (key: string | MapperRoot) -> (UIStrokeParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UITableLayout: (key: string | MapperRoot) -> (UITableLayoutParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	UITextSizeConstraint: (key: string | MapperRoot) -> (UITextSizeConstraintParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	VideoFrame: (key: string | MapperRoot) -> (VideoFrameParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	ViewportFrame: (key: string | MapperRoot) -> (ViewportFrameParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
-	WorldModel: (key: string | MapperRoot) -> (WorldModelParam<NewChild | MapperDescriptor>) -> MapperDescriptor,
+	BillboardGui: (key: string | MapperRoot) -> (BillboardGuiParam<BillboardGuiMapperElem>) -> MapperDescriptor,
+	Camera: (key: string | MapperRoot) -> (CameraParam<CameraMapperElem>) -> MapperDescriptor,
+	CanvasGroup: (key: string | MapperRoot) -> (CanvasGroupParam<CanvasGroupMapperElem>) -> MapperDescriptor,
+	Folder: (key: string | MapperRoot) -> (FolderParam<FolderMapperElem>) -> MapperDescriptor,
+	Frame: (key: string | MapperRoot) -> (FrameParam<FrameMapperElem>) -> MapperDescriptor,
+	ImageButton: (key: string | MapperRoot) -> (ImageButtonParam<ImageButtonMapperElem>) -> MapperDescriptor,
+	ImageLabel: (key: string | MapperRoot) -> (ImageLabelParam<ImageLabelMapperElem>) -> MapperDescriptor,
+	ScreenGui: (key: string | MapperRoot) -> (ScreenGuiParam<ScreenGuiMapperElem>) -> MapperDescriptor,
+	ScrollingFrame: (key: string | MapperRoot) -> (ScrollingFrameParam<ScrollingFrameMapperElem>) -> MapperDescriptor,
+	SurfaceGui: (key: string | MapperRoot) -> (SurfaceGuiParam<SurfaceGuiMapperElem>) -> MapperDescriptor,
+	TextBox: (key: string | MapperRoot) -> (TextBoxParam<TextBoxMapperElem>) -> MapperDescriptor,
+	TextButton: (key: string | MapperRoot) -> (TextButtonParam<TextButtonMapperElem>) -> MapperDescriptor,
+	TextLabel: (key: string | MapperRoot) -> (TextLabelParam<TextLabelMapperElem>) -> MapperDescriptor,
+	UIAspectRatioConstraint: (key: string | MapperRoot) -> (UIAspectRatioConstraintParam<UIAspectRatioConstraintMapperElem>) -> MapperDescriptor,
+	UICorner: (key: string | MapperRoot) -> (UICornerParam<UICornerMapperElem>) -> MapperDescriptor,
+	UIDragDetector: (key: string | MapperRoot) -> (UIDragDetectorParam<UIDragDetectorMapperElem>) -> MapperDescriptor,
+	UIFlexItem: (key: string | MapperRoot) -> (UIFlexItemParam<UIFlexItemMapperElem>) -> MapperDescriptor,
+	UIGradient: (key: string | MapperRoot) -> (UIGradientParam<UIGradientMapperElem>) -> MapperDescriptor,
+	UIGridLayout: (key: string | MapperRoot) -> (UIGridLayoutParam<UIGridLayoutMapperElem>) -> MapperDescriptor,
+	UIListLayout: (key: string | MapperRoot) -> (UIListLayoutParam<UIListLayoutMapperElem>) -> MapperDescriptor,
+	UIPadding: (key: string | MapperRoot) -> (UIPaddingParam<UIPaddingMapperElem>) -> MapperDescriptor,
+	UIPageLayout: (key: string | MapperRoot) -> (UIPageLayoutParam<UIPageLayoutMapperElem>) -> MapperDescriptor,
+	UIScale: (key: string | MapperRoot) -> (UIScaleParam<UIScaleMapperElem>) -> MapperDescriptor,
+	UIShadow: (key: string | MapperRoot) -> (UIShadowParam<UIShadowMapperElem>) -> MapperDescriptor,
+	UISizeConstraint: (key: string | MapperRoot) -> (UISizeConstraintParam<UISizeConstraintMapperElem>) -> MapperDescriptor,
+	UIStroke: (key: string | MapperRoot) -> (UIStrokeParam<UIStrokeMapperElem>) -> MapperDescriptor,
+	UITableLayout: (key: string | MapperRoot) -> (UITableLayoutParam<UITableLayoutMapperElem>) -> MapperDescriptor,
+	UITextSizeConstraint: (key: string | MapperRoot) -> (UITextSizeConstraintParam<UITextSizeConstraintMapperElem>) -> MapperDescriptor,
+	VideoFrame: (key: string | MapperRoot) -> (VideoFrameParam<VideoFrameMapperElem>) -> MapperDescriptor,
+	ViewportFrame: (key: string | MapperRoot) -> (ViewportFrameParam<ViewportFrameMapperElem>) -> MapperDescriptor,
+	WorldModel: (key: string | MapperRoot) -> (WorldModelParam<WorldModelMapperElem>) -> MapperDescriptor,
 }
 export type D = {
 	New: <T>(className: string) -> (props: any) -> T,
 	Mapper: DMapper,
-	BillboardGui: (BillboardGuiParam<NewChild>) -> BillboardGui,
-	Camera: (CameraParam<NewChild>) -> Camera,
-	CanvasGroup: (CanvasGroupParam<NewChild>) -> CanvasGroup,
-	Folder: (FolderParam<NewChild>) -> Folder,
-	Frame: (FrameParam<NewChild>) -> Frame,
-	ImageButton: (ImageButtonParam<NewChild>) -> ImageButton,
-	ImageLabel: (ImageLabelParam<NewChild>) -> ImageLabel,
-	ScreenGui: (ScreenGuiParam<NewChild>) -> ScreenGui,
-	ScrollingFrame: (ScrollingFrameParam<NewChild>) -> ScrollingFrame,
-	SurfaceGui: (SurfaceGuiParam<NewChild>) -> SurfaceGui,
-	TextBox: (TextBoxParam<NewChild>) -> TextBox,
-	TextButton: (TextButtonParam<NewChild>) -> TextButton,
-	TextLabel: (TextLabelParam<NewChild>) -> TextLabel,
-	UIAspectRatioConstraint: (UIAspectRatioConstraintParam<NewChild>) -> UIAspectRatioConstraint,
-	UICorner: (UICornerParam<NewChild>) -> UICorner,
-	UIDragDetector: (UIDragDetectorParam<NewChild>) -> UIDragDetector,
-	UIFlexItem: (UIFlexItemParam<NewChild>) -> UIFlexItem,
-	UIGradient: (UIGradientParam<NewChild>) -> UIGradient,
-	UIGridLayout: (UIGridLayoutParam<NewChild>) -> UIGridLayout,
-	UIListLayout: (UIListLayoutParam<NewChild>) -> UIListLayout,
-	UIPadding: (UIPaddingParam<NewChild>) -> UIPadding,
-	UIPageLayout: (UIPageLayoutParam<NewChild>) -> UIPageLayout,
-	UIScale: (UIScaleParam<NewChild>) -> UIScale,
-	UIShadow: (UIShadowParam<NewChild>) -> UIShadow,
-	UISizeConstraint: (UISizeConstraintParam<NewChild>) -> UISizeConstraint,
-	UIStroke: (UIStrokeParam<NewChild>) -> UIStroke,
-	UITableLayout: (UITableLayoutParam<NewChild>) -> UITableLayout,
-	UITextSizeConstraint: (UITextSizeConstraintParam<NewChild>) -> UITextSizeConstraint,
-	VideoFrame: (VideoFrameParam<NewChild>) -> VideoFrame,
-	ViewportFrame: (ViewportFrameParam<NewChild>) -> ViewportFrame,
-	WorldModel: (WorldModelParam<NewChild>) -> WorldModel,
+	BillboardGui: (BillboardGuiParam<BillboardGuiElem>) -> BillboardGui,
+	Camera: (CameraParam<CameraElem>) -> Camera,
+	CanvasGroup: (CanvasGroupParam<CanvasGroupElem>) -> CanvasGroup,
+	Folder: (FolderParam<FolderElem>) -> Folder,
+	Frame: (FrameParam<FrameElem>) -> Frame,
+	ImageButton: (ImageButtonParam<ImageButtonElem>) -> ImageButton,
+	ImageLabel: (ImageLabelParam<ImageLabelElem>) -> ImageLabel,
+	ScreenGui: (ScreenGuiParam<ScreenGuiElem>) -> ScreenGui,
+	ScrollingFrame: (ScrollingFrameParam<ScrollingFrameElem>) -> ScrollingFrame,
+	SurfaceGui: (SurfaceGuiParam<SurfaceGuiElem>) -> SurfaceGui,
+	TextBox: (TextBoxParam<TextBoxElem>) -> TextBox,
+	TextButton: (TextButtonParam<TextButtonElem>) -> TextButton,
+	TextLabel: (TextLabelParam<TextLabelElem>) -> TextLabel,
+	UIAspectRatioConstraint: (UIAspectRatioConstraintParam<UIAspectRatioConstraintElem>) -> UIAspectRatioConstraint,
+	UICorner: (UICornerParam<UICornerElem>) -> UICorner,
+	UIDragDetector: (UIDragDetectorParam<UIDragDetectorElem>) -> UIDragDetector,
+	UIFlexItem: (UIFlexItemParam<UIFlexItemElem>) -> UIFlexItem,
+	UIGradient: (UIGradientParam<UIGradientElem>) -> UIGradient,
+	UIGridLayout: (UIGridLayoutParam<UIGridLayoutElem>) -> UIGridLayout,
+	UIListLayout: (UIListLayoutParam<UIListLayoutElem>) -> UIListLayout,
+	UIPadding: (UIPaddingParam<UIPaddingElem>) -> UIPadding,
+	UIPageLayout: (UIPageLayoutParam<UIPageLayoutElem>) -> UIPageLayout,
+	UIScale: (UIScaleParam<UIScaleElem>) -> UIScale,
+	UIShadow: (UIShadowParam<UIShadowElem>) -> UIShadow,
+	UISizeConstraint: (UISizeConstraintParam<UISizeConstraintElem>) -> UISizeConstraint,
+	UIStroke: (UIStrokeParam<UIStrokeElem>) -> UIStroke,
+	UITableLayout: (UITableLayoutParam<UITableLayoutElem>) -> UITableLayout,
+	UITextSizeConstraint: (UITextSizeConstraintParam<UITextSizeConstraintElem>) -> UITextSizeConstraint,
+	VideoFrame: (VideoFrameParam<VideoFrameElem>) -> VideoFrame,
+	ViewportFrame: (ViewportFrameParam<ViewportFrameElem>) -> ViewportFrame,
+	WorldModel: (WorldModelParam<WorldModelElem>) -> WorldModel,
 }
 
 --[[ InitD(quad) — `UseProvider` 확장(`RobloxExtension.D`)으로 실린다
@@ -1490,68 +2623,68 @@ return function(quad: any): D
 	-- Claim.luau의 newMapperClass — 여기선 클래스별 캐스트 별칭만, D.<Class> 동형)
 	local Mapper: { [string]: any } = { Root = quad.MapperRoot }
 	local D: { [string]: any } = { New = New, Mapper = Mapper }
-	D.BillboardGui = (New("BillboardGui") :: any) :: (BillboardGuiParam<NewChild>) -> BillboardGui
-	D.Camera = (New("Camera") :: any) :: (CameraParam<NewChild>) -> Camera
-	D.CanvasGroup = (New("CanvasGroup") :: any) :: (CanvasGroupParam<NewChild>) -> CanvasGroup
-	D.Folder = (New("Folder") :: any) :: (FolderParam<NewChild>) -> Folder
-	D.Frame = (New("Frame") :: any) :: (FrameParam<NewChild>) -> Frame
-	D.ImageButton = (New("ImageButton") :: any) :: (ImageButtonParam<NewChild>) -> ImageButton
-	D.ImageLabel = (New("ImageLabel") :: any) :: (ImageLabelParam<NewChild>) -> ImageLabel
-	D.ScreenGui = (New("ScreenGui") :: any) :: (ScreenGuiParam<NewChild>) -> ScreenGui
-	D.ScrollingFrame = (New("ScrollingFrame") :: any) :: (ScrollingFrameParam<NewChild>) -> ScrollingFrame
-	D.SurfaceGui = (New("SurfaceGui") :: any) :: (SurfaceGuiParam<NewChild>) -> SurfaceGui
-	D.TextBox = (New("TextBox") :: any) :: (TextBoxParam<NewChild>) -> TextBox
-	D.TextButton = (New("TextButton") :: any) :: (TextButtonParam<NewChild>) -> TextButton
-	D.TextLabel = (New("TextLabel") :: any) :: (TextLabelParam<NewChild>) -> TextLabel
-	D.UIAspectRatioConstraint = (New("UIAspectRatioConstraint") :: any) :: (UIAspectRatioConstraintParam<NewChild>) -> UIAspectRatioConstraint
-	D.UICorner = (New("UICorner") :: any) :: (UICornerParam<NewChild>) -> UICorner
-	D.UIDragDetector = (New("UIDragDetector") :: any) :: (UIDragDetectorParam<NewChild>) -> UIDragDetector
-	D.UIFlexItem = (New("UIFlexItem") :: any) :: (UIFlexItemParam<NewChild>) -> UIFlexItem
-	D.UIGradient = (New("UIGradient") :: any) :: (UIGradientParam<NewChild>) -> UIGradient
-	D.UIGridLayout = (New("UIGridLayout") :: any) :: (UIGridLayoutParam<NewChild>) -> UIGridLayout
-	D.UIListLayout = (New("UIListLayout") :: any) :: (UIListLayoutParam<NewChild>) -> UIListLayout
-	D.UIPadding = (New("UIPadding") :: any) :: (UIPaddingParam<NewChild>) -> UIPadding
-	D.UIPageLayout = (New("UIPageLayout") :: any) :: (UIPageLayoutParam<NewChild>) -> UIPageLayout
-	D.UIScale = (New("UIScale") :: any) :: (UIScaleParam<NewChild>) -> UIScale
-	D.UIShadow = (New("UIShadow") :: any) :: (UIShadowParam<NewChild>) -> UIShadow
-	D.UISizeConstraint = (New("UISizeConstraint") :: any) :: (UISizeConstraintParam<NewChild>) -> UISizeConstraint
-	D.UIStroke = (New("UIStroke") :: any) :: (UIStrokeParam<NewChild>) -> UIStroke
-	D.UITableLayout = (New("UITableLayout") :: any) :: (UITableLayoutParam<NewChild>) -> UITableLayout
-	D.UITextSizeConstraint = (New("UITextSizeConstraint") :: any) :: (UITextSizeConstraintParam<NewChild>) -> UITextSizeConstraint
-	D.VideoFrame = (New("VideoFrame") :: any) :: (VideoFrameParam<NewChild>) -> VideoFrame
-	D.ViewportFrame = (New("ViewportFrame") :: any) :: (ViewportFrameParam<NewChild>) -> ViewportFrame
-	D.WorldModel = (New("WorldModel") :: any) :: (WorldModelParam<NewChild>) -> WorldModel
-	Mapper.BillboardGui = (quad.newMapperClass("BillboardGui") :: any) :: (key: string | MapperRoot) -> (BillboardGuiParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.Camera = (quad.newMapperClass("Camera") :: any) :: (key: string | MapperRoot) -> (CameraParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.CanvasGroup = (quad.newMapperClass("CanvasGroup") :: any) :: (key: string | MapperRoot) -> (CanvasGroupParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.Folder = (quad.newMapperClass("Folder") :: any) :: (key: string | MapperRoot) -> (FolderParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.Frame = (quad.newMapperClass("Frame") :: any) :: (key: string | MapperRoot) -> (FrameParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.ImageButton = (quad.newMapperClass("ImageButton") :: any) :: (key: string | MapperRoot) -> (ImageButtonParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.ImageLabel = (quad.newMapperClass("ImageLabel") :: any) :: (key: string | MapperRoot) -> (ImageLabelParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.ScreenGui = (quad.newMapperClass("ScreenGui") :: any) :: (key: string | MapperRoot) -> (ScreenGuiParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.ScrollingFrame = (quad.newMapperClass("ScrollingFrame") :: any) :: (key: string | MapperRoot) -> (ScrollingFrameParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.SurfaceGui = (quad.newMapperClass("SurfaceGui") :: any) :: (key: string | MapperRoot) -> (SurfaceGuiParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.TextBox = (quad.newMapperClass("TextBox") :: any) :: (key: string | MapperRoot) -> (TextBoxParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.TextButton = (quad.newMapperClass("TextButton") :: any) :: (key: string | MapperRoot) -> (TextButtonParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.TextLabel = (quad.newMapperClass("TextLabel") :: any) :: (key: string | MapperRoot) -> (TextLabelParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIAspectRatioConstraint = (quad.newMapperClass("UIAspectRatioConstraint") :: any) :: (key: string | MapperRoot) -> (UIAspectRatioConstraintParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UICorner = (quad.newMapperClass("UICorner") :: any) :: (key: string | MapperRoot) -> (UICornerParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIDragDetector = (quad.newMapperClass("UIDragDetector") :: any) :: (key: string | MapperRoot) -> (UIDragDetectorParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIFlexItem = (quad.newMapperClass("UIFlexItem") :: any) :: (key: string | MapperRoot) -> (UIFlexItemParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIGradient = (quad.newMapperClass("UIGradient") :: any) :: (key: string | MapperRoot) -> (UIGradientParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIGridLayout = (quad.newMapperClass("UIGridLayout") :: any) :: (key: string | MapperRoot) -> (UIGridLayoutParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIListLayout = (quad.newMapperClass("UIListLayout") :: any) :: (key: string | MapperRoot) -> (UIListLayoutParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIPadding = (quad.newMapperClass("UIPadding") :: any) :: (key: string | MapperRoot) -> (UIPaddingParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIPageLayout = (quad.newMapperClass("UIPageLayout") :: any) :: (key: string | MapperRoot) -> (UIPageLayoutParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIScale = (quad.newMapperClass("UIScale") :: any) :: (key: string | MapperRoot) -> (UIScaleParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIShadow = (quad.newMapperClass("UIShadow") :: any) :: (key: string | MapperRoot) -> (UIShadowParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UISizeConstraint = (quad.newMapperClass("UISizeConstraint") :: any) :: (key: string | MapperRoot) -> (UISizeConstraintParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UIStroke = (quad.newMapperClass("UIStroke") :: any) :: (key: string | MapperRoot) -> (UIStrokeParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UITableLayout = (quad.newMapperClass("UITableLayout") :: any) :: (key: string | MapperRoot) -> (UITableLayoutParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.UITextSizeConstraint = (quad.newMapperClass("UITextSizeConstraint") :: any) :: (key: string | MapperRoot) -> (UITextSizeConstraintParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.VideoFrame = (quad.newMapperClass("VideoFrame") :: any) :: (key: string | MapperRoot) -> (VideoFrameParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.ViewportFrame = (quad.newMapperClass("ViewportFrame") :: any) :: (key: string | MapperRoot) -> (ViewportFrameParam<NewChild | MapperDescriptor>) -> MapperDescriptor
-	Mapper.WorldModel = (quad.newMapperClass("WorldModel") :: any) :: (key: string | MapperRoot) -> (WorldModelParam<NewChild | MapperDescriptor>) -> MapperDescriptor
+	D.BillboardGui = (New("BillboardGui") :: any) :: (BillboardGuiParam<BillboardGuiElem>) -> BillboardGui
+	D.Camera = (New("Camera") :: any) :: (CameraParam<CameraElem>) -> Camera
+	D.CanvasGroup = (New("CanvasGroup") :: any) :: (CanvasGroupParam<CanvasGroupElem>) -> CanvasGroup
+	D.Folder = (New("Folder") :: any) :: (FolderParam<FolderElem>) -> Folder
+	D.Frame = (New("Frame") :: any) :: (FrameParam<FrameElem>) -> Frame
+	D.ImageButton = (New("ImageButton") :: any) :: (ImageButtonParam<ImageButtonElem>) -> ImageButton
+	D.ImageLabel = (New("ImageLabel") :: any) :: (ImageLabelParam<ImageLabelElem>) -> ImageLabel
+	D.ScreenGui = (New("ScreenGui") :: any) :: (ScreenGuiParam<ScreenGuiElem>) -> ScreenGui
+	D.ScrollingFrame = (New("ScrollingFrame") :: any) :: (ScrollingFrameParam<ScrollingFrameElem>) -> ScrollingFrame
+	D.SurfaceGui = (New("SurfaceGui") :: any) :: (SurfaceGuiParam<SurfaceGuiElem>) -> SurfaceGui
+	D.TextBox = (New("TextBox") :: any) :: (TextBoxParam<TextBoxElem>) -> TextBox
+	D.TextButton = (New("TextButton") :: any) :: (TextButtonParam<TextButtonElem>) -> TextButton
+	D.TextLabel = (New("TextLabel") :: any) :: (TextLabelParam<TextLabelElem>) -> TextLabel
+	D.UIAspectRatioConstraint = (New("UIAspectRatioConstraint") :: any) :: (UIAspectRatioConstraintParam<UIAspectRatioConstraintElem>) -> UIAspectRatioConstraint
+	D.UICorner = (New("UICorner") :: any) :: (UICornerParam<UICornerElem>) -> UICorner
+	D.UIDragDetector = (New("UIDragDetector") :: any) :: (UIDragDetectorParam<UIDragDetectorElem>) -> UIDragDetector
+	D.UIFlexItem = (New("UIFlexItem") :: any) :: (UIFlexItemParam<UIFlexItemElem>) -> UIFlexItem
+	D.UIGradient = (New("UIGradient") :: any) :: (UIGradientParam<UIGradientElem>) -> UIGradient
+	D.UIGridLayout = (New("UIGridLayout") :: any) :: (UIGridLayoutParam<UIGridLayoutElem>) -> UIGridLayout
+	D.UIListLayout = (New("UIListLayout") :: any) :: (UIListLayoutParam<UIListLayoutElem>) -> UIListLayout
+	D.UIPadding = (New("UIPadding") :: any) :: (UIPaddingParam<UIPaddingElem>) -> UIPadding
+	D.UIPageLayout = (New("UIPageLayout") :: any) :: (UIPageLayoutParam<UIPageLayoutElem>) -> UIPageLayout
+	D.UIScale = (New("UIScale") :: any) :: (UIScaleParam<UIScaleElem>) -> UIScale
+	D.UIShadow = (New("UIShadow") :: any) :: (UIShadowParam<UIShadowElem>) -> UIShadow
+	D.UISizeConstraint = (New("UISizeConstraint") :: any) :: (UISizeConstraintParam<UISizeConstraintElem>) -> UISizeConstraint
+	D.UIStroke = (New("UIStroke") :: any) :: (UIStrokeParam<UIStrokeElem>) -> UIStroke
+	D.UITableLayout = (New("UITableLayout") :: any) :: (UITableLayoutParam<UITableLayoutElem>) -> UITableLayout
+	D.UITextSizeConstraint = (New("UITextSizeConstraint") :: any) :: (UITextSizeConstraintParam<UITextSizeConstraintElem>) -> UITextSizeConstraint
+	D.VideoFrame = (New("VideoFrame") :: any) :: (VideoFrameParam<VideoFrameElem>) -> VideoFrame
+	D.ViewportFrame = (New("ViewportFrame") :: any) :: (ViewportFrameParam<ViewportFrameElem>) -> ViewportFrame
+	D.WorldModel = (New("WorldModel") :: any) :: (WorldModelParam<WorldModelElem>) -> WorldModel
+	Mapper.BillboardGui = (quad.newMapperClass("BillboardGui") :: any) :: (key: string | MapperRoot) -> (BillboardGuiParam<BillboardGuiMapperElem>) -> MapperDescriptor
+	Mapper.Camera = (quad.newMapperClass("Camera") :: any) :: (key: string | MapperRoot) -> (CameraParam<CameraMapperElem>) -> MapperDescriptor
+	Mapper.CanvasGroup = (quad.newMapperClass("CanvasGroup") :: any) :: (key: string | MapperRoot) -> (CanvasGroupParam<CanvasGroupMapperElem>) -> MapperDescriptor
+	Mapper.Folder = (quad.newMapperClass("Folder") :: any) :: (key: string | MapperRoot) -> (FolderParam<FolderMapperElem>) -> MapperDescriptor
+	Mapper.Frame = (quad.newMapperClass("Frame") :: any) :: (key: string | MapperRoot) -> (FrameParam<FrameMapperElem>) -> MapperDescriptor
+	Mapper.ImageButton = (quad.newMapperClass("ImageButton") :: any) :: (key: string | MapperRoot) -> (ImageButtonParam<ImageButtonMapperElem>) -> MapperDescriptor
+	Mapper.ImageLabel = (quad.newMapperClass("ImageLabel") :: any) :: (key: string | MapperRoot) -> (ImageLabelParam<ImageLabelMapperElem>) -> MapperDescriptor
+	Mapper.ScreenGui = (quad.newMapperClass("ScreenGui") :: any) :: (key: string | MapperRoot) -> (ScreenGuiParam<ScreenGuiMapperElem>) -> MapperDescriptor
+	Mapper.ScrollingFrame = (quad.newMapperClass("ScrollingFrame") :: any) :: (key: string | MapperRoot) -> (ScrollingFrameParam<ScrollingFrameMapperElem>) -> MapperDescriptor
+	Mapper.SurfaceGui = (quad.newMapperClass("SurfaceGui") :: any) :: (key: string | MapperRoot) -> (SurfaceGuiParam<SurfaceGuiMapperElem>) -> MapperDescriptor
+	Mapper.TextBox = (quad.newMapperClass("TextBox") :: any) :: (key: string | MapperRoot) -> (TextBoxParam<TextBoxMapperElem>) -> MapperDescriptor
+	Mapper.TextButton = (quad.newMapperClass("TextButton") :: any) :: (key: string | MapperRoot) -> (TextButtonParam<TextButtonMapperElem>) -> MapperDescriptor
+	Mapper.TextLabel = (quad.newMapperClass("TextLabel") :: any) :: (key: string | MapperRoot) -> (TextLabelParam<TextLabelMapperElem>) -> MapperDescriptor
+	Mapper.UIAspectRatioConstraint = (quad.newMapperClass("UIAspectRatioConstraint") :: any) :: (key: string | MapperRoot) -> (UIAspectRatioConstraintParam<UIAspectRatioConstraintMapperElem>) -> MapperDescriptor
+	Mapper.UICorner = (quad.newMapperClass("UICorner") :: any) :: (key: string | MapperRoot) -> (UICornerParam<UICornerMapperElem>) -> MapperDescriptor
+	Mapper.UIDragDetector = (quad.newMapperClass("UIDragDetector") :: any) :: (key: string | MapperRoot) -> (UIDragDetectorParam<UIDragDetectorMapperElem>) -> MapperDescriptor
+	Mapper.UIFlexItem = (quad.newMapperClass("UIFlexItem") :: any) :: (key: string | MapperRoot) -> (UIFlexItemParam<UIFlexItemMapperElem>) -> MapperDescriptor
+	Mapper.UIGradient = (quad.newMapperClass("UIGradient") :: any) :: (key: string | MapperRoot) -> (UIGradientParam<UIGradientMapperElem>) -> MapperDescriptor
+	Mapper.UIGridLayout = (quad.newMapperClass("UIGridLayout") :: any) :: (key: string | MapperRoot) -> (UIGridLayoutParam<UIGridLayoutMapperElem>) -> MapperDescriptor
+	Mapper.UIListLayout = (quad.newMapperClass("UIListLayout") :: any) :: (key: string | MapperRoot) -> (UIListLayoutParam<UIListLayoutMapperElem>) -> MapperDescriptor
+	Mapper.UIPadding = (quad.newMapperClass("UIPadding") :: any) :: (key: string | MapperRoot) -> (UIPaddingParam<UIPaddingMapperElem>) -> MapperDescriptor
+	Mapper.UIPageLayout = (quad.newMapperClass("UIPageLayout") :: any) :: (key: string | MapperRoot) -> (UIPageLayoutParam<UIPageLayoutMapperElem>) -> MapperDescriptor
+	Mapper.UIScale = (quad.newMapperClass("UIScale") :: any) :: (key: string | MapperRoot) -> (UIScaleParam<UIScaleMapperElem>) -> MapperDescriptor
+	Mapper.UIShadow = (quad.newMapperClass("UIShadow") :: any) :: (key: string | MapperRoot) -> (UIShadowParam<UIShadowMapperElem>) -> MapperDescriptor
+	Mapper.UISizeConstraint = (quad.newMapperClass("UISizeConstraint") :: any) :: (key: string | MapperRoot) -> (UISizeConstraintParam<UISizeConstraintMapperElem>) -> MapperDescriptor
+	Mapper.UIStroke = (quad.newMapperClass("UIStroke") :: any) :: (key: string | MapperRoot) -> (UIStrokeParam<UIStrokeMapperElem>) -> MapperDescriptor
+	Mapper.UITableLayout = (quad.newMapperClass("UITableLayout") :: any) :: (key: string | MapperRoot) -> (UITableLayoutParam<UITableLayoutMapperElem>) -> MapperDescriptor
+	Mapper.UITextSizeConstraint = (quad.newMapperClass("UITextSizeConstraint") :: any) :: (key: string | MapperRoot) -> (UITextSizeConstraintParam<UITextSizeConstraintMapperElem>) -> MapperDescriptor
+	Mapper.VideoFrame = (quad.newMapperClass("VideoFrame") :: any) :: (key: string | MapperRoot) -> (VideoFrameParam<VideoFrameMapperElem>) -> MapperDescriptor
+	Mapper.ViewportFrame = (quad.newMapperClass("ViewportFrame") :: any) :: (key: string | MapperRoot) -> (ViewportFrameParam<ViewportFrameMapperElem>) -> MapperDescriptor
+	Mapper.WorldModel = (quad.newMapperClass("WorldModel") :: any) :: (key: string | MapperRoot) -> (WorldModelParam<WorldModelMapperElem>) -> MapperDescriptor
 	quad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨
 	return (D :: any) :: D
 end

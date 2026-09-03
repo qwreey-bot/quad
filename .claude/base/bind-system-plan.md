@@ -181,8 +181,10 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
 
 **[2026-08-28 `Claim`]** 그 `{ ...타입명시 }`는 생성기가 `type <Class>Param<E>`로
 이름 붙여 찍고 `D.Mapper.<Class>`와 공유한다 — 필드 파트는 같고 children 배열의
-원소 타입 `E`만 파라미터(`D.Frame`은 기존 유니언, 매퍼는 `| MapperDescriptor`).
-사용자 확정, `base/claim-plan.md` §2·§7-12.
+원소 타입 `E`만 파라미터(`D.Frame`은 children 원소 유니언, 매퍼는
+`| MapperDescriptor` — **[2026-09-03]** 생성 별칭 `<Class>Elem`/
+`<Class>MapperElem`으로 찍히고 배열부 `OnChange` 디스크립터가 거기 합류,
+`base/onchange-plan.md`). 사용자 확정, `base/claim-plan.md` §2·§7-12.
 
 - **이름은 대문자 `New`로 통일**(사용자 확정: *"2. New입니다."*) — PA님 코드
   인용의 소문자 `new`와 섞여 있던 것을 정리.
@@ -462,11 +464,13 @@ Service` 기반으로 구현)로 두면 됨 — 별도 `On` 모듈/필드 접근
 **이름 지정 방식만 문자열 키인 예외**다(타입은 위 정정대로 생성기가 준다).
 
 **`GetPropertyChangedSignal`은 이 문자열 키 패턴이 안 통함 — 별도 `OnChange`
-특수 키로 확정(2026-08-10 세션).** 이벤트는 `inst[key]`가 이미 Signal이라
-그대로 `Connect`하면 되지만, `GetPropertyChangedSignal(name)`은 프로퍼티
-이름을 인자로 받아야 하고 그 이름이 "값 세팅" 키 네임스페이스와 겹쳐서
-평범한 문자열 키로는 세팅과 리스닝을 구분할 수 없음 — 상세는
-`base/onchange-plan.md`.
+표면으로 확정(2026-08-10 세션; **[2026-09-03 역전]** 해시부 특수 키가 아니라
+배열부 값 `OnChange(name, fn)` — `Tag(...)`와 같은 자리).** 이벤트는
+`inst[key]`가 이미 Signal이라 그대로 `Connect`하면 되지만,
+`GetPropertyChangedSignal(name)`은 프로퍼티 이름을 인자로 받아야 하고 그
+이름이 "값 세팅" 키 네임스페이스와 겹쳐서 평범한 문자열 키로는 세팅과
+리스닝을 구분할 수 없음 — 상세는 `base/onchange-plan.md`(초기값 발화 계약·
+생성기 타이핑 포함).
 
 **PA님 코드와 대조해서 재확인한 것(변경 없음)**:
 - **OOP 회피 결정은 오히려 보강됨** — PA님의 `ObjectOrientedProgramming/

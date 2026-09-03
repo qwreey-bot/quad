@@ -2,8 +2,8 @@
 --[[
 	M10 엔진 축 둘째 단위(2026-09-03) — `Handlers/Event.luau`(문자열 키 +
 	`GetEventsOfClass` 리플렉션, self 미전달, `None`/`nil`이면 Connect 안 함)와
-	`Handlers/OnChange.luau`(`OnChange(name)` 키 팩토리 + 이름별 weak 캐시 +
-	`GetPropertyChangedSignal` 바인딩, `H-27` `v == nil` 얼리리턴).
+	`Handlers/OnChange.luau`(`OnChange(name, fn)` 배열부 디스크립터 —
+	2026-09-03 역전 — + `GetPropertyChangedSignal` 바인딩, 초기값 발화 계약).
 	정본: `base/event-plan.md` 두 절, `base/onchange-plan.md` "확정" 절,
 	`bind-system-plan.md` "인스턴스 생성 / 이벤트 네이밍 인체공학" 절.
 
@@ -115,68 +115,76 @@ do
 end
 
 print()
-print("=== 4. OnChange — 프로퍼티 변경 시그널에 새 값으로 콜백, 캐시 동등성 ===")
+print("=== 4. OnChange — 배열부 디스크립터, 초기값 발화 계약(배열→해시 순서), 같은 이름 둘 ===")
 do
 	local OnChange = q.OnChange
-	assert(OnChange("Text") == OnChange("Text"), "same name → same key object (weak cache)")
-	assert(OnChange("Text") ~= OnChange("Name"), "different names → different keys")
-	assert(OnChange("Text").Name == "Text", "key carries the property name")
-
-	-- ⚠️ 초기 props에 `Text = "a"`를 같이 두지 않는다 — 해시 파트 안의 순서는
-	-- 계약 밖(dispatch-core "배열→해시 순서"만 약속)이라 그 초기 대입이 이
-	-- 콜백을 깨울지가 비결정(`H10-11`). spec은 바인드 뒤의 변경만 본다.
 	local seen = {}
+	local seen2 = {}
 	local b = q.D.TextButton({
-		[OnChange("Text")] = function(v)
+		Text = "a", -- 해시 파트 — 배열부의 Connect 뒤에 대입되므로 초기값도 콜백에 닿는다(계약)
+		OnChange("Text", function(v)
 			table.insert(seen, v)
-		end,
+		end),
+		OnChange("Text", function(v)
+			table.insert(seen2, v)
+		end),
 	})
-	assert(#seen == 0, "no call at bind time (no property write in the same props)")
+	assert(#seen == 1 and seen[1] == "a", "initial-value firing: the same props' property write reaches the callback (array before hash)")
+	assert(#seen2 == 1 and seen2[1] == "a", "same name twice — both bound (no silent last-wins)")
 	b.Text = "b"
-	b.Text = "c"
-	assert(#seen == 2 and seen[1] == "b" and seen[2] == "c", "callback gets the CURRENT value per change")
+	assert(#seen == 2 and seen[2] == "b" and #seen2 == 2, "later changes reach both")
 	b.Name = "x"
 	assert(#seen == 2, "other properties do not trigger it")
+	-- 길이 0 말단: 형제 자식 오프셋에 기여하지 않는다(H-39)
+	assert(q.Dispatch.getOffsetAt(b, 3) == 0, "descriptors contribute length 0")
 
+	local d = OnChange("Text", function() end)
+	assert(d.Name == "Text" and type(d.Callback) == "function", "descriptor shape { Name, Callback }")
+	assert(OnChange("Text", function() end) ~= d, "no cache — every call is a fresh value")
 	local ok, err = pcall(function()
-		return OnChange(42)
+		return OnChange(42, function() end)
 	end)
 	assert(not ok, "non-string name rejected")
 	mock.assertBlamesUser(err, SPEC_FILE, "OnChange(42)")
+	local ok2, err2 = pcall(function()
+		return OnChange("Text", "nope")
+	end)
+	assert(not ok2, "non-function callback rejected")
+	mock.assertBlamesUser(err2, SPEC_FILE, "OnChange(name, non-fn)")
 	print("PASS")
 end
 
 print()
-print("=== 5. OnChange H-27 — None으로 끄면 nil을 부르는 Connection이 심기지 않는다 ===")
+print("=== 5. OnChange store-bind — State<디스크립터> 교체·None으로 끄기·재연결·철거 ===")
 do
 	local calls = 0
-	local src = q.Source(function()
+	local src = q.Source(q.OnChange("Text", function()
 		calls += 1
-	end)
-	local b = q.D.TextButton({ [q.OnChange("Text")] = src })
+	end))
+	local b = q.D.TextButton({ src })
 	local sig = b:GetPropertyChangedSignal("Text")
-	assert(liveConnections(sig) == 1, "connected once")
+	assert(liveConnections(sig) == 1, "connected once through StoreBind unwrap")
 	b.Text = "b"
-	assert(calls == 1, "reactive callback fired")
+	assert(calls == 1, "reactive descriptor fired")
 
-	src:Set(q.None)
-	assert(liveConnections(sig) == 0, "H-27: no connection left after None")
-	b.Text = "c" -- 얼리리턴이 빠져 있었다면 여기서 attempt to call a nil value
+	src:Set(q.None) -- NoneHandler → nil → NilHandler(길이 0) — OnChange 핸들러엔 안 닿는다
+	assert(liveConnections(sig) == 0, "None disconnects, nothing new connected")
+	b.Text = "c"
 	assert(calls == 1, "off: nothing runs, nothing crashes")
 
-	src:Set(function(v)
+	src:Set(q.OnChange("Text", function()
 		calls += 10
-	end)
+	end))
 	b.Text = "d"
 	assert(calls == 11 and liveConnections(sig) == 1, "re-enabled with a single connection")
 
-	q.Dispatch.retractFrom(b, q.OnChange("Text"), 1)
+	q.Dispatch.retractFrom(b, 1, 1)
 	assert(liveConnections(sig) == 0, "retraction disconnects")
 	print("PASS")
 end
 
 print()
-print("=== 6. 교대 — 같은 이벤트 자리의 평문/State 교체가 연결을 하나로 유지, 다른 quad와 키 공유 ===")
+print("=== 6. 교대 — 같은 이벤트 자리의 평문/State 교체가 연결을 하나로 유지, OnChange 팩토리는 quad 간 공유 ===")
 do
 	local b = q.D.TextButton({ MouseButton1Click = function() end })
 	local sig = b.MouseButton1Click
@@ -186,9 +194,8 @@ do
 	src:Set(function() end) -- 같은 자리 재발행: Disconnect+Connect 1회(churn 허용, dedup 없음)
 	assert(liveConnections(sig) == 1, "re-emission keeps one connection")
 
-	-- OnChange 키 팩토리는 모듈 레벨 — 두 quad 인스턴스가 같은 키를 본다
 	local q2 = Quad.New():UseProvider(QuadRoblox)
-	assert(q2.OnChange("Text") == q.OnChange("Text"), "module-level cache: keys are shared across quad instances")
+	assert(q2.OnChange == q.OnChange, "module-level factory shared across quad instances")
 	print("PASS")
 end
 

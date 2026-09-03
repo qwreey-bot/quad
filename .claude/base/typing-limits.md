@@ -667,6 +667,49 @@ A/B 실측). 실사용은 `quad-types`의 `TagConstructor`/`AttributeConstructor
 
 ---
 
+## 8.7. 이름을 인자로 받는 팩토리의 타이핑은 `K & keyof<Map>` + `index<Map, K>`로 — 큰 싱글톤 유니언·오버로드 교집합은 안 된다
+
+**[2026-09-03 실측, `OnChange(name, fn)` 역전 — `luau-test/done/30-*`,
+실물 규모는 `quad-roblox/test/spec.onchangetypes.luau`]** "이름 문자열 +
+그 이름에 달린 타입의 콜백"을 받는 팩토리(`OnChange("Position", fn)`)를
+검증하려던 실측에서 갈린 것:
+
+1. **제네릭 `K`에 리터럴을 묶으면 싱글톤이 안 남는다** —
+   `f<K>(name: K)`에 `"Position"`을 주면 `K = string`. 반환 타입의
+   `Name: K`가 싱글톤 유니언과 대조될 수 없다. 인라인 테이블 리터럴
+   `{ Name = "Position" }`을 기대 타입 아래 두어도 같다(양방향 추론이
+   싱글톤을 못 지킨다).
+2. **큰 싱글톤 유니언을 `K &`로 교차하면 "Code is too complex"** —
+   `name: K & ("A" | "B" | … 235개)`는 자리표시자 규모에선 통과하고 실물
+   규모에서 죽는다(정규화). 이름·타입 쌍을 **오버로드 교집합**으로 찍는
+   것도 37개부터 죽는다.
+3. **⭐ 되는 것: `name: K & keyof<Map>`, `fn: (index<Map, K>) -> ()`** —
+   `keyof<>`가 같은 235-유니언인데도 `index<>`와 짝이면 통과한다. 이름 오타
+   (`Property '"Positon"' does not exist`)와 콜백 파라미터 타입 불일치가
+   호출 자리에서 잡히고, **무주석 콜백의 파라미터가 추론된다**(`index<>`가
+   파라미터 타입을 직접 만들어 주므로 — §7·`type-recursive-issue-try-callback/`
+   의 "제네릭 콜백 인자에 컨텍스트가 안 흐른다"의 예외). 맵에서 이름이
+   클래스마다 다른 타입이면 `any`로 찍을 것 — `index<>`가 유니언을 주면
+   주석 콜백이 반공변으로 거부된다.
+4. **클래스 소속은 생성자 쪽 유니언으로** — `{ Name: "Position", Callback:
+   (UDim2) -> () } | …`(클래스당 수십 멤버)를 `E`에 넣으면 클래스 밖 이름이
+   생성자 자리에서 거부된다. 다만 **Color3/string처럼 멤버가 많은 타입의
+   콜백은 `LuauSubtypingIterationLimit` 기본 한도를 넘는다** — 유일하게
+   유효한 레버가 이 플래그(5만이면 클린, `scripts/test.sh`가 10만을 실음;
+   `Simplification`/`Reasoning`/`SolverConstraint`/`SubtypingRecursion`/
+   `TypeSimplificationIteration`/`CartesianProduct` 한도는 무효, 멤버의
+   `Callback`을 `any`나 `read`로 바꿔도 무효). 클래스 밖 이름의 음성 경로엔
+   이 플래그를 얹어도 "too complex" 잡음이 에러와 함께 붙는다 — 에러 자체는
+   난다. 8.5절과 같이 에디터(luau-lsp) fflags에도 같은 키가 필요할 수 있다
+   (**[2026-09-03 기준] 아직 안 얹음**).
+5. **`State<T>`는 `Set` 파라미터 때문에 불변** — `Source<{Name: "Visible",
+   …}>`는 `State<FrameOnChange>`에 안 맞는다. 클래스 유니언으로 캐스트해
+   만든다(`q.Source(OnChange(...) :: FrameOnChange)`). 반응형 자식
+   `q.Source(frame)` vs `State<Instance>`도 같은 규칙이다(선행 한계 —
+   `q.Source(frame :: Instance)`).
+
+---
+
 ## 9. 미해결 / 추적 중
 
 - **[2026-08-19 설정 완료]** 에디터(`luau-lsp`)의 솔버 설정 — `luau-analyze`

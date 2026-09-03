@@ -1,76 +1,79 @@
 --[[
-	OnChange — the `GetPropertyChangedSignal` special key: `OnChange(name)` key
-	factory + its handler, one file (`base/onchange-plan.md` "확정" 절, as-is;
-	quad-roblox-owned because the signal lookup itself is the logic —
-	`architecture.md` "패키지 경계" 분할 기준).
+	OnChange — the `GetPropertyChangedSignal` binding as an ARRAY-PART VALUE:
+	`OnChange(propertyName, fn)` returns a descriptor the children array
+	carries, like `Tag(...)` and the lifecycle hooks (`base/onchange-plan.md`
+	"확정" 절, as-is — the 2026-09-03 reversal from the hash-key form
+	`[OnChange "x"] = fn`, `archive/onchange-hash-key-reversed.md`).
+	quad-roblox-owned because the signal lookup itself is the logic
+	(`architecture.md` "패키지 경계" 분할 기준).
 
-	  OnChange(propertyName) -> key       -- per-name weak cache: same name =
-	                                      -- same object while anything holds it
-	                                      -- (AttributeKey's exact technique;
-	                                      -- `OnChange "a" == OnChange "a"` is
-	                                      -- an intentionally observable fact)
-	  Frame { [OnChange "Position"] = function(v: UDim2) ... end }
+	  Frame {
+	      Text = "a",
+	      OnChange("Text", function(v: string) ... end),
+	      OnChange("Text", function(v) ... end),   -- same name twice is fine
+	      State<descriptor>,                        -- reactive via StoreBind
+	  }
 
-	No generic parameter — the callback's parameter type is written inline by
-	the caller (onchange-plan: a name-taking factory has no field for the
-	generator to pre-type; per-property codegen was rejected).
+	Descriptor = frozen `{ Name, Callback }`, branded in a module-local
+	weak-key set (Brand.luau's shape — quad-roblox never requires quad-base,
+	round14 Q3 (a)). No cache, no equality contract: every call is a fresh
+	value, so the same name in two array slots binds twice instead of the
+	hash-key form's silent last-wins.
 
-	Handler ("OnChange", NORMAL priority): matches on the KEY being an
-	OnChange key object (hash part; v not inspected — `nil` must match, see
-	below). process:
-	  v == nil  → `Void` (⭐ `H-27`: without this early return, turning a
-	              callback off with `None` would plant a Connection that calls
-	              `nil` the next time the property changes)
-	  otherwise → `inst:GetPropertyChangedSignal(name):Connect(function()
-	                v(inst[name]) end)`; the retractor closes over the
-	              Connection and disconnects it.
-	`State<function>` needs nothing here — StoreBind unwraps and re-dispatches
-	(`onchange-plan.md`, "새 메커니즘 없음"). No same-value dedup, same
-	reasoning as Handlers/Event.luau.
+	Handler ("OnChange", NORMAL priority): number key ∧ descriptor value
+	(`H-52` key guard). Terminal ⇒ registers its array position (`H-39`) as
+	None/0 like TagFallbackHandler — no physical element. process connects
+	`inst:GetPropertyChangedSignal(name):Connect(function() fn(inst[name]) end)`
+	and the retractor closes over the Connection and disconnects it. The
+	array part is driven BEFORE the hash part (`F-4-1`), so the binding is
+	live when the same props' property writes land — the "초기값 발화"
+	contract (onchange-plan; under Deferred signals that is one delivery per
+	write, reading the value at delivery time).
 
-	Key identity is a module-local weak-key set (Brand.luau's shape) rather
-	than a quad-base Brand: quad-roblox never requires quad-base (round14 Q3
-	(a)), and the key type is backend-local anyway.
+	No `v == nil` case here (`H-27` is moot in this shape — a `None`/`nil`
+	array element goes to NoneHandler/NilHandler, never to this handler), no
+	same-value dedup (`Connect` is not idempotent — Handlers/Event.luau
+	reasoning), no property-membership check (an unknown name raises the
+	engine's own error inside process — the generated `OnChangeFn` type
+	catches it statically first, D/init.luau).
+
+	Typing lives in the GENERATED file: `PropTypes` (property name → type
+	across the D scope), `OnChangeFn = <K>(name: K & keyof<PropTypes>,
+	fn: (index<PropTypes, K>) -> ()) -> …` — `RobloxExtension.OnChange`
+	carries that type over this untyped runtime (luau-test `30`).
 ]]
 
 local QuadTypes = require("../../luau_packages/quad_types")
 local Types = require("../types")
 local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 
-export type OnChangeKey = Types.OnChangeKey
+export type OnChangeDescriptor = Types.OnChangeDescriptor
 
 -- error namespace of the (first) installing quad — the factory is
--- module-level, so it borrows the namespace at install time (one quad-base
--- copy per process is the supported layout; a second copy shares the same
--- ErrorNamespace contract anyway)
+-- module-level and only reachable through an installed quad (`q.OnChange`)
 local errNS: any = nil
 
-local keys = setmetatable({} :: { [any]: true }, { __mode = "k" })
-local cache = setmetatable({} :: { [string]: any }, { __mode = "v" })
+local descriptors = setmetatable({} :: { [any]: true }, { __mode = "k" })
 
-local function isOnChangeKey(x: any): boolean
-	return keys[x] == true
+local function isOnChange(x: any): boolean
+	return descriptors[x] == true
 end
 
-local function OnChange(name: string): OnChangeKey
+local function OnChange(name: string, fn: (any) -> ()): OnChangeDescriptor
 	if type(name) ~= "string" then
-		-- errNS is set at install; the factory is only reachable through an
-		-- installed quad (`q.OnChange`)
 		errNS.errorBeforeNearest("OnChange: property name must be a string", SURFACE)
 	end
-	local cached = cache[name]
-	if cached ~= nil then
-		return cached
+	if type(fn) ~= "function" then
+		errNS.errorBeforeNearest(`OnChange("{name}"): callback must be a function`, SURFACE)
 	end
-	local key = table.freeze({ Name = name })
-	keys[key] = true
-	cache[name] = key
-	return (key :: any) :: OnChangeKey
+	local d = table.freeze({ Name = name, Callback = fn })
+	descriptors[d] = true
+	return (d :: any) :: OnChangeDescriptor
 end
 
 local function install(quad: any)
 	local dispatch = quad.Dispatch
-	local Void = quad.Void
+	local None = quad.None
 	if errNS == nil then
 		errNS = quad.errorNamespace
 		errNS.setFuncLevel(OnChange, SURFACE) -- `H-238`: public factory tagged
@@ -78,21 +81,22 @@ local function install(quad: any)
 
 	dispatch.addHandler({
 		name = "OnChange",
-		isHandlable = function(_inst: any, k: any, _v: any): boolean
-			return isOnChangeKey(k)
+		isHandlable = function(_inst: any, k: any, v: any): boolean
+			return type(k) == "number" and isOnChange(v)
 		end,
 		priority = dispatch.HANDLER_PRIORITY_NORMAL,
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
-			if v == nil then
-				return Void -- `H-27`
-			end
-			local name = k.Name
-			local callback = v :: (any) -> ()
+			-- `H-39`: terminal — no physical element, so the pair is None/0
+			dispatch.setOffsetSource(inst, k, None)
+			dispatch.setLength(inst, k, 0, inst)
+
+			local name = v.Name
+			local callback = v.Callback :: (any) -> ()
 			local connection = inst:GetPropertyChangedSignal(name):Connect(function()
 				callback(inst[name])
 			end)
 			return function(_nextValue: any?, _retracting: boolean)
-				connection:Disconnect()
+				connection:Disconnect() -- bookkeeping stays None/0 (Tag idiom)
 			end
 		end,
 	} :: QuadTypes.Handler)
@@ -100,6 +104,6 @@ end
 
 return {
 	OnChange = OnChange,
-	isOnChangeKey = isOnChangeKey,
+	isOnChange = isOnChange,
 	install = install,
 }

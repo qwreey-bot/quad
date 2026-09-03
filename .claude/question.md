@@ -147,8 +147,9 @@
   추가)**: 여러 Store를 한 번에 attribute로 묶는 그룹 프리미티브
   (`Attribute(store1, store2, ...)`, `Tag`와 동형)가 신설되면서, 기존
   단일 키 생성자 `Attribute<<T>>("name")`를 이름 충돌 방지를 위해
-  `AttributeKey<<T>>`로 잠정 리네임함(`OnChange`/`OnChangeKey`처럼 함수
-  이름과 반환 타입 이름이 분리된 기존 전례와 대칭) — 해석 모호성 자체는
+  `AttributeKey<<T>>`로 잠정 리네임함(`OnChange`/`OnChangeDescriptor`(구
+  `OnChangeKey`, 2026-09-03 배열부 역전)처럼 함수 이름과 반환 타입 이름이
+  분리된 기존 전례와 대칭) — 해석 모호성 자체는
   이미 없앴으니 급하지 않지만, 최종 이름은 여전히 이 목록의 다른
   가칭들과 함께 검토 대상. `base/attribute-plan.md` "그룹 `Attribute(...)`"
   절 참고.

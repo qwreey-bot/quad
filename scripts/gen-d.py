@@ -210,6 +210,11 @@ def emit():
     L.append("\t이벤트 콜백 | State<콜백> | None (None 표현은 H-300 (a) — QuadTypes.None).")
     L.append("\t이벤트 필드의 런타임 핸들러는 Handlers/Event.luau(M10, 2026-09-03 구현됨 —")
     L.append("\t`base/event-plan.md`); M5엔 타입이 먼저 왔다(ROADMAP M5 체크박스의 계약).")
+    L.append("\tOnChange(M10, 2026-09-03 역전 — base/onchange-plan.md): 배열부 디스크립터.")
+    L.append("\tPropTypes(스코프 전체 프로퍼티 이름 → 타입, 클래스 간 충돌 이름은 any) +")
+    L.append("\tOnChangeFn(`K & keyof<PropTypes>` / `index<PropTypes, K>` — 이름 오타·콜백")
+    L.append("\t타입·무주석 추론까지, luau-test 30) + 클래스별 <Class>OnChange 유니언이 E에")
+    L.append("\t합류(클래스 밖 이름은 생성자 자리에서 거부).")
     L.append("]]")
     L.append("")
     L.append('local QuadTypes = require("../luau_packages/quad_types")')
@@ -235,6 +240,37 @@ def emit():
             L.append(f"\t{ev['name']}: (({sig}) | State<{sig}> | None)?,")
         L.append("}")
         L.append("")
+    # OnChange 타이핑(onchange-plan 2026-09-03 역전, luau-test 30 실측):
+    #  - PropTypes: 스코프 전체 (이름 → 타입). 같은 이름이 클래스마다 다른
+    #    타입이면 `any`(index<>가 유니언을 주면 주석 콜백이 반공변으로 거부됨 —
+    #    실측 6건: Style/CanvasSize/Color/Offset/Transparency/Padding).
+    #  - 이름 싱글톤 유니언을 `K &`로 직접 교차하면 "too complex"(실측) —
+    #    `keyof<PropTypes>`는 같은 유니언이지만 index<>와 짝일 때만 통과했다.
+    prop_types = {}
+    for name in names:
+        for p in classes[name]["props"]:
+            prop_types.setdefault(p["name"], set()).add(p["type"])
+    L.append("-- OnChange — PropTypes(D 스코프 전체 프로퍼티 이름 → 타입; 클래스 간 충돌은 any)")
+    L.append("export type PropTypes = {")
+    for pname in sorted(prop_types):
+        ts = sorted(prop_types[pname])
+        L.append(f"\t{pname}: {ts[0] if len(ts) == 1 else 'any'},")
+    L.append("}")
+    L.append("export type OnChangeDescriptor<K> = { Name: K, Callback: (index<PropTypes, K>) -> () }")
+    L.append("export type OnChangeFn = <K>(name: K & keyof<PropTypes>, fn: (index<PropTypes, K>) -> ()) -> OnChangeDescriptor<K>")
+    L.append("")
+    for name in names:
+        c = classes[name]
+        L.append(f"export type {name}OnChange =")
+        members = [f'\t{{ Name: "{p["name"]}", Callback: ({p["type"]}) -> () }}' for p in c["props"]]
+        # 리뷰 반영: 프로퍼티가 0개인 클래스(지금은 없음 — 최소 Folder 4개)가
+        # 생기면 우변 없는 별칭이 찍혀 파일 전체가 깨진다 → never
+        L.append("\n\t| ".join(members) if members else "\tnever")
+        # 배열 원소 유니언은 클래스당 별칭 하나 — D/DMapper 타입과 런타임 캐스트
+        # 네 자리가 같은 별칭을 참조한다(손 나열 드리프트 방지, 리뷰 반영)
+        L.append(f"export type {name}Elem = NewChild | {name}OnChange | State<{name}OnChange>")
+        L.append(f"export type {name}MapperElem = {name}Elem | MapperDescriptor")
+        L.append("")
     L.append("-- D 네임스페이스 타입(H-305 (d′)) — `UseProvider` 확장 `RobloxExtension`이")
     L.append("-- 싣는 풀 타입 표면. 아래 런타임 별칭 캐스트와 1:1 — 손 나열 금지 계약대로")
     L.append("-- 생성기가 같이 찍는다.")
@@ -242,14 +278,14 @@ def emit():
     L.append("\tRoot: MapperRoot,")
     for name in names:
         L.append(
-            f"\t{name}: (key: string | MapperRoot) -> ({name}Param<NewChild | MapperDescriptor>) -> MapperDescriptor,"
+            f"\t{name}: (key: string | MapperRoot) -> ({name}Param<{name}MapperElem>) -> MapperDescriptor,"
         )
     L.append("}")
     L.append("export type D = {")
     L.append("\tNew: <T>(className: string) -> (props: any) -> T,")
     L.append("\tMapper: DMapper,")
     for name in names:
-        L.append(f"\t{name}: ({name}Param<NewChild>) -> {name},")
+        L.append(f"\t{name}: ({name}Param<{name}Elem>) -> {name},")
     L.append("}")
     L.append("")
     L.append("--[[ InitD(quad) — `UseProvider` 확장(`RobloxExtension.D`)으로 실린다")
@@ -280,10 +316,10 @@ def emit():
     L.append("\tlocal Mapper: { [string]: any } = { Root = quad.MapperRoot }")
     L.append("\tlocal D: { [string]: any } = { New = New, Mapper = Mapper }")
     for name in names:
-        L.append(f'\tD.{name} = (New("{name}") :: any) :: ({name}Param<NewChild>) -> {name}')
+        L.append(f'\tD.{name} = (New("{name}") :: any) :: ({name}Param<{name}Elem>) -> {name}')
     for name in names:
         L.append(
-            f'\tMapper.{name} = (quad.newMapperClass("{name}") :: any) :: (key: string | MapperRoot) -> ({name}Param<NewChild | MapperDescriptor>) -> MapperDescriptor'
+            f'\tMapper.{name} = (quad.newMapperClass("{name}") :: any) :: (key: string | MapperRoot) -> ({name}Param<{name}MapperElem>) -> MapperDescriptor'
         )
     L.append("\tquad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨")
     L.append("\treturn (D :: any) :: D")
