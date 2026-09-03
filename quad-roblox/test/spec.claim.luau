@@ -9,6 +9,7 @@
 local Quad = require("../luau_packages/quad_base")
 local QuadRoblox = require("../src").QuadRoblox
 local installProperty = require("../src/Handlers/Property")
+local installEvent = require("../src/Handlers/Event") -- M10: 문자열 키는 Event 리플렉션도 지난다
 local mock = require("../../quad-base/test/mock")
 local Instance = mock.Instance
 
@@ -21,6 +22,7 @@ local gameShim = mock.gameShim(REFLECTED)
 
 local q: any = Quad.New():UseProvider(QuadRoblox)
 ;(getfenv(installProperty) :: any).game = gameShim
+;(getfenv(installEvent) :: any).game = gameShim
 ;(getfenv(q.D.New) :: any).Instance = { new = mock.Instance.new }
 q.isInst = mock.isMockInstance
 

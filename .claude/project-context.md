@@ -30,7 +30,10 @@ fork 둘이 worktree에서 M6/M10을 mock 축으로 선행 구현했고 **메인
 (`audit/m6-remainder-studio-2026-09-03.md`), 정정 `H6-14`/`H6-15`; M6 잔여
 목록 전부 닫힘(소스는 round15 "이 fork 슬라이스 밖" 절). **같은 날 M10 엔진
 축 첫 단위**(Tag/Attribute 엔진 op — quad-roblox `EngineOps` + mockProvider,
-`H10-10`)까지 — M10 잔여 목록은 ROADMAP M10 배너가 소스** —
+`H10-10`)와 **둘째 단위**(Event/OnChange 핸들러 — `Handlers/Event.luau`·
+`Handlers/OnChange.luau`, `H-27`, 확장 `{ D, OnChange }`, `H10-13`; 사용자
+문항 `H10-11`·`H10-12`는 round16 표가 소스)까지 — M10 잔여 목록은 ROADMAP
+M10 배너가 소스(남은 건 InstanceShorthand, M11 이후 권고)** —
 **M4도 같은 방식의 자율 구간으로 2026-09-01 착수·종결**(사용자 조건부
 승인으로 규약 `qa-request/m4-implementation-round13-brief.md` §0 전량 (a)
 확정, 발견 `-round13.md`(`H-287`~; §4 열린 문항 0) — 단위 하나:

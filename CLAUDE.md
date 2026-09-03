@@ -17,7 +17,8 @@ M6(Slot)/M10(Tag·Attribute)을 mock 축으로 탐사 구현 후 **메인에 머
 `ROADMAP.md` M6/M10 배너가 소스). **같은 날 M6 잔여 마감 단위 완료**(공개
 CRUD 다섯·`collectLeaves`·quad-types `Slot<T>`·실기기 Deferred 축 실측까지 —
 M6 잔여 전부 닫힘, `H6-9`~`H6-24`, §4 회신 반영 완료) + **M10 엔진 축 첫 단위**(Tag/Attribute
-엔진 op 셋 실설치, `H10-10`)** —
+엔진 op 셋 실설치, `H10-10`) + **둘째 단위**(Event/OnChange 핸들러,
+`H10-13`; 사용자 문항 `H10-11`/`H10-12`)** —
 **M4는 같은 날 자율 구간으로 착수·종결**(사용자 조건부 승인 — 규약
 `.claude/qa-request/m4-implementation-round13-brief.md` §0 전량 (a), 발견
 `-round13.md`(`H-287`~; §4 열린 문항 0): `Dispatch/StoreBind.luau` +

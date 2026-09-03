@@ -1760,8 +1760,12 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > 이 배너다**(다른 문서는 여기를 가리킬 것): ~~EngineOps 실구현
 > addTag/removeTag/setAttribute~~(**[2026-09-03 완료 — 엔진 축 첫 단위]**
 > `EngineOps.luau` 셋 + mockProvider 편입 + `spec.tagattribute` + Studio 7/7
-> `audit/m10-engine-axis-studio-2026-09-03.md`, round16 `H10-10`), **Event/
-> OnChange 핸들러**(`H-27` 포함), **InstanceShorthand**(아래 체크박스 — 그
+> `audit/m10-engine-axis-studio-2026-09-03.md`, round16 `H10-10`), ~~**Event/
+> OnChange 핸들러**(`H-27` 포함)~~(**[2026-09-03 완료 — 엔진 축 둘째 단위]**
+> `Handlers/Event.luau`·`Handlers/OnChange.luau` + `spec.events` + Studio 8/8
+> `audit/m10-events-studio-2026-09-03.md`, round16 `H10-13`; 사용자 문항 둘
+> `H10-11`(초기 props 순서 계약)·`H10-12`(특수 키 strict 타이핑)은 round16
+> §표가 소스), **InstanceShorthand**(아래 체크박스 — 그
 > 항목이 스스로 "M11(Tween) 이후"를 권한다).
 > **[2026-09-03 아침 회신]** ① `AttributeGroupHandler` 부분 실패 롤백은
 > **닫혔다**(사용자 동의 — 문서화로 관리 안 함, `attribute-plan.md` 말미 확정
@@ -1781,13 +1785,13 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       위치 claim 배선 — 5라운드 `AT-1`에서 `(inst, groupValue) → k`로 확정해놓고
       의사코드에 안 들어가 있었다. **`nameClaims`보다 먼저** 해야 절반만 기록되는
       중간 상태가 안 생긴다
-- [ ] **[2026-08-24 `H-27`]** `OnChangeHandler.process`에 `v == nil` 얼리리턴 —
+- [x] **[2026-09-03 완료 — Studio 실측 3번 항목이 `None` 구간 무에러를 핀]** **[2026-08-24 `H-27`]** `OnChangeHandler.process`에 `v == nil` 얼리리턴 —
       없으면 `None`으로 콜백을 끄는 게 실제로는 **나중에 터질 Connection을 새로
       심는** 동작이 된다
 - [x] **[2026-09-03 편입 — 타입은 `H10-3` (d) `setmetatable<A,B>` 표기]** **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Tag`/`Attribute`
       필드 추가(위 M3 항목의 "마일스톤마다" 규칙)
-- [ ] `Handlers/Event.luau`(`ReflectionService` 기반 자동 판별)
-- [ ] `Handlers/OnChange.luau`(`OnChange(name)` 특수 키 팩토리+Handler,
+- [x] **[2026-09-03 완료 — `GetEventsOfClass` 디스크립터 `.Name`, 상속 포함, 프로퍼티 집합과 분리 실측]** `Handlers/Event.luau`(`ReflectionService` 기반 자동 판별)
+- [x] **[2026-09-03 완료]** `Handlers/OnChange.luau`(`OnChange(name)` 특수 키 팩토리+Handler,
       `GetPropertyChangedSignal` 바인딩 — 제네릭 없이 콜백 타입은 인라인
       명시, 이름별 weak 캐시로 `OnChange(a) == OnChange(a)` 동등성 보장
       (`AttributeKey`와 동일 기법), `base/onchange-plan.md`, 2026-08-10

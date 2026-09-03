@@ -44,4 +44,10 @@ export type Tween<T> = {
 
 export type NewChild = Instance | QuadTypes.State<Instance> | QuadTypes.None
 
+-- `OnChange(name)` key object (M10, `base/onchange-plan.md`) — frozen
+-- `{ Name }`, identity-cached per name (Handlers/OnChange.luau). Values bound
+-- to it are `(newValue) -> ()` callbacks (or State/None of one); the
+-- parameter type is written inline by the caller — no generic here by canon.
+export type OnChangeKey = { read Name: string }
+
 return {}

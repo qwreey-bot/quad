@@ -4,6 +4,14 @@
 레이어 없음, `Attribute`와 같은 패키지 배치). **[2026-08-11 아홉 번째
 세션 후속]** `AttributeKey`와 동일한 이름별 weak 캐시로
 `OnChange(a) == OnChange(a)` 동등성도 확정 — 아래 "확정" 절 참고.
+**[2026-09-03 구현됨]** `quad-roblox/src/Handlers/OnChange.luau`(M10 엔진 축
+둘째 단위, round16 `H10-13`) — "확정" 절 그대로(`H-27` 얼리리턴 포함, Studio
+실측 `audit/m10-events-studio-2026-09-03.md`). 구현 시 드러나 **사용자
+판정 대기**인 것 둘(round16 표가 소스): `H10-11` — 같은 props의 초기 프로퍼티
+대입이 이 콜백을 깨우는지가 해시 순서에 달림(base는 배열→해시 순서만
+약속) / `H10-12` — strict에서 `[OnChange "x"]` 키가 생성 `<Class>Param<E>`에
+타입으로 들어갈 자리가 없음(`AttributeKey`/`Tag` 키도 동일). 둘 다 정본
+정정이 아니라 새 계약·타입 표면 결정이라 여기엔 반영하지 않았다.
 
 ## 문제
 

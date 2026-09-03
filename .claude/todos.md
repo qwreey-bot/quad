@@ -41,9 +41,18 @@
    `session/2026-09-03-02-m6-remainder.md`.
    **[같은 날 M10 엔진 축 첫 단위 완료]** Tag/Attribute 엔진 op 셋을
    quad-roblox `EngineOps`에 설치(mockProvider도 같은 셋, `H10-10`, Studio
-   7/7 — `session/2026-09-03-03-m10-engine-axis.md`). **다음 단위: M10
-   잔여의 다음 항목** — 잔여 목록의 소스는 ROADMAP M10 배너, 여기서 다시
-   나열하지 않는다.
+   7/7 — `session/2026-09-03-03-m10-engine-axis.md`). **[같은 날 둘째
+   단위 완료]** Event/OnChange 핸들러(`Handlers/Event.luau`·`OnChange.luau`,
+   `H-27`, 확장 `{ D, OnChange }`, `spec.events`, Studio 8/8 —
+   `session/2026-09-03-04-m10-events.md`, round16 `H10-13`). **사용자 회신
+   대기 둘**(round16 표가 소스, 급하지 않음 — 둘 다 새 계약·타입 표면):
+   `H10-11` 같은 props의 초기 프로퍼티 대입이 `OnChange` 콜백을 깨우는지
+   (권고 (a) 계약 문서화) / `H10-12` 특수 키(`OnChange`/`AttributeKey`/`Tag`)
+   가 strict `<Class>Param<E>`에 타입으로 못 들어감. **다음 단위: M10 잔여는
+   InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
+   목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
+   (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지
+   않는다).
    아래는 M4 종결 기록:
 
    **[구 00번 — M4] ⭐⭐⭐ [2026-09-01 착수·종결] M4 자율 구현 구간 — 완료, M2·M3와 같은

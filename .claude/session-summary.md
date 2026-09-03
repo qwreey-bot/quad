@@ -2268,3 +2268,13 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   quad-types `Quad` op 필드, `spec.tagattribute` 신설·스텁 spec 셋 재편,
   Studio 7/7(`audit/m10-engine-axis-studio-2026-09-03.md`), round16
   `H10-10`. M10 잔여는 Event/OnChange·InstanceShorthand(ROADMAP M10 배너).
+
+- `session/2026-09-03-04-m10-events.md` **[M10 엔진 축 둘째 단위 —
+  Event/OnChange 핸들러]** 선행 실측으로 `GetEventsOfClass` 존재·모양 확인
+  뒤 `Handlers/Event.luau`(키 매치, `v == nil`이면 Connect 없음)·
+  `Handlers/OnChange.luau`(이름별 weak 캐시, `H-27` 얼리리턴) 전사, 확장
+  `{ D, OnChange }`, mock `declareEvents`, `spec.events` 6절, Studio 8/8
+  (`audit/m10-events-studio-2026-09-03.md`). 사용자 문항 둘 — `H10-11`(같은
+  props의 초기 대입이 OnChange를 깨우는지는 해시 순서)·`H10-12`(특수 키가
+  strict `<Class>Param<E>`에 안 들어감 — AttributeKey/Tag도 동일). M10 잔여는
+  InstanceShorthand(M11 이후 권고)뿐.

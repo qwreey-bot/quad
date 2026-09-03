@@ -4,7 +4,14 @@
 > 사용자가 "이벤트 연결은 다른 base 문서가 되어야 할 듯"이라고 직접
 > 지목한 부분. **내용은 옮기기만 했고 결정은 하나도 안 바뀜.**
 
-**상태**: base — 확정.
+**상태**: base — 확정. **[2026-09-03 구현됨]** `quad-roblox/src/Handlers/Event.luau`
+(M10 엔진 축 둘째 단위, round16 `H10-13`) — 아래 두 절 그대로. 판별 API는
+`ReflectionService:GetEventsOfClass`(디스크립터 `.Name`, 상속 포함,
+`GetPropertiesOfClass`와 집합이 겹치지 않음 — Studio 실측
+`audit/m10-events-studio-2026-09-03.md`). **같은 props 안에서 프로퍼티 대입과
+바인딩의 상대 순서는 계약 밖**이라는 점이 `OnChange` 쪽에서 문항으로 올라가
+있다(round16 `H10-11`) — 이벤트 자체는 프로퍼티 대입으로 발화하지 않아
+여기엔 영향 없음.
 
 **여기 없는 이벤트 관련 결정 하나**: 이벤트 *네이밍* 인체공학
 (`On.EventName` 도트액세스를 안 쓰고 평범한 문자열 키 + reflection을

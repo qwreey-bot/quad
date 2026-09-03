@@ -675,7 +675,9 @@ end
   **구현 디테일 캐비엇**: `None→nil`이 Roblox의 nil을 허용 안 하는 타입
   프로퍼티(Color3/number 등)에 도달하면 `inst[k] = nil`은 런타임 에러 —
   PropertyHandler 자신이 `v == nil`이면 셋을 건너뛰는 방어를 갖고 있어야
-  함(None 자체의 문제가 아니라 PropertyHandler 구현 디테일, M9/M10로 미룸).
+  함(None 자체의 문제가 아니라 PropertyHandler 구현 디테일, M9/M10로 미룸
+  — **[2026-09-03 M10 구현됨]** `quad-roblox/src/Handlers/Property.luau`의
+  `v == nil → Void` 얼리리턴, `spec.handlers` 9절; 마지막 쓴 값이 남는다).
 - **반환하는 retractor는 여기서 할 일이 없음** — `NoneHandler`는 `v==None`을
   매치했을 때 재귀 호출로 곧바로 `Dispatch.process(inst,k,nil,index+1)`을
   부르는 게 전부고 자기 자신이 들고 있는 별도 상태가 없어서(`Relate` 등

@@ -102,12 +102,33 @@ type Data = {
 	children: { Data },
 	changed: { [any]: Signal },
 	properties: { [any]: any },
+	events: { [string]: Signal }, -- lazily minted per declared event name (M10)
 	destroying: Signal,
 	destroyed: boolean,
 }
 
 local dataOf = setmetatable({}, { __mode = "k" }) :: { [any]: Data }
 local proxyOf = setmetatable({}, { __mode = "v" }) :: { [Data]: any }
+
+-- M10 (2026-09-03): engine events. Real instances expose `inst.MouseButton1Click`
+-- as an RBXScriptSignal AND Reflection lists it under `GetEventsOfClass`; the
+-- mock keeps both in step from ONE registry — a spec declares the event names
+-- of a class once (`mock.declareEvents`), then `inst[name]` on that class
+-- yields a Signal (lazily minted, per instance) and `gameShim`'s
+-- `GetEventsOfClass` returns `{ Name = ... }` descriptors for the same names.
+-- Flat by class name (no inheritance model in the mock).
+local declaredEvents: { [string]: { [string]: true } } = {}
+
+local function declareEvents(className: string, names: { string })
+	local set = declaredEvents[className]
+	if set == nil then
+		set = {}
+		declaredEvents[className] = set
+	end
+	for _, n in names do
+		set[n] = true
+	end
+end
 
 local methods = {}
 
@@ -148,6 +169,15 @@ local function getProxy(data: Data): any
 			elseif key == "Destroying" then
 				return data.destroying
 			else
+				local declared = declaredEvents[data.className]
+				if declared ~= nil and declared[key] then
+					local sig = data.events[key]
+					if sig == nil then
+						sig = newSignal()
+						data.events[key] = sig
+					end
+					return sig
+				end
 				return data.properties[key]
 			end
 		end,
@@ -174,6 +204,13 @@ local function getProxy(data: Data): any
 					table.insert(newParentData.children, data)
 				end
 			else
+				local declared = declaredEvents[data.className]
+				if declared ~= nil and declared[key] then
+					-- Roblox rejects assignment to a signal member; keep the mock's
+					-- read/write fidelity symmetric so `inst.Event = fn` cannot
+					-- pass under CLI and fail only in Studio (M10 리뷰 반영)
+					error(`{key} is an event of {data.className} and cannot be assigned`, 2)
+				end
 				data.properties[key] = value
 			end
 			fireChanged(data, key)
@@ -195,6 +232,7 @@ function Instance.new(className: string): MockInstance
 		children = {},
 		changed = {},
 		properties = {},
+		events = {},
 		destroying = newSignal(),
 		destroyed = false,
 	}
@@ -327,6 +365,9 @@ function methods.Destroy(inst: any)
 		methods.Destroy(getProxy(childData))
 	end
 	data.destroying:DisconnectAll()
+	for _, sig in data.events do
+		sig:DisconnectAll() -- event Connections die with the instance too (M10 리뷰 반영)
+	end
 	for _, sig in data.changed do
 		sig:DisconnectAll()
 	end
@@ -674,6 +715,18 @@ local function gameShim(reflected: { [string]: { any } })
 				GetPropertiesOfClass = function(_s: any, className: string): { any }
 					return reflected[className] or {}
 				end,
+				-- events come from the mock's own registry (`declareEvents`) so
+				-- Reflection and `inst[name]` never disagree
+				GetEventsOfClass = function(_s: any, className: string): { any }
+					local out: { any } = {}
+					for name in pairs(declaredEvents[className] or {}) do
+						table.insert(out, { Name = name })
+					end
+					table.sort(out, function(a: any, b: any)
+						return a.Name < b.Name
+					end)
+					return out
+				end,
 			}
 		end,
 	}
@@ -693,6 +746,7 @@ end
 return {
 	Instance = Instance,
 	isDestroyed = isDestroyed,
+	declareEvents = declareEvents,
 	gameShim = gameShim,
 	newSignal = newSignal,
 	isMockInstance = isMockInstance,

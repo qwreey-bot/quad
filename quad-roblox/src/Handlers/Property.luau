@@ -8,17 +8,22 @@
 	regular no-match error; no special wording, `H-148`) ∧ the key is a real
 	property of `inst.ClassName` per `ReflectionService:GetPropertiesOfClass`
 	(descriptor array with `.Name`, inherited included — Studio-measured
-	2026-09-02). Event keys are NOT properties in that API, so they fall
-	through — their handler arrives in M10 (`Handlers/Event.luau`); until
-	then an event key raises the regular no-match error instead of silently
-	assigning a callback onto a signal.
+	2026-09-02). Event keys are NOT properties in that API (measured
+	2026-09-03: `GetEventsOfClass` and `GetPropertiesOfClass` are disjoint),
+	so they fall through to `Handlers/Event.luau` — a separate handler at the
+	same NORMAL priority (M10). A string key that is neither raises the
+	regular no-match error.
 
 	process is one line (`inst[k] = v`) — hash keys touch no Length/Offset
 	bookkeeping (`H-39` is about ARRAY positions only). The retractor is
 	`Void`: a property cannot be "unset", and a descending-diff replacement
-	simply writes the next value. Deferred by canon:
-	  - `v == nil` skip-defense — `dispatch-core-plan.md` explicitly defers
-	    it to M9/M10 ("PropertyHandler 구현 디테일, M9/M10로 미룸").
+	simply writes the next value. `v == nil` (a `None` re-dispatch, or a
+	State that computed nil) SKIPS the write — `dispatch-core-plan.md`
+	"`None` 센티널" 절의 구현 디테일 캐비엇 (M10에서 채움, 2026-09-03):
+	`inst[k] = nil` on a non-nillable engine property (Color3/number …) is a
+	raw engine error inside `process`, which would leave the `H-103` NOOP
+	marker stuck on that key. The last written value stays (a property
+	cannot be unset). Deferred by canon:
 	  - `isTween(realv)` branch + 3-state relation slot — M11
 	    (`tween-plan.md`); this file grows that branch then.
 
@@ -63,6 +68,9 @@ local function install(quad: any)
 		end,
 		priority = dispatch.HANDLER_PRIORITY_NORMAL,
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
+			if v == nil then
+				return Void -- skip-defense (header) — never write nil into an engine property
+			end
 			inst[k] = v
 			return Void
 		end,
