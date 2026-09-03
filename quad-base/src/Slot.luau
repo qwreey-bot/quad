@@ -95,7 +95,15 @@ local function Init(module: any)
 	-- wrap: element-type whitelist gate (H-40) + State→wrapper-Slot. raw* only
 	-- ever see already-wrapped physical elements.
 	local function wrapElement(v: any): any
-		if isSlot(v) then return v end
+		if isSlot(v) then
+			-- round15 `H6-19`: a destroyed Slot must fail HERE (pre-pass), not
+			-- inside attachSlot after the array/ownership mutation — otherwise
+			-- Splice's batch gate is left On by the raise (통합 리뷰 재현).
+			if v._destroyed then
+				Err.errorBeforeNearest("Slot: destroyed Slot cannot be an element", SURFACE)
+			end
+			return v
+		end
 		if not isState(v) then
 			if module.isRef(v) or module.isPreRef(v) or module.isPostRef(v)
 				or module.isObserver(v) or module.isEffect(v) or module.isModifier(v) then
@@ -121,8 +129,24 @@ local function Init(module: any)
 		return el
 	end
 
-	-- (indexOfRaw / collectLeaves land with :List and Move/Swap/Extract/Splice
-	-- in later slices — omitted here so slice-2 analyze stays lint-clean.)
+	-- collectLeaves(slot, out?) — flatten the physical leaves a nested Slot
+	-- occupies, in order (`H-29`). The native* layer requires "the elements
+	-- that leave/move are passed as an array"; a nested-Slot element has no
+	-- such array of its own, so reposition/extract paths build it here.
+	local function collectLeaves(slot: any, out: { any }?): { any }
+		local acc: { any } = out or {}
+		for _, element in ipairs(slot._elements) do
+			if isSlot(element) then collectLeaves(element, acc)
+			else table.insert(acc, element) end
+		end
+		return acc
+	end
+
+	-- leavesOf(element): the array a native* op receives for ONE _elements
+	-- entry — the element itself, or its flattened leaves if it is a Slot.
+	local function leavesOf(element: any): { any }
+		return if isSlot(element) then collectLeaves(element) else { element }
+	end
 
 	-- reindexFrom: rewrite bk.indexOfElement from `from` to end. Every place
 	-- that shifts _elements calls this — regardless of materialization.
@@ -165,14 +189,48 @@ local function Init(module: any)
 		bk.offsetSetUpTo = math.min(bk.offsetSetUpTo, index - 1)
 	end
 
+	-- maybeRecompute — THE recompute gate for explicit calls (`H-119`): the
+	-- owner's batch Blocker and the reentry blocker are both honored; whatever
+	-- a skipped call would have done is recovered by the outer pass's rewind
+	-- through the cursors the caller already pulled (`dispatch-core-plan.md`).
+	-- Extracted 2026-09-03 (user-approved) — it was copy-pasted at every
+	-- raw* tail and the reconcile/List tails.
+	local function maybeRecompute(self: any, bk: any)
+		if BK.getBlocker(self):IsOn() or bk.recomputeBlocker:IsOn() then return end
+		BK.recompute(self, bk)
+	end
+
+	-- unbindObserverAt — a position's length observer (State-length slots
+	-- only; constants have none) goes with the position.
+	local function unbindObserverAt(bk: any, index: number)
+		local observer = bk.observers[index]
+		if observer then unbindLifetime(observer) end
+	end
+
+	-- vacate — the shared tail of the raw 3-family (rawRemove/rawUnmount/
+	-- rawDetach; extraction user-approved 2026-09-03, `slot-plan.md` "raw
+	-- 3형제"). The three differ ONLY in what happens before this call
+	-- (destroy? release ownership?); what is identical is that the position
+	-- ceases to exist: array + reverse map always, bookkeeping splice + gated
+	-- recompute only once materialized (`H-12`: bookkeeping is unconditional
+	-- after materialization, physical ops are what `_mounted` gates).
+	local function vacate(self: any, index: number, element: any, bk: any)
+		table.remove(self._elements, index)
+		reindexFrom(self, index)
+		bk.indexOfElement[element] = nil
+		if self._physicalTarget ~= nil then
+			spliceArraysDown(self, index)
+			maybeRecompute(self, bk)
+		end
+	end
+
 	-- ── attach 3-family ────────────────────────────────────────────────
 	local function makeBaseObserver(slot: any): any
 		return slot.Offset:Observer(function()
 			if slot._physicalTarget == nil then return end -- unmaterialized: swallow the install fire
 			local bk = BK.getBookkeeping(slot)
 			bk.offsetCacheValidUpTo, bk.offsetSetUpTo = 0, 0 -- base changed → all
-			if BK.getBlocker(slot):IsOn() or bk.recomputeBlocker:IsOn() then return end
-			BK.recompute(slot, bk)
+			maybeRecompute(slot, bk)
 		end)
 	end
 
@@ -203,10 +261,7 @@ local function Init(module: any)
 			end
 		end
 		blocker:OffWithoutEmit()
-		local bk = BK.getBookkeeping(slot)
-		if not bk.recomputeBlocker:IsOn() then
-			BK.recompute(slot, bk)
-		end
+		maybeRecompute(slot, BK.getBookkeeping(slot)) -- the batch gate just opened; only the reentry gate can still hold
 		if remountingList and slot._listObserver then
 			bindLifetime(physicalTarget, slot._listObserver)
 		end
@@ -259,12 +314,15 @@ local function Init(module: any)
 		return index
 	end
 
+	-- raw 3-family — two axes decide the head (destroy? / release ownership?),
+	-- the tail is `vacate` for all three (`slot-plan.md` "raw 3형제"):
+	--   rawRemove : release + DESTROY
+	--   rawUnmount: release + keep alive   ← the element leaves, reusable elsewhere
+	--   rawDetach : KEEP ownership + alive ← this Slot still holds it (_detached)
 	local function rawRemove(self: any, index: number)
 		local element = self._elements[index]
 		local bk = BK.getBookkeeping(self)
-		if bk.observers[index] then
-			unbindLifetime(bk.observers[index])
-		end
+		unbindObserverAt(bk, index)
 		releaseOwner(element, self)
 		if isSlot(element) then destroySlotTree(element)
 		elseif self._mounted then
@@ -272,60 +330,32 @@ local function Init(module: any)
 		else
 			module.nativeDispose(element)
 		end
-		table.remove(self._elements, index)
-		reindexFrom(self, index)
-		bk.indexOfElement[element] = nil
-		if self._physicalTarget ~= nil then
-			spliceArraysDown(self, index)
-			if not (BK.getBlocker(self):IsOn() or bk.recomputeBlocker:IsOn()) then
-				BK.recompute(self, bk)
-			end
-		end
+		vacate(self, index, element, bk)
 	end
 
 	local function rawUnmount(self: any, index: number)
 		local element = self._elements[index]
 		local bk = BK.getBookkeeping(self)
-		if bk.observers[index] then
-			unbindLifetime(bk.observers[index])
-		end
+		unbindObserverAt(bk, index)
 		releaseOwner(element, self)
 		if isSlot(element) then unmountSlotTree(element)
 		elseif self._mounted then
 			module.nativeExtract(self._mountedInst, BK.getOffsetAt(self, index), { element })
 		end
-		table.remove(self._elements, index)
-		reindexFrom(self, index)
-		bk.indexOfElement[element] = nil
-		if self._physicalTarget ~= nil then
-			spliceArraysDown(self, index)
-			if not (BK.getBlocker(self):IsOn() or bk.recomputeBlocker:IsOn()) then
-				BK.recompute(self, bk)
-			end
-		end
+		vacate(self, index, element, bk)
 	end
 
-	-- rawDetach: rawUnmount's "keep ownership" twin — Detach uses it.
 	local function rawDetach(self: any, index: number)
 		local element = self._elements[index]
 		local bk = BK.getBookkeeping(self)
-		if bk.observers[index] then
-			unbindLifetime(bk.observers[index])
-		end
-		-- releaseOwner NOT called — this Slot keeps holding it (slot._detached)
+		unbindObserverAt(bk, index)
+		-- releaseOwner NOT called — the one difference from rawUnmount: releasing
+		-- would let someone else claim what slot._detached still holds.
 		if isSlot(element) then unmountSlotTree(element)
 		elseif self._mounted then
 			module.nativeExtract(self._mountedInst, BK.getOffsetAt(self, index), { element })
 		end
-		table.remove(self._elements, index)
-		reindexFrom(self, index)
-		bk.indexOfElement[element] = nil
-		if self._physicalTarget ~= nil then
-			spliceArraysDown(self, index)
-			if not (BK.getBlocker(self):IsOn() or bk.recomputeBlocker:IsOn()) then
-				BK.recompute(self, bk)
-			end
-		end
+		vacate(self, index, element, bk)
 	end
 
 	-- rawReplace: keep the array position, swap the occupant (H-1/B-5).
@@ -390,9 +420,33 @@ local function Init(module: any)
 		arr[to] = v
 	end
 
+	-- invalidateFrom — raw* regulation 3 (`H-3`/`H-113`): after a permutation,
+	-- pull BOTH cursors to one before the lowest touched position — `math.min`
+	-- with the position itself is exactly the formula `H-113` disproved.
+	local function invalidateFrom(bk: any, lowest: number)
+		bk.offsetCacheValidUpTo = math.min(bk.offsetCacheValidUpTo, lowest - 1)
+		bk.offsetSetUpTo = math.min(bk.offsetSetUpTo, lowest - 1)
+	end
+
 	local function rawMove(self: any, fromIndex: number, toIndex: number)
 		if fromIndex == toIndex then return end
-		rotateInPlace(self._elements, fromIndex, toIndex)
+		local els = self._elements
+		if self._mounted then
+			-- raw* regulation 5·6: the physical op gets the flattened leaves and
+			-- runs only when mounted. Offsets are read BEFORE the permutation
+			-- (the cache describes the current layout). `toOffset` = the absolute
+			-- offset the block's first leaf has AFTER the move — the leaf array
+			-- is spliced like `_elements` is (remove at from, insert at to), so
+			-- moving down past `to` lands after `to`'s leaves minus our own.
+			local moving = leavesOf(els[fromIndex])
+			local fromOffset = BK.getOffsetAt(self, fromIndex)
+			local toOffset = BK.getOffsetAt(self, toIndex)
+			if fromIndex < toIndex then
+				toOffset += #leavesOf(els[toIndex]) - #moving
+			end
+			module.nativeMove(self._mountedInst, fromOffset, moving, toOffset)
+		end
+		rotateInPlace(els, fromIndex, toIndex)
 		local lo = math.min(fromIndex, toIndex)
 		reindexFrom(self, lo)
 		if self._physicalTarget == nil then return end
@@ -406,11 +460,57 @@ local function Init(module: any)
 		rotateInPlace(bk.lengthList, fromIndex, toIndex)
 		rotateInPlace(bk.sourceList, fromIndex, toIndex)
 		rotateInPlace(bk.observers, fromIndex, toIndex)
-		bk.offsetCacheValidUpTo = math.min(bk.offsetCacheValidUpTo, lo - 1)
-		bk.offsetSetUpTo = math.min(bk.offsetSetUpTo, lo - 1)
-		if not (BK.getBlocker(self):IsOn() or bk.recomputeBlocker:IsOn()) then
-			BK.recompute(self, bk)
+		invalidateFrom(bk, lo)
+		maybeRecompute(self, bk)
+	end
+
+	-- rawSwap: the O(1) pair exchange — the middle stays put (that is why
+	-- nativeSwap exists apart from nativeMove). Same regulations as rawMove.
+	local function rawSwap(self: any, indexA: number, indexB: number)
+		if indexA == indexB then return end
+		local els = self._elements
+		local lo, hi = math.min(indexA, indexB), math.max(indexA, indexB)
+		if self._mounted then
+			module.nativeSwap(
+				self._mountedInst,
+				BK.getOffsetAt(self, lo), leavesOf(els[lo]),
+				BK.getOffsetAt(self, hi), leavesOf(els[hi])
+			)
 		end
+		els[lo], els[hi] = els[hi], els[lo]
+		local bk = BK.getBookkeeping(self)
+		bk.indexOfElement[els[lo]], bk.indexOfElement[els[hi]] = lo, hi
+		if self._physicalTarget == nil then return end
+		for _, arr in { bk.lengthList, bk.sourceList, bk.observers } :: { any } do
+			arr[lo], arr[hi] = arr[hi], arr[lo]
+		end
+		invalidateFrom(bk, lo)
+		maybeRecompute(self, bk)
+	end
+
+	-- rawSplice: remove `removeCount` positions at `index` (alive — returned)
+	-- and insert `newElements` there. Composition of rawUnmount + rawAdd under
+	-- this Slot's batch Blocker, so the bookkeeping recompute runs ONCE at the
+	-- end (the CRUD table's "shift+recompute 1회" is the recompute half; the
+	-- physical ops stay per element — see round15 `H6-9`). Elements are
+	-- already wrapped/validated by the caller (`H-30`/`H-31` pre-pass).
+	local function rawSplice(self: any, index: number, removeCount: number, newElements: { any }): { any }
+		local removed = {}
+		local gate = if self._physicalTarget ~= nil then BK.getBlocker(self) else nil
+		local ownsGate = gate ~= nil and not gate:IsOn()
+		if ownsGate then gate:On() end
+		for i = index + removeCount - 1, index, -1 do
+			table.insert(removed, 1, self._elements[i])
+			rawUnmount(self, i)
+		end
+		for k, element in ipairs(newElements) do
+			rawAdd(self, element, index + k - 1)
+		end
+		if ownsGate then
+			gate:OffWithoutEmit()
+			maybeRecompute(self, BK.getBookkeeping(self))
+		end
+		return removed
 	end
 
 	-- releaseElement: disposition of a pushed-out/removed element — Owned decides.
@@ -457,6 +557,16 @@ local function Init(module: any)
 		unbindLifetime(slot._baseObserver)
 		slot._mounted, slot._mountedInst = false, nil
 		slot._physicalTarget = nil
+		-- round15 `H6-19` (통합 리뷰 재현): restore the UNMATERIALIZED invariant.
+		-- Position bookkeeping (lengthList/sourceList/observers/N + offset cache)
+		-- is rebuilt from scratch by the next materializeSlotTree, and CRUD while
+		-- unmounted maintains only _elements/indexOfElement — a stale `N` from the
+		-- old mount would make the next recompute walk positions that no longer
+		-- exist (inflated Length, wrong sibling offsets). `bk` itself, its
+		-- indexOfElement and recomputeBlocker survive (`H-232` remount contract).
+		bk.lengthList, bk.sourceList, bk.observers, bk.N = {}, {}, {}, nil
+		bk.offsetCache = {}
+		bk.offsetCacheValidUpTo, bk.offsetSetUpTo = 0, 0
 	end
 
 	function destroySlotTree(slot: any)
@@ -499,21 +609,113 @@ local function Init(module: any)
 		self._crudUsed = true
 	end
 
+	-- checkIndex: fail-fast, no clamping (CRUD table "에러 조건"). `allowEnd`
+	-- admits n+1 (an insertion position — Add/Splice); otherwise 1..n.
+	local function checkIndex(self: any, index: any, surface: string, allowEnd: boolean?)
+		local n = #self._elements
+		local limit = if allowEnd then n + 1 else n
+		if type(index) ~= "number" or index < 1 or index > limit or index % 1 ~= 0 then
+			Err.errorBeforeNearest(surface .. ": index out of range", SURFACE)
+		end
+	end
+
+	-- prepareElements: the validation PRE-PASS for CRUD that takes new
+	-- elements (`H-30`/`H-31`) — wrap (type gate) + "already mounted" + no
+	-- duplicates within the batch, all BEFORE any raw* mutates. The wrapped
+	-- results are what raw* receives (never wrapped twice).
+	-- ⚠️ The checks run on the RAW values (round15 `H6-19`, 통합 리뷰): a State
+	-- element is wrapped into a fresh Slot, so checking the wrapper would be
+	-- vacuous — the same State twice, or a State whose current value is
+	-- already mounted, would pass here and raise from reconcile depth
+	-- mid-mutation. For a State the occupant to check is its current value.
+	local function prepareElements(surface: string, count: number, ...: any): { any }
+		local prepared, seen = table.create(count), {}
+		for i = 1, count do
+			local raw = (select(i, ...))
+			if raw ~= nil and seen[raw] then
+				Err.errorBeforeNearest(surface .. ": the same element appears twice", SURFACE)
+			end
+			local element = wrapElement(raw) -- type gate (nil/None/handler-layer/isInst)
+			seen[raw] = true
+			local occupant = if element ~= raw then raw:Get() else raw
+			if occupant ~= nil and elementOwner:GetWeak(occupant, OWNER) ~= nil then
+				Err.errorBeforeNearest(surface .. ": this element is already mounted — multiple mounts are not allowed", SURFACE)
+			end
+			prepared[i] = element
+		end
+		return prepared
+	end
+
 	function Slot_mt.Add(self: any, element: any, index: number?): number
 		assertLive(self); assertManual(self)
-		local n = #self._elements
-		if index ~= nil and (index < 1 or index > n + 1) then
-			Err.errorBeforeNearest("Slot:Add: index out of range", SURFACE)
-		end
-		return rawAdd(self, wrapElement(element), index)
+		if index ~= nil then checkIndex(self, index, "Slot:Add", true) end
+		return rawAdd(self, prepareElements("Slot:Add", 1, element)[1], index)
 	end
 
 	function Slot_mt.Remove(self: any, index: number)
 		assertLive(self); assertManual(self)
-		if index < 1 or index > #self._elements then
-			Err.errorBeforeNearest("Slot:Remove: index out of range", SURFACE)
-		end
+		checkIndex(self, index, "Slot:Remove")
 		rawRemove(self, index)
+	end
+
+	-- Replace: same position, new occupant, old one DESTROYED — Extract's
+	-- destroy twin (`B-5`). Public Replace always destroys (`destroyOld = true`).
+	function Slot_mt.Replace(self: any, index: number, newElement: any)
+		assertLive(self); assertManual(self)
+		checkIndex(self, index, "Slot:Replace")
+		local prepared = prepareElements("Slot:Replace", 1, newElement)
+		rawReplace(self, index, prepared[1], true)
+	end
+
+	-- Extract(index, newElement?): alive removal. Without `newElement` the
+	-- tail is pulled in (O(n)); with it the position is swapped in place
+	-- (O(1)). Returns the previous element, unwrapped.
+	function Slot_mt.Extract(self: any, index: number, newElement: any?): any
+		assertLive(self); assertManual(self)
+		checkIndex(self, index, "Slot:Extract")
+		local old = self._elements[index]
+		if newElement ~= nil then
+			local prepared = prepareElements("Slot:Extract", 1, newElement)
+			rawReplace(self, index, prepared[1], false)
+		else
+			rawUnmount(self, index)
+		end
+		return unwrapElement(old)
+	end
+
+	-- Splice(index, removeCount, ...newElements): alive removal of a span +
+	-- insertion in its place, one recompute. `index` ranges like Add (1..n+1);
+	-- `removeCount` must fit what is actually there — no clamping.
+	function Slot_mt.Splice(self: any, index: number, removeCount: number, ...: any): { any }
+		assertLive(self); assertManual(self)
+		checkIndex(self, index, "Slot:Splice", true)
+		if type(removeCount) ~= "number" or removeCount < 0 or removeCount % 1 ~= 0
+			or index + removeCount - 1 > #self._elements then
+			Err.errorBeforeNearest("Slot:Splice: removeCount out of range", SURFACE)
+		end
+		local prepared = prepareElements("Slot:Splice", select("#", ...), ...)
+		local removed = rawSplice(self, index, removeCount, prepared)
+		for i, element in ipairs(removed) do
+			removed[i] = unwrapElement(element)
+		end
+		return removed
+	end
+
+	-- Move/Swap: reposition only — no ownership change, no Parent op on
+	-- Roblox (`nativeMove`/`nativeSwap` are no-ops there). void by design:
+	-- the caller already knows the positions.
+	function Slot_mt.Move(self: any, oldIndex: number, newIndex: number)
+		assertLive(self); assertManual(self)
+		checkIndex(self, oldIndex, "Slot:Move")
+		checkIndex(self, newIndex, "Slot:Move")
+		rawMove(self, oldIndex, newIndex)
+	end
+
+	function Slot_mt.Swap(self: any, indexA: number, indexB: number)
+		assertLive(self); assertManual(self)
+		checkIndex(self, indexA, "Slot:Swap")
+		checkIndex(self, indexB, "Slot:Swap")
+		rawSwap(self, indexA, indexB) -- Swap(i, i) is a no-op inside
 	end
 
 	function Slot_mt.Get(self: any, index: number): any
@@ -673,8 +875,7 @@ local function Init(module: any)
 
 			if ownsGate then
 				blocker:OffWithoutEmit()
-				local bk = BK.getBookkeeping(self)
-				if not bk.recomputeBlocker:IsOn() then BK.recompute(self, bk) end
+				maybeRecompute(self, BK.getBookkeeping(self))
 			end
 		end
 
@@ -712,8 +913,7 @@ local function Init(module: any)
 		-- if already materialized, activate now (mount is a one-shot event)
 		if self._physicalTarget then
 			self:_activateList(self._physicalTarget)
-			local bk = BK.getBookkeeping(self)
-			if not bk.recomputeBlocker:IsOn() then BK.recompute(self, bk) end
+			maybeRecompute(self, BK.getBookkeeping(self))
 		end
 		return self
 	end
@@ -741,8 +941,11 @@ local function Init(module: any)
 		self._baseObserver = makeBaseObserver(self)
 		if initial ~= nil then
 			self._crudUsed = true
+			-- Not `self:Add(v)` — the tagged Add would then be the nearest tagged
+			-- frame and blame THIS line instead of the user's `Slot{…}` (round15
+			-- `H6-19`). Same pre-pass + raw* as Add, called directly.
 			for _, v in ipairs(initial) do
-				self:Add(v)
+				rawAdd(self, prepareElements("Slot", 1, v)[1])
 			end
 		end
 		return self
@@ -779,7 +982,19 @@ local function Init(module: any)
 	-- runs after InitDispatch), and _slotInternal above is ready.
 	require("./Dispatch/Slot").register(Dispatch, module)
 
-	for _, fn in { dispose } :: { any } do
+	-- `H-238`: public surface tagged so argument-validation raises (Nearest)
+	-- blame the user's line, not this file. All are table-stored (module field
+	-- / metatable methods) — the spike-27 inlining rule holds. (round15
+	-- `H6-10`: the fork tagged only `dispose`; the same gap `H10-7` closed
+	-- for Tag/Attribute.)
+	for _, fn in
+		{
+			Slot, dispose,
+			Slot_mt.Add, Slot_mt.Remove, Slot_mt.Replace, Slot_mt.Extract, Slot_mt.ExtractAll,
+			Slot_mt.Splice, Slot_mt.Clear, Slot_mt.Move, Slot_mt.Swap,
+			Slot_mt.List, Slot_mt.Single,
+		} :: { any }
+	do
 		Err.setFuncLevel(fn, SURFACE)
 	end
 end

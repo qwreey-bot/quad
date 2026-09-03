@@ -234,6 +234,54 @@ export type Store<T> = T & {
 	__reservedCheck: CheckReservedKeys<keyof<T>>,
 }
 
+-- ── Slot (M6, `H-25`의 "마일스톤마다 갱신" 몫 — 2026-09-03 잔여 마감) ────
+-- 계약 정본은 `base/slot-plan.md` "CRUD API 확정" 표와 "`Slot:List(...)`" 절.
+-- 요소 자리는 `T | State<T> | Slot<T>`(반응형 raw 요소는 내부 `:Single` 래퍼로,
+-- 중첩은 Slot-in-Slot) — 같은 인자의 자기 참조라 `Ref<T>`처럼 안전하다
+-- (`typing-limits.md` §1 "정확한 경계" 표: 한계는 **다른** 인자로 자기를
+-- 돌려줄 때다).
+-- 조회(`Get`/`IndexOf`/`Extract`류 반환)는 언래핑된 원래 값이 온다.
+export type SlotElement<T> = T | State<T> | Slot<T>
+export type SlotListOpts = { Owned: boolean? }
+-- `updateFn(item, index, offset, prev, userdata) -> (result, userdata)`: `result`는
+-- 요소 | nil/None(파괴) | Detach(홀드). `item`엔 `KeyGone` 센티널도 온다.
+-- (별도 alias로 빼지 않는다 — `Slot<T>`↔`SlotElement<T>` 재귀 그룹 안에서
+-- 메소드 제네릭 `<Item, UD>`를 인자로 받는 alias는 "다른 파라미터의 재귀"로
+-- 거부된다 — 2026-09-03 실측, typing-limits §1①과 같은 제약.)
+export type Slot<T> = {
+	Length: Source<number>,
+	Offset: Source<number>,
+	Add: (self: Slot<T>, element: SlotElement<T>, index: number?) -> number,
+	Remove: (self: Slot<T>, index: number) -> (),
+	Replace: (self: Slot<T>, index: number, newElement: SlotElement<T>) -> (),
+	Extract: (self: Slot<T>, index: number, newElement: SlotElement<T>?) -> SlotElement<T>,
+	ExtractAll: (self: Slot<T>) -> { SlotElement<T> },
+	Splice: (self: Slot<T>, index: number, removeCount: number, ...SlotElement<T>) -> { SlotElement<T> },
+	Clear: (self: Slot<T>) -> (),
+	Move: (self: Slot<T>, oldIndex: number, newIndex: number) -> (),
+	Swap: (self: Slot<T>, indexA: number, indexB: number) -> (),
+	Get: (self: Slot<T>, index: number) -> SlotElement<T>?,
+	IndexOf: (self: Slot<T>, element: SlotElement<T>) -> number?,
+	List: <Item, UD>(
+		self: Slot<T>,
+		data: { Item } | State<{ Item }>,
+		updateFn: (item: Item | KeyGone, index: number, offset: Source<number>, prev: SlotElement<T>?, userdata: UD?) -> (any, UD?),
+		keyFn: ((item: Item, index: number) -> any)?,
+		opts: SlotListOpts?
+	) -> Slot<T>,
+	Single: <UD>(
+		self: Slot<T>,
+		state: T? | State<T?>,
+		updateFn: ((item: T | KeyGone, offset: Source<number>, prev: SlotElement<T>?, userdata: UD?) -> (any, UD?))?,
+		opts: SlotListOpts?
+	) -> Slot<T>,
+}
+-- 센티널 둘 — `None`과 같은 신원 값(재export). 런타임 마커 필드가 아직 없어
+-- 좁힘용 구조 타입은 못 둔다(`H-300`이 None에 준 마커의 Slot 몫은 round15
+-- §4 문항 — 빈 테이블 타입은 그때까지의 자리표시).
+export type Detach = {}
+export type KeyGone = {}
+
 export type Quad = {
 	Version: "0.0.0", -- quad-base/pesde.toml의 version과 항상 맞출 것
 	debug: boolean,
@@ -286,10 +334,17 @@ export type Quad = {
 	-- 주입 엔진 op(`architecture.md` EngineOps) — `Effect._bindDestroying`이 부른다. 미주입이면 에러 스텁.
 	onDestroying: (inst: any, fn: () -> ()) -> { Connected: boolean, Disconnect: (self: any) -> () },
 
+	-- Slot 표면(M6 — `H-25` 몫, 2026-09-03). `Slot(initial?)`은 `:Add` 반복 sugar.
+	-- `dispose`는 quad 관리 값을 지우는 유일한 안전 경로(마운트 중이면 error).
+	Slot: <T>(initial: { SlotElement<T> }?) -> Slot<T>,
+	Detach: Detach,
+	KeyGone: KeyGone,
+	dispose: (value: any) -> (),
+	isSlot: (x: any) -> boolean,
+
 	-- 브랜드 술어(`.claude/base/brand-plan.md`). `isTag`/`isAttribute*`는
-	-- M10 편입(2026-09-03)으로 아래 합류 — 나머지(`isTween`/`isSlot`)는
-	-- 그 타입의 마일스톤에서(`isSlot` 값은 이미 M6 편입으로 module에 산다 —
-	-- `Quad` 타입 등재는 M6 잔여 `H-25` 몫과 함께).
+	-- M10 편입(2026-09-03)으로 아래 합류, `isSlot`은 위 Slot 표면과 함께 —
+	-- 남은 것은 `isTween`(그 타입의 마일스톤에서).
 	isEpoch: (x: any) -> boolean,
 	isSource: (x: any) -> boolean,
 	isState: (x: any) -> boolean,

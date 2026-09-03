@@ -251,6 +251,13 @@ v2 트리 안에 과거 v1 컴포넌트를 리프로 박아넣는 것, (B) 기�
   (그냥 `:Destroy()`인지, 다른 처리인지)도 문서 밖 — 7-1에서 제안한
   "직접 Destroy 금지, Unmount 경유" 규칙을 Dispatch 엔진의 어느 지점에
   훅으로 강제할지도 Slot 실제 구현 시점 확인 필요.
+- **[2026-09-03 현황]** 위 둘 중 **첫째는 확인됐다** — M6 Slot 코어가
+  실재하고 `isInst`만 보므로 quad 밖 Instance도 요소로 받아들여진다(갈래는
+  `question.md`의 Slot foreign 항목, (a) 자동 claim 권고로 회신 대기).
+  **둘째(그 요소에 대한 retract "폐기"의 정확한 동작)는 여전히 미확인** —
+  현 구현은 `Remove`가 `nativeRemove`(= `Destroy`)이고 `Owned = false`
+  경로만 언마운트라, 7-1의 "Unmount 경유" 훅 자리는 v1-compat 착수 때
+  정할 몫. 아래 결론은 그 둘째에 대해서만 유효하다.
 - **결론: 지금 결정 불가.** M0 이후 Slot 코어 로직 구현 라운드
   (`archive/question-resolved.md`의 `여러 Slot이 형제로 섞일 때 순서 보장`
   항목과 같은 시점 — 이미 해소돼 아카이브로 옮겨졌으나 실제 구현 시점의

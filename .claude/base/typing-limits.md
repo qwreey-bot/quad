@@ -121,6 +121,14 @@ local wrong: number = s:Get()   -- ❌이어야 하는데 에러 안 남
 즉 구멍은 정확히 **"그 한 줄이 진짜 그 타입을 만드는가"** 하나로
 좁혀집니다.
 
+**[2026-09-03 실측 각주, M6 `Slot<T>` 타입(round15 `H6-18`)]** 위 표의 첫 행
+"같은 인자로만 재귀"에는 **상호 재귀 alias 그룹**도 포함된다 —
+`Slot<T>` ↔ `SlotElement<T> = T | State<T> | Slot<T>`는 정상이다. 단 그
+그룹 안에서 **메소드 제네릭을 인자로 받는 alias**(`SlotUpdateFn<Item, T, UD>`를
+`List: <Item, UD>(…)` 안에서 쓰는 형태)는 "Recursive type being used with
+different parameters"로 **거부**된다(에러 — 조용한 손실은 아님). 처방은 그
+alias를 메소드 시그니처에 인라인하는 것(`quad-types/src/init.luau`의 `Slot<T>`).
+
 ### 그래서 우리가 하는 것 — ① 명시적 타입 바인딩 강제
 
 **파생 State를 만드는 자리마다 결과 타입을 `:` 주석으로 명시합니다.**
@@ -516,7 +524,10 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
 - **`Source<T>`가 `State<T>`를 구조적으로 만족**(서브타입으로 그대로
   넘길 수 있음) — `luau-test/done/08`. 단 **단방향 의존을
   유지해야 함**(`State<T>`가 `Source`를 참조하면 안 됨 — 두 제네릭
-  별칭의 상호 재귀는 솔버가 취약한 패턴).
+  별칭의 상호 재귀는 솔버가 취약한 패턴. **[2026-09-03 범위 한정]** 이
+  경고는 **서브타입 호환이 걸린 쌍**에 한한다 — 같은 인자로만 도는 순수
+  데이터 조합의 상호 재귀 그룹(`Slot<T>` ↔ `SlotElement<T>`)은 정상, §1
+  "정확한 경계" 각주와 §8 8번).
 - **`PreRef<T>`가 `Ref<T>` 자리에 대입 가능** — `luau-test/13` A섹션.
   **[2026-08-14 아홉 번째 세션] `PostRef<T>`도 완전히 같은 관계**(같은
   `Ref` 런타임 재사용, 브랜드 태그만 다름 — `base/ref-plan.md`의
@@ -595,6 +606,11 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
    걸림. 그 `type function`이 원본 타입을 조금이라도 반환하면(패스스루
    포함) 안 됨 — 검사 결과는 원본과 절대 안 섞이는 별도 필드로 격리하고,
    원본 타입 자체는 `type function`을 아예 거치지 않게 할 것.
+8. **[2026-09-03 신설, `H6-18`] 상호 재귀 alias 그룹(`Slot<T>` ↔
+   `SlotElement<T>`류) 안에서 메소드 제네릭(`<Item, UD>`)을 인자로 받는
+   alias를 따로 뽑았는가?** → "Recursive type being used with different
+   parameters"로 **거부**된다. 그 시그니처는 메소드 자리에 인라인할 것
+   (§1 "정확한 경계" 각주).
 
 > **실측 방법 주의**: `luau-analyze`가 진단 0건이어도 타입이 제대로
 > 해소됐다는 뜻이 아닙니다(1번이 정확히 그 사례). **`luau-analyze

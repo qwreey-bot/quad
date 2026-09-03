@@ -2244,3 +2244,15 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   setmetatable + __call 인자 무검사), attribute-plan error 계약 이관,
   question.md 두 항목 현황(Slot foreign — 확인 시점 도래 / AttributeGroup
   롤백 이월). 아침 검토용 문제점·후행 목록은 세션 파일이 소스.
+
+- `session/2026-09-03-02-m6-remainder.md` **[M6 잔여 마감 — 자율 구간 첫
+  단위]** 공개 CRUD 다섯(`Move`/`Swap`/`Extract`/`Replace`/`Splice`) +
+  `collectLeaves` + `rawSwap`/`rawSplice`, raw 3형제 꼬리 공용화(사용자
+  승인 — `vacate`/`maybeRecompute`), quad-types `Slot<T>`(`H-25`), `H-238`
+  태깅(`H6-10`), spec 17~21(KeyGone 세 갈래 포함). 정정: `Handlers/Slot.luau`는
+  native* 층에 흡수(`H6-14`), `H-286` ② 기각(`H6-15`). 끝 절차: 감사 3라운드
+  수렴(13→6→1), `/code-review medium` 확정 6 → `H6-19` ① 묶음(Splice 게이트
+  누수 경로·State 선행 검증·언마운트 부기 리셋·생성자 blame)+`H6-20` ②, 탐사자 `H6-21`(reconcile 예외 자리 문서화)·`H6-22`(pesde 심 재생성). §4
+  문항 넷(`H6-9` Splice 단일 물리 op / `H6-12` 래퍼 이탈 소유권 / `H6-16`
+  센티널 마커 / `H6-20` nativeSwap 계약) — 막는 것 아님. 실기기 Deferred 축도 같은 날 Studio 실측
+  (`audit/m6-remainder-studio-2026-09-03.md` 11/11) — M6 잔여 전부 닫힘.

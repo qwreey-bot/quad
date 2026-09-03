@@ -77,6 +77,12 @@ quad/
 - **`pesde install`은 워크스페이스 루트에서 한 번**만 돌리면 **모든
   워크스페이스 멤버**가 스캔·링크됨(개수는 `architecture.md`의
   `workspace_members`가 소스 — 새 멤버가 늘어도 이 동작은 안 바뀜).
+  - **⚠️ [2026-09-03 실측, round15 `H6-22`] `quad-types`에 `export type`을
+    추가하면 `pesde install`을 다시 돌려야 한다.** 소비자가 require하는
+    `luau_packages/quad_types.luau`는 pesde가 **타입 이름을 하나씩 재export하는
+    생성 심**(gitignore)이고 `scripts/relink.sh`는 `.pesde/` 아래 사본만
+    갱신하지 이 심은 안 건드린다 — 새 타입은 심에 없어 `QuadTypes.Slot`이
+    "Unknown type"이 된다(M6 잔여 마감에서 탐사자가 잡음, `Slot<T>` 등 5개).
 - **[2026-08-19 후속, `type-version-check` 신설 때 실측] 의존하는
   워크스페이스 멤버의 `target`이 자기 자신의 기본 target과 다르면
   `workspace = "..."` 의존 선언에 `target = "..."`를 명시해야 한다.**

@@ -291,7 +291,7 @@ quad/
 │       ├── AttributeKey.luau     # **[`H10-1` 재편]** 단일 키 `AttributeKey<<T>>(name)` + 이름별 weak 캐시 + 스칼라 편의 패밀리(String/Number/BooleanAttribute) **+ `AttributeKeyHandler`(이름 claim)+FALLBACK 자기 등록까지 이 한 파일** — 엔진 고유 타입 패밀리(Color3Attribute류)만 백엔드 소속(`base/attribute-plan.md` "패키지 배치" 절)
 │       ├── Tween.luau            # 값 타입만(`Tween(opts)` 팩토리 — `TweenBrand`에 등록, 인스턴스와 `isTween`은 위 `Brand.luau`) — 엔진 무관, 독립 Dispatch 핸들러 아님. 실제 애니메이션 처리는 quad-roblox Handlers/Property.luau 내부 분기(`base/tween-plan.md`, 2026-08-10 세션 재설계)
 │       ├── Effect.luau           # `Effect(fn, ...deps)` — deps 없으면 설치1회+leaf사망시 정리, 있으면 dep마다 약하게 등록(State/Source면 `:WeakSubscribe`, `Ref`면 `:WeakCallback`)해 재실행. **[2026-08-26 `H-107`]** 등록 클로저는 dep 종류별로 **둘**(`onRefFire`/`onStateFire` — 두 콜백 계약의 자리 수가 다르다), 강한 주인은 항상 `_deps`(`base/effect-plan.md`)
-│       ├── Slot.luau             # [2026-08-24 `H-46`] 값 타입 본체 — 생성자(**[2026-08-27 Q2]** `Length`·`Offset`·`_baseObserver`를 여기서 만든다, 파괴는 `_destroyed`), 공개 CRUD, `:List`/`:Single`, `raw*` 세트, `wrapElement`/`unwrapElement`, `attachSlot` 3형제, `elementOwner`/`claimOwner`/`releaseOwner`, `dispose`, `Detach`/`KeyGone`(`base/slot-plan.md`). 다른 값 타입과 같은 대칭 — 아래 `Dispatch/Slot.luau`는 핸들러/부기만
+│       ├── Slot.luau             # [2026-08-24 `H-46`] 값 타입 본체 — 생성자(**[2026-08-27 Q2]** `Length`·`Offset`·`_baseObserver`를 여기서 만든다, 파괴는 `_destroyed`), 공개 CRUD, `:List`/`:Single`, `raw*` 세트(**[2026-09-03]** + 공용 꼬리 `vacate`/게이트 `maybeRecompute`/`collectLeaves` — `slot-plan.md`의 raw 3형제 의사코드 주석이 소스), `wrapElement`/`unwrapElement`, `attachSlot` 3형제, `elementOwner`/`claimOwner`/`releaseOwner`, `dispose`, `Detach`/`KeyGone`(`base/slot-plan.md`). 다른 값 타입과 같은 대칭 — 아래 `Dispatch/Slot.luau`는 핸들러/부기만
 │       ├── Debug/init.luau       # [2026-08-24 `H-47`] M1에서 **이미 커밋됨** — `InitDebug(module)`, `module.debug = false`(`base/project-setup-plan.md`)
 │       ├── Dispatch/
 │       │   ├── init.luau          # process 엔진 — `chains`(inst,k별 인덱스 배열, 슬롯마다 {handler, retractor}) + 하강 diff(핸들러가 같으면 그 자리 클로저에 새 값을 넘기고 재process, 다르면 그 자리부터 retractFrom) + 3-인자 `retractFrom(inst,k,index)` (`dispatch-core-plan.md` "Dispatch 체인" 절, 2026-08-08 신설 → 2026-08-13 다섯 번째 세션 인덱스화 → 같은 날 열네 번째 세션 하강 diff)
@@ -324,7 +324,7 @@ quad/
         │   ├── Property.luau      # 일반 프로퍼티 세팅 + `isTween(realv)` 분기(3-상태 릴레이션 슬롯 `RobloxTween|true|nil`, hasBeenSet 억제, override 정책) — 구 `Handlers/Tween.luau`(높은 우선순위 store-bind 핸들러)는 폐기(`archive/tween-special-bind-key-reversed.md`)
         │   ├── Event.luau         # ReflectionService 기반 자동 판별
         │   ├── OnChange.luau      # `OnChange(name)` 특수 키 팩토리+Handler, `GetPropertyChangedSignal` 바인딩 + 이름별 weak 캐시(`AttributeKey`와 동일 기법, `base/onchange-plan.md`, 2026-08-10 세션)
-        │   ├── Slot.luau          # base Slot 재조정 로직의 실제 적용/해제(Instance Parent 조작)
+        │   │                      # **[2026-09-03 정정, round15 `H6-14`]** 여기 한때 `Slot.luau`("base Slot 재조정 로직의 실제 적용/해제")가 있었다 — 2026-08-21 `native*` 주입 op 확정으로 그 몫은 위 `EngineOps.luau`의 native* 여섯이 그 자체가 됐고(SlotHandler는 quad-base `Dispatch/Slot.luau`, 물리 조작은 주입 op), 별도 파일은 없다
         │   └── InstanceChild.luau # k:number, v:Instance — 중첩 인스턴스 자식(예: Frame { Frame {} })
         ├── Animate.luau           # `Animate(info)` 편의 콤비네이터 — `factory(self)->State`, `:Apply`로 붙임(내부는 `:Compute`/`Tween{...}` 조합), base 프리미티브 아님(`base/tween-plan.md`)
         ├── D/

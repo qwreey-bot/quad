@@ -28,10 +28,14 @@ additional-primitives-plan.md`가 다루던 키 기반 동적 컬렉션 재조�
 
 Slot의 add/remove/clear 재조정 로직(추상 자식 참조 기준 — "이 자리에 뭐가
 있어야 하는가"를 결정하는 순수 로직)은 `quad-base/src/Dispatch/Slot.luau`가
-소유. 실제 트리 조작(Instance `Parent` 설정/`Destroy`)은 `quad-roblox/src/
-Handlers/Slot.luau`가 그 위에서 적용/해제만 담당 — 다른 모든 인터페이스/구현
-분리와 동일한 패턴(`base/architecture.md`의 소스 트리 참고). Slot 자체는
-당연히 Instance들을 담게 될 것으로 취급.
+소유. 실제 트리 조작(Instance `Parent` 설정/`Destroy`)은 백엔드 몫 — 다른 모든
+인터페이스/구현 분리와 동일한 패턴(`base/architecture.md`의 소스 트리 참고).
+**⚠️ [2026-09-03 정정, round15 `H6-14`]** 여기 한때 그 몫이 *"`quad-roblox/src/
+Handlers/Slot.luau`가 그 위에서 적용/해제"*라 적혀 있었다 — 그건 2026-08-21의
+`native*` 주입 op 계층(아래 그 절) **이전** 표기다. 지금 백엔드 절반은
+**`quad-roblox/src/EngineOps.luau`의 `native*` 여섯 그 자체**이고(SlotHandler는
+base, 물리 조작은 주입 op), 별도 `Handlers/Slot.luau` 파일은 **없다**(M5 단위
+①이 실제로 그렇게 짰다). Slot 자체는 당연히 Instance들을 담게 될 것으로 취급.
 
 **[2026-08-09 세 번째 세션 보강]** 이 경계가 담당하는 훅은 mount(`Add`)/
 unmount(`Remove`) 둘이 아니라 **reposition(`Move`/`Swap`)까지 셋** —
@@ -81,6 +85,13 @@ base는 여전히 `T`가 뭔지 모른다 — **아는 건 백엔드고 base는 
 - **`offset`은 전부 0-based 절대 offset**(`Dispatch.getOffsetAt`이 주는 그 값).
   Roblox 백엔드는 이 인자를 그냥 무시한다 — `LayoutOrder`가 물리 순서와
   분리돼 있으므로.
+  - **[2026-09-03 명확화, round15 `H6-13`] `nativeMove`의 `toOffset`은 "이동
+    **후** 블록 첫 리프의 절대 offset"이다** — 리프 배열을 `_elements`처럼
+    splice(뺀 뒤 넣기)한 결과 좌표. `fromOffset`은 이동 전 값. 그래서 아래로
+    옮길 땐(`from < to`) `getOffsetAt(to) + #leaves(to) - #moving`, 위로는
+    `getOffsetAt(to)`다(`Slot.luau` `rawMove`가 계산). `nativeSwap`의 두 offset은
+    둘 다 교환 **전** 값(사이가 고정이라 전후가 같다). Roblox/mock은 무시하므로
+    실측은 spec(`spec.slot` 17)의 인자 단언뿐 — DOM 백엔드가 생기면 그때 검증.
 - **⭐ 빠지는 요소는 반드시 `elements` 배열로 넘긴다** — `(target, offset, count)`만으로
   대상을 찾을 수 있는 건 DOM뿐이다(`childNodes[offset]`). **Roblox는 자식이 순서
   없는 집합**이고 quad의 offset은 순전히 논리값이라, 백엔드가 offset으로 인스턴스를
@@ -88,7 +99,11 @@ base는 여전히 `T`가 뭔지 모른다 — **아는 건 백엔드고 base는 
 - **`Replace`는 별도 op이 아니다** — `newElements`가 있는 `nativeRemove`(파괴 교체)
   또는 `nativeExtract`(비파괴 교체)다. `Splice`도 이 둘로 표현된다. 제거와 삽입을
   한 호출로 합치는 이유는 **리플로우 2회와 그 사이 인덱스가 어긋난 창**을 없애기
-  위함(사용자: *"안 그러면 splice 가 무거워짐"*).
+  위함(사용자: *"안 그러면 splice 가 무거워짐"*). **⚠️ [2026-09-03] `Splice`의
+  "한 호출"은 아직 구현되지 않았다** — 현행 `rawSplice`는 recompute만 1회로
+  묶고 물리 op은 요소별이다. 이 문장을 유지할지(새 walk 헬퍼로 한 호출 실현)
+  현행으로 정정할지는 round15 `H6-9`(§4 회신 대기, 권고 현행) — 아래 raw* 규약
+  각주("실제로 내려앉은 모양")가 현행을 서술한다.
 - **파괴/비파괴를 불리언이 아니라 이름으로 가른 이유**: 공개 CRUD의
   `Remove` ↔ `Extract` 어휘를 그대로 물려받고, **백엔드의 융합**을 열어주기
   위해서다 — Roblox에서 `Parent = nil` 후 `Destroy()`는 그냥 `Destroy()`보다
@@ -756,6 +771,12 @@ Slot의 좀비 배열이 조용히 자란다(아래 "파괴된 Slot은 재사용
 | `Move` | `Slot:Move(oldIndex, newIndex)` | **O(n)** | 제자리 재배치 — 옛/새 위치 사이 요소들이 밀림/당겨짐(배열 splice와 동일 의미), **Parent 안 건드림** |
 | `Swap` | `Slot:Swap(indexA, indexB)` | **O(1)** | 두 인덱스의 요소를 맞교환, 나머지 안 건드림, **Parent 안 건드림** |
 | `Get` | `Slot:Get(index): T?` | O(1) | 그 인덱스의 element 조회(범위 밖이면 `nil`) |
+
+**[2026-09-03 표기 정정, round15 `H6-19`(통합 리뷰)] 위 표의 `T`(반환·요소
+자리)는 실제로 **요소 유니온 `T | State<T> | Slot<T>`**다 — 반응형 raw 요소는
+언래핑된 원래 `State`가, 중첩은 `Slot` 자신이 돌아온다(아래 "래핑/언래핑은 Slot
+전체에 걸린 연산이다" 절). quad-types의 `SlotElement<T>`가 그 표기이고 표는
+축약이다 — 타입 표면을 표에 맞춰 `T?`로 되돌리지 말 것.
 | `IndexOf` | `Slot:IndexOf(element): number?` | O(n) | element의 현재 인덱스 역조회(멤버 아니면 `nil`) — 레퍼런스만 있고 인덱스가 없을 때 다른 CRUD와 연결하는 다리 |
 
 - **`Add`가 삽입된 인덱스를 반환하는 이유(2026-08-10 세션 확정)** —
@@ -861,16 +882,27 @@ Slot의 좀비 배열이 조용히 자란다(아래 "파괴된 Slot은 재사용
     fail-fast 톤. `newElements` 각각에 `Add`와 동일한 검증(이미 마운트/
     타입 제약) 적용, 검증은 실제 mutate 전에 전부 먼저 통과해야 함
     (일부만 적용된 채 중간에 에러나는 반쪽 상태 방지).
+  - `Replace(index, newElement)`: `index`는 1..현재 개수, `newElement`는 `Add`와
+    동일한 검증(**[2026-09-03 추가]** — `B-5` 신설 때 이 목록에 빠져 있었다).
+  - **[2026-09-03 `H6-19`] 선행 검증은 래핑 전 raw 값을 본다** — 새 요소가
+    `State`면 그 **현재 값**의 소유권과 배치 안 중복을 검사한다(래퍼 Slot은 매번
+    새로 만들어지므로 래퍼를 검사하면 항상 통과해 버린다). 파괴된 Slot 요소도
+    이 자리에서 막는다(`rawSplice`의 배치 Blocker 안에서 raise가 나면 게이트가
+    켜진 채 남는다 — 이게 이 선행 패스가 존재하는 이유의 실례).
   - `Swap`: `indexA`/`indexB` 중 하나라도 범위 밖이면 에러 — 단
     `Swap(i, i)`(같은 인덱스)는 위치가 안 바뀌므로 에러 없이 no-op.
 - **`Move`/`Swap`은 반환값 없음(void)** — 내부 재배치만 수행, 멤버십
   weak-set을 안 건드림(요소가 Slot을 떠난 적이 없으므로) — 그래서 `Add`/
   `Remove`/`Extract`보다 저렴함.
-- **공개 CRUD 중 실제로 mutate하는 것(`Add`/`Remove`/`Extract`/
+- **공개 CRUD 중 실제로 mutate하는 것(`Add`/`Remove`/`Replace`/`Extract`/
   `ExtractAll`/`Splice`/`Clear`/`Move`/`Swap`)은 "가드 확인 + `raw*` 위임"의
   얇은 wrapper** — `self._listed`(`:List`가 설치돼 있으면 수동 CRUD 금지)만
-  확인하고 실제 로직은 `rawAdd`/`rawRemove`/`rawExtract`/`rawSplice`/
-  `rawClear`/`rawMove`/`rawSwap`에 있음 — 이 `raw*` 함수들이 `:List`의 reconcile이
+  확인하고 실제 로직은 `rawAdd`/`rawRemove`/`rawUnmount`/`rawReplace`/
+  `rawSplice`/`rawMove`/`rawSwap`에 있음(**[2026-09-03 정정]** 한때
+  `rawExtract`/`rawClear`도 열거했으나 그 둘은 별도 함수가 아니다 — 제거형
+  `Extract`는 `rawUnmount`, 교체형은 `rawReplace(…, false)`, `Clear`는
+  `rawRemove` 반복. 아래 "raw* 규약이 실제로 내려앉은 모양" 각주가 소스) —
+  이 `raw*` 함수들이 `:List`의 reconcile이
   가드 없이 직접 호출하는 바로 그 함수(아래 "`Slot:List`" 절의 "구현"
   참고). 공개 메소드에 로직이 따로 있는 게 아니라 전부 이 한 세트를
   공유. **`Get`/`IndexOf`는 순수 읽기라 이 가드 대상 아님** — `:List`가
@@ -1769,9 +1801,11 @@ raw `i`를 그대로 위치 인자로 썼는데, 앞쪽 item이 filter로 마운
   세션에 "reconcile의 제거는 전부 비파괴 언마운트"로 바꿨던 것을
   **부분적으로 되돌림** — `nil` 리턴/키 소멸은 다시 **파괴**가 기본이고,
   값 교체와 `Detach`만 비파괴. 아래 "`nil` 리턴은 파괴가 기본" 절이
-  소스) — `rawExtract`/`rawSwap`/`rawClear`도 (위 "모든 공개 CRUD는
-  가드+위임" 구조상) 당연히 존재하지만, `:List`의 reconcile 알고리즘
-  자체가 그 셋을 직접 호출할 일이 없을 뿐. `rawUnmount`는 `rawRemove`의
+  소스) — `rawSwap`/`rawSplice`도 (위 "모든 공개 CRUD는
+  가드+위임" 구조상) 존재하지만(**[2026-09-03 정정]** 한때 여기
+  `rawExtract`/`rawClear`도 적었으나 그 둘은 별도 함수가 아니다 — 위 "CRUD API
+  확정" 절의 정정 참고), `:List`의 reconcile 알고리즘
+  자체가 그 둘을 직접 호출할 일이 없을 뿐. `rawUnmount`는 `rawRemove`의
   비파괴 짝으로서 `Extract` 계열과 공유하는 저수준 프리미티브 — 위 코드
   블록의 "rawRemove의 비파괴 짝 — `:List`의 reconcile과 `Extract`
   계열이 씀" 주석 참고. reconcile이 공개 `Slot:Extract` 대신
@@ -2717,8 +2751,9 @@ end
 -- "raw*가 index 기준과 element 기준으로 섞여 있다"는 캐비엇은 **전부 index로
 -- 통일**하는 것으로 닫혔다(**사용자 확정**: *"index 로 전부 처리되면 될듯.
 -- 애초에 안에서 다시 element -> index 를 찾아야하던걸로 앎"*).
---   * `rawRemove`/`rawUnmount`/`rawDetach`/`rawMove`/`rawSwap`/`rawExtract`/
---     `rawSplice`/`rawReplace` — **전부 index를 받는다.**
+--   * `rawRemove`/`rawUnmount`/`rawDetach`/`rawMove`/`rawSwap`/`rawSplice`/
+--     `rawReplace` — **전부 index를 받는다.**(**[2026-09-03]** 한때 `rawExtract`도
+--     열거 — 별도 함수 아님, 아래 "실제로 내려앉은 모양" 각주.)
 --   * 예외는 `rawAdd(self, element, index, fromDetached?)` 하나 — 새로 넣는
 --     대상이라 element가 인자인 게 당연하다(그 element는 **이미 래핑된 물리
 --     요소**여야 한다, 아래 "래핑은 raw 바깥에서" 항목).
@@ -2897,6 +2932,23 @@ end
 -- 다를 수 있음(구현 세부, M6에서 확정)"*은 5라운드의 index 통일로 닫힌
 -- stale이었고 **[2026-09-03] M6 편입(raw* 전부 index 기준 실측)으로 본문에서
 -- 삭제됨** — 옛 인용을 만나면 이 각주가 그 흔적이다.
+-- **⭐ [2026-09-03 M6 잔여 마감 — 위 규약이 실제로 내려앉은 모양]**(정본은
+-- 이 문서, 실측은 `spec.slot` 17~21):
+--   * `rawMove`/`rawSwap` — 규약 1·3·5·6 그대로(넷 순열 + 커서 `min-1` +
+--     `collectLeaves` 리프 배열 + `_mounted` 게이트). 규약 4("`setLength`에
+--     일임")는 **직접 게이트 recompute**(`maybeRecompute`)로 실현했다 —
+--     `setLength`는 같은 길이를 다시 받아도 옛 observer를 풀고 새로 다는
+--     비용이 있어 순열엔 안 맞고, 결과는 동치(게이트가 같다). fork의 `rawMove`
+--     (`H6-6`)가 먼저 그렇게 갔고 리뷰가 승인했다.
+--   * `rawExtract`는 별도 함수가 아니다 — 제거 형태는 `rawUnmount` 그 자체이고,
+--     교체 형태(`Extract(index, new)`)는 `rawReplace(…, destroyOld = false)`다.
+--     `rawClear`도 없다 — `Clear`는 `rawRemove` 역순 반복.
+--   * `rawSplice` — `rawUnmount` 역순 + `rawAdd` 순차를 **이 Slot의 Blocker로
+--     감싼** 합성이라 recompute는 1회다. 단 **물리 op은 요소별**(정본의
+--     "`nativeExtract(…, removed, newElements)` 한 호출"이 아니다) — 새 요소에
+--     중첩 Slot이 섞이면 리프를 한 호출에 싣기 위해 materialize/mount 분리 walk가
+--     하나 더 필요해서, 그 결정은 round15 `H6-9`(② — 권고: DOM 백엔드가 생길
+--     때까지 현행)로 올렸다. Roblox/mock은 offset을 무시하므로 관측 차이 없음.
 
 -- **raw 3형제 — 갈리는 축이 둘(파괴하는가 / 소유권을 놓는가)**:
 --   rawRemove : 소유권 반납 + **파괴**
@@ -2904,6 +2956,16 @@ end
 --   rawDetach : **소유권 유지** + 파괴 안 함 ← 내가 계속 들고 있는 경로
 -- 셋 다 **자리를 없애는** 연산이라 spliceArraysDown이 따라붙는다. 자리를
 -- 유지한 채 내용만 바꾸는 rawReplace(아래)는 그래서 별개 축이다.
+-- **⭐ [2026-09-03 사용자 승인 — 꼬리 공용화]** 위 세 함수의 **머리**(그
+-- 자리의 length observer 해제 → 소유권 처분 → 파괴/언마운트/추출 물리 op)는
+-- 각자 갖고, **꼬리**("그 자리가 사라진다": `table.remove` + `reindexFrom` +
+-- 역방향 맵 삭제 + 실체화됐으면 `spliceArraysDown` + 게이트 recompute)는
+-- `vacate(self, index, element, bk)` 하나를 공유한다. 게이트 자체도
+-- `maybeRecompute(self, bk)` 하나(`H-119`의 두 Blocker 확인)로 모였다 —
+-- 위 의사코드 셋의 꼬리 7줄과 4곳의 게이트 복붙이 그 함수들이다. 분리가
+-- "의도적"이었던 건 **축(머리)**이지 꼬리가 아니었고, 사용자 조건(*"개발 문서와
+-- 주석만 충분하고 흐름을 인간이 읽기 좋다면"*)대로 코드 주석이 축을 먼저
+-- 말한다. `Slot.luau`가 소스.
 
 -- [신설, 2026-08-21 5라운드 `C-1`] rawAdd — 이 문서에서 가장 많이 참조되는데
 -- 정의가 없어서 `_mounted` 분기가 다른 함수 주석에만 흩어져 있었다. 새 결정은
@@ -3304,6 +3366,15 @@ end
   `newElements` 전량에 대해 (a) `wrapElement`(타입 검증 포함)와
   (b) `elementOwner` 조회(이미 누가 갖고 있으면 error)를 **먼저 다 돌린다.**
 - 통과한 래핑 결과를 그대로 `raw*`에 넘긴다(두 번 래핑하지 않는다).
+- **[2026-09-03 명시, round15 `H6-21`(탐사자)] 이 선행 패스는 `:List`의
+  `updateFn` **반환값**엔 적용되지 않는다** — `settle`은 사이클 안에서 항목마다
+  `wrapElement → rawAdd`를 바로 밟으므로, 반환된 State의 현재 값이 딴 데
+  마운트돼 있거나 `updateFn` 자체가 던지면 그 raise는 **배치 Blocker가 켜진
+  안**에서 난다 → 게이트가 켜진 채 남고 그 Slot의 반응성이 죽는다. 이건
+  `architecture.md`의 "예외 안전성 계약 — 감싸지 않는다"(*"에러가 난 이후
+  데이터의 무결이 깨져도 별 책임 안 진다"*)가 적용되는 **또 하나의 자리**다 —
+  선행 검증을 사이클 전체로 넓히려면 `updateFn`을 두 번 부르거나 `pcall`이
+  필요한데 둘 다 계약 밖(사용자 문서에 yield 금지와 같은 톤으로 적을 것).
 - 같은 처방이 `:List`의 중복 키 검사에도 적용됐다(`reconcile`의 선행 패스,
   위 그 의사코드).
 

@@ -2011,7 +2011,7 @@ bk.offsetSetUpTo        = math.min(bk.offsetSetUpTo,        ?)
 |---|---|---|
 | `setLength(ownerKey, i, ...)`, 그리고 그 State가 나중에 emit할 때 | `i` | **`i` 자리의 offset은 안 바뀐다**(그건 `1..i-1`의 합) — 바뀌는 건 그 **뒤**뿐. 사용자: *"정확히 입력받은 자신 인덱스까지 당김"* |
 | `spliceArraysUp`/`spliceArraysDown`(자리 삽입·삭제) | **`i - 1`** | **[2026-08-26 정정, `H-113`]** 한때 `i`였다 — `recompute`의 커서가 정확히 `i`일 때 `i`로 당기면 "변경 없음"과 구분이 안 돼 되감기가 안 걸린다. 근거는 아래 "되감기 신호는 `bk.invalidAfter` 하나로 통일한다" 절(제목은 역전 *전* 이름 그대로다 — 그 절이 폐기를 서술한다) |
-| `rawMove`/`rawSwap`, 그리고 `rawExtract`의 **교체 형태**(`newElement` 지정) — **자리 수가 안 바뀌는 경로만.** ⚠️ `rawSplice`/`rawClear`/`rawExtract`의 **제거 형태**(`newElement` 생략)는 자리 수가 바뀌므로 위 splice 행 | **`minPos - 1`** | **[2026-08-26 신설, `/code-review high`]** splice와 같은 이유다 — 바뀐 최소 위치가 커서와 같으면 `math.min(i, i) = i`라 되감기가 안 걸리고, 그 자리로 옮겨온 요소의 offset이 조용히 낡는다. `base/slot-plan.md`의 `H-29` 규약 3번이 짝이고, 이 표에 행이 없어 "세 규칙"으로 세어지던 자리다 |
+| `rawMove`/`rawSwap`, 그리고 `Extract(index, new)`의 **교체 형태**(= `rawReplace(…, destroyOld = false)`) — **자리 수가 안 바뀌는 경로만.** ⚠️ `rawSplice`/`Clear`(`rawRemove` 반복)/`Extract(index)`의 **제거 형태**(= `rawUnmount`)는 자리 수가 바뀌므로 위 splice 행(**[2026-09-03]** 한때 `rawExtract`/`rawClear`라 적었으나 별도 함수가 아니다 — `slot-plan.md`의 raw* 규약 의사코드 주석(2026-09-03 M6 잔여 마감 각주)이 소스) | **`minPos - 1`** | **[2026-08-26 신설, `/code-review high`]** splice와 같은 이유다 — 바뀐 최소 위치가 커서와 같으면 `math.min(i, i) = i`라 되감기가 안 걸리고, 그 자리로 옮겨온 요소의 offset이 조용히 낡는다. `base/slot-plan.md`의 `H-29` 규약 3번이 짝이고, 이 표에 행이 없어 "세 규칙"으로 세어지던 자리다 |
 | owner의 베이스 변경(`ownerKey.Offset`이 바뀜 = `_baseObserver`가 도는 순간) | `0` | 1번 자리부터 전부 다시 |
 
 **⭐ [2026-08-24 6라운드 손 트레이싱 `H-3`] 이 표는 산문으로만 있었고 실제
@@ -2140,7 +2140,7 @@ local function recompute(ownerKey, bk)
         -- ⭐⭐ [2026-08-27 재배치, 9라운드 `H-124`] **되감기 판정이 `lengthList[i]`
         --   읽기보다 먼저다.** 옛 순서(읽기·누적 → 판정)에선 `offset:Set(abs)` 안의
         --   사용자 코드가 요소를 제거해 `i > bk.N`이 되면(커서가 마지막 자리일 때
-        --   아무 자리나 제거, 또는 `rawSplice`/`rawClear`의 다중 제거)
+        --   아무 자리나 제거, 또는 `rawSplice`/`Clear`의 다중 제거)
         --   `lengthList[i]`가 이미 `nil`이라 `sum += nil`로 죽고, 그 error가
         --   `recomputeBlocker:On()`과 `OffWithoutEmit()` 사이라 **차단기가 영원히
         --   켜진 채 남는다**(그 owner의 레이아웃 영구 동결, `H-87` 부류). 되감으면

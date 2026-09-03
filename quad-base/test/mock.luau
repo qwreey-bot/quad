@@ -613,8 +613,16 @@ local function getAttributes(inst: any): { [string]: any }
 	return table.clone(instAttributes[inst] or {})
 end
 
+-- isDestroyed(inst) — spec predicate for "Destroy() ran on this mock
+-- instance" (the proxy exposes no field for it; `inst._destroyed` reads nil
+-- and made spec.slot 12's assertion vacuous — M6 잔여 마감 발견).
+local function isDestroyed(inst: any): boolean
+	return getData(inst).destroyed
+end
+
 return {
 	Instance = Instance,
+	isDestroyed = isDestroyed,
 	gameShim = gameShim,
 	newSignal = newSignal,
 	isMockInstance = isMockInstance,

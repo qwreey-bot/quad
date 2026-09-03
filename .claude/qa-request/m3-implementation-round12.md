@@ -592,7 +592,11 @@ Bookkeeping` 의존 방향 제안) / Leaf 핸들러 등록 소유권을 각 객�
     전사 스파이크로 실측) ② `unbindLifetime`이 leaf dedup relate를 못 비워
     언바인드→재발행 경로에서 재바인드가 스킵되는지 — 정상 재발행이 아니라
     **포탈 언마운트→재마운트**(M6 `H-164` 캐치업)에서 실체화되는 축이라 M6
-    몫(**[2026-09-01 기준] 유일하게 열린 채 남은 항목**) ③ Observer
+    몫 — **[2026-09-03 기각, M6 잔여 마감 — round15 `H6-15`]** Slot의 포탈
+    경로는 leaf dedup relate를 **지나지 않는다**(`_baseObserver`/`_listObserver`/
+    `_detachCleanup`/`bk.observers` 전부 `bindLifetime` 직접 호출이고, leaf
+    핸들러 retractor는 stand-down 때 relate를 비운다 — `Observer.luau`), 포탈
+    재마운트+캐치업은 `spec.slot` 15가 실측. 열린 항목 없음 ③ Observer
     `_catchUp`의 에포크 단일 비교와 bit32 랩 충돌(`state-epoch-plan` §2 랩
     설계와 대조) — **[2026-09-01 기각, 같은 라운드]** 전제가 실물과 다르다:
     `_catchUp`은 에포크 비교가 아니라 불리언 홀드 플래그(`_rerunRequired`)

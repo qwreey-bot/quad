@@ -14,7 +14,9 @@ M5 체크박스(전부 `[x]`). 단위 ⑤ 확정 요지(프로바이더 설치
 (a)·rojo 라이브 싱크 반입)는 `.claude/todos.md` 00번이 소스. **같은 날 병렬 탐사 승인, 2026-09-03 통합 완료** — fork 둘이 worktree에서
 M6(Slot)/M10(Tag·Attribute)을 mock 축으로 탐사 구현 후 **메인에 머지됨**
 (발견 접두 `H6-`/`H10-`, 원장 `round15`/`round16` — 잔여·후행은
-`ROADMAP.md` M6/M10 배너가 소스)** —
+`ROADMAP.md` M6/M10 배너가 소스). **같은 날 M6 잔여 마감 단위 완료**(공개
+CRUD 다섯·`collectLeaves`·quad-types `Slot<T>`·실기기 Deferred 축 실측까지 —
+M6 잔여 전부 닫힘, `H6-9`~`H6-22`)** —
 **M4는 같은 날 자율 구간으로 착수·종결**(사용자 조건부 승인 — 규약
 `.claude/qa-request/m4-implementation-round13-brief.md` §0 전량 (a), 발견
 `-round13.md`(`H-287`~; §4 열린 문항 0): `Dispatch/StoreBind.luau` +

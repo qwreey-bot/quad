@@ -866,9 +866,9 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       "변경 없음"과 구분이 안 돼 되감기가 안 걸린다),
       `slot._baseObserver` 콜백
       (베이스가 바뀐 경우라 `0`), 그리고 **⭐ [2026-08-26 신설,
-      `/code-review high`] `rawMove`/`rawSwap`/`rawExtract`류**(자리 수는
+      `/code-review high`] `rawMove`/`rawSwap`/교체형 `Extract`(= `rawReplace`)류**(자리 수는
       그대로, 순서만 바뀜 — 두 필드 다 `math.min(…, minPos - 1)`, `H-29` 규약
-      3번). **전부 `recompute`보다 먼저.**
+      3번; **[2026-09-03]** 옛 표기 `rawExtract`는 별도 함수가 아니다). **전부 `recompute`보다 먼저.**
       (c) **`recompute` 호출은 `setLength`의 단독 책임**이다 — `rawAdd`/
       `rawReplace`의 명시 호출은 삭제됐고, 자리가 없어지는 경로
       (`rawRemove`/`rawUnmount`/`rawDetach`)만 예외로 직접 부른다.
@@ -1171,6 +1171,12 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > 소스는 그 원장의 "이 fork 슬라이스 밖" 절이다** — 여기 재나열하지 않는다
 > (감사 2라운드가 이중 소스를 잡음). 그 절에 없는 것 하나만 여기 적는다:
 > quad-types `Quad`의 `Slot` 필드(`H-25` — fork 미반영, 아래 체크박스).
+>
+> **⭐ [2026-09-03 M6 잔여 마감 — 메인 자율 구간]** 그 절의 항목이 **전부
+> 닫혔다**(상태·목록은 그 절이 소스 — 여기 재나열하지 않는다) + `H-25`
+> quad-types `Slot<T>`(아래 체크박스). 발견 `H6-9`~`H6-22`, §4 열린 문항은
+> 그 원장이 소스(막는 것 아님). 실기기 실측은
+> `audit/m6-remainder-studio-2026-09-03.md`. **M6 잔여 없음.**
 
 ### 확정된 것 — 코드 아님, 구현 전 필독
 
@@ -1335,7 +1341,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       다른 값 타입(`Modifier`/`Tag`/`Tween`/`Ref`/`Effect`)이 전부 top-level
       파일을 갖는 것과 같은 대칭이고, `base/slot-plan.md`의 `attachSlot`
       블록이 이미 머리에 이 파일명을 적어뒀다
-- [ ] **[2026-09-03 편입 — 7개 중 6개 구현됨, `collectLeaves`만 잔여**(공개 CRUD와 같이 온다 — `Slot.luau` 주석)**]** **⭐ [2026-08-24, 6라운드] 이 마일스톤에서 새로 생긴 필드·헬퍼**
+- [x] **[2026-09-03 편입 — 7개 중 6개 fork 구현, `collectLeaves`는 같은 날 M6 잔여 마감(공개 CRUD와 함께)으로 완료. 같은 날 사용자 승인으로 헬퍼 셋이 더 생겼다 — `vacate`(raw 3형제 공용 꼬리)/`maybeRecompute`(단일 recompute 게이트)/`unbindObserverAt`, `base/slot-plan.md`의 raw 3형제 의사코드 주석이 소스]** **⭐ [2026-08-24, 6라운드] 이 마일스톤에서 새로 생긴 필드·헬퍼**
       (구현 항목으로 드러나야 놓치지 않는다):
       **`bk.indexOfElement`**(물리 요소→`_elements` 인덱스 역방향 맵,
       `indexOfRaw`가 이걸 O(1)로 조회하는 **기본 경로**. **[2026-08-27, 9라운드
@@ -1358,9 +1364,9 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       만드는 데 필요, 없어서 그 넷이 미작성이었다) ·
       `:List`의 **`prevKeys`**(옛 `keyIndex`의 강등판, 단순 키 집합).
       전부 `base/slot-plan.md`가 소스
-- [ ] **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Slot` 필드 추가
+- [x] **[2026-09-03 완료 — `Slot<T>`/`SlotElement<T>`/`SlotListOpts`/`Detach`/`KeyGone` 타입 + `Quad`의 `Slot`/`Detach`/`KeyGone`/`dispose`/`isSlot` 필드; 재귀 alias 제약은 typing-limits §1 각주(`H6-18`)]** **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Slot` 필드 추가
       (위 M3 항목의 "마일스톤마다" 규칙)
-- [ ] **[2026-08-13 여섯 번째 세션 — 이 세션의 Slot 결정 전부, 구현 전 필독]**
+- [x] **[2026-09-03 확인 — 아래 결정 전부 fork 편입 코드에 구현돼 있음(`unmountSlotTree`/해제 순서/`claimOwner`·`claimOwnerAt` 분리/`rawRemove`의 `releaseOwner`/파괴적 클로저), 남은 서술 몫 없음]** **[2026-08-13 여섯 번째 세션 — 이 세션의 Slot 결정 전부, 구현 전 필독]**
       - **`State<Slot>` 교체 = 파괴가 아니라 언마운트**(`state<Frame>`와 동일).
         비파괴 경로 `unmountSlotTree`를 `destroySlotTree`와 별도로 구현 —
         차이는 딱 둘: 실제 `Destroy()`를 안 하고, 자식 `releaseOwner`도 안 함
@@ -1414,7 +1420,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       세션에 `question.md` 0-B 해소, 정본은 `base/slot-plan.md`
       "`dispose(value)`" 절
 
-- [x] **[2026-09-03 편입 — `KeyGone` 파괴 분기 spec만 잔여]** `Slot:List(data, updateFn, keyFn?)` — 키 기반 동적 컬렉션 재조정,
+- [x] **[2026-09-03 편입 — `KeyGone` 파괴 분기 spec은 같은 날 잔여 마감으로 완료(`spec.slot` 20)]** `Slot:List(data, updateFn, keyFn?)` — 키 기반 동적 컬렉션 재조정,
       `keyFn(item, index) -> key` 생략 시 원본 `data` 배열 위치(raw index)를
       그대로 key로 사용(중간 삽입/삭제 시 identity 보존 안 됨, 캐스케이드
       갱신 — 흔한 업계 관행과 같은 트레이드오프).
@@ -1500,9 +1506,9 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       별개" 절. **[2026-08-27 정정, 9라운드 `H-125`/Q2]** 여기 한때 *"마운트
       시점에 `setOffsetSource`가 등록하는 바로 그 Source를 `self.Offset`으로도
       저장"*이었다 — 그러면 첫 마운트와 재마운트가 갈려 재마운트 캐시가 낡는다)
-- [x] **[2026-09-03 base 절반만 편입 — quad-roblox `Handlers/Slot.luau`는 잔여]** base `Dispatch/Slot.luau`(추상 재조정, mount/unmount/reposition 3훅) +
-      quad-roblox `Handlers/Slot.luau`(실제 Parent 조작 + reposition —
-      `SetSiblingIndex` 또는 `LayoutOrder` 기반이면 no-op, 구현 선택)
+- [x] **[2026-09-03 base 절반 편입 → 같은 날 잔여 마감 `H6-14`: 백엔드 절반은 M5 단위 ①의 `EngineOps.luau` native* 여섯이 그 자체(`nativeMove`/`nativeSwap`은 LayoutOrder 기반이라 no-op 덮어쓰기) — 별도 `Handlers/Slot.luau` 파일은 없다]** base `Dispatch/Slot.luau`(추상 재조정, mount/unmount/reposition 3훅) +
+      quad-roblox 백엔드 절반(실제 Parent 조작 + reposition — 옛 표기는
+      `Handlers/Slot.luau`, 지금은 `EngineOps.luau`)
 ## M7 — Modifier
 
 - [ ] **[2026-08-27 9라운드 `H-142` 후속, `/code-review`]** 생성기가 찍는
@@ -1740,7 +1746,8 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > **⭐ [2026-09-03 병렬 fork 편입 — quad-base 절반 완료]** M10의
 > quad-base 몫(Tag/AttributeKey/Attribute 값·핸들러·안내 스텁·spec 2벌)이
 > `spike/m10-tag-attribute` fork로 구현돼 메인에 머지됐다(발견 원장
-> `qa-request/m10-implementation-round16.md` — `H10-1`~`H10-6`).
+> `qa-request/m10-implementation-round16.md` — `H10-1`부터, 통합 리뷰
+> 발견(`H10-7`~)까지 이어 씀; 상태는 그 파일이 소스).
 > **⚠️ 파일 분할이 `H10-1`로 재편됐다**: 아래 체크박스의 6파일 구성
 > (`Dispatch/Tag.luau`+`TagFallback.luau`류의 알고리즘/등록 분리 파일)은
 > `H-278`(각 값 선언 모듈이 자기 Init에서 등록 — M3 회신 라운드 확정)
@@ -1750,9 +1757,16 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > 산다(`TagFallbackHandler` 등 — 문서의 별도-엔티티 요구의 실질은
 > 이름·priority 분리). 아래 `[x]` 항목의 파일 경로 서술은 이 재편 기준으로
 > 읽을 것. **잔여는 quad-roblox 엔진 축**(EngineOps 실구현 —
-> addTag/removeTag/setAttribute, Event/OnChange, InstanceShorthand)과
-> `AttributeGroupHandler` 부분 실패 롤백 판단(`question.md`) — **M10
+> addTag/removeTag/setAttribute, Event/OnChange, InstanceShorthand) — **M10
 > 잔여 목록의 유일한 소스는 이 배너다**(다른 문서는 여기를 가리킬 것).
+> **[2026-09-03 아침 회신]** ① `AttributeGroupHandler` 부분 실패 롤백은
+> **닫혔다**(사용자 동의 — 문서화로 관리 안 함, `attribute-plan.md` 말미 확정
+> 절·`archive/question-resolved.md`; 한때 여기 잔여로 적혀 있었음). ② Tag/
+> Attribute 엔진 op의 **설치 형태는 에이전트 선택**(사용자: *"어떤 방식으로든
+> 채운다면 괜찮 … 코드 스타일 문제"*) — 방향은 (d′) "모든 프로바이더가 같은
+> 형태"대로 mock의 `installTagAttributeOps` opt-in을 `mockProvider`에,
+> 실물은 `EngineOps`에 편입(`session/2026-09-03-01-fork-integration.md`
+> "아침 회신" 4번). 엔진 축 착수 때 이 배너의 체크박스로 진행을 적는다.
 
 
 - [x] **[2026-09-03 편입]** **[2026-08-24 `H-39`]** `TagHandler`/`AttributeGroupHandler`가 자기 배열

@@ -5,6 +5,9 @@
 	Add/Remove reflect physically, ordering via Length/Offset, unmount on
 	State<Slot> swap, dispose guard), Slot-in-Slot nesting, `:List`/`:Single`
 	reconcile (Detach reuse, remount catch-up), wrapper-Slot reorder (`H6-6`).
+	Sections 17~21 are the M6 remainder (2026-09-03, main): the public CRUD
+	five (Move/Swap/Extract/Replace/Splice) + `collectLeaves` reaching native*,
+	the `KeyGone` disposition branches, and pre-materialization CRUD.
 
 	`--!nocheck`: this spec pokes internal fields (`_elements`, `_mounted`,
 	`bk`) that the public `Quad` type does not expose — the M5 specs use the
@@ -248,7 +251,7 @@ do
 	assert(childCount(parent) == 1 and builds == 1, "built once, mounted")
 	show:Set(false); data:Set({ { id = "x" } }) -- re-eval → Detach
 	assert(childCount(parent) == 0, "detached from tree")
-	assert(theFrame.Parent == nil and not theFrame._destroyed, "detached, not destroyed")
+	assert(theFrame.Parent == nil and not mock.isDestroyed(theFrame), "detached, not destroyed")
 	show:Set(true); data:Set({ { id = "x" } }) -- re-eval → prev returned → remount
 	assert(childCount(parent) == 1 and builds == 1, "remounted same frame, no rebuild")
 	print("PASS")
@@ -347,6 +350,288 @@ do
 	end)
 	assert(not ok2 and string.find(tostring(err2), "keyFn returned nil", 1, true) ~= nil, "domain error instead of raw 'table index is nil': " .. tostring(err2))
 	mock.assertBlamesUser(err2, "spec.slot.luau", "keyFn nil blame")
+	print("PASS")
+end
+
+-- ── M6 잔여 마감(2026-09-03, 메인) — 공개 CRUD 다섯 + collectLeaves + KeyGone 분기 ──
+
+-- spy(name, fn): temporarily replace an injected op on `q` (Slot reads
+-- `module.<op>` late — `H-174`), returning the captured call list.
+local function spy(name, body)
+	local orig, calls = q[name], {}
+	q[name] = function(...)
+		table.insert(calls, { ... })
+		if orig then return orig(...) end
+		return nil
+	end
+	body()
+	q[name] = orig
+	return calls
+end
+
+print()
+print("=== 17. Move/Swap — 중첩 Slot 요소의 리프가 native*에 배열로 넘어가고(collectLeaves) 부기가 따라간다 ===")
+do
+	local s, inner = Slot(), Slot()
+	local a = Instance.new("Frame"); a.Name = "a"
+	local i1 = Instance.new("Frame"); i1.Name = "i1"
+	local i2 = Instance.new("Frame"); i2.Name = "i2"
+	local c = Instance.new("Frame"); c.Name = "c"
+	inner:Add(i1); inner:Add(i2)
+	s:Add(a); s:Add(inner); s:Add(c) -- leaves: a(0) i1(1) i2(2) c(3)
+	local parent = Instance.new("Folder")
+	dispatch.drive(parent, { s })
+	assert(inner.Offset:Get() == 1 and s.Length:Get() == 4, "initial layout")
+
+	-- Move(2, 1): the nested block moves up — toOffset is where it lands (0)
+	local moves = spy("nativeMove", function() s:Move(2, 1) end)
+	assert(#moves == 1, "one nativeMove call")
+	local m = moves[1]
+	assert(m[1] == parent and m[2] == 1 and m[4] == 0, "nativeMove(target, fromOffset=1, leaves, toOffset=0): " .. tostring(m[2]) .. "," .. tostring(m[4]))
+	assert(#m[3] == 2 and m[3][1] == i1 and m[3][2] == i2, "elements = flattened leaves of the nested Slot (collectLeaves)")
+	assert(s:IndexOf(inner) == 1 and s:IndexOf(a) == 2, "reordered")
+	assert(inner.Offset:Get() == 0, "inner Offset follows its new position: " .. inner.Offset:Get())
+	assert(dispatch.getOffsetAt(s, 3) == 3, "c still at absolute 3")
+
+	-- Move(1, 3): the block moves down past a(1) and c(1) → lands at 2
+	moves = spy("nativeMove", function() s:Move(1, 3) end)
+	assert(moves[1][2] == 0 and moves[1][4] == 2, "toOffset = post-move first-leaf offset (2): " .. tostring(moves[1][4]))
+	assert(s:IndexOf(inner) == 3 and inner.Offset:Get() == 2, "inner now last, Offset 2: " .. inner.Offset:Get())
+
+	-- Swap(1, 3): a(0) ↔ inner(2..3); the middle (c) stays
+	local swaps = spy("nativeSwap", function() s:Swap(1, 3) end)
+	local w = swaps[1]
+	assert(w[2] == 0 and w[3][1] == a and w[4] == 2 and #w[5] == 2 and w[5][1] == i1, "nativeSwap(target, 0, {a}, 2, {i1,i2})")
+	assert(s:IndexOf(inner) == 1 and s:IndexOf(c) == 2 and s:IndexOf(a) == 3, "swapped ends, middle fixed")
+	assert(inner.Offset:Get() == 0 and dispatch.getOffsetAt(s, 3) == 3, "offsets after swap")
+
+	-- Swap(i, i) is a no-op (no physical op); range errors are fail-fast
+	assert(#spy("nativeSwap", function() s:Swap(2, 2) end) == 0, "Swap(i,i) no-op")
+	assert(not pcall(function() s:Move(0, 1) end), "Move index 0 rejected")
+	assert(not pcall(function() s:Swap(1, 9) end), "Swap out of range rejected")
+	assert(not pcall(function() s:Move(1.5, 2) end), "non-integer index rejected")
+	local _, err = pcall(function() s:Move(0, 1) end)
+	mock.assertBlamesUser(err, "spec.slot.luau", "public CRUD argument error blames the caller (H-238)")
+	assert(s.Length:Get() == 4 and childCount(parent) == 4, "nothing lost")
+	print("PASS")
+end
+
+print()
+print("=== 18. Extract/Replace — 비파괴 추출(소유권 반납), 제자리 교체, 파괴 교체, State 요소 언래핑 ===")
+do
+	local s = Slot()
+	local a = Instance.new("Frame"); a.Name = "a"
+	local b = Instance.new("Frame"); b.Name = "b"
+	local c = Instance.new("Frame"); c.Name = "c"
+	s:Add(a); s:Add(b); s:Add(c)
+	local parent = Instance.new("Folder")
+	dispatch.drive(parent, { s })
+
+	assert(s:Extract(2) == b, "Extract returns the element")
+	assert(b.Parent == nil and not mock.isDestroyed(b), "extracted: out of the tree, alive")
+	assert(s.Length:Get() == 2 and childCount(parent) == 2, "tail pulled in")
+	assert(s:Add(b) == 3, "ownership was released — re-Add works")
+
+	local d = Instance.new("Frame"); d.Name = "d"
+	assert(s:Extract(1, d) == a, "Extract(index, new) returns the previous element")
+	assert(a.Parent == nil and not mock.isDestroyed(a) and d.Parent == parent, "swapped in place, old alive")
+	assert(s:Get(1) == d and s:Get(2) == c and s:Get(3) == b and s.Length:Get() == 3, "order d,c,b")
+
+	local e = Instance.new("Frame"); e.Name = "e"
+	s:Replace(1, e)
+	assert(mock.isDestroyed(d) and e.Parent == parent and s:Get(1) == e, "Replace destroys the old occupant")
+	assert(s.Length:Get() == 3 and childCount(parent) == 3, "position count unchanged")
+
+	-- pre-pass: an already-mounted element is rejected before anything mutates
+	local other = Slot(); local f = Instance.new("Frame"); other:Add(f)
+	dispatch.drive(Instance.new("Folder"), { other })
+	assert(not pcall(function() s:Replace(1, f) end), "Replace with a mounted element rejected")
+	assert(s:Get(1) == e and not mock.isDestroyed(e), "rejected Replace mutated nothing")
+
+	-- State element: Extract returns the unwrapped State, the instance is detached
+	local g = Instance.new("Frame"); g.Name = "g"
+	local st = q.Source(g)
+	s:Add(st)
+	assert(s:IndexOf(st) == 4 and g.Parent == parent, "state element mounted via wrapper")
+	assert(s:Extract(4) == st, "Extract unwraps the State")
+	assert(g.Parent == nil and not mock.isDestroyed(g), "user instance detached, alive")
+	print("PASS")
+end
+
+print()
+print("=== 19. Splice — 구간 비파괴 추출 + 삽입, recompute 1회, 검증 선행 패스(반쪽 상태 없음) ===")
+do
+	local s = Slot()
+	local a, b, c, d = Instance.new("Frame"), Instance.new("Frame"), Instance.new("Frame"), Instance.new("Frame")
+	a.Name, b.Name, c.Name, d.Name = "a", "b", "c", "d"
+	s:Add(a); s:Add(b); s:Add(c); s:Add(d)
+	local parent = Instance.new("Folder")
+	dispatch.drive(parent, { s })
+	local x, y, z = Instance.new("Frame"), Instance.new("Frame"), Instance.new("Frame")
+	x.Name, y.Name, z.Name = "x", "y", "z"
+
+	local recomputes = 0
+	local bkTable = q._bookkeeping
+	local origRecompute = bkTable.recompute
+	bkTable.recompute = function(...) recomputes += 1; return origRecompute(...) end
+	local removed = s:Splice(2, 2, x, y, z)
+	bkTable.recompute = origRecompute
+	assert(#removed == 2 and removed[1] == b and removed[2] == c, "removed span returned in order")
+	assert(b.Parent == nil and not mock.isDestroyed(b) and c.Parent == nil and not mock.isDestroyed(c), "removed alive")
+	assert(s:Get(1) == a and s:Get(2) == x and s:Get(3) == y and s:Get(4) == z and s:Get(5) == d, "a,x,y,z,d")
+	assert(s.Length:Get() == 5 and childCount(parent) == 5, "5 mounted")
+	assert(recomputes == 1, "one explicit recompute for the whole splice (batched): " .. recomputes)
+	assert(dispatch.getOffsetAt(s, 5) == 4, "offsets settled after the batch")
+
+	-- insertion at the end (index n+1, removeCount 0) is the Add-like range
+	assert(#s:Splice(6, 0, Instance.new("Frame")) == 0 and s.Length:Get() == 6, "append via Splice")
+	assert(not pcall(function() s:Splice(8, 0) end), "index n+2 rejected")
+	assert(not pcall(function() s:Splice(5, 3) end), "removeCount past the end rejected")
+	assert(not pcall(function() s:Splice(1, -1) end), "negative removeCount rejected")
+
+	-- pre-pass: the LAST new element is bad → nothing at all changes (H-30/H-31)
+	local p, mountedElsewhere = Instance.new("Frame"), Instance.new("Frame")
+	local other = Slot(); other:Add(mountedElsewhere)
+	dispatch.drive(Instance.new("Folder"), { other })
+	local before = childCount(parent)
+	assert(not pcall(function() s:Splice(1, 1, p, mountedElsewhere) end), "mounted element in the batch rejected")
+	assert(childCount(parent) == before and s:Get(1) == a and p.Parent == nil, "half-applied state prevented")
+	assert(not pcall(function() s:Splice(1, 0, p, p) end), "duplicate within the batch rejected")
+	assert(not pcall(function() s:Splice(1, 0, p, nil, p) end), "nil hole in the vararg rejected")
+	assert(childCount(parent) == before, "still untouched")
+	print("PASS")
+end
+
+print()
+print("=== 20. KeyGone 처분 세 갈래 — nil(파괴) / Detach(홀드→재마운트) / 새 값(error), Owned=false는 언마운트만 ===")
+do
+	local frames, builds = {}, 0
+	local data = q.Source({ { id = "a" }, { id = "b" } })
+	local goneReply = "nil" -- what updateFn returns for KeyGone
+	local s = Slot()
+	s:List(data, function(item, _i, _o, prev, _ud)
+		if item == q.KeyGone then
+			if goneReply == "nil" then return nil end
+			if goneReply == "detach" then return q.Detach end
+			return Instance.new("Frame") -- a NEW value on KeyGone is a contract error
+		end
+		if prev then return prev end
+		builds += 1
+		local f = Instance.new("Frame"); f.Name = item.id
+		frames[item.id] = f
+		return f
+	end, function(item) return item.id end)
+	local parent = Instance.new("Folder")
+	dispatch.drive(parent, { s })
+	assert(childCount(parent) == 2 and builds == 2, "initial")
+
+	-- (1) nil → destroyed
+	data:Set({ { id = "b" } })
+	assert(mock.isDestroyed(frames.a) and childCount(parent) == 1, "KeyGone→nil destroys")
+
+	-- (2) Detach → held (alive, out of the tree), key returns → the SAME frame remounts
+	goneReply = "detach"
+	data:Set({})
+	assert(not mock.isDestroyed(frames.b) and frames.b.Parent == nil and childCount(parent) == 0, "KeyGone→Detach holds")
+	assert(s._detached and s._detached.b == frames.b, "held in slot._detached")
+	data:Set({ { id = "b" } })
+	assert(childCount(parent) == 1 and frames.b.Parent == parent and builds == 2, "remounted the held frame, no rebuild")
+
+	-- (3) a new value on KeyGone → error
+	goneReply = "new"
+	assert(not pcall(function() data:Set({}) end), "KeyGone accepts only nil/None/Detach")
+
+	-- Owned = false: the user's frames are never destroyed, only unmounted
+	local u1 = Instance.new("Frame"); u1.Name = "u1"
+	local udata = q.Source({ { id = "u1", f = u1 } })
+	local us = Slot()
+	us:List(udata, function(item, _i, _o, prev, _ud)
+		if item == q.KeyGone then return nil end
+		return prev or item.f
+	end, function(item) return item.id end, { Owned = false })
+	local uparent = Instance.new("Folder")
+	dispatch.drive(uparent, { us })
+	assert(u1.Parent == uparent, "user frame mounted")
+	udata:Set({})
+	assert(not mock.isDestroyed(u1) and u1.Parent == nil and childCount(uparent) == 0, "Owned=false: KeyGone→nil unmounts only")
+	-- and the element is free again (ownership released on the way out)
+	local reuse = Slot(); reuse:Add(u1)
+	dispatch.drive(Instance.new("Folder"), { reuse })
+	assert(u1.Parent ~= nil, "unowned element reusable after leaving the list")
+	print("PASS")
+end
+
+print()
+print("=== 21. 실체화 전 CRUD — Move/Swap/Splice/Extract가 _elements만 만지고, 마운트 때 그 순서대로 선다 ===")
+do
+	local s = Slot()
+	local a, b, c, d = Instance.new("Frame"), Instance.new("Frame"), Instance.new("Frame"), Instance.new("Frame")
+	a.Name, b.Name, c.Name, d.Name = "a", "b", "c", "d"
+	s:Add(a); s:Add(b); s:Add(c)
+	s:Move(3, 1) -- c,a,b
+	s:Swap(2, 3) -- c,b,a
+	assert(s:Extract(2) == b, "Extract before mount") -- c,a
+	local removed = s:Splice(2, 1, d, b) -- c,d,b
+	assert(removed[1] == a and s:Get(1) == c and s:Get(2) == d and s:Get(3) == b, "c,d,b")
+	assert(s.Length:Get() == 0, "Length is 0 until mount (H6-4)")
+	local parent = Instance.new("Folder")
+	local calls = spy("nativeMove", function() dispatch.drive(parent, { s }) end)
+	assert(#calls == 0, "no reposition op replayed at mount")
+	assert(s.Length:Get() == 3 and childCount(parent) == 3, "mounted in the final order")
+	assert(dispatch.getOffsetAt(s, 1) == 0 and dispatch.getOffsetAt(s, 3) == 2, "offsets from the final layout")
+	assert(a.Parent == nil and not mock.isDestroyed(a), "spliced-out element alive, unmounted")
+	print("PASS")
+end
+
+print()
+print("=== 22. 통합 리뷰(H6-19) — 선행 검증이 raw 값을 본다·파괴된 Slot 요소·언마운트 부기 리셋·생성자 blame ===")
+do
+	-- (a) a destroyed Slot as a new element fails in the pre-pass — the batch
+	-- gate must not be left On by a raise inside rawSplice
+	local s = Slot()
+	local a, b = Instance.new("Frame"), Instance.new("Frame")
+	s:Add(a); s:Add(b)
+	local parent = Instance.new("Folder")
+	dispatch.drive(parent, { s })
+	local dead = Slot(); q.dispose(dead)
+	assert(not pcall(function() s:Splice(1, 0, dead) end), "destroyed Slot element rejected")
+	assert(not dispatch.getBlocker(s):IsOn(), "batch gate NOT left On")
+	assert(#s._elements == 2 and s.Length:Get() == 2, "nothing mutated")
+	s:Add(Instance.new("Frame"))
+	assert(s.Length:Get() == 3 and childCount(parent) == 3, "bookkeeping still alive after the rejected Splice")
+
+	-- (b) State elements: the same State twice, or a State whose current value
+	-- is mounted elsewhere, are rejected BEFORE any mutation (raw-value checks)
+	local f = Instance.new("Frame")
+	local st = q.Source(f)
+	assert(not pcall(function() s:Splice(1, 0, st, st) end), "same State twice rejected")
+	assert(#s._elements == 3 and childCount(parent) == 3, "no half-applied wrapper")
+	local elsewhere = Slot(); elsewhere:Add(st)
+	dispatch.drive(Instance.new("Folder"), { elsewhere })
+	assert(f.Parent ~= nil, "st's value mounted elsewhere")
+	assert(not pcall(function() s:Add(st) end), "Add(State) whose value is mounted elsewhere rejected")
+	assert(not pcall(function() s:Splice(1, 0, Instance.new("Frame"), st) end), "…and inside a Splice batch")
+	assert(#s._elements == 3 and childCount(parent) == 3, "still untouched")
+
+	-- (c) nested Slot extracted, mutated while unmounted, re-added: Length and
+	-- sibling offsets come from the CURRENT elements, not the old mount's N
+	local p, child = Slot(), Slot()
+	local pa, pc = Instance.new("Frame"), Instance.new("Frame")
+	child:Add(Instance.new("Frame")); child:Add(Instance.new("Frame")); child:Add(Instance.new("Frame"))
+	p:Add(pa); p:Add(child); p:Add(pc)
+	local pp = Instance.new("Folder")
+	dispatch.drive(pp, { p })
+	assert(p.Length:Get() == 5, "5 leaves")
+	assert(p:Extract(2) == child, "nested Slot extracted alive")
+	child:Remove(3) -- while unmounted
+	p:Add(child)
+	assert(child.Length:Get() == 2, "child Length from current elements: " .. child.Length:Get())
+	assert(p.Length:Get() == 4 and childCount(pp) == 4, "parent Length 4: " .. p.Length:Get())
+	assert(child.Offset:Get() == 2, "re-added at the end → offset 2: " .. child.Offset:Get())
+
+	-- (d) `Slot{bad}` blames the user's line, not the constructor's Add call
+	local _, err = pcall(function() return Slot({ 123 }) end)
+	mock.assertBlamesUser(err, "spec.slot.luau", "constructor element error blames the caller (H-238)")
 	print("PASS")
 end
 

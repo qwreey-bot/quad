@@ -24,7 +24,11 @@ op+생명주기 / `D` 생성기 / Property·InstanceChild 핸들러 /
 12번)는 `.claude/todos.md` 00번이 소스. **같은 날 사용자 승인으로 병렬 탐사, 2026-09-03 통합 완료** —
 fork 둘이 worktree에서 M6/M10을 mock 축으로 선행 구현했고 **메인에
 머지됨**(발견 접두 `H6-`/`H10-`, 원장 `round15`/`round16`; 통합 판정(H10-3
-(d)·H10-5·H10-1)과 잔여 목록은 `ROADMAP.md` M6/M10 배너가 소스)** —
+(d)·H10-5·H10-1)과 잔여 목록은 `ROADMAP.md` M6/M10 배너가 소스). **[2026-09-03
+후속] M6 잔여 마감 단위 완료** — 공개 CRUD 다섯·`collectLeaves`·raw 꼬리
+공용화·quad-types `Slot<T>`(`H-25`)·`KeyGone` spec·실기기 Deferred 축 실측
+(`audit/m6-remainder-studio-2026-09-03.md`), 정정 `H6-14`/`H6-15`; M6 잔여
+목록 전부 닫힘(소스는 round15 "이 fork 슬라이스 밖" 절)** —
 **M4도 같은 방식의 자율 구간으로 2026-09-01 착수·종결**(사용자 조건부
 승인으로 규약 `qa-request/m4-implementation-round13-brief.md` §0 전량 (a)
 확정, 발견 `-round13.md`(`H-287`~; §4 열린 문항 0) — 단위 하나:
