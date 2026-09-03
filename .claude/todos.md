@@ -53,8 +53,10 @@
    무타입 프리미티브(제네릭 폐기), 타입은 배열부 슈가
    `StringAttribute(name, value)`류(= 단일 항목 그룹)가 진다
    (`session/2026-09-03-06-attribute-sugar.md`, `H10-15`) — round16 §표 열린
-   문항 0. 에디터 fflags는 문서화만(typing-limits 8.5). **사용자 지시: 다음은
-   M7 규약 문항지.** **M10 잔여는
+   문항 0. 에디터 fflags는 문서화만(typing-limits 8.5). **사용자 지시로 M7 규약 문항지
+   작성 완료 — `qa-request/m7-implementation-round17-brief.md` §0 다섯 문항
+   회신 대기**(권고 전부 (a); Q3 `D.Modifier.<Class>()`·Q4 drive가 flatten
+   소유는 새 이름·배치라 사용자 결정 필요). **M10 잔여는
    InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
    목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
    (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지

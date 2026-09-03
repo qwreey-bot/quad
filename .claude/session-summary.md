@@ -2298,5 +2298,7 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   키·위치 claim·dedup·StoreBind 상속), raw 타입 검사·nil 거부는 슈가 몫.
   quad-types `AttributeSugar<T>`, quad-roblox `NewChild`에 `Tag`/`Attribute`
   합류(strict `D` children). spec.attribute 10절, Studio 실측, round16
-  `H10-15`. 에디터 fflags는 문서화만(typing-limits 8.5 스니펫). 다음은 M7
-  규약 문항지.
+  `H10-15`. 에디터 fflags는 문서화만(typing-limits 8.5 스니펫). 같은 세션
+  말미에 M7 규약 문항지 `qa-request/m7-implementation-round17-brief.md` 신설
+  (§0 Q1~Q5, 회신 대기 — Q3 타입드 생성자 표면·Q4 flatten 호출 주체가
+  사용자 결정 자리).
