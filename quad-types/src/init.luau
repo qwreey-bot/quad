@@ -276,11 +276,12 @@ export type Slot<T> = {
 		opts: SlotListOpts?
 	) -> Slot<T>,
 }
--- 센티널 둘 — `None`과 같은 신원 값(재export). 런타임 마커 필드가 아직 없어
--- 좁힘용 구조 타입은 못 둔다(`H-300`이 None에 준 마커의 Slot 몫은 round15
--- §4 문항 — 빈 테이블 타입은 그때까지의 자리표시).
-export type Detach = {}
-export type KeyGone = {}
+-- 센티널 둘 — `None`과 같은 신원 값(재export). 판정은 `v == Detach` 신원
+-- 비교이고 마커 필드는 타입 좁힘용 조언층일 뿐(`H6-16` (a), 2026-09-03 사용자
+-- 확정 — `None`의 `__quadNone`과 같은 모양, `H-300`). 신원 비교로는 좁혀지지
+-- 않는다(truthiness 좁힘만) — 사용자 `Item` 쪽엔 캐스트가 남을 수 있음.
+export type Detach = { read __quadDetach: true }
+export type KeyGone = { read __quadKeyGone: true }
 
 export type Quad = {
 	Version: "0.0.0", -- quad-base/pesde.toml의 version과 항상 맞출 것

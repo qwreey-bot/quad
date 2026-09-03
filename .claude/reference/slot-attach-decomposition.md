@@ -274,6 +274,11 @@ local function materializeSlotTree(slot, physicalTarget, ownerKey, position)
 end
 
 -- 비공개 재귀 2: 물리만 붙인다.
+-- ⚠️ [2026-09-03] 아래 몸통(리프마다 `nativeInsert`)은 이 근거 기록 시점의
+-- 모양이다 — round15 `H6-9` (b)로 지금은 플래그 walk(`markMountedTree`)와
+-- 서브트리 리프 전체를 싣는 물리 op 하나로 갈라졌다. 유효한 모양은
+-- `base/slot-plan.md`의 `markMountedTree`/`mountSlotTree` 의사코드. 분해 원칙(부기 walk와 물리
+-- walk를 함수 경계로 가른다)은 그대로다.
 local function mountSlotTree(slot, physicalTarget)
     slot._mounted = true                    -- R3 (C3)
     slot._mountedInst = physicalTarget

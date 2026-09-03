@@ -455,6 +455,21 @@ do
 	assert(s:IndexOf(st) == 4 and g.Parent == parent, "state element mounted via wrapper")
 	assert(s:Extract(4) == st, "Extract unwraps the State")
 	assert(g.Parent == nil and not mock.isDestroyed(g), "user instance detached, alive")
+	-- H6-12 (b): the discarded sugar wrapper released its claim — the State is
+	-- re-addable right away (no GC dependence), and dispose(g) is allowed
+	assert(s:Add(st) == 4 and g.Parent == parent, "re-Add(state) after Extract works (wrapper claim released)")
+	assert(s:Extract(4) == st, "extract again")
+	q.dispose(g)
+	assert(mock.isDestroyed(g), "dispose(inst) allowed after the wrapper let go")
+	-- Remove(state element): the wrapper is asked to die → user instance survives, unclaimed
+	local h = Instance.new("Frame"); h.Name = "h"
+	local sth = q.Source(h)
+	s:Add(sth)
+	s:Remove(s:IndexOf(sth))
+	assert(not mock.isDestroyed(h) and h.Parent == nil, "Owned=false wrapper: Remove unmounts, does not destroy")
+	local reclaim = Slot(); reclaim:Add(h)
+	dispatch.drive(Instance.new("Folder"), { reclaim })
+	assert(h.Parent ~= nil, "the instance is claimable elsewhere after the wrapper died")
 	print("PASS")
 end
 
@@ -474,19 +489,46 @@ do
 	local bkTable = q._bookkeeping
 	local origRecompute = bkTable.recompute
 	bkTable.recompute = function(...) recomputes += 1; return origRecompute(...) end
-	local removed = s:Splice(2, 2, x, y, z)
+	local removed
+	local inserts
+	local extracts = spy("nativeExtract", function()
+		inserts = spy("nativeInsert", function()
+			removed = s:Splice(2, 2, x, y, z)
+		end)
+	end)
 	bkTable.recompute = origRecompute
 	assert(#removed == 2 and removed[1] == b and removed[2] == c, "removed span returned in order")
 	assert(b.Parent == nil and not mock.isDestroyed(b) and c.Parent == nil and not mock.isDestroyed(c), "removed alive")
 	assert(s:Get(1) == a and s:Get(2) == x and s:Get(3) == y and s:Get(4) == z and s:Get(5) == d, "a,x,y,z,d")
 	assert(s.Length:Get() == 5 and childCount(parent) == 5, "5 mounted")
 	assert(recomputes == 1, "one explicit recompute for the whole splice (batched): " .. recomputes)
+	-- H6-9 (b): ONE physical op — nativeExtract(target, offset, removed, new)
+	assert(#extracts == 1 and #inserts == 0, "exactly one nativeExtract, no nativeInsert: " .. #extracts .. "/" .. #inserts)
+	local e = extracts[1]
+	assert(e[1] == parent and e[2] == 1, "offset of the span (1): " .. tostring(e[2]))
+	assert(#e[3] == 2 and e[3][1] == b and e[3][2] == c, "removed leaves in order")
+	assert(#e[4] == 3 and e[4][1] == x and e[4][2] == y and e[4][3] == z, "new leaves in order")
 	assert(dispatch.getOffsetAt(s, 5) == 4, "offsets settled after the batch")
 
+	-- nested Slots on both sides still fold into the one op (collectLeaves)
+	local inner = Slot(); local i1, i2 = Instance.new("Frame"), Instance.new("Frame")
+	inner:Add(i1); inner:Add(i2)
+	local w = Instance.new("Frame")
+	local ex2 = spy("nativeExtract", function() s:Splice(2, 2, inner, w) end) -- removes x,y; inserts inner{i1,i2}, w
+	assert(#ex2 == 1 and #ex2[1][3] == 2 and #ex2[1][4] == 3 and ex2[1][4][1] == i1 and ex2[1][4][3] == w, "nested leaves flattened into the single op")
+	assert(inner._mounted and inner._mountedInst == parent and inner.Offset:Get() == 1, "new nested Slot marked mounted at its offset")
+	assert(s.Length:Get() == 6 and childCount(parent) == 6, "6 leaves")
+	-- pure insertion (removeCount 0) is one nativeInsert; pure removal one nativeExtract
+	local ins = spy("nativeInsert", function() s:Splice(1, 0, Instance.new("Frame")) end)
+	assert(#ins == 1 and ins[1][2] == 0, "removeCount 0 → one nativeInsert at the span offset")
+	local ex3 = spy("nativeExtract", function() s:Splice(1, 1) end)
+	assert(#ex3 == 1 and ex3[1][4] == nil, "no new elements → nativeExtract without newElements")
+
 	-- insertion at the end (index n+1, removeCount 0) is the Add-like range
-	assert(#s:Splice(6, 0, Instance.new("Frame")) == 0 and s.Length:Get() == 6, "append via Splice")
-	assert(not pcall(function() s:Splice(8, 0) end), "index n+2 rejected")
-	assert(not pcall(function() s:Splice(5, 3) end), "removeCount past the end rejected")
+	local n, L = #s._elements, s.Length:Get() -- positions vs leaves (inner holds 2)
+	assert(#s:Splice(n + 1, 0, Instance.new("Frame")) == 0 and s.Length:Get() == L + 1, "append via Splice")
+	assert(not pcall(function() s:Splice(n + 3, 0) end), "index n+2 rejected")
+	assert(not pcall(function() s:Splice(n, 3) end), "removeCount past the end rejected")
 	assert(not pcall(function() s:Splice(1, -1) end), "negative removeCount rejected")
 
 	-- pre-pass: the LAST new element is bad → nothing at all changes (H-30/H-31)
@@ -632,6 +674,47 @@ do
 	-- (d) `Slot{bad}` blames the user's line, not the constructor's Add call
 	local _, err = pcall(function() return Slot({ 123 }) end)
 	mock.assertBlamesUser(err, "spec.slot.luau", "constructor element error blames the caller (H-238)")
+	print("PASS")
+end
+
+print()
+print("=== 23. 회신 반영 리뷰(H6-24) — 점유자 단위 dedup: 같은 Instance를 든 State 둘·raw+State, 마운트 전 aliasing, 미실체화 Extract(i,new)의 래퍼 반납 ===")
+do
+	-- (a) two States over one instance inside one Splice: rejected in the
+	-- pre-pass (no half-applied array, gate not left On)
+	local s = Slot()
+	s:Add(Instance.new("Frame"))
+	local parent = Instance.new("Folder")
+	dispatch.drive(parent, { s })
+	local f = Instance.new("Frame")
+	assert(not pcall(function() s:Splice(2, 0, q.Source(f), q.Source(f)) end), "two States over one instance rejected")
+	assert(not pcall(function() s:Splice(2, 0, f, q.Source(f)) end), "raw + State over the same instance rejected")
+	assert(#s._elements == 1 and childCount(parent) == 1 and not dispatch.getBlocker(s):IsOn(), "nothing mutated, gate open")
+	s:Add(Instance.new("Frame"))
+	assert(s.Length:Get() == 2, "still reactive")
+
+	-- (b) aliasing States added BEFORE mount (materializeSlotTree variant):
+	-- the second Add already sees the first wrapper's occupant
+	local u = Slot()
+	local g = Instance.new("Frame")
+	u:Add(q.Source(g))
+	assert(not pcall(function() u:Add(q.Source(g)) end), "second State over the same instance rejected before mount")
+	local up = Instance.new("Folder")
+	dispatch.drive(up, { u })
+	assert(childCount(up) == 1 and u.Length:Get() == 1, "mounts cleanly")
+
+	-- (c) unmaterialized Extract(i, new) on a previously mounted nested Slot
+	-- releases the outgoing sugar wrapper's claim
+	local outer, p = Slot(), Slot()
+	local x, h = Instance.new("Frame"), Instance.new("Frame")
+	local st = q.Source(h)
+	p:Add(x); p:Add(st)
+	outer:Add(p)
+	dispatch.drive(Instance.new("Folder"), { outer })
+	assert(outer:Extract(1) == p and p._physicalTarget == nil, "p alive, unmaterialized")
+	assert(p:Extract(2, Instance.new("Frame")) == st, "Extract(i, new) returns the State")
+	q.dispose(h)
+	assert(mock.isDestroyed(h), "the wrapper let go of h (dispose allowed)")
 	print("PASS")
 end
 

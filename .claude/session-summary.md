@@ -2254,8 +2254,12 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   수렴(13→6→1), `/code-review medium` 확정 6 → `H6-19` ① 묶음(Splice 게이트
   누수 경로·State 선행 검증·언마운트 부기 리셋·생성자 blame)+`H6-20` ②, 탐사자 `H6-21`(reconcile 예외 자리 문서화)·`H6-22`(pesde 심 재생성). §4
   문항 넷(`H6-9` Splice 단일 물리 op / `H6-12` 래퍼 이탈 소유권 / `H6-16`
-  센티널 마커 / `H6-20` nativeSwap 계약) — 막는 것 아님. 실기기 Deferred 축도 같은 날 Studio 실측
-  (`audit/m6-remainder-studio-2026-09-03.md` 11/11) — M6 잔여 전부 닫힘.
+  센티널 마커 / `H6-20` nativeSwap 계약) — **같은 날 사용자 회신으로 전량
+  반영**(`H6-9` (b) 단일 물리 op — 마운트/언마운트 플래그 walk 분리 /
+  `H6-12` (b) 슈가 래퍼만 소유권 반납 / `H6-16` (a) 마커 / `H6-20` (a)
+  문구), 부수 `H6-23`·`H6-24`(점유자 단위 dedup). 실기기 Deferred 축도 같은 날 Studio 실측
+  (`audit/m6-remainder-studio-2026-09-03.md` 11/11 ×2) — M6 잔여 전부 닫힘,
+  §4 열린 문항 0.
 
 - `session/2026-09-03-03-m10-engine-axis.md` **[M10 엔진 축 첫 단위 —
   Tag/Attribute 엔진 op]** 사용자 위임(아침 회신 4번)으로 (d′) 형태 채택:

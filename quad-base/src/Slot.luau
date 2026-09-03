@@ -19,9 +19,11 @@ local QuadTypes = require("../luau_packages/quad_types")
 
 local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 
--- Sentinels — identity only (like None). Re-exported at top level.
-local Detach = table.freeze(setmetatable({}, { __tostring = function() return "Detach" end }))
-local KeyGone = table.freeze(setmetatable({}, { __tostring = function() return "KeyGone" end }))
+-- Sentinels — identity is the judgement (like None); the marker field is the
+-- TYPE-narrowing aid only (`H6-16` (a), user decision 2026-09-03 — same shape
+-- as None's `__quadNone`, `H-300`). Re-exported at top level.
+local Detach = table.freeze(setmetatable({ __quadDetach = true :: true }, { __tostring = function() return "Detach" end }))
+local KeyGone = table.freeze(setmetatable({ __quadKeyGone = true :: true }, { __tostring = function() return "KeyGone" end }))
 
 local function Init(module: any)
 	-- ⚠️ H6-3: Slot_mt is created PER module instance, NOT at file scope. Its
@@ -90,7 +92,7 @@ local function Init(module: any)
 	end
 
 	-- forward decls (mutual recursion)
-	local Slot, materializeSlotTree, mountSlotTree, attachSlot, destroySlotTree, unmountSlotTree
+	local Slot, materializeSlotTree, mountSlotTree, markMountedTree, attachSlot, destroySlotTree, unmountSlotTree, teardownTree
 
 	-- wrap: element-type whitelist gate (H-40) + State→wrapper-Slot. raw* only
 	-- ever see already-wrapped physical elements.
@@ -268,19 +270,21 @@ local function Init(module: any)
 		BK.setLength(ownerKey, position, slot.Length, physicalTarget, slot)
 	end
 
-	function mountSlotTree(slot: any, physicalTarget: any)
+	-- Mounting is two halves (`H6-9` (b), user decision 2026-09-03): the FLAG
+	-- walk (recursive `_mounted`/`_mountedInst`) and ONE physical op for the
+	-- whole subtree's flattened leaves — never one op per leaf. rawSplice uses
+	-- the halves separately to fold several new subtrees into its single op.
+	function markMountedTree(slot: any, physicalTarget: any)
 		slot._mounted = true
 		slot._mountedInst = physicalTarget
-		local acc = slot.Offset:Get()
 		for _, element in ipairs(slot._elements) do
-			if isSlot(element) then
-				mountSlotTree(element, physicalTarget)
-				acc += element.Length:Get()
-			else
-				module.nativeInsert(physicalTarget, acc, { element })
-				acc += 1
-			end
+			if isSlot(element) then markMountedTree(element, physicalTarget) end
 		end
+	end
+
+	function mountSlotTree(slot: any, physicalTarget: any)
+		module.nativeInsert(physicalTarget, slot.Offset:Get(), collectLeaves(slot))
+		markMountedTree(slot, physicalTarget)
 	end
 
 	function attachSlot(slot: any, physicalTarget: any, ownerKey: any, position: number, mount: boolean?)
@@ -291,7 +295,9 @@ local function Init(module: any)
 	end
 
 	-- ── raw layer ──────────────────────────────────────────────────────
-	local function rawAdd(self: any, element: any, index: number?, fromDetached: boolean?): number
+	-- `deferPhysical` (rawAdd/rawUnmount): bookkeeping only — the caller
+	-- (rawSplice) issues the ONE physical op for the whole batch itself.
+	local function rawAdd(self: any, element: any, index: number?, fromDetached: boolean?, deferPhysical: boolean?): number
 		claimOwner(element, self, fromDetached)
 		index = index or (#self._elements + 1)
 		table.insert(self._elements, index, element)
@@ -302,16 +308,40 @@ local function Init(module: any)
 		end
 
 		spliceArraysUp(self, index)
+		local physical = self._mounted and not deferPhysical
 		if isSlot(element) then
-			attachSlot(element, self._physicalTarget, self, index, self._mounted)
+			attachSlot(element, self._physicalTarget, self, index, physical)
 		else
 			BK.setOffsetSource(self, index, None)
-			if self._mounted then
+			if physical then
 				module.nativeInsert(self._mountedInst, BK.getOffsetAt(self, index), { element })
 			end
 			BK.setLength(self, index, 1, self._physicalTarget, element)
 		end
 		return index
+	end
+
+	-- releaseSugarWrapper — `H6-12` (b), user decision 2026-09-03 (*"래퍼라서
+	-- 문제 되는 부분인지라, 그 부분만 좁게 해결"*). A wrapper Slot minted by
+	-- wrapElement (`_wrapped ~= nil`) is discarded the moment it leaves its
+	-- outer Slot as an element: the user gets the State back and a re-Add
+	-- mints a fresh wrapper. So it must not keep owning the user's instance —
+	-- otherwise the next Add(state)/dispose(inst) fails "already mounted"
+	-- until GC clears the weak record (the nondeterminism slot-plan forbids).
+	-- Portal unmount (State<Slot> swap) and user-made Owned=false lists keep
+	-- ownership exactly as before — they are real Slots the user still holds.
+	local function releaseSugarWrapper(wrapper: any)
+		for _, element in ipairs(wrapper._elements) do
+			releaseOwner(element, wrapper)
+		end
+	end
+
+	-- leaveAsElement — a Slot element leaving its outer Slot ALIVE (rawUnmount,
+	-- non-destroying rawReplace, rawSplice): unmount (logical only when the
+	-- caller batches the physical op), then drop a sugar wrapper's inner claim.
+	local function leaveAsElement(element: any, deferPhysical: boolean?)
+		if deferPhysical then teardownTree(element) else unmountSlotTree(element) end
+		if element._wrapped ~= nil then releaseSugarWrapper(element) end
 	end
 
 	-- raw 3-family — two axes decide the head (destroy? / release ownership?),
@@ -333,13 +363,13 @@ local function Init(module: any)
 		vacate(self, index, element, bk)
 	end
 
-	local function rawUnmount(self: any, index: number)
+	local function rawUnmount(self: any, index: number, deferPhysical: boolean?)
 		local element = self._elements[index]
 		local bk = BK.getBookkeeping(self)
 		unbindObserverAt(bk, index)
 		releaseOwner(element, self)
-		if isSlot(element) then unmountSlotTree(element)
-		elseif self._mounted then
+		if isSlot(element) then leaveAsElement(element, deferPhysical)
+		elseif self._mounted and not deferPhysical then
 			module.nativeExtract(self._mountedInst, BK.getOffsetAt(self, index), { element })
 		end
 		vacate(self, index, element, bk)
@@ -371,6 +401,13 @@ local function Init(module: any)
 		if not self._mounted then
 			if destroyOld then
 				if isSlot(oldElement) then destroySlotTree(oldElement) else module.nativeDispose(oldElement) end
+			elseif isSlot(oldElement) then
+				-- materialized but unmounted: the old subtree still has its
+				-- observers bound to the target — logical teardown (`H6-23`).
+				-- Unmaterialized: nothing to tear down, but a sugar wrapper that
+				-- was mounted earlier still holds its claim (`H6-24`) — release.
+				if self._physicalTarget ~= nil then teardownTree(oldElement) end
+				if oldElement._wrapped ~= nil then releaseSugarWrapper(oldElement) end
 			end
 			if self._physicalTarget ~= nil then
 				if isSlot(newElement) then
@@ -386,7 +423,7 @@ local function Init(module: any)
 		local offset = BK.getOffsetAt(self, index)
 		if isSlot(oldElement) or isSlot(newElement) then
 			if isSlot(oldElement) then
-				if destroyOld then destroySlotTree(oldElement) else unmountSlotTree(oldElement) end
+				if destroyOld then destroySlotTree(oldElement) else leaveAsElement(oldElement) end
 			else
 				local op = if destroyOld then module.nativeRemove else module.nativeExtract
 				op(self._mountedInst, offset, { oldElement })
@@ -489,23 +526,55 @@ local function Init(module: any)
 	end
 
 	-- rawSplice: remove `removeCount` positions at `index` (alive — returned)
-	-- and insert `newElements` there. Composition of rawUnmount + rawAdd under
-	-- this Slot's batch Blocker, so the bookkeeping recompute runs ONCE at the
-	-- end (the CRUD table's "shift+recompute 1회" is the recompute half; the
-	-- physical ops stay per element — see round15 `H6-9`). Elements are
-	-- already wrapped/validated by the caller (`H-30`/`H-31` pre-pass).
+	-- and insert `newElements` there — ONE recompute and ONE physical op
+	-- (`H6-9` (b), user decision 2026-09-03: `nativeExtract(target, offset,
+	-- removedLeaves, newLeaves)` — the reflow-window rationale in slot-plan's
+	-- native* section). Bookkeeping goes through rawUnmount/rawAdd with
+	-- `deferPhysical` under this Slot's batch Blocker; the physical halves are
+	-- gathered with collectLeaves before (removed) and after (new — nested
+	-- Slots are materialized but not yet marked mounted) the array mutation,
+	-- then the new subtrees get the flag walk. Elements are already
+	-- wrapped/validated by the caller (`H-30`/`H-31` pre-pass).
 	local function rawSplice(self: any, index: number, removeCount: number, newElements: { any }): { any }
-		local removed = {}
+		local removed = table.create(removeCount)
+		for i = index, index + removeCount - 1 do
+			removed[i - index + 1] = self._elements[i]
+		end
+		local mounted = self._mounted
 		local gate = if self._physicalTarget ~= nil then BK.getBlocker(self) else nil
 		local ownsGate = gate ~= nil and not gate:IsOn()
 		if ownsGate then gate:On() end
+
+		local base, removedLeaves: { any } = 0, {}
+		if mounted then
+			base = BK.getOffsetAt(self, index) -- before the mutation — the cache describes the current layout
+			for _, element in ipairs(removed) do
+				if isSlot(element) then collectLeaves(element, removedLeaves)
+				else table.insert(removedLeaves, element) end
+			end
+		end
 		for i = index + removeCount - 1, index, -1 do
-			table.insert(removed, 1, self._elements[i])
-			rawUnmount(self, i)
+			rawUnmount(self, i, true)
 		end
 		for k, element in ipairs(newElements) do
-			rawAdd(self, element, index + k - 1)
+			rawAdd(self, element, index + k - 1, nil, true)
 		end
+		if mounted then
+			local newLeaves = {}
+			for k, element in ipairs(newElements) do
+				if isSlot(element) then collectLeaves(element, newLeaves)
+				else table.insert(newLeaves, element) end
+			end
+			if #removedLeaves > 0 then
+				module.nativeExtract(self._mountedInst, base, removedLeaves, if #newLeaves > 0 then newLeaves else nil)
+			elseif #newLeaves > 0 then
+				module.nativeInsert(self._mountedInst, base, newLeaves)
+			end
+			for _, element in ipairs(newElements) do
+				if isSlot(element) then markMountedTree(element, self._mountedInst) end
+			end
+		end
+
 		if ownsGate then
 			gate:OffWithoutEmit()
 			maybeRecompute(self, BK.getBookkeeping(self))
@@ -539,14 +608,14 @@ local function Init(module: any)
 	end
 
 	-- ── destroy / unmount trees ────────────────────────────────────────
-	function unmountSlotTree(slot: any)
-		local physicalTarget = slot._mountedInst
-		for i = #slot._elements, 1, -1 do
-			local element = slot._elements[i]
-			if isSlot(element) then unmountSlotTree(element)
-			elseif physicalTarget then
-				module.nativeExtract(physicalTarget, BK.getOffsetAt(slot, i), { element })
-			end
+	-- Unmounting is two halves, mirroring mounting (`H6-9` (b)): teardownTree
+	-- is the LOGICAL half (observers unbound, flags + position bookkeeping
+	-- reset, recursively, no physical op); unmountSlotTree adds ONE
+	-- nativeExtract of the subtree's flattened leaves. rawSplice calls the
+	-- logical half only and folds the leaves into its single op.
+	function teardownTree(slot: any)
+		for _, element in ipairs(slot._elements) do
+			if isSlot(element) then teardownTree(element) end
 		end
 		local bk = BK.getBookkeeping(slot)
 		for _, observer in pairs(bk.observers) do
@@ -569,10 +638,20 @@ local function Init(module: any)
 		bk.offsetCacheValidUpTo, bk.offsetSetUpTo = 0, 0
 	end
 
+	function unmountSlotTree(slot: any)
+		if slot._mounted then
+			module.nativeExtract(slot._mountedInst, slot.Offset:Get(), collectLeaves(slot))
+		end
+		teardownTree(slot)
+	end
+
 	function destroySlotTree(slot: any)
 		if slot._destroyed then return end
 		if slot._owned == false then
 			unmountSlotTree(slot)
+			-- a sugar wrapper asked to die leaves its user's instance alive AND
+			-- unclaimed (`H6-12` (b)); a user-made Owned=false list keeps its claims
+			if slot._wrapped ~= nil then releaseSugarWrapper(slot) end
 			return
 		end
 		for _, element in ipairs(slot._elements) do
@@ -628,18 +707,38 @@ local function Init(module: any)
 	-- vacuous — the same State twice, or a State whose current value is
 	-- already mounted, would pass here and raise from reconcile depth
 	-- mid-mutation. For a State the occupant to check is its current value.
-	local function prepareElements(surface: string, count: number, ...: any): { any }
+	-- Dedup is on the OCCUPANT (a State's current value), not the raw value
+	-- (`H6-24`, 회신 반영 리뷰): two States holding one instance, or a raw
+	-- instance plus a State holding it, are two wrappers over one occupant —
+	-- the wrappers' own claims happen at mount, mid-loop, inside the batch
+	-- gate. The same occupant test runs against what `self` already holds
+	-- (unmaterialized wrappers have not claimed yet, so elementOwner alone
+	-- cannot see them — the materializeSlotTree variant of the leak).
+	local function occupantOf(element: any): any
+		if isSlot(element) then
+			return if element._wrapped ~= nil then element._wrapped:Get() else element
+		end
+		return element
+	end
+
+	local function prepareElements(self: any, surface: string, count: number, ...: any): { any }
 		local prepared, seen = table.create(count), {}
+		for _, existing in ipairs(self._elements) do
+			local occ = occupantOf(existing)
+			if occ ~= nil then seen[occ] = true end
+		end
 		for i = 1, count do
 			local raw = (select(i, ...))
-			if raw ~= nil and seen[raw] then
-				Err.errorBeforeNearest(surface .. ": the same element appears twice", SURFACE)
-			end
 			local element = wrapElement(raw) -- type gate (nil/None/handler-layer/isInst)
-			seen[raw] = true
 			local occupant = if element ~= raw then raw:Get() else raw
-			if occupant ~= nil and elementOwner:GetWeak(occupant, OWNER) ~= nil then
-				Err.errorBeforeNearest(surface .. ": this element is already mounted — multiple mounts are not allowed", SURFACE)
+			if occupant ~= nil then
+				if seen[occupant] then
+					Err.errorBeforeNearest(surface .. ": the same element appears twice", SURFACE)
+				end
+				if elementOwner:GetWeak(occupant, OWNER) ~= nil then
+					Err.errorBeforeNearest(surface .. ": this element is already mounted — multiple mounts are not allowed", SURFACE)
+				end
+				seen[occupant] = true
 			end
 			prepared[i] = element
 		end
@@ -649,7 +748,7 @@ local function Init(module: any)
 	function Slot_mt.Add(self: any, element: any, index: number?): number
 		assertLive(self); assertManual(self)
 		if index ~= nil then checkIndex(self, index, "Slot:Add", true) end
-		return rawAdd(self, prepareElements("Slot:Add", 1, element)[1], index)
+		return rawAdd(self, prepareElements(self, "Slot:Add", 1, element)[1], index)
 	end
 
 	function Slot_mt.Remove(self: any, index: number)
@@ -663,7 +762,7 @@ local function Init(module: any)
 	function Slot_mt.Replace(self: any, index: number, newElement: any)
 		assertLive(self); assertManual(self)
 		checkIndex(self, index, "Slot:Replace")
-		local prepared = prepareElements("Slot:Replace", 1, newElement)
+		local prepared = prepareElements(self, "Slot:Replace", 1, newElement)
 		rawReplace(self, index, prepared[1], true)
 	end
 
@@ -675,7 +774,7 @@ local function Init(module: any)
 		checkIndex(self, index, "Slot:Extract")
 		local old = self._elements[index]
 		if newElement ~= nil then
-			local prepared = prepareElements("Slot:Extract", 1, newElement)
+			local prepared = prepareElements(self, "Slot:Extract", 1, newElement)
 			rawReplace(self, index, prepared[1], false)
 		else
 			rawUnmount(self, index)
@@ -693,7 +792,7 @@ local function Init(module: any)
 			or index + removeCount - 1 > #self._elements then
 			Err.errorBeforeNearest("Slot:Splice: removeCount out of range", SURFACE)
 		end
-		local prepared = prepareElements("Slot:Splice", select("#", ...), ...)
+		local prepared = prepareElements(self, "Slot:Splice", select("#", ...), ...)
 		local removed = rawSplice(self, index, removeCount, prepared)
 		for i, element in ipairs(removed) do
 			removed[i] = unwrapElement(element)
@@ -945,7 +1044,7 @@ local function Init(module: any)
 			-- frame and blame THIS line instead of the user's `Slot{…}` (round15
 			-- `H6-19`). Same pre-pass + raw* as Add, called directly.
 			for _, v in ipairs(initial) do
-				rawAdd(self, prepareElements("Slot", 1, v)[1])
+				rawAdd(self, prepareElements(self, "Slot", 1, v)[1])
 			end
 		end
 		return self

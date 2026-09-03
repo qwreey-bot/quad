@@ -49,3 +49,17 @@ Deferred 일반론의 한 사례 — 새 발견 아님. userdata 동일성은 `H
 - 없음 — 이걸로 round15 "이 fork 슬라이스 밖" 절의 여섯 항목이 전부 닫혔다
   (상태는 그 절이 소스).
 - `ServerStorage.QuadTestRun`은 실측 산출물(다음 실측이 시작 때 지운다).
+
+## 2. 회신 반영 재실측 (같은 날 — `H6-9` (b)·`H6-12` (b))
+
+같은 관용구로 새 `Slot.luau`(싱크 확인: `markMountedTree` 존재) 재실행.
+
+| 시나리오 | 단언 | 결과 |
+|---|---|---|
+| `Splice(2, 2, inner{i1,i2}, x)` on `[a,b,c,d]` | 제거분 `b,c` 생존·반환, 배치 `a,i1,i2,x,d` 5리프, `inner.Offset` 1, `inner._mounted` | PASS ×3 |
+| State 요소 `Add(st)` → `Extract` → **재-`Add`** | 언래핑 반환 뒤 재-Add 성공(래퍼 소유권 반납) | PASS ×3 |
+| `Remove(state요소)` → 다른 Slot에 그 Instance `Add` | 파괴 안 됨, 다른 곳에서 claim 성공 | PASS ×2 |
+| 포탈(`Source(slot)`) 언마운트/재마운트 — 중첩 포함 | 서브트리당 한 op으로 떼고 붙임, `in3.Offset` 1 복원 | PASS ×3 |
+
+11/11 PASS. 시행착오 하나: 첫 스크립트가 이미 마운트된 Slot을 포탈 루트에도
+넣어 "already mounted elsewhere"가 났다 — 계약대로의 거부라 스크립트만 고침.
