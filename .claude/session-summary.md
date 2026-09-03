@@ -2256,3 +2256,11 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   문항 넷(`H6-9` Splice 단일 물리 op / `H6-12` 래퍼 이탈 소유권 / `H6-16`
   센티널 마커 / `H6-20` nativeSwap 계약) — 막는 것 아님. 실기기 Deferred 축도 같은 날 Studio 실측
   (`audit/m6-remainder-studio-2026-09-03.md` 11/11) — M6 잔여 전부 닫힘.
+
+- `session/2026-09-03-03-m10-engine-axis.md` **[M10 엔진 축 첫 단위 —
+  Tag/Attribute 엔진 op]** 사용자 위임(아침 회신 4번)으로 (d′) 형태 채택:
+  quad-roblox `EngineOps`에 `addTag`/`removeTag`(CollectionService)/
+  `setAttribute` 설치, mockProvider가 같은 셋을 심고 로그는 재설치 opt-in,
+  quad-types `Quad` op 필드, `spec.tagattribute` 신설·스텁 spec 셋 재편,
+  Studio 7/7(`audit/m10-engine-axis-studio-2026-09-03.md`), round16
+  `H10-10`. M10 잔여는 Event/OnChange·InstanceShorthand(ROADMAP M10 배너).

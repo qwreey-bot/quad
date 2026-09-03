@@ -43,8 +43,15 @@ end
 print()
 print("=== 2. 미주입 스텁 — 백엔드 없는 quad에서 Tag를 걸면 안내 에러(blame은 사용자 줄) ===")
 do
-	local q = Quad.New() -- 생명주기/ops 미설치
-	mock.installLifetime(q) -- 생명주기만 — tag op는 여전히 스텁
+	local q = Quad.New()
+	-- [M10 엔진 축] mockProvider가 이제 tag op까지 심으므로(installLifetime은
+	-- 그 위임 래퍼) "생명주기만 설치"가 불가능해졌다 — 모듈 자신의 스텁을
+	-- 붙잡아 뒀다가 프로바이더 설치 뒤 그 op만 되돌린다(Tag.luau는
+	-- `module.addTag`를 호출 시점에 읽는다, `H-174`). 그래야 디스패치 경유
+	-- blame 경로(핸들러 프레임을 지나 사용자 줄까지)가 계속 검증된다(통합 리뷰).
+	local stub = q.addTag
+	mock.installLifetime(q)
+	q.addTag = stub
 	local inst = Instance.new("Frame")
 	local ok, err = pcall(function()
 		q.Dispatch.drive(inst, { q.Tag("a") })

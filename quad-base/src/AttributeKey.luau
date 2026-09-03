@@ -80,7 +80,7 @@ local function notInstalled(name: string): (...any) -> ...any
 		-- stub itself and Nearest would blame quad internals (`H-272` reasoning)
 		Err.errorBefore(
 			`quad: {name} is not available — no backend has installed the attribute op `
-				.. "(quad-roblox does this in M10; tests use mock.installTagAttributeOps)",
+				.. "(install a provider with quad:UseProvider — a bare Quad.New() has none)",
 			SURFACE
 		)
 	end

@@ -1756,9 +1756,13 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > "FallbackHandler"는 별도 파일이 아니라 **등록 엔티티 이름**으로
 > 산다(`TagFallbackHandler` 등 — 문서의 별도-엔티티 요구의 실질은
 > 이름·priority 분리). 아래 `[x]` 항목의 파일 경로 서술은 이 재편 기준으로
-> 읽을 것. **잔여는 quad-roblox 엔진 축**(EngineOps 실구현 —
-> addTag/removeTag/setAttribute, Event/OnChange, InstanceShorthand) — **M10
-> 잔여 목록의 유일한 소스는 이 배너다**(다른 문서는 여기를 가리킬 것).
+> 읽을 것. **잔여는 quad-roblox 엔진 축** — **M10 잔여 목록의 유일한 소스는
+> 이 배너다**(다른 문서는 여기를 가리킬 것): ~~EngineOps 실구현
+> addTag/removeTag/setAttribute~~(**[2026-09-03 완료 — 엔진 축 첫 단위]**
+> `EngineOps.luau` 셋 + mockProvider 편입 + `spec.tagattribute` + Studio 7/7
+> `audit/m10-engine-axis-studio-2026-09-03.md`, round16 `H10-10`), **Event/
+> OnChange 핸들러**(`H-27` 포함), **InstanceShorthand**(아래 체크박스 — 그
+> 항목이 스스로 "M11(Tween) 이후"를 권한다).
 > **[2026-09-03 아침 회신]** ① `AttributeGroupHandler` 부분 실패 롤백은
 > **닫혔다**(사용자 동의 — 문서화로 관리 안 함, `attribute-plan.md` 말미 확정
 > 절·`archive/question-resolved.md`; 한때 여기 잔여로 적혀 있었음). ② Tag/
@@ -1788,7 +1792,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       명시, 이름별 weak 캐시로 `OnChange(a) == OnChange(a)` 동등성 보장
       (`AttributeKey`와 동일 기법), `base/onchange-plan.md`, 2026-08-10
       세션 확정·2026-08-11 아홉 번째 세션 후속(캐시))
-- [ ] **[2026-09-03 Q6 (a) 각주 — M5 round14 브리프 확정 이행]** Attribute
+- [x] **[2026-09-03 M10 엔진 축 — 아래 EngineOps 몫(쓰기 op 셋) 완료; Q6 각주(읽기 소비자 설계 주의)는 읽기 API가 생길 때의 지침으로 남는다]** **[2026-09-03 Q6 (a) 각주 — M5 round14 브리프 확정 이행]** Attribute
       op의 **읽기 소비자**(`InstanceAttribute` 읽기 타입, quad-debug)는
       Instance 참조 Attribute가 `InstanceHandle`(미문서화 Studio Beta)로
       돌아오므로 **`:Get()` 언랩·nil·죽은 참조 위에서 설계할 것** —

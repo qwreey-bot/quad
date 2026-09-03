@@ -39,8 +39,11 @@
    (`audit/m6-remainder-studio-2026-09-03.md` 11/11 PASS) — **M6 잔여 목록
    전부 닫힘**(소스는 round15 "이 fork 슬라이스 밖" 절). 진행 원문은
    `session/2026-09-03-02-m6-remainder.md`.
-   **다음 단위: M10 엔진 축** — 잔여 목록과 op 설치 방향(아침 회신 4번)의
-   소스는 ROADMAP M10 배너, 여기서 다시 나열하지 않는다.
+   **[같은 날 M10 엔진 축 첫 단위 완료]** Tag/Attribute 엔진 op 셋을
+   quad-roblox `EngineOps`에 설치(mockProvider도 같은 셋, `H10-10`, Studio
+   7/7 — `session/2026-09-03-03-m10-engine-axis.md`). **다음 단위: M10
+   잔여의 다음 항목** — 잔여 목록의 소스는 ROADMAP M10 배너, 여기서 다시
+   나열하지 않는다.
    아래는 M4 종결 기록:
 
    **[구 00번 — M4] ⭐⭐⭐ [2026-09-01 착수·종결] M4 자율 구현 구간 — 완료, M2·M3와 같은
