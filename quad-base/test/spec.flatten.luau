@@ -100,4 +100,26 @@ do
 end
 
 print()
+print("=== 4. H-312(사용자 확정) — 해시 키 자리의 Modifier는 flatten이 즉시 error(사용자 줄 blame), 슬롯 소진 전 ===")
+do
+	local inst = Instance.new("Frame")
+	local mod = Modifier():Size(1)
+	local props = { mod, Size = Modifier():X(1) }
+	local ok, err = pcall(function()
+		q.Dispatch.drive(inst, props)
+	end)
+	assert(not ok, "Modifier at a hash key must error")
+	assert(string.find(tostring(err), "array part", 1, true) ~= nil, "message names the rule: " .. tostring(err))
+	mock.assertBlamesUser(err, "spec.flatten.luau", "hash-key Modifier")
+	assert(props[1] == mod, "rejected before any array slot was consumed")
+	-- 희소 숫자 키(배열부 밖)도 해시 파트라 같이 잡힌다(리뷰 반영)
+	local ok2, err2 = pcall(function()
+		q.Dispatch.drive(Instance.new("Frame"), { [5] = Modifier():X(1) })
+	end)
+	assert(not ok2 and string.find(tostring(err2), "array part", 1, true) ~= nil, "sparse numeric key rejected too: " .. tostring(err2))
+	-- Modifier 없는 props도 해시 파트 순회만 한 번(배열부 이중 순회 없음)은 구현 주석이 소스
+	print("PASS")
+end
+
+print()
 print("=== ALL PASS ===")

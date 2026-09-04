@@ -313,7 +313,7 @@ def emit():
     L.append("}")
     L.append("export type DModifier = {")
     for name in names:
-        L.append(f"\t{name}: () -> {name}Modifier,")
+        L.append(f"\t{name}: (...({name}Modifier | {{ [string]: any }})) -> {name}Modifier,")
     L.append("}")
     L.append("export type D = {")
     L.append("\tNew: <T>(className: string) -> (props: any) -> T,")
@@ -356,7 +356,7 @@ def emit():
             f'\tMapper.{name} = (quad.newMapperClass("{name}") :: any) :: (key: string | MapperRoot) -> ({name}Param<{name}MapperElem>) -> MapperDescriptor'
         )
     for name in names:
-        L.append(f"\tModifierNS.{name} = (quad.Modifier :: any) :: () -> {name}Modifier")
+        L.append(f"\tModifierNS.{name} = (quad.Modifier :: any) :: (...({name}Modifier | {{ [string]: any }})) -> {name}Modifier")
     L.append("\tquad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨")
     L.append("\treturn (D :: any) :: D")
     L.append("end")

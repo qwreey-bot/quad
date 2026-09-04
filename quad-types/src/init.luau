@@ -157,7 +157,9 @@ export type Modifier = {
 	Apply: <U>(self: Modifier, factory: (Modifier) -> U) -> U,
 	Overridden: (self: Modifier, ...any) -> any,
 }
-export type ModifierConstructor = setmetatable<{ Overridden: (...any) -> any }, { __call: (self: any) -> Modifier }>
+-- `H-310`(사용자 확정 2026-09-04): 인자는 Modifier 또는 `{ field = value }` 테이블,
+-- 뒤가 필드 단위로 덮어씀(Overridden 규칙) — `Modifier()` == `Modifier({})`
+export type ModifierConstructor = setmetatable<{ Overridden: (...any) -> any }, { __call: (self: any, ...(Modifier | { [string]: any })) -> Modifier }>
 -- children 유니언용 마커 타입(위 `__quadModifier` 필드만) — 생성 `<Class>Modifier`도 이 필드를 가진다
 export type ModifierMarker = { read __quadModifier: true }
 

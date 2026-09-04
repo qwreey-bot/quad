@@ -190,4 +190,42 @@ do
 end
 
 print()
+print("=== 8. Modifier(...) 인자(H-310, 사용자 확정) — Modifier/필드 테이블 혼합, 뒤가 덮어씀, 검증 셋 ===")
+do
+	local base = Modifier():FontSize(14):Color("red")
+	local m = Modifier(base, { FontSize = 20, Bold = true }, Modifier():Color(None))
+	assert(fieldOf(m, "FontSize") == 20 and fieldOf(m, "Bold") == true and fieldOf(m, "Color") == None, "later args override field-wise; None is a real value")
+	assert(fieldOf(base, "FontSize") == 14 and fieldOf(base, "Color") == "red", "inputs untouched")
+	assert(next(Modifier()[FieldsKey]) == nil and next(Modifier({})[FieldsKey]) == nil, "Modifier() == Modifier({})")
+	local src = q.Source(1)
+	assert(fieldOf(Modifier({ X = src }), "X") == src, "State values pass through the field table")
+	for label, fn in {
+		["non-table arg"] = function()
+			Modifier(5)
+		end,
+		["numeric key"] = function()
+			Modifier({ [1] = "x" })
+		end,
+		["handler-layer value"] = function()
+			Modifier({ X = Modifier() })
+		end,
+		-- 리뷰 반영(에이전트 추가 규칙): quad 객체는 필드 테이블이 아니다
+		["Source arg"] = function()
+			Modifier(q.Source(1))
+		end,
+		["None arg"] = function()
+			Modifier(None)
+		end,
+		["function value"] = function()
+			Modifier({ X = function() end })
+		end,
+	} :: { [string]: () -> () } do
+		local ok, err = pcall(fn)
+		assert(not ok, "rejected: " .. label)
+		mock.assertBlamesUser(err, SPEC_FILE, "Modifier(...) " .. label)
+	end
+	print("PASS")
+end
+
+print()
 print("=== ALL PASS ===")

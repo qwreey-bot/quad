@@ -2323,3 +2323,8 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   true }`만(typing-limits 8.8 신설), Tarjan 40000→160000. `spec.modifiertypes`,
   round17 `H-313`. M7 단위 ①~③ 완료 — §4 회신 대기 `H-310`/`H-312`.
 
+- `session/2026-09-04-04-m7-reply-h310-h312.md` **[M7 §4 회신 반영]**
+  `H-310` 가변 인자 `Modifier(a, b, …)`(Modifier·필드 테이블, 뒤가 덮어씀 —
+  사용자 갈래 밖 (d)) / `H-312` 해시 키 Modifier는 flatten이 error. spec 두
+  절, 정본 각주. round17 §4엔 `H-313` 마커 계약 확인만 남음.
+

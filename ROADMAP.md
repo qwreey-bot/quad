@@ -1518,7 +1518,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       Modifier 타입으로 차단되는 것과 같은 자리(`base/bind-system-plan.md`의
       `H-142` 항목).
 
-- [x] **[2026-09-04 M7 단위 ① — `quad-base/src/Modifier.luau`, `spec.modifier` 7절, round17]** `Modifier()`(빈 인스턴스 바닥 생성자, 2026-08-07 열 번째 세션
+- [x] **[2026-09-04 M7 단위 ① — `quad-base/src/Modifier.luau`, `spec.modifier` 7절, round17; 같은 날 `H-310` 회신으로 `Modifier(a, b, …)` 가변 인자(Modifier·필드 테이블, 뒤가 덮어씀)]** `Modifier()`(빈 인스턴스 바닥 생성자, 2026-08-07 열 번째 세션
       명시 — `Source(default)`/`Ref(default)`/`Store({defaults})`와 같은
       `Type(args)` 팩토리 관습, `modifier-plan.md` 3번)
 - [x] **[2026-09-04 단위 ①(체이닝 — spec.modifier 2절) + 단위 ②(flatten — `Modifier.luau` export, `Dispatch.drive`의 첫 pre-pass로 호출(round17 Q4 (a)), spec.flatten 1~2절)]** flatten-before-dispatch(`isModifier(v)`로 배열 항목 중 Modifier만

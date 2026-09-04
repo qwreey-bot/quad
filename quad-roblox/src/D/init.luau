@@ -3519,37 +3519,37 @@ export type DMapper = {
 	WorldModel: (key: string | MapperRoot) -> (WorldModelParam<WorldModelMapperElem>) -> MapperDescriptor,
 }
 export type DModifier = {
-	BillboardGui: () -> BillboardGuiModifier,
-	Camera: () -> CameraModifier,
-	CanvasGroup: () -> CanvasGroupModifier,
-	Folder: () -> FolderModifier,
-	Frame: () -> FrameModifier,
-	ImageButton: () -> ImageButtonModifier,
-	ImageLabel: () -> ImageLabelModifier,
-	ScreenGui: () -> ScreenGuiModifier,
-	ScrollingFrame: () -> ScrollingFrameModifier,
-	SurfaceGui: () -> SurfaceGuiModifier,
-	TextBox: () -> TextBoxModifier,
-	TextButton: () -> TextButtonModifier,
-	TextLabel: () -> TextLabelModifier,
-	UIAspectRatioConstraint: () -> UIAspectRatioConstraintModifier,
-	UICorner: () -> UICornerModifier,
-	UIDragDetector: () -> UIDragDetectorModifier,
-	UIFlexItem: () -> UIFlexItemModifier,
-	UIGradient: () -> UIGradientModifier,
-	UIGridLayout: () -> UIGridLayoutModifier,
-	UIListLayout: () -> UIListLayoutModifier,
-	UIPadding: () -> UIPaddingModifier,
-	UIPageLayout: () -> UIPageLayoutModifier,
-	UIScale: () -> UIScaleModifier,
-	UIShadow: () -> UIShadowModifier,
-	UISizeConstraint: () -> UISizeConstraintModifier,
-	UIStroke: () -> UIStrokeModifier,
-	UITableLayout: () -> UITableLayoutModifier,
-	UITextSizeConstraint: () -> UITextSizeConstraintModifier,
-	VideoFrame: () -> VideoFrameModifier,
-	ViewportFrame: () -> ViewportFrameModifier,
-	WorldModel: () -> WorldModelModifier,
+	BillboardGui: (...(BillboardGuiModifier | { [string]: any })) -> BillboardGuiModifier,
+	Camera: (...(CameraModifier | { [string]: any })) -> CameraModifier,
+	CanvasGroup: (...(CanvasGroupModifier | { [string]: any })) -> CanvasGroupModifier,
+	Folder: (...(FolderModifier | { [string]: any })) -> FolderModifier,
+	Frame: (...(FrameModifier | { [string]: any })) -> FrameModifier,
+	ImageButton: (...(ImageButtonModifier | { [string]: any })) -> ImageButtonModifier,
+	ImageLabel: (...(ImageLabelModifier | { [string]: any })) -> ImageLabelModifier,
+	ScreenGui: (...(ScreenGuiModifier | { [string]: any })) -> ScreenGuiModifier,
+	ScrollingFrame: (...(ScrollingFrameModifier | { [string]: any })) -> ScrollingFrameModifier,
+	SurfaceGui: (...(SurfaceGuiModifier | { [string]: any })) -> SurfaceGuiModifier,
+	TextBox: (...(TextBoxModifier | { [string]: any })) -> TextBoxModifier,
+	TextButton: (...(TextButtonModifier | { [string]: any })) -> TextButtonModifier,
+	TextLabel: (...(TextLabelModifier | { [string]: any })) -> TextLabelModifier,
+	UIAspectRatioConstraint: (...(UIAspectRatioConstraintModifier | { [string]: any })) -> UIAspectRatioConstraintModifier,
+	UICorner: (...(UICornerModifier | { [string]: any })) -> UICornerModifier,
+	UIDragDetector: (...(UIDragDetectorModifier | { [string]: any })) -> UIDragDetectorModifier,
+	UIFlexItem: (...(UIFlexItemModifier | { [string]: any })) -> UIFlexItemModifier,
+	UIGradient: (...(UIGradientModifier | { [string]: any })) -> UIGradientModifier,
+	UIGridLayout: (...(UIGridLayoutModifier | { [string]: any })) -> UIGridLayoutModifier,
+	UIListLayout: (...(UIListLayoutModifier | { [string]: any })) -> UIListLayoutModifier,
+	UIPadding: (...(UIPaddingModifier | { [string]: any })) -> UIPaddingModifier,
+	UIPageLayout: (...(UIPageLayoutModifier | { [string]: any })) -> UIPageLayoutModifier,
+	UIScale: (...(UIScaleModifier | { [string]: any })) -> UIScaleModifier,
+	UIShadow: (...(UIShadowModifier | { [string]: any })) -> UIShadowModifier,
+	UISizeConstraint: (...(UISizeConstraintModifier | { [string]: any })) -> UISizeConstraintModifier,
+	UIStroke: (...(UIStrokeModifier | { [string]: any })) -> UIStrokeModifier,
+	UITableLayout: (...(UITableLayoutModifier | { [string]: any })) -> UITableLayoutModifier,
+	UITextSizeConstraint: (...(UITextSizeConstraintModifier | { [string]: any })) -> UITextSizeConstraintModifier,
+	VideoFrame: (...(VideoFrameModifier | { [string]: any })) -> VideoFrameModifier,
+	ViewportFrame: (...(ViewportFrameModifier | { [string]: any })) -> ViewportFrameModifier,
+	WorldModel: (...(WorldModelModifier | { [string]: any })) -> WorldModelModifier,
 }
 export type D = {
 	New: <T>(className: string) -> (props: any) -> T,
@@ -3676,37 +3676,37 @@ return function(quad: any): D
 	Mapper.VideoFrame = (quad.newMapperClass("VideoFrame") :: any) :: (key: string | MapperRoot) -> (VideoFrameParam<VideoFrameMapperElem>) -> MapperDescriptor
 	Mapper.ViewportFrame = (quad.newMapperClass("ViewportFrame") :: any) :: (key: string | MapperRoot) -> (ViewportFrameParam<ViewportFrameMapperElem>) -> MapperDescriptor
 	Mapper.WorldModel = (quad.newMapperClass("WorldModel") :: any) :: (key: string | MapperRoot) -> (WorldModelParam<WorldModelMapperElem>) -> MapperDescriptor
-	ModifierNS.BillboardGui = (quad.Modifier :: any) :: () -> BillboardGuiModifier
-	ModifierNS.Camera = (quad.Modifier :: any) :: () -> CameraModifier
-	ModifierNS.CanvasGroup = (quad.Modifier :: any) :: () -> CanvasGroupModifier
-	ModifierNS.Folder = (quad.Modifier :: any) :: () -> FolderModifier
-	ModifierNS.Frame = (quad.Modifier :: any) :: () -> FrameModifier
-	ModifierNS.ImageButton = (quad.Modifier :: any) :: () -> ImageButtonModifier
-	ModifierNS.ImageLabel = (quad.Modifier :: any) :: () -> ImageLabelModifier
-	ModifierNS.ScreenGui = (quad.Modifier :: any) :: () -> ScreenGuiModifier
-	ModifierNS.ScrollingFrame = (quad.Modifier :: any) :: () -> ScrollingFrameModifier
-	ModifierNS.SurfaceGui = (quad.Modifier :: any) :: () -> SurfaceGuiModifier
-	ModifierNS.TextBox = (quad.Modifier :: any) :: () -> TextBoxModifier
-	ModifierNS.TextButton = (quad.Modifier :: any) :: () -> TextButtonModifier
-	ModifierNS.TextLabel = (quad.Modifier :: any) :: () -> TextLabelModifier
-	ModifierNS.UIAspectRatioConstraint = (quad.Modifier :: any) :: () -> UIAspectRatioConstraintModifier
-	ModifierNS.UICorner = (quad.Modifier :: any) :: () -> UICornerModifier
-	ModifierNS.UIDragDetector = (quad.Modifier :: any) :: () -> UIDragDetectorModifier
-	ModifierNS.UIFlexItem = (quad.Modifier :: any) :: () -> UIFlexItemModifier
-	ModifierNS.UIGradient = (quad.Modifier :: any) :: () -> UIGradientModifier
-	ModifierNS.UIGridLayout = (quad.Modifier :: any) :: () -> UIGridLayoutModifier
-	ModifierNS.UIListLayout = (quad.Modifier :: any) :: () -> UIListLayoutModifier
-	ModifierNS.UIPadding = (quad.Modifier :: any) :: () -> UIPaddingModifier
-	ModifierNS.UIPageLayout = (quad.Modifier :: any) :: () -> UIPageLayoutModifier
-	ModifierNS.UIScale = (quad.Modifier :: any) :: () -> UIScaleModifier
-	ModifierNS.UIShadow = (quad.Modifier :: any) :: () -> UIShadowModifier
-	ModifierNS.UISizeConstraint = (quad.Modifier :: any) :: () -> UISizeConstraintModifier
-	ModifierNS.UIStroke = (quad.Modifier :: any) :: () -> UIStrokeModifier
-	ModifierNS.UITableLayout = (quad.Modifier :: any) :: () -> UITableLayoutModifier
-	ModifierNS.UITextSizeConstraint = (quad.Modifier :: any) :: () -> UITextSizeConstraintModifier
-	ModifierNS.VideoFrame = (quad.Modifier :: any) :: () -> VideoFrameModifier
-	ModifierNS.ViewportFrame = (quad.Modifier :: any) :: () -> ViewportFrameModifier
-	ModifierNS.WorldModel = (quad.Modifier :: any) :: () -> WorldModelModifier
+	ModifierNS.BillboardGui = (quad.Modifier :: any) :: (...(BillboardGuiModifier | { [string]: any })) -> BillboardGuiModifier
+	ModifierNS.Camera = (quad.Modifier :: any) :: (...(CameraModifier | { [string]: any })) -> CameraModifier
+	ModifierNS.CanvasGroup = (quad.Modifier :: any) :: (...(CanvasGroupModifier | { [string]: any })) -> CanvasGroupModifier
+	ModifierNS.Folder = (quad.Modifier :: any) :: (...(FolderModifier | { [string]: any })) -> FolderModifier
+	ModifierNS.Frame = (quad.Modifier :: any) :: (...(FrameModifier | { [string]: any })) -> FrameModifier
+	ModifierNS.ImageButton = (quad.Modifier :: any) :: (...(ImageButtonModifier | { [string]: any })) -> ImageButtonModifier
+	ModifierNS.ImageLabel = (quad.Modifier :: any) :: (...(ImageLabelModifier | { [string]: any })) -> ImageLabelModifier
+	ModifierNS.ScreenGui = (quad.Modifier :: any) :: (...(ScreenGuiModifier | { [string]: any })) -> ScreenGuiModifier
+	ModifierNS.ScrollingFrame = (quad.Modifier :: any) :: (...(ScrollingFrameModifier | { [string]: any })) -> ScrollingFrameModifier
+	ModifierNS.SurfaceGui = (quad.Modifier :: any) :: (...(SurfaceGuiModifier | { [string]: any })) -> SurfaceGuiModifier
+	ModifierNS.TextBox = (quad.Modifier :: any) :: (...(TextBoxModifier | { [string]: any })) -> TextBoxModifier
+	ModifierNS.TextButton = (quad.Modifier :: any) :: (...(TextButtonModifier | { [string]: any })) -> TextButtonModifier
+	ModifierNS.TextLabel = (quad.Modifier :: any) :: (...(TextLabelModifier | { [string]: any })) -> TextLabelModifier
+	ModifierNS.UIAspectRatioConstraint = (quad.Modifier :: any) :: (...(UIAspectRatioConstraintModifier | { [string]: any })) -> UIAspectRatioConstraintModifier
+	ModifierNS.UICorner = (quad.Modifier :: any) :: (...(UICornerModifier | { [string]: any })) -> UICornerModifier
+	ModifierNS.UIDragDetector = (quad.Modifier :: any) :: (...(UIDragDetectorModifier | { [string]: any })) -> UIDragDetectorModifier
+	ModifierNS.UIFlexItem = (quad.Modifier :: any) :: (...(UIFlexItemModifier | { [string]: any })) -> UIFlexItemModifier
+	ModifierNS.UIGradient = (quad.Modifier :: any) :: (...(UIGradientModifier | { [string]: any })) -> UIGradientModifier
+	ModifierNS.UIGridLayout = (quad.Modifier :: any) :: (...(UIGridLayoutModifier | { [string]: any })) -> UIGridLayoutModifier
+	ModifierNS.UIListLayout = (quad.Modifier :: any) :: (...(UIListLayoutModifier | { [string]: any })) -> UIListLayoutModifier
+	ModifierNS.UIPadding = (quad.Modifier :: any) :: (...(UIPaddingModifier | { [string]: any })) -> UIPaddingModifier
+	ModifierNS.UIPageLayout = (quad.Modifier :: any) :: (...(UIPageLayoutModifier | { [string]: any })) -> UIPageLayoutModifier
+	ModifierNS.UIScale = (quad.Modifier :: any) :: (...(UIScaleModifier | { [string]: any })) -> UIScaleModifier
+	ModifierNS.UIShadow = (quad.Modifier :: any) :: (...(UIShadowModifier | { [string]: any })) -> UIShadowModifier
+	ModifierNS.UISizeConstraint = (quad.Modifier :: any) :: (...(UISizeConstraintModifier | { [string]: any })) -> UISizeConstraintModifier
+	ModifierNS.UIStroke = (quad.Modifier :: any) :: (...(UIStrokeModifier | { [string]: any })) -> UIStrokeModifier
+	ModifierNS.UITableLayout = (quad.Modifier :: any) :: (...(UITableLayoutModifier | { [string]: any })) -> UITableLayoutModifier
+	ModifierNS.UITextSizeConstraint = (quad.Modifier :: any) :: (...(UITextSizeConstraintModifier | { [string]: any })) -> UITextSizeConstraintModifier
+	ModifierNS.VideoFrame = (quad.Modifier :: any) :: (...(VideoFrameModifier | { [string]: any })) -> VideoFrameModifier
+	ModifierNS.ViewportFrame = (quad.Modifier :: any) :: (...(ViewportFrameModifier | { [string]: any })) -> ViewportFrameModifier
+	ModifierNS.WorldModel = (quad.Modifier :: any) :: (...(WorldModelModifier | { [string]: any })) -> WorldModelModifier
 	quad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨
 	return (D :: any) :: D
 end
