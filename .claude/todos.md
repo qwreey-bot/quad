@@ -64,7 +64,15 @@
    `session/2026-09-04-04-m7-reply-h310-h312.md`). 남은 건 `H-313` 확인
    항목 하나(마커 방식이 children 자리의 클래스 소속 검사를 잃는 타이핑
    계약 — Luau 한계라 수용 여부만)와 후순위 상위 클래스 Modifier 타입
-   (ROADMAP M7). **M7 실질 완료** — 다음 마일스톤은 사용자와 정한다. **M10 잔여는
+   (ROADMAP M7). **[같은 날 단위 ④ 완료 — `H-314`, 사용자 설계]** 클래스 태그·
+   `Modifier.Define(name, parent?)` 공개 레지스트리·검사형 `As<Desc>()`·무검사
+   `As<<T>>()`/`As(name)`·`Into<Class>`·상위 클래스 Modifier 생성(조상 전부)·예약 접두
+   `^As%u` — `H-313` 소멸(children 클래스 소속 검사 회복), Q5 후순위 닫힘,
+   `Apply` self·factory `any`(typing-limits 8.9절 솔버 결함), test.sh
+   `LuauTypeInferIterationLimit=1000000`. 정본 `modifier-plan.md` 11절, 실측
+   `audit/m7-unit4-as-modifier-2026-09-04.md`, 원문
+   `session/2026-09-04-05-m7-unit4-class-tags-as-into.md`. 확인 항목은 `H-314`
+   (Define이 생성자를 돌려줌)뿐. **M7 완료** — 다음 마일스톤은 사용자와 정한다. **M10 잔여는
    InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
    목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
    (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지

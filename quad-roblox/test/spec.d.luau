@@ -28,12 +28,24 @@ do
 				end
 			end
 		elseif name == "Modifier" then
-			-- M7 단위 ③: 클래스별 타입드 Modifier 생성자 네임스페이스(round17 Q3 (a)) —
-			-- 런타임은 quad.Modifier 하나, 클래스별 캐스트 별칭
-			assert(type(v) == "table", "D.Modifier is a namespace of per-class aliases")
-			for mname, mv in v :: { [string]: any } do
-				assert(mv == q.Modifier, "Modifier." .. mname .. " must alias quad.Modifier")
+			-- M7 단위 ③·④: 클래스별 타입드 Modifier 생성자 네임스페이스(round17 Q3 (a)) —
+			-- 단위 ④부터 `quad.Modifier.Define(name, parent)`가 돌려준 태그 생성자
+			-- (스코프 31 + 조상 클래스 — GuiObject류도 여기엔 있다, D 별칭엔 없다)
+			assert(type(v) == "table", "D.Modifier is a namespace of per-class constructors")
+			-- (새 솔버: `type(x) == "function"`으로 좁힌 변수는 최상위 `function` 타입이
+			--  돼 호출이 막힌다 — 검사용 변수와 호출용 변수를 갈라 둔다)
+			local ns: any = v
+			for mname, mv in ns :: { [string]: any } do
+				local ctor: any = mv
+				assert(type(mv) == "function", "Modifier." .. mname .. " must be a constructor")
+				assert(ctor({}).__quadModifier == mname, "Modifier." .. mname .. " tags with its class name")
 			end
+			local guiCtor: any, instCtor: any = ns.GuiObject, ns.Instance
+			assert(type(guiCtor) == "function" and type(instCtor) == "function", "ancestor classes get constructors")
+			local define: any = q.Modifier.Define
+			assert(ns.Frame == define("Frame", "GuiObject"), "re-Define with the same parent returns the same ctor")
+			local gui: any = ns.GuiObject
+			assert(gui():Visible(true):AsTextLabel().__quadModifier == "TextLabel", "checked descent works on generated classes")
 		else
 			assert(type(v) == "function", name .. " must be a function (alias or New)")
 		end

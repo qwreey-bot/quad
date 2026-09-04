@@ -16,9 +16,18 @@
 	Modifier(M7 단위 ③, round17): 클래스별 <Class>Modifier(필드 setter — 값은
 	Field<T | Tween<T>> = V | State<V> | None | 변환 함수, 자기 타입 반환; 예약 메소드
 	Apply/Peek/Overridden; 이벤트는 제외 — 함수 인자는 변환 함수라 콜백과 겹친다)
-	+ D.Modifier.<Class>() 캐스트 별칭(런타임은 quad.Modifier 하나, round17 Q3 (a))
-	+ children엔 마커 `{ read __quadModifier: true }`로(NewChild, types.luau) — <Class>Modifier를
-	유니언에 직접 넣으면 큰 클래스에서 too complex(실측); State<Modifier>는 7절이 error라 제외.
+	+ D.Modifier.<Class>() 타입드 생성자(round17 Q3 (a) — 단위 ③엔 quad.Modifier 캐스트 별칭,
+	단위 ④부터 아래 Define 태그 생성자)
+	+ children엔 마커만(<Class>Modifier를 유니언에 직접 넣으면 큰 클래스에서 too complex —
+	typing-limits 8.8절): 무타입 base는 `{ read __quadModifier: true }`(NewChild, types.luau),
+	클래스 태그는 조상 체인 마커 `{ read __quadModifier: "Frame" | "GuiObject" | … }`(<Class>Elem).
+	단위 ④(2026-09-04, 사용자 설계 — modifier-plan 11절): 상위 클래스 Modifier 타입도 전부
+	생성(스코프 클래스의 조상 전부 — GuiObjectModifier류; 개수는 이 파일의 <Class>Modifier 선언이
+	소스), 검사형 하강 `As<Class>()`(하위 클래스 + 항등),
+	무검사 `As<<T>>()`, 인터페이스 `Into<Class> = { As<Class>: (self: any) -> <Class>Modifier }`,
+	Apply는 self·factory 둘 다 any(8.9절 — 재귀 필드 + 유니언 멤버 메소드 이름 충돌 시
+	유니언 검사가 조용히 통과하는 솔버 결함을 피해 클래스 소속 검사를 되찾음). 런타임은
+	quad.Modifier.Define(name, parent)이 돌려주는 태그 생성자(조상 먼저 등록).
 ]]
 
 local QuadTypes = require("../luau_packages/quad_types")
@@ -1676,10 +1685,12 @@ export type BillboardGuiOnChange =
 	| 	{ Name: "StudsOffsetWorldSpace", Callback: (Vector3) -> () }
 	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
 export type BillboardGuiModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "BillboardGui", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: BillboardGuiModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: BillboardGuiModifier, factory: (BillboardGuiModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: BillboardGuiModifier, ...any) -> any,
+	As: <T>(self: BillboardGuiModifier, name: string?) -> T, -- 무검사(11절)
+	AsBillboardGui: (self: BillboardGuiModifier) -> BillboardGuiModifier, -- 항등(Into<BillboardGui> 구현)
 	Active: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
 	Adornee: (self: BillboardGuiModifier, value: Field<Instance | Tween<Instance>>) -> BillboardGuiModifier,
 	AlwaysOnTop: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
@@ -1710,7 +1721,8 @@ export type BillboardGuiModifier = {
 	StudsOffsetWorldSpace: (self: BillboardGuiModifier, value: Field<Vector3 | Tween<Vector3>>) -> BillboardGuiModifier,
 	ZIndexBehavior: (self: BillboardGuiModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> BillboardGuiModifier,
 }
-export type BillboardGuiElem = NewChild | BillboardGuiOnChange | State<BillboardGuiOnChange>
+export type IntoBillboardGui = { AsBillboardGui: (self: any) -> BillboardGuiModifier }
+export type BillboardGuiElem = NewChild | BillboardGuiOnChange | State<BillboardGuiOnChange> | { read __quadModifier: "BillboardGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type BillboardGuiMapperElem = BillboardGuiElem | MapperDescriptor
 
 export type CameraOnChange =
@@ -1730,10 +1742,12 @@ export type CameraOnChange =
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "VRTiltAndRollEnabled", Callback: (boolean) -> () }
 export type CameraModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "Camera", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: CameraModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: CameraModifier, factory: (CameraModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: CameraModifier, ...any) -> any,
+	As: <T>(self: CameraModifier, name: string?) -> T, -- 무검사(11절)
+	AsCamera: (self: CameraModifier) -> CameraModifier, -- 항등(Into<Camera> 구현)
 	Archivable: (self: CameraModifier, value: Field<boolean | Tween<boolean>>) -> CameraModifier,
 	CFrame: (self: CameraModifier, value: Field<CFrame | Tween<CFrame>>) -> CameraModifier,
 	CameraSubject: (self: CameraModifier, value: Field<Instance | Tween<Instance>>) -> CameraModifier,
@@ -1750,7 +1764,8 @@ export type CameraModifier = {
 	Sandboxed: (self: CameraModifier, value: Field<boolean | Tween<boolean>>) -> CameraModifier,
 	VRTiltAndRollEnabled: (self: CameraModifier, value: Field<boolean | Tween<boolean>>) -> CameraModifier,
 }
-export type CameraElem = NewChild | CameraOnChange | State<CameraOnChange>
+export type IntoCamera = { AsCamera: (self: any) -> CameraModifier }
+export type CameraElem = NewChild | CameraOnChange | State<CameraOnChange> | { read __quadModifier: "Camera" | "PVInstance" | "Instance" }
 export type CameraMapperElem = CameraElem | MapperDescriptor
 
 export type CanvasGroupOnChange =
@@ -1793,10 +1808,12 @@ export type CanvasGroupOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type CanvasGroupModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "CanvasGroup", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: CanvasGroupModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: CanvasGroupModifier, factory: (CanvasGroupModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: CanvasGroupModifier, ...any) -> any,
+	As: <T>(self: CanvasGroupModifier, name: string?) -> T, -- 무검사(11절)
+	AsCanvasGroup: (self: CanvasGroupModifier) -> CanvasGroupModifier, -- 항등(Into<CanvasGroup> 구현)
 	Active: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
 	AnchorPoint: (self: CanvasGroupModifier, value: Field<Vector2 | Tween<Vector2>>) -> CanvasGroupModifier,
 	Archivable: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
@@ -1836,7 +1853,8 @@ export type CanvasGroupModifier = {
 	Visible: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
 	ZIndex: (self: CanvasGroupModifier, value: Field<number | Tween<number>>) -> CanvasGroupModifier,
 }
-export type CanvasGroupElem = NewChild | CanvasGroupOnChange | State<CanvasGroupOnChange>
+export type IntoCanvasGroup = { AsCanvasGroup: (self: any) -> CanvasGroupModifier }
+export type CanvasGroupElem = NewChild | CanvasGroupOnChange | State<CanvasGroupOnChange> | { read __quadModifier: "CanvasGroup" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type CanvasGroupMapperElem = CanvasGroupElem | MapperDescriptor
 
 export type FolderOnChange =
@@ -1845,16 +1863,19 @@ export type FolderOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 export type FolderModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "Folder", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: FolderModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: FolderModifier, factory: (FolderModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: FolderModifier, ...any) -> any,
+	As: <T>(self: FolderModifier, name: string?) -> T, -- 무검사(11절)
+	AsFolder: (self: FolderModifier) -> FolderModifier, -- 항등(Into<Folder> 구현)
 	Archivable: (self: FolderModifier, value: Field<boolean | Tween<boolean>>) -> FolderModifier,
 	Capabilities: (self: FolderModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> FolderModifier,
 	Name: (self: FolderModifier, value: Field<string | Tween<string>>) -> FolderModifier,
 	Sandboxed: (self: FolderModifier, value: Field<boolean | Tween<boolean>>) -> FolderModifier,
 }
-export type FolderElem = NewChild | FolderOnChange | State<FolderOnChange>
+export type IntoFolder = { AsFolder: (self: any) -> FolderModifier }
+export type FolderElem = NewChild | FolderOnChange | State<FolderOnChange> | { read __quadModifier: "Folder" | "Instance" }
 export type FolderMapperElem = FolderElem | MapperDescriptor
 
 export type FrameOnChange =
@@ -1896,10 +1917,12 @@ export type FrameOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type FrameModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "Frame", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: FrameModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: FrameModifier, factory: (FrameModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: FrameModifier, ...any) -> any,
+	As: <T>(self: FrameModifier, name: string?) -> T, -- 무검사(11절)
+	AsFrame: (self: FrameModifier) -> FrameModifier, -- 항등(Into<Frame> 구현)
 	Active: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
 	AnchorPoint: (self: FrameModifier, value: Field<Vector2 | Tween<Vector2>>) -> FrameModifier,
 	Archivable: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
@@ -1938,8 +1961,241 @@ export type FrameModifier = {
 	Visible: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
 	ZIndex: (self: FrameModifier, value: Field<number | Tween<number>>) -> FrameModifier,
 }
-export type FrameElem = NewChild | FrameOnChange | State<FrameOnChange>
+export type IntoFrame = { AsFrame: (self: any) -> FrameModifier }
+export type FrameElem = NewChild | FrameOnChange | State<FrameOnChange> | { read __quadModifier: "Frame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type FrameMapperElem = FrameElem | MapperDescriptor
+
+export type GuiBaseModifier = {
+	read __quadModifier: "GuiBase", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: GuiBaseModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: GuiBaseModifier, ...any) -> any,
+	As: <T>(self: GuiBaseModifier, name: string?) -> T, -- 무검사(11절)
+	AsGuiBase: (self: GuiBaseModifier) -> GuiBaseModifier, -- 항등(Into<GuiBase> 구현)
+	AsBillboardGui: (self: GuiBaseModifier) -> BillboardGuiModifier,
+	AsCanvasGroup: (self: GuiBaseModifier) -> CanvasGroupModifier,
+	AsFrame: (self: GuiBaseModifier) -> FrameModifier,
+	AsGuiBase2d: (self: GuiBaseModifier) -> GuiBase2dModifier,
+	AsGuiButton: (self: GuiBaseModifier) -> GuiButtonModifier,
+	AsGuiLabel: (self: GuiBaseModifier) -> GuiLabelModifier,
+	AsGuiObject: (self: GuiBaseModifier) -> GuiObjectModifier,
+	AsImageButton: (self: GuiBaseModifier) -> ImageButtonModifier,
+	AsImageLabel: (self: GuiBaseModifier) -> ImageLabelModifier,
+	AsLayerCollector: (self: GuiBaseModifier) -> LayerCollectorModifier,
+	AsScreenGui: (self: GuiBaseModifier) -> ScreenGuiModifier,
+	AsScrollingFrame: (self: GuiBaseModifier) -> ScrollingFrameModifier,
+	AsSurfaceGui: (self: GuiBaseModifier) -> SurfaceGuiModifier,
+	AsSurfaceGuiBase: (self: GuiBaseModifier) -> SurfaceGuiBaseModifier,
+	AsTextBox: (self: GuiBaseModifier) -> TextBoxModifier,
+	AsTextButton: (self: GuiBaseModifier) -> TextButtonModifier,
+	AsTextLabel: (self: GuiBaseModifier) -> TextLabelModifier,
+	AsVideoFrame: (self: GuiBaseModifier) -> VideoFrameModifier,
+	AsViewportFrame: (self: GuiBaseModifier) -> ViewportFrameModifier,
+	Archivable: (self: GuiBaseModifier, value: Field<boolean | Tween<boolean>>) -> GuiBaseModifier,
+	Capabilities: (self: GuiBaseModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> GuiBaseModifier,
+	Name: (self: GuiBaseModifier, value: Field<string | Tween<string>>) -> GuiBaseModifier,
+	Sandboxed: (self: GuiBaseModifier, value: Field<boolean | Tween<boolean>>) -> GuiBaseModifier,
+}
+export type IntoGuiBase = { AsGuiBase: (self: any) -> GuiBaseModifier }
+
+export type GuiBase2dModifier = {
+	read __quadModifier: "GuiBase2d", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: GuiBase2dModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: GuiBase2dModifier, ...any) -> any,
+	As: <T>(self: GuiBase2dModifier, name: string?) -> T, -- 무검사(11절)
+	AsGuiBase2d: (self: GuiBase2dModifier) -> GuiBase2dModifier, -- 항등(Into<GuiBase2d> 구현)
+	AsBillboardGui: (self: GuiBase2dModifier) -> BillboardGuiModifier,
+	AsCanvasGroup: (self: GuiBase2dModifier) -> CanvasGroupModifier,
+	AsFrame: (self: GuiBase2dModifier) -> FrameModifier,
+	AsGuiButton: (self: GuiBase2dModifier) -> GuiButtonModifier,
+	AsGuiLabel: (self: GuiBase2dModifier) -> GuiLabelModifier,
+	AsGuiObject: (self: GuiBase2dModifier) -> GuiObjectModifier,
+	AsImageButton: (self: GuiBase2dModifier) -> ImageButtonModifier,
+	AsImageLabel: (self: GuiBase2dModifier) -> ImageLabelModifier,
+	AsLayerCollector: (self: GuiBase2dModifier) -> LayerCollectorModifier,
+	AsScreenGui: (self: GuiBase2dModifier) -> ScreenGuiModifier,
+	AsScrollingFrame: (self: GuiBase2dModifier) -> ScrollingFrameModifier,
+	AsSurfaceGui: (self: GuiBase2dModifier) -> SurfaceGuiModifier,
+	AsSurfaceGuiBase: (self: GuiBase2dModifier) -> SurfaceGuiBaseModifier,
+	AsTextBox: (self: GuiBase2dModifier) -> TextBoxModifier,
+	AsTextButton: (self: GuiBase2dModifier) -> TextButtonModifier,
+	AsTextLabel: (self: GuiBase2dModifier) -> TextLabelModifier,
+	AsVideoFrame: (self: GuiBase2dModifier) -> VideoFrameModifier,
+	AsViewportFrame: (self: GuiBase2dModifier) -> ViewportFrameModifier,
+	Archivable: (self: GuiBase2dModifier, value: Field<boolean | Tween<boolean>>) -> GuiBase2dModifier,
+	AutoLocalize: (self: GuiBase2dModifier, value: Field<boolean | Tween<boolean>>) -> GuiBase2dModifier,
+	Capabilities: (self: GuiBase2dModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> GuiBase2dModifier,
+	Name: (self: GuiBase2dModifier, value: Field<string | Tween<string>>) -> GuiBase2dModifier,
+	RootLocalizationTable: (self: GuiBase2dModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> GuiBase2dModifier,
+	Sandboxed: (self: GuiBase2dModifier, value: Field<boolean | Tween<boolean>>) -> GuiBase2dModifier,
+	SelectionBehaviorDown: (self: GuiBase2dModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiBase2dModifier,
+	SelectionBehaviorLeft: (self: GuiBase2dModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiBase2dModifier,
+	SelectionBehaviorRight: (self: GuiBase2dModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiBase2dModifier,
+	SelectionBehaviorUp: (self: GuiBase2dModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiBase2dModifier,
+	SelectionGroup: (self: GuiBase2dModifier, value: Field<boolean | Tween<boolean>>) -> GuiBase2dModifier,
+}
+export type IntoGuiBase2d = { AsGuiBase2d: (self: any) -> GuiBase2dModifier }
+
+export type GuiButtonModifier = {
+	read __quadModifier: "GuiButton", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: GuiButtonModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: GuiButtonModifier, ...any) -> any,
+	As: <T>(self: GuiButtonModifier, name: string?) -> T, -- 무검사(11절)
+	AsGuiButton: (self: GuiButtonModifier) -> GuiButtonModifier, -- 항등(Into<GuiButton> 구현)
+	AsImageButton: (self: GuiButtonModifier) -> ImageButtonModifier,
+	AsTextButton: (self: GuiButtonModifier) -> TextButtonModifier,
+	Active: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	AnchorPoint: (self: GuiButtonModifier, value: Field<Vector2 | Tween<Vector2>>) -> GuiButtonModifier,
+	Archivable: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	AutoButtonColor: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	AutoLocalize: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	AutomaticSize: (self: GuiButtonModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> GuiButtonModifier,
+	BackgroundColor3: (self: GuiButtonModifier, value: Field<Color3 | Tween<Color3>>) -> GuiButtonModifier,
+	BackgroundTransparency: (self: GuiButtonModifier, value: Field<number | Tween<number>>) -> GuiButtonModifier,
+	BorderColor3: (self: GuiButtonModifier, value: Field<Color3 | Tween<Color3>>) -> GuiButtonModifier,
+	BorderMode: (self: GuiButtonModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> GuiButtonModifier,
+	BorderSizePixel: (self: GuiButtonModifier, value: Field<number | Tween<number>>) -> GuiButtonModifier,
+	Capabilities: (self: GuiButtonModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> GuiButtonModifier,
+	ClipsDescendants: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	HoverHapticEffect: (self: GuiButtonModifier, value: Field<HapticEffect | Tween<HapticEffect>>) -> GuiButtonModifier,
+	InputSink: (self: GuiButtonModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> GuiButtonModifier,
+	Interactable: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	LayoutOrder: (self: GuiButtonModifier, value: Field<number | Tween<number>>) -> GuiButtonModifier,
+	Modal: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	Name: (self: GuiButtonModifier, value: Field<string | Tween<string>>) -> GuiButtonModifier,
+	NextSelectionDown: (self: GuiButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiButtonModifier,
+	NextSelectionLeft: (self: GuiButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiButtonModifier,
+	NextSelectionRight: (self: GuiButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiButtonModifier,
+	NextSelectionUp: (self: GuiButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiButtonModifier,
+	Position: (self: GuiButtonModifier, value: Field<UDim2 | Tween<UDim2>>) -> GuiButtonModifier,
+	PressHapticEffect: (self: GuiButtonModifier, value: Field<HapticEffect | Tween<HapticEffect>>) -> GuiButtonModifier,
+	RootLocalizationTable: (self: GuiButtonModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> GuiButtonModifier,
+	Rotation: (self: GuiButtonModifier, value: Field<number | Tween<number>>) -> GuiButtonModifier,
+	Sandboxed: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	Selectable: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	Selected: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	SelectionBehaviorDown: (self: GuiButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiButtonModifier,
+	SelectionBehaviorLeft: (self: GuiButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiButtonModifier,
+	SelectionBehaviorRight: (self: GuiButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiButtonModifier,
+	SelectionBehaviorUp: (self: GuiButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiButtonModifier,
+	SelectionGroup: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	SelectionImageObject: (self: GuiButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiButtonModifier,
+	SelectionOrder: (self: GuiButtonModifier, value: Field<number | Tween<number>>) -> GuiButtonModifier,
+	Size: (self: GuiButtonModifier, value: Field<UDim2 | Tween<UDim2>>) -> GuiButtonModifier,
+	SizeConstraint: (self: GuiButtonModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> GuiButtonModifier,
+	Style: (self: GuiButtonModifier, value: Field<Enum.ButtonStyle | Tween<Enum.ButtonStyle>>) -> GuiButtonModifier,
+	Visible: (self: GuiButtonModifier, value: Field<boolean | Tween<boolean>>) -> GuiButtonModifier,
+	ZIndex: (self: GuiButtonModifier, value: Field<number | Tween<number>>) -> GuiButtonModifier,
+}
+export type IntoGuiButton = { AsGuiButton: (self: any) -> GuiButtonModifier }
+
+export type GuiLabelModifier = {
+	read __quadModifier: "GuiLabel", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: GuiLabelModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: GuiLabelModifier, ...any) -> any,
+	As: <T>(self: GuiLabelModifier, name: string?) -> T, -- 무검사(11절)
+	AsGuiLabel: (self: GuiLabelModifier) -> GuiLabelModifier, -- 항등(Into<GuiLabel> 구현)
+	AsImageLabel: (self: GuiLabelModifier) -> ImageLabelModifier,
+	AsTextLabel: (self: GuiLabelModifier) -> TextLabelModifier,
+	Active: (self: GuiLabelModifier, value: Field<boolean | Tween<boolean>>) -> GuiLabelModifier,
+	AnchorPoint: (self: GuiLabelModifier, value: Field<Vector2 | Tween<Vector2>>) -> GuiLabelModifier,
+	Archivable: (self: GuiLabelModifier, value: Field<boolean | Tween<boolean>>) -> GuiLabelModifier,
+	AutoLocalize: (self: GuiLabelModifier, value: Field<boolean | Tween<boolean>>) -> GuiLabelModifier,
+	AutomaticSize: (self: GuiLabelModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> GuiLabelModifier,
+	BackgroundColor3: (self: GuiLabelModifier, value: Field<Color3 | Tween<Color3>>) -> GuiLabelModifier,
+	BackgroundTransparency: (self: GuiLabelModifier, value: Field<number | Tween<number>>) -> GuiLabelModifier,
+	BorderColor3: (self: GuiLabelModifier, value: Field<Color3 | Tween<Color3>>) -> GuiLabelModifier,
+	BorderMode: (self: GuiLabelModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> GuiLabelModifier,
+	BorderSizePixel: (self: GuiLabelModifier, value: Field<number | Tween<number>>) -> GuiLabelModifier,
+	Capabilities: (self: GuiLabelModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> GuiLabelModifier,
+	ClipsDescendants: (self: GuiLabelModifier, value: Field<boolean | Tween<boolean>>) -> GuiLabelModifier,
+	InputSink: (self: GuiLabelModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> GuiLabelModifier,
+	Interactable: (self: GuiLabelModifier, value: Field<boolean | Tween<boolean>>) -> GuiLabelModifier,
+	LayoutOrder: (self: GuiLabelModifier, value: Field<number | Tween<number>>) -> GuiLabelModifier,
+	Name: (self: GuiLabelModifier, value: Field<string | Tween<string>>) -> GuiLabelModifier,
+	NextSelectionDown: (self: GuiLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiLabelModifier,
+	NextSelectionLeft: (self: GuiLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiLabelModifier,
+	NextSelectionRight: (self: GuiLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiLabelModifier,
+	NextSelectionUp: (self: GuiLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiLabelModifier,
+	Position: (self: GuiLabelModifier, value: Field<UDim2 | Tween<UDim2>>) -> GuiLabelModifier,
+	RootLocalizationTable: (self: GuiLabelModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> GuiLabelModifier,
+	Rotation: (self: GuiLabelModifier, value: Field<number | Tween<number>>) -> GuiLabelModifier,
+	Sandboxed: (self: GuiLabelModifier, value: Field<boolean | Tween<boolean>>) -> GuiLabelModifier,
+	Selectable: (self: GuiLabelModifier, value: Field<boolean | Tween<boolean>>) -> GuiLabelModifier,
+	SelectionBehaviorDown: (self: GuiLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiLabelModifier,
+	SelectionBehaviorLeft: (self: GuiLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiLabelModifier,
+	SelectionBehaviorRight: (self: GuiLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiLabelModifier,
+	SelectionBehaviorUp: (self: GuiLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiLabelModifier,
+	SelectionGroup: (self: GuiLabelModifier, value: Field<boolean | Tween<boolean>>) -> GuiLabelModifier,
+	SelectionImageObject: (self: GuiLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiLabelModifier,
+	SelectionOrder: (self: GuiLabelModifier, value: Field<number | Tween<number>>) -> GuiLabelModifier,
+	Size: (self: GuiLabelModifier, value: Field<UDim2 | Tween<UDim2>>) -> GuiLabelModifier,
+	SizeConstraint: (self: GuiLabelModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> GuiLabelModifier,
+	Visible: (self: GuiLabelModifier, value: Field<boolean | Tween<boolean>>) -> GuiLabelModifier,
+	ZIndex: (self: GuiLabelModifier, value: Field<number | Tween<number>>) -> GuiLabelModifier,
+}
+export type IntoGuiLabel = { AsGuiLabel: (self: any) -> GuiLabelModifier }
+
+export type GuiObjectModifier = {
+	read __quadModifier: "GuiObject", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: GuiObjectModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: GuiObjectModifier, ...any) -> any,
+	As: <T>(self: GuiObjectModifier, name: string?) -> T, -- 무검사(11절)
+	AsGuiObject: (self: GuiObjectModifier) -> GuiObjectModifier, -- 항등(Into<GuiObject> 구현)
+	AsCanvasGroup: (self: GuiObjectModifier) -> CanvasGroupModifier,
+	AsFrame: (self: GuiObjectModifier) -> FrameModifier,
+	AsGuiButton: (self: GuiObjectModifier) -> GuiButtonModifier,
+	AsGuiLabel: (self: GuiObjectModifier) -> GuiLabelModifier,
+	AsImageButton: (self: GuiObjectModifier) -> ImageButtonModifier,
+	AsImageLabel: (self: GuiObjectModifier) -> ImageLabelModifier,
+	AsScrollingFrame: (self: GuiObjectModifier) -> ScrollingFrameModifier,
+	AsTextBox: (self: GuiObjectModifier) -> TextBoxModifier,
+	AsTextButton: (self: GuiObjectModifier) -> TextButtonModifier,
+	AsTextLabel: (self: GuiObjectModifier) -> TextLabelModifier,
+	AsVideoFrame: (self: GuiObjectModifier) -> VideoFrameModifier,
+	AsViewportFrame: (self: GuiObjectModifier) -> ViewportFrameModifier,
+	Active: (self: GuiObjectModifier, value: Field<boolean | Tween<boolean>>) -> GuiObjectModifier,
+	AnchorPoint: (self: GuiObjectModifier, value: Field<Vector2 | Tween<Vector2>>) -> GuiObjectModifier,
+	Archivable: (self: GuiObjectModifier, value: Field<boolean | Tween<boolean>>) -> GuiObjectModifier,
+	AutoLocalize: (self: GuiObjectModifier, value: Field<boolean | Tween<boolean>>) -> GuiObjectModifier,
+	AutomaticSize: (self: GuiObjectModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> GuiObjectModifier,
+	BackgroundColor3: (self: GuiObjectModifier, value: Field<Color3 | Tween<Color3>>) -> GuiObjectModifier,
+	BackgroundTransparency: (self: GuiObjectModifier, value: Field<number | Tween<number>>) -> GuiObjectModifier,
+	BorderColor3: (self: GuiObjectModifier, value: Field<Color3 | Tween<Color3>>) -> GuiObjectModifier,
+	BorderMode: (self: GuiObjectModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> GuiObjectModifier,
+	BorderSizePixel: (self: GuiObjectModifier, value: Field<number | Tween<number>>) -> GuiObjectModifier,
+	Capabilities: (self: GuiObjectModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> GuiObjectModifier,
+	ClipsDescendants: (self: GuiObjectModifier, value: Field<boolean | Tween<boolean>>) -> GuiObjectModifier,
+	InputSink: (self: GuiObjectModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> GuiObjectModifier,
+	Interactable: (self: GuiObjectModifier, value: Field<boolean | Tween<boolean>>) -> GuiObjectModifier,
+	LayoutOrder: (self: GuiObjectModifier, value: Field<number | Tween<number>>) -> GuiObjectModifier,
+	Name: (self: GuiObjectModifier, value: Field<string | Tween<string>>) -> GuiObjectModifier,
+	NextSelectionDown: (self: GuiObjectModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiObjectModifier,
+	NextSelectionLeft: (self: GuiObjectModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiObjectModifier,
+	NextSelectionRight: (self: GuiObjectModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiObjectModifier,
+	NextSelectionUp: (self: GuiObjectModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiObjectModifier,
+	Position: (self: GuiObjectModifier, value: Field<UDim2 | Tween<UDim2>>) -> GuiObjectModifier,
+	RootLocalizationTable: (self: GuiObjectModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> GuiObjectModifier,
+	Rotation: (self: GuiObjectModifier, value: Field<number | Tween<number>>) -> GuiObjectModifier,
+	Sandboxed: (self: GuiObjectModifier, value: Field<boolean | Tween<boolean>>) -> GuiObjectModifier,
+	Selectable: (self: GuiObjectModifier, value: Field<boolean | Tween<boolean>>) -> GuiObjectModifier,
+	SelectionBehaviorDown: (self: GuiObjectModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiObjectModifier,
+	SelectionBehaviorLeft: (self: GuiObjectModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiObjectModifier,
+	SelectionBehaviorRight: (self: GuiObjectModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiObjectModifier,
+	SelectionBehaviorUp: (self: GuiObjectModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> GuiObjectModifier,
+	SelectionGroup: (self: GuiObjectModifier, value: Field<boolean | Tween<boolean>>) -> GuiObjectModifier,
+	SelectionImageObject: (self: GuiObjectModifier, value: Field<GuiObject | Tween<GuiObject>>) -> GuiObjectModifier,
+	SelectionOrder: (self: GuiObjectModifier, value: Field<number | Tween<number>>) -> GuiObjectModifier,
+	Size: (self: GuiObjectModifier, value: Field<UDim2 | Tween<UDim2>>) -> GuiObjectModifier,
+	SizeConstraint: (self: GuiObjectModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> GuiObjectModifier,
+	Visible: (self: GuiObjectModifier, value: Field<boolean | Tween<boolean>>) -> GuiObjectModifier,
+	ZIndex: (self: GuiObjectModifier, value: Field<number | Tween<number>>) -> GuiObjectModifier,
+}
+export type IntoGuiObject = { AsGuiObject: (self: any) -> GuiObjectModifier }
 
 export type ImageButtonOnChange =
 	{ Name: "Active", Callback: (boolean) -> () }
@@ -2000,10 +2256,12 @@ export type ImageButtonOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type ImageButtonModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "ImageButton", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: ImageButtonModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: ImageButtonModifier, factory: (ImageButtonModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ImageButtonModifier, ...any) -> any,
+	As: <T>(self: ImageButtonModifier, name: string?) -> T, -- 무검사(11절)
+	AsImageButton: (self: ImageButtonModifier) -> ImageButtonModifier, -- 항등(Into<ImageButton> 구현)
 	Active: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
 	AnchorPoint: (self: ImageButtonModifier, value: Field<Vector2 | Tween<Vector2>>) -> ImageButtonModifier,
 	Archivable: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
@@ -2062,7 +2320,8 @@ export type ImageButtonModifier = {
 	Visible: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
 	ZIndex: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
 }
-export type ImageButtonElem = NewChild | ImageButtonOnChange | State<ImageButtonOnChange>
+export type IntoImageButton = { AsImageButton: (self: any) -> ImageButtonModifier }
+export type ImageButtonElem = NewChild | ImageButtonOnChange | State<ImageButtonOnChange> | { read __quadModifier: "ImageButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type ImageButtonMapperElem = ImageButtonElem | MapperDescriptor
 
 export type ImageLabelOnChange =
@@ -2114,10 +2373,12 @@ export type ImageLabelOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type ImageLabelModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "ImageLabel", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: ImageLabelModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: ImageLabelModifier, factory: (ImageLabelModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ImageLabelModifier, ...any) -> any,
+	As: <T>(self: ImageLabelModifier, name: string?) -> T, -- 무검사(11절)
+	AsImageLabel: (self: ImageLabelModifier) -> ImageLabelModifier, -- 항등(Into<ImageLabel> 구현)
 	Active: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
 	AnchorPoint: (self: ImageLabelModifier, value: Field<Vector2 | Tween<Vector2>>) -> ImageLabelModifier,
 	Archivable: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
@@ -2166,8 +2427,134 @@ export type ImageLabelModifier = {
 	Visible: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
 	ZIndex: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
 }
-export type ImageLabelElem = NewChild | ImageLabelOnChange | State<ImageLabelOnChange>
+export type IntoImageLabel = { AsImageLabel: (self: any) -> ImageLabelModifier }
+export type ImageLabelElem = NewChild | ImageLabelOnChange | State<ImageLabelOnChange> | { read __quadModifier: "ImageLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type ImageLabelMapperElem = ImageLabelElem | MapperDescriptor
+
+export type InstanceModifier = {
+	read __quadModifier: "Instance", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: InstanceModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: InstanceModifier, ...any) -> any,
+	As: <T>(self: InstanceModifier, name: string?) -> T, -- 무검사(11절)
+	AsInstance: (self: InstanceModifier) -> InstanceModifier, -- 항등(Into<Instance> 구현)
+	AsBillboardGui: (self: InstanceModifier) -> BillboardGuiModifier,
+	AsCamera: (self: InstanceModifier) -> CameraModifier,
+	AsCanvasGroup: (self: InstanceModifier) -> CanvasGroupModifier,
+	AsFolder: (self: InstanceModifier) -> FolderModifier,
+	AsFrame: (self: InstanceModifier) -> FrameModifier,
+	AsGuiBase: (self: InstanceModifier) -> GuiBaseModifier,
+	AsGuiBase2d: (self: InstanceModifier) -> GuiBase2dModifier,
+	AsGuiButton: (self: InstanceModifier) -> GuiButtonModifier,
+	AsGuiLabel: (self: InstanceModifier) -> GuiLabelModifier,
+	AsGuiObject: (self: InstanceModifier) -> GuiObjectModifier,
+	AsImageButton: (self: InstanceModifier) -> ImageButtonModifier,
+	AsImageLabel: (self: InstanceModifier) -> ImageLabelModifier,
+	AsLayerCollector: (self: InstanceModifier) -> LayerCollectorModifier,
+	AsModel: (self: InstanceModifier) -> ModelModifier,
+	AsPVInstance: (self: InstanceModifier) -> PVInstanceModifier,
+	AsScreenGui: (self: InstanceModifier) -> ScreenGuiModifier,
+	AsScrollingFrame: (self: InstanceModifier) -> ScrollingFrameModifier,
+	AsSurfaceGui: (self: InstanceModifier) -> SurfaceGuiModifier,
+	AsSurfaceGuiBase: (self: InstanceModifier) -> SurfaceGuiBaseModifier,
+	AsTextBox: (self: InstanceModifier) -> TextBoxModifier,
+	AsTextButton: (self: InstanceModifier) -> TextButtonModifier,
+	AsTextLabel: (self: InstanceModifier) -> TextLabelModifier,
+	AsUIAspectRatioConstraint: (self: InstanceModifier) -> UIAspectRatioConstraintModifier,
+	AsUIBase: (self: InstanceModifier) -> UIBaseModifier,
+	AsUIComponent: (self: InstanceModifier) -> UIComponentModifier,
+	AsUIConstraint: (self: InstanceModifier) -> UIConstraintModifier,
+	AsUICorner: (self: InstanceModifier) -> UICornerModifier,
+	AsUIDragDetector: (self: InstanceModifier) -> UIDragDetectorModifier,
+	AsUIFlexItem: (self: InstanceModifier) -> UIFlexItemModifier,
+	AsUIGradient: (self: InstanceModifier) -> UIGradientModifier,
+	AsUIGridLayout: (self: InstanceModifier) -> UIGridLayoutModifier,
+	AsUIGridStyleLayout: (self: InstanceModifier) -> UIGridStyleLayoutModifier,
+	AsUILayout: (self: InstanceModifier) -> UILayoutModifier,
+	AsUIListLayout: (self: InstanceModifier) -> UIListLayoutModifier,
+	AsUIPadding: (self: InstanceModifier) -> UIPaddingModifier,
+	AsUIPageLayout: (self: InstanceModifier) -> UIPageLayoutModifier,
+	AsUIScale: (self: InstanceModifier) -> UIScaleModifier,
+	AsUIShadow: (self: InstanceModifier) -> UIShadowModifier,
+	AsUISizeConstraint: (self: InstanceModifier) -> UISizeConstraintModifier,
+	AsUIStroke: (self: InstanceModifier) -> UIStrokeModifier,
+	AsUITableLayout: (self: InstanceModifier) -> UITableLayoutModifier,
+	AsUITextSizeConstraint: (self: InstanceModifier) -> UITextSizeConstraintModifier,
+	AsVideoFrame: (self: InstanceModifier) -> VideoFrameModifier,
+	AsViewportFrame: (self: InstanceModifier) -> ViewportFrameModifier,
+	AsWorldModel: (self: InstanceModifier) -> WorldModelModifier,
+	AsWorldRoot: (self: InstanceModifier) -> WorldRootModifier,
+	Archivable: (self: InstanceModifier, value: Field<boolean | Tween<boolean>>) -> InstanceModifier,
+	Capabilities: (self: InstanceModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> InstanceModifier,
+	Name: (self: InstanceModifier, value: Field<string | Tween<string>>) -> InstanceModifier,
+	Sandboxed: (self: InstanceModifier, value: Field<boolean | Tween<boolean>>) -> InstanceModifier,
+}
+export type IntoInstance = { AsInstance: (self: any) -> InstanceModifier }
+
+export type LayerCollectorModifier = {
+	read __quadModifier: "LayerCollector", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: LayerCollectorModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: LayerCollectorModifier, ...any) -> any,
+	As: <T>(self: LayerCollectorModifier, name: string?) -> T, -- 무검사(11절)
+	AsLayerCollector: (self: LayerCollectorModifier) -> LayerCollectorModifier, -- 항등(Into<LayerCollector> 구현)
+	AsBillboardGui: (self: LayerCollectorModifier) -> BillboardGuiModifier,
+	AsScreenGui: (self: LayerCollectorModifier) -> ScreenGuiModifier,
+	AsSurfaceGui: (self: LayerCollectorModifier) -> SurfaceGuiModifier,
+	AsSurfaceGuiBase: (self: LayerCollectorModifier) -> SurfaceGuiBaseModifier,
+	Archivable: (self: LayerCollectorModifier, value: Field<boolean | Tween<boolean>>) -> LayerCollectorModifier,
+	AutoLocalize: (self: LayerCollectorModifier, value: Field<boolean | Tween<boolean>>) -> LayerCollectorModifier,
+	Capabilities: (self: LayerCollectorModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> LayerCollectorModifier,
+	Enabled: (self: LayerCollectorModifier, value: Field<boolean | Tween<boolean>>) -> LayerCollectorModifier,
+	Name: (self: LayerCollectorModifier, value: Field<string | Tween<string>>) -> LayerCollectorModifier,
+	ResetOnSpawn: (self: LayerCollectorModifier, value: Field<boolean | Tween<boolean>>) -> LayerCollectorModifier,
+	RootLocalizationTable: (self: LayerCollectorModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> LayerCollectorModifier,
+	Sandboxed: (self: LayerCollectorModifier, value: Field<boolean | Tween<boolean>>) -> LayerCollectorModifier,
+	SelectionBehaviorDown: (self: LayerCollectorModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> LayerCollectorModifier,
+	SelectionBehaviorLeft: (self: LayerCollectorModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> LayerCollectorModifier,
+	SelectionBehaviorRight: (self: LayerCollectorModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> LayerCollectorModifier,
+	SelectionBehaviorUp: (self: LayerCollectorModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> LayerCollectorModifier,
+	SelectionGroup: (self: LayerCollectorModifier, value: Field<boolean | Tween<boolean>>) -> LayerCollectorModifier,
+	ZIndexBehavior: (self: LayerCollectorModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> LayerCollectorModifier,
+}
+export type IntoLayerCollector = { AsLayerCollector: (self: any) -> LayerCollectorModifier }
+
+export type ModelModifier = {
+	read __quadModifier: "Model", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: ModelModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: ModelModifier, ...any) -> any,
+	As: <T>(self: ModelModifier, name: string?) -> T, -- 무검사(11절)
+	AsModel: (self: ModelModifier) -> ModelModifier, -- 항등(Into<Model> 구현)
+	AsWorldModel: (self: ModelModifier) -> WorldModelModifier,
+	AsWorldRoot: (self: ModelModifier) -> WorldRootModifier,
+	Archivable: (self: ModelModifier, value: Field<boolean | Tween<boolean>>) -> ModelModifier,
+	Capabilities: (self: ModelModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> ModelModifier,
+	ModelStreamingMode: (self: ModelModifier, value: Field<Enum.ModelStreamingMode | Tween<Enum.ModelStreamingMode>>) -> ModelModifier,
+	Name: (self: ModelModifier, value: Field<string | Tween<string>>) -> ModelModifier,
+	PrimaryPart: (self: ModelModifier, value: Field<BasePart | Tween<BasePart>>) -> ModelModifier,
+	Sandboxed: (self: ModelModifier, value: Field<boolean | Tween<boolean>>) -> ModelModifier,
+	WorldPivot: (self: ModelModifier, value: Field<CFrame | Tween<CFrame>>) -> ModelModifier,
+}
+export type IntoModel = { AsModel: (self: any) -> ModelModifier }
+
+export type PVInstanceModifier = {
+	read __quadModifier: "PVInstance", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: PVInstanceModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: PVInstanceModifier, ...any) -> any,
+	As: <T>(self: PVInstanceModifier, name: string?) -> T, -- 무검사(11절)
+	AsPVInstance: (self: PVInstanceModifier) -> PVInstanceModifier, -- 항등(Into<PVInstance> 구현)
+	AsCamera: (self: PVInstanceModifier) -> CameraModifier,
+	AsModel: (self: PVInstanceModifier) -> ModelModifier,
+	AsWorldModel: (self: PVInstanceModifier) -> WorldModelModifier,
+	AsWorldRoot: (self: PVInstanceModifier) -> WorldRootModifier,
+	Archivable: (self: PVInstanceModifier, value: Field<boolean | Tween<boolean>>) -> PVInstanceModifier,
+	Capabilities: (self: PVInstanceModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> PVInstanceModifier,
+	Name: (self: PVInstanceModifier, value: Field<string | Tween<string>>) -> PVInstanceModifier,
+	Sandboxed: (self: PVInstanceModifier, value: Field<boolean | Tween<boolean>>) -> PVInstanceModifier,
+}
+export type IntoPVInstance = { AsPVInstance: (self: any) -> PVInstanceModifier }
 
 export type ScreenGuiOnChange =
 	{ Name: "Archivable", Callback: (boolean) -> () }
@@ -2190,10 +2577,12 @@ export type ScreenGuiOnChange =
 	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
 export type ScreenGuiModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "ScreenGui", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: ScreenGuiModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: ScreenGuiModifier, factory: (ScreenGuiModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ScreenGuiModifier, ...any) -> any,
+	As: <T>(self: ScreenGuiModifier, name: string?) -> T, -- 무검사(11절)
+	AsScreenGui: (self: ScreenGuiModifier) -> ScreenGuiModifier, -- 항등(Into<ScreenGui> 구현)
 	Archivable: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
 	AutoLocalize: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
 	Capabilities: (self: ScreenGuiModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> ScreenGuiModifier,
@@ -2214,7 +2603,8 @@ export type ScreenGuiModifier = {
 	SelectionGroup: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
 	ZIndexBehavior: (self: ScreenGuiModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> ScreenGuiModifier,
 }
-export type ScreenGuiElem = NewChild | ScreenGuiOnChange | State<ScreenGuiOnChange>
+export type IntoScreenGui = { AsScreenGui: (self: any) -> ScreenGuiModifier }
+export type ScreenGuiElem = NewChild | ScreenGuiOnChange | State<ScreenGuiOnChange> | { read __quadModifier: "ScreenGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type ScreenGuiMapperElem = ScreenGuiElem | MapperDescriptor
 
 export type ScrollingFrameOnChange =
@@ -2273,10 +2663,12 @@ export type ScrollingFrameOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type ScrollingFrameModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "ScrollingFrame", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: ScrollingFrameModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: ScrollingFrameModifier, factory: (ScrollingFrameModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ScrollingFrameModifier, ...any) -> any,
+	As: <T>(self: ScrollingFrameModifier, name: string?) -> T, -- 무검사(11절)
+	AsScrollingFrame: (self: ScrollingFrameModifier) -> ScrollingFrameModifier, -- 항등(Into<ScrollingFrame> 구현)
 	Active: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
 	AnchorPoint: (self: ScrollingFrameModifier, value: Field<Vector2 | Tween<Vector2>>) -> ScrollingFrameModifier,
 	Archivable: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
@@ -2332,7 +2724,8 @@ export type ScrollingFrameModifier = {
 	Visible: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
 	ZIndex: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
 }
-export type ScrollingFrameElem = NewChild | ScrollingFrameOnChange | State<ScrollingFrameOnChange>
+export type IntoScrollingFrame = { AsScrollingFrame: (self: any) -> ScrollingFrameModifier }
+export type ScrollingFrameElem = NewChild | ScrollingFrameOnChange | State<ScrollingFrameOnChange> | { read __quadModifier: "ScrollingFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type ScrollingFrameMapperElem = ScrollingFrameElem | MapperDescriptor
 
 export type SurfaceGuiOnChange =
@@ -2364,10 +2757,12 @@ export type SurfaceGuiOnChange =
 	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
 	| 	{ Name: "ZOffset", Callback: (number) -> () }
 export type SurfaceGuiModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "SurfaceGui", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: SurfaceGuiModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: SurfaceGuiModifier, factory: (SurfaceGuiModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: SurfaceGuiModifier, ...any) -> any,
+	As: <T>(self: SurfaceGuiModifier, name: string?) -> T, -- 무검사(11절)
+	AsSurfaceGui: (self: SurfaceGuiModifier) -> SurfaceGuiModifier, -- 항등(Into<SurfaceGui> 구현)
 	Active: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
 	Adornee: (self: SurfaceGuiModifier, value: Field<Instance | Tween<Instance>>) -> SurfaceGuiModifier,
 	AlwaysOnTop: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
@@ -2396,8 +2791,37 @@ export type SurfaceGuiModifier = {
 	ZIndexBehavior: (self: SurfaceGuiModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> SurfaceGuiModifier,
 	ZOffset: (self: SurfaceGuiModifier, value: Field<number | Tween<number>>) -> SurfaceGuiModifier,
 }
-export type SurfaceGuiElem = NewChild | SurfaceGuiOnChange | State<SurfaceGuiOnChange>
+export type IntoSurfaceGui = { AsSurfaceGui: (self: any) -> SurfaceGuiModifier }
+export type SurfaceGuiElem = NewChild | SurfaceGuiOnChange | State<SurfaceGuiOnChange> | { read __quadModifier: "SurfaceGui" | "SurfaceGuiBase" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type SurfaceGuiMapperElem = SurfaceGuiElem | MapperDescriptor
+
+export type SurfaceGuiBaseModifier = {
+	read __quadModifier: "SurfaceGuiBase", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: SurfaceGuiBaseModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: SurfaceGuiBaseModifier, ...any) -> any,
+	As: <T>(self: SurfaceGuiBaseModifier, name: string?) -> T, -- 무검사(11절)
+	AsSurfaceGuiBase: (self: SurfaceGuiBaseModifier) -> SurfaceGuiBaseModifier, -- 항등(Into<SurfaceGuiBase> 구현)
+	AsSurfaceGui: (self: SurfaceGuiBaseModifier) -> SurfaceGuiModifier,
+	Active: (self: SurfaceGuiBaseModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiBaseModifier,
+	Adornee: (self: SurfaceGuiBaseModifier, value: Field<Instance | Tween<Instance>>) -> SurfaceGuiBaseModifier,
+	Archivable: (self: SurfaceGuiBaseModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiBaseModifier,
+	AutoLocalize: (self: SurfaceGuiBaseModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiBaseModifier,
+	Capabilities: (self: SurfaceGuiBaseModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> SurfaceGuiBaseModifier,
+	Enabled: (self: SurfaceGuiBaseModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiBaseModifier,
+	Face: (self: SurfaceGuiBaseModifier, value: Field<Enum.NormalId | Tween<Enum.NormalId>>) -> SurfaceGuiBaseModifier,
+	Name: (self: SurfaceGuiBaseModifier, value: Field<string | Tween<string>>) -> SurfaceGuiBaseModifier,
+	ResetOnSpawn: (self: SurfaceGuiBaseModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiBaseModifier,
+	RootLocalizationTable: (self: SurfaceGuiBaseModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> SurfaceGuiBaseModifier,
+	Sandboxed: (self: SurfaceGuiBaseModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiBaseModifier,
+	SelectionBehaviorDown: (self: SurfaceGuiBaseModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> SurfaceGuiBaseModifier,
+	SelectionBehaviorLeft: (self: SurfaceGuiBaseModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> SurfaceGuiBaseModifier,
+	SelectionBehaviorRight: (self: SurfaceGuiBaseModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> SurfaceGuiBaseModifier,
+	SelectionBehaviorUp: (self: SurfaceGuiBaseModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> SurfaceGuiBaseModifier,
+	SelectionGroup: (self: SurfaceGuiBaseModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiBaseModifier,
+	ZIndexBehavior: (self: SurfaceGuiBaseModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> SurfaceGuiBaseModifier,
+}
+export type IntoSurfaceGuiBase = { AsSurfaceGuiBase: (self: any) -> SurfaceGuiBaseModifier }
 
 export type TextBoxOnChange =
 	{ Name: "Active", Callback: (boolean) -> () }
@@ -2462,10 +2886,12 @@ export type TextBoxOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type TextBoxModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "TextBox", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: TextBoxModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: TextBoxModifier, factory: (TextBoxModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: TextBoxModifier, ...any) -> any,
+	As: <T>(self: TextBoxModifier, name: string?) -> T, -- 무검사(11절)
+	AsTextBox: (self: TextBoxModifier) -> TextBoxModifier, -- 항등(Into<TextBox> 구현)
 	Active: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
 	AnchorPoint: (self: TextBoxModifier, value: Field<Vector2 | Tween<Vector2>>) -> TextBoxModifier,
 	Archivable: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
@@ -2528,7 +2954,8 @@ export type TextBoxModifier = {
 	Visible: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
 	ZIndex: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
 }
-export type TextBoxElem = NewChild | TextBoxOnChange | State<TextBoxOnChange>
+export type IntoTextBox = { AsTextBox: (self: any) -> TextBoxModifier }
+export type TextBoxElem = NewChild | TextBoxOnChange | State<TextBoxOnChange> | { read __quadModifier: "TextBox" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type TextBoxMapperElem = TextBoxElem | MapperDescriptor
 
 export type TextButtonOnChange =
@@ -2592,10 +3019,12 @@ export type TextButtonOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type TextButtonModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "TextButton", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: TextButtonModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: TextButtonModifier, factory: (TextButtonModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: TextButtonModifier, ...any) -> any,
+	As: <T>(self: TextButtonModifier, name: string?) -> T, -- 무검사(11절)
+	AsTextButton: (self: TextButtonModifier) -> TextButtonModifier, -- 항등(Into<TextButton> 구현)
 	Active: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
 	AnchorPoint: (self: TextButtonModifier, value: Field<Vector2 | Tween<Vector2>>) -> TextButtonModifier,
 	Archivable: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
@@ -2656,7 +3085,8 @@ export type TextButtonModifier = {
 	Visible: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
 	ZIndex: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
 }
-export type TextButtonElem = NewChild | TextButtonOnChange | State<TextButtonOnChange>
+export type IntoTextButton = { AsTextButton: (self: any) -> TextButtonModifier }
+export type TextButtonElem = NewChild | TextButtonOnChange | State<TextButtonOnChange> | { read __quadModifier: "TextButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type TextButtonMapperElem = TextButtonElem | MapperDescriptor
 
 export type TextLabelOnChange =
@@ -2714,10 +3144,12 @@ export type TextLabelOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type TextLabelModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "TextLabel", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: TextLabelModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: TextLabelModifier, factory: (TextLabelModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: TextLabelModifier, ...any) -> any,
+	As: <T>(self: TextLabelModifier, name: string?) -> T, -- 무검사(11절)
+	AsTextLabel: (self: TextLabelModifier) -> TextLabelModifier, -- 항등(Into<TextLabel> 구현)
 	Active: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
 	AnchorPoint: (self: TextLabelModifier, value: Field<Vector2 | Tween<Vector2>>) -> TextLabelModifier,
 	Archivable: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
@@ -2772,7 +3204,8 @@ export type TextLabelModifier = {
 	Visible: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
 	ZIndex: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
 }
-export type TextLabelElem = NewChild | TextLabelOnChange | State<TextLabelOnChange>
+export type IntoTextLabel = { AsTextLabel: (self: any) -> TextLabelModifier }
+export type TextLabelElem = NewChild | TextLabelOnChange | State<TextLabelOnChange> | { read __quadModifier: "TextLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type TextLabelMapperElem = TextLabelElem | MapperDescriptor
 
 export type UIAspectRatioConstraintOnChange =
@@ -2784,10 +3217,12 @@ export type UIAspectRatioConstraintOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 export type UIAspectRatioConstraintModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIAspectRatioConstraint", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIAspectRatioConstraintModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIAspectRatioConstraintModifier, factory: (UIAspectRatioConstraintModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIAspectRatioConstraintModifier, ...any) -> any,
+	As: <T>(self: UIAspectRatioConstraintModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIAspectRatioConstraint: (self: UIAspectRatioConstraintModifier) -> UIAspectRatioConstraintModifier, -- 항등(Into<UIAspectRatioConstraint> 구현)
 	Archivable: (self: UIAspectRatioConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UIAspectRatioConstraintModifier,
 	AspectRatio: (self: UIAspectRatioConstraintModifier, value: Field<number | Tween<number>>) -> UIAspectRatioConstraintModifier,
 	AspectType: (self: UIAspectRatioConstraintModifier, value: Field<Enum.AspectType | Tween<Enum.AspectType>>) -> UIAspectRatioConstraintModifier,
@@ -2796,8 +3231,91 @@ export type UIAspectRatioConstraintModifier = {
 	Name: (self: UIAspectRatioConstraintModifier, value: Field<string | Tween<string>>) -> UIAspectRatioConstraintModifier,
 	Sandboxed: (self: UIAspectRatioConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UIAspectRatioConstraintModifier,
 }
-export type UIAspectRatioConstraintElem = NewChild | UIAspectRatioConstraintOnChange | State<UIAspectRatioConstraintOnChange>
+export type IntoUIAspectRatioConstraint = { AsUIAspectRatioConstraint: (self: any) -> UIAspectRatioConstraintModifier }
+export type UIAspectRatioConstraintElem = NewChild | UIAspectRatioConstraintOnChange | State<UIAspectRatioConstraintOnChange> | { read __quadModifier: "UIAspectRatioConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" }
 export type UIAspectRatioConstraintMapperElem = UIAspectRatioConstraintElem | MapperDescriptor
+
+export type UIBaseModifier = {
+	read __quadModifier: "UIBase", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: UIBaseModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: UIBaseModifier, ...any) -> any,
+	As: <T>(self: UIBaseModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIBase: (self: UIBaseModifier) -> UIBaseModifier, -- 항등(Into<UIBase> 구현)
+	AsUIAspectRatioConstraint: (self: UIBaseModifier) -> UIAspectRatioConstraintModifier,
+	AsUIComponent: (self: UIBaseModifier) -> UIComponentModifier,
+	AsUIConstraint: (self: UIBaseModifier) -> UIConstraintModifier,
+	AsUICorner: (self: UIBaseModifier) -> UICornerModifier,
+	AsUIDragDetector: (self: UIBaseModifier) -> UIDragDetectorModifier,
+	AsUIFlexItem: (self: UIBaseModifier) -> UIFlexItemModifier,
+	AsUIGradient: (self: UIBaseModifier) -> UIGradientModifier,
+	AsUIGridLayout: (self: UIBaseModifier) -> UIGridLayoutModifier,
+	AsUIGridStyleLayout: (self: UIBaseModifier) -> UIGridStyleLayoutModifier,
+	AsUILayout: (self: UIBaseModifier) -> UILayoutModifier,
+	AsUIListLayout: (self: UIBaseModifier) -> UIListLayoutModifier,
+	AsUIPadding: (self: UIBaseModifier) -> UIPaddingModifier,
+	AsUIPageLayout: (self: UIBaseModifier) -> UIPageLayoutModifier,
+	AsUIScale: (self: UIBaseModifier) -> UIScaleModifier,
+	AsUIShadow: (self: UIBaseModifier) -> UIShadowModifier,
+	AsUISizeConstraint: (self: UIBaseModifier) -> UISizeConstraintModifier,
+	AsUIStroke: (self: UIBaseModifier) -> UIStrokeModifier,
+	AsUITableLayout: (self: UIBaseModifier) -> UITableLayoutModifier,
+	AsUITextSizeConstraint: (self: UIBaseModifier) -> UITextSizeConstraintModifier,
+	Archivable: (self: UIBaseModifier, value: Field<boolean | Tween<boolean>>) -> UIBaseModifier,
+	Capabilities: (self: UIBaseModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIBaseModifier,
+	Name: (self: UIBaseModifier, value: Field<string | Tween<string>>) -> UIBaseModifier,
+	Sandboxed: (self: UIBaseModifier, value: Field<boolean | Tween<boolean>>) -> UIBaseModifier,
+}
+export type IntoUIBase = { AsUIBase: (self: any) -> UIBaseModifier }
+
+export type UIComponentModifier = {
+	read __quadModifier: "UIComponent", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: UIComponentModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: UIComponentModifier, ...any) -> any,
+	As: <T>(self: UIComponentModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIComponent: (self: UIComponentModifier) -> UIComponentModifier, -- 항등(Into<UIComponent> 구현)
+	AsUIAspectRatioConstraint: (self: UIComponentModifier) -> UIAspectRatioConstraintModifier,
+	AsUIConstraint: (self: UIComponentModifier) -> UIConstraintModifier,
+	AsUICorner: (self: UIComponentModifier) -> UICornerModifier,
+	AsUIDragDetector: (self: UIComponentModifier) -> UIDragDetectorModifier,
+	AsUIFlexItem: (self: UIComponentModifier) -> UIFlexItemModifier,
+	AsUIGradient: (self: UIComponentModifier) -> UIGradientModifier,
+	AsUIGridLayout: (self: UIComponentModifier) -> UIGridLayoutModifier,
+	AsUIGridStyleLayout: (self: UIComponentModifier) -> UIGridStyleLayoutModifier,
+	AsUILayout: (self: UIComponentModifier) -> UILayoutModifier,
+	AsUIListLayout: (self: UIComponentModifier) -> UIListLayoutModifier,
+	AsUIPadding: (self: UIComponentModifier) -> UIPaddingModifier,
+	AsUIPageLayout: (self: UIComponentModifier) -> UIPageLayoutModifier,
+	AsUIScale: (self: UIComponentModifier) -> UIScaleModifier,
+	AsUIShadow: (self: UIComponentModifier) -> UIShadowModifier,
+	AsUISizeConstraint: (self: UIComponentModifier) -> UISizeConstraintModifier,
+	AsUIStroke: (self: UIComponentModifier) -> UIStrokeModifier,
+	AsUITableLayout: (self: UIComponentModifier) -> UITableLayoutModifier,
+	AsUITextSizeConstraint: (self: UIComponentModifier) -> UITextSizeConstraintModifier,
+	Archivable: (self: UIComponentModifier, value: Field<boolean | Tween<boolean>>) -> UIComponentModifier,
+	Capabilities: (self: UIComponentModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIComponentModifier,
+	Name: (self: UIComponentModifier, value: Field<string | Tween<string>>) -> UIComponentModifier,
+	Sandboxed: (self: UIComponentModifier, value: Field<boolean | Tween<boolean>>) -> UIComponentModifier,
+}
+export type IntoUIComponent = { AsUIComponent: (self: any) -> UIComponentModifier }
+
+export type UIConstraintModifier = {
+	read __quadModifier: "UIConstraint", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: UIConstraintModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: UIConstraintModifier, ...any) -> any,
+	As: <T>(self: UIConstraintModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIConstraint: (self: UIConstraintModifier) -> UIConstraintModifier, -- 항등(Into<UIConstraint> 구현)
+	AsUIAspectRatioConstraint: (self: UIConstraintModifier) -> UIAspectRatioConstraintModifier,
+	AsUISizeConstraint: (self: UIConstraintModifier) -> UISizeConstraintModifier,
+	AsUITextSizeConstraint: (self: UIConstraintModifier) -> UITextSizeConstraintModifier,
+	Archivable: (self: UIConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UIConstraintModifier,
+	Capabilities: (self: UIConstraintModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIConstraintModifier,
+	Name: (self: UIConstraintModifier, value: Field<string | Tween<string>>) -> UIConstraintModifier,
+	Sandboxed: (self: UIConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UIConstraintModifier,
+}
+export type IntoUIConstraint = { AsUIConstraint: (self: any) -> UIConstraintModifier }
 
 export type UICornerOnChange =
 	{ Name: "Archivable", Callback: (boolean) -> () }
@@ -2810,10 +3328,12 @@ export type UICornerOnChange =
 	| 	{ Name: "TopLeftRadius", Callback: (UDim) -> () }
 	| 	{ Name: "TopRightRadius", Callback: (UDim) -> () }
 export type UICornerModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UICorner", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UICornerModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UICornerModifier, factory: (UICornerModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UICornerModifier, ...any) -> any,
+	As: <T>(self: UICornerModifier, name: string?) -> T, -- 무검사(11절)
+	AsUICorner: (self: UICornerModifier) -> UICornerModifier, -- 항등(Into<UICorner> 구현)
 	Archivable: (self: UICornerModifier, value: Field<boolean | Tween<boolean>>) -> UICornerModifier,
 	BottomLeftRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
 	BottomRightRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
@@ -2824,7 +3344,8 @@ export type UICornerModifier = {
 	TopLeftRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
 	TopRightRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
 }
-export type UICornerElem = NewChild | UICornerOnChange | State<UICornerOnChange>
+export type IntoUICorner = { AsUICorner: (self: any) -> UICornerModifier }
+export type UICornerElem = NewChild | UICornerOnChange | State<UICornerOnChange> | { read __quadModifier: "UICorner" | "UIComponent" | "UIBase" | "Instance" }
 export type UICornerMapperElem = UICornerElem | MapperDescriptor
 
 export type UIDragDetectorOnChange =
@@ -2855,10 +3376,12 @@ export type UIDragDetectorOnChange =
 	| 	{ Name: "SelectionModeRotateSpeed", Callback: (number) -> () }
 	| 	{ Name: "UIDragSpeedAxisMapping", Callback: (Enum.UIDragSpeedAxisMapping) -> () }
 export type UIDragDetectorModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIDragDetector", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIDragDetectorModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIDragDetectorModifier, factory: (UIDragDetectorModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIDragDetectorModifier, ...any) -> any,
+	As: <T>(self: UIDragDetectorModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIDragDetector: (self: UIDragDetectorModifier) -> UIDragDetectorModifier, -- 항등(Into<UIDragDetector> 구현)
 	ActivatedCursorIcon: (self: UIDragDetectorModifier, value: Field<Content | Tween<Content>>) -> UIDragDetectorModifier,
 	ActivatedCursorIconContent: (self: UIDragDetectorModifier, value: Field<Content | Tween<Content>>) -> UIDragDetectorModifier,
 	Archivable: (self: UIDragDetectorModifier, value: Field<boolean | Tween<boolean>>) -> UIDragDetectorModifier,
@@ -2886,7 +3409,8 @@ export type UIDragDetectorModifier = {
 	SelectionModeRotateSpeed: (self: UIDragDetectorModifier, value: Field<number | Tween<number>>) -> UIDragDetectorModifier,
 	UIDragSpeedAxisMapping: (self: UIDragDetectorModifier, value: Field<Enum.UIDragSpeedAxisMapping | Tween<Enum.UIDragSpeedAxisMapping>>) -> UIDragDetectorModifier,
 }
-export type UIDragDetectorElem = NewChild | UIDragDetectorOnChange | State<UIDragDetectorOnChange>
+export type IntoUIDragDetector = { AsUIDragDetector: (self: any) -> UIDragDetectorModifier }
+export type UIDragDetectorElem = NewChild | UIDragDetectorOnChange | State<UIDragDetectorOnChange> | { read __quadModifier: "UIDragDetector" | "UIComponent" | "UIBase" | "Instance" }
 export type UIDragDetectorMapperElem = UIDragDetectorElem | MapperDescriptor
 
 export type UIFlexItemOnChange =
@@ -2899,10 +3423,12 @@ export type UIFlexItemOnChange =
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "ShrinkRatio", Callback: (number) -> () }
 export type UIFlexItemModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIFlexItem", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIFlexItemModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIFlexItemModifier, factory: (UIFlexItemModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIFlexItemModifier, ...any) -> any,
+	As: <T>(self: UIFlexItemModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIFlexItem: (self: UIFlexItemModifier) -> UIFlexItemModifier, -- 항등(Into<UIFlexItem> 구현)
 	Archivable: (self: UIFlexItemModifier, value: Field<boolean | Tween<boolean>>) -> UIFlexItemModifier,
 	Capabilities: (self: UIFlexItemModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIFlexItemModifier,
 	FlexMode: (self: UIFlexItemModifier, value: Field<Enum.UIFlexMode | Tween<Enum.UIFlexMode>>) -> UIFlexItemModifier,
@@ -2912,7 +3438,8 @@ export type UIFlexItemModifier = {
 	Sandboxed: (self: UIFlexItemModifier, value: Field<boolean | Tween<boolean>>) -> UIFlexItemModifier,
 	ShrinkRatio: (self: UIFlexItemModifier, value: Field<number | Tween<number>>) -> UIFlexItemModifier,
 }
-export type UIFlexItemElem = NewChild | UIFlexItemOnChange | State<UIFlexItemOnChange>
+export type IntoUIFlexItem = { AsUIFlexItem: (self: any) -> UIFlexItemModifier }
+export type UIFlexItemElem = NewChild | UIFlexItemOnChange | State<UIFlexItemOnChange> | { read __quadModifier: "UIFlexItem" | "UIComponent" | "UIBase" | "Instance" }
 export type UIFlexItemMapperElem = UIFlexItemElem | MapperDescriptor
 
 export type UIGradientOnChange =
@@ -2929,10 +3456,12 @@ export type UIGradientOnChange =
 	| 	{ Name: "Transparency", Callback: (NumberSequence) -> () }
 	| 	{ Name: "Type", Callback: (Enum.GradientType) -> () }
 export type UIGradientModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIGradient", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIGradientModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIGradientModifier, factory: (UIGradientModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIGradientModifier, ...any) -> any,
+	As: <T>(self: UIGradientModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIGradient: (self: UIGradientModifier) -> UIGradientModifier, -- 항등(Into<UIGradient> 구현)
 	Archivable: (self: UIGradientModifier, value: Field<boolean | Tween<boolean>>) -> UIGradientModifier,
 	Capabilities: (self: UIGradientModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIGradientModifier,
 	Color: (self: UIGradientModifier, value: Field<ColorSequence | Tween<ColorSequence>>) -> UIGradientModifier,
@@ -2946,7 +3475,8 @@ export type UIGradientModifier = {
 	Transparency: (self: UIGradientModifier, value: Field<NumberSequence | Tween<NumberSequence>>) -> UIGradientModifier,
 	Type: (self: UIGradientModifier, value: Field<Enum.GradientType | Tween<Enum.GradientType>>) -> UIGradientModifier,
 }
-export type UIGradientElem = NewChild | UIGradientOnChange | State<UIGradientOnChange>
+export type IntoUIGradient = { AsUIGradient: (self: any) -> UIGradientModifier }
+export type UIGradientElem = NewChild | UIGradientOnChange | State<UIGradientOnChange> | { read __quadModifier: "UIGradient" | "UIComponent" | "UIBase" | "Instance" }
 export type UIGradientMapperElem = UIGradientElem | MapperDescriptor
 
 export type UIGridLayoutOnChange =
@@ -2963,10 +3493,12 @@ export type UIGridLayoutOnChange =
 	| 	{ Name: "StartCorner", Callback: (Enum.StartCorner) -> () }
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
 export type UIGridLayoutModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIGridLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIGridLayoutModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIGridLayoutModifier, factory: (UIGridLayoutModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIGridLayoutModifier, ...any) -> any,
+	As: <T>(self: UIGridLayoutModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIGridLayout: (self: UIGridLayoutModifier) -> UIGridLayoutModifier, -- 항등(Into<UIGridLayout> 구현)
 	Archivable: (self: UIGridLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIGridLayoutModifier,
 	Capabilities: (self: UIGridLayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIGridLayoutModifier,
 	CellPadding: (self: UIGridLayoutModifier, value: Field<UDim2 | Tween<UDim2>>) -> UIGridLayoutModifier,
@@ -2980,8 +3512,50 @@ export type UIGridLayoutModifier = {
 	StartCorner: (self: UIGridLayoutModifier, value: Field<Enum.StartCorner | Tween<Enum.StartCorner>>) -> UIGridLayoutModifier,
 	VerticalAlignment: (self: UIGridLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UIGridLayoutModifier,
 }
-export type UIGridLayoutElem = NewChild | UIGridLayoutOnChange | State<UIGridLayoutOnChange>
+export type IntoUIGridLayout = { AsUIGridLayout: (self: any) -> UIGridLayoutModifier }
+export type UIGridLayoutElem = NewChild | UIGridLayoutOnChange | State<UIGridLayoutOnChange> | { read __quadModifier: "UIGridLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" }
 export type UIGridLayoutMapperElem = UIGridLayoutElem | MapperDescriptor
+
+export type UIGridStyleLayoutModifier = {
+	read __quadModifier: "UIGridStyleLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: UIGridStyleLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: UIGridStyleLayoutModifier, ...any) -> any,
+	As: <T>(self: UIGridStyleLayoutModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIGridStyleLayout: (self: UIGridStyleLayoutModifier) -> UIGridStyleLayoutModifier, -- 항등(Into<UIGridStyleLayout> 구현)
+	AsUIGridLayout: (self: UIGridStyleLayoutModifier) -> UIGridLayoutModifier,
+	AsUIListLayout: (self: UIGridStyleLayoutModifier) -> UIListLayoutModifier,
+	AsUIPageLayout: (self: UIGridStyleLayoutModifier) -> UIPageLayoutModifier,
+	AsUITableLayout: (self: UIGridStyleLayoutModifier) -> UITableLayoutModifier,
+	Archivable: (self: UIGridStyleLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIGridStyleLayoutModifier,
+	Capabilities: (self: UIGridStyleLayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIGridStyleLayoutModifier,
+	FillDirection: (self: UIGridStyleLayoutModifier, value: Field<Enum.FillDirection | Tween<Enum.FillDirection>>) -> UIGridStyleLayoutModifier,
+	HorizontalAlignment: (self: UIGridStyleLayoutModifier, value: Field<Enum.HorizontalAlignment | Tween<Enum.HorizontalAlignment>>) -> UIGridStyleLayoutModifier,
+	Name: (self: UIGridStyleLayoutModifier, value: Field<string | Tween<string>>) -> UIGridStyleLayoutModifier,
+	Sandboxed: (self: UIGridStyleLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIGridStyleLayoutModifier,
+	SortOrder: (self: UIGridStyleLayoutModifier, value: Field<Enum.SortOrder | Tween<Enum.SortOrder>>) -> UIGridStyleLayoutModifier,
+	VerticalAlignment: (self: UIGridStyleLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UIGridStyleLayoutModifier,
+}
+export type IntoUIGridStyleLayout = { AsUIGridStyleLayout: (self: any) -> UIGridStyleLayoutModifier }
+
+export type UILayoutModifier = {
+	read __quadModifier: "UILayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: UILayoutModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: UILayoutModifier, ...any) -> any,
+	As: <T>(self: UILayoutModifier, name: string?) -> T, -- 무검사(11절)
+	AsUILayout: (self: UILayoutModifier) -> UILayoutModifier, -- 항등(Into<UILayout> 구현)
+	AsUIGridLayout: (self: UILayoutModifier) -> UIGridLayoutModifier,
+	AsUIGridStyleLayout: (self: UILayoutModifier) -> UIGridStyleLayoutModifier,
+	AsUIListLayout: (self: UILayoutModifier) -> UIListLayoutModifier,
+	AsUIPageLayout: (self: UILayoutModifier) -> UIPageLayoutModifier,
+	AsUITableLayout: (self: UILayoutModifier) -> UITableLayoutModifier,
+	Archivable: (self: UILayoutModifier, value: Field<boolean | Tween<boolean>>) -> UILayoutModifier,
+	Capabilities: (self: UILayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UILayoutModifier,
+	Name: (self: UILayoutModifier, value: Field<string | Tween<string>>) -> UILayoutModifier,
+	Sandboxed: (self: UILayoutModifier, value: Field<boolean | Tween<boolean>>) -> UILayoutModifier,
+}
+export type IntoUILayout = { AsUILayout: (self: any) -> UILayoutModifier }
 
 export type UIListLayoutOnChange =
 	{ Name: "Archivable", Callback: (boolean) -> () }
@@ -2998,10 +3572,12 @@ export type UIListLayoutOnChange =
 	| 	{ Name: "VerticalFlex", Callback: (Enum.UIFlexAlignment) -> () }
 	| 	{ Name: "Wraps", Callback: (boolean) -> () }
 export type UIListLayoutModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIListLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIListLayoutModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIListLayoutModifier, factory: (UIListLayoutModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIListLayoutModifier, ...any) -> any,
+	As: <T>(self: UIListLayoutModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIListLayout: (self: UIListLayoutModifier) -> UIListLayoutModifier, -- 항등(Into<UIListLayout> 구현)
 	Archivable: (self: UIListLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIListLayoutModifier,
 	Capabilities: (self: UIListLayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIListLayoutModifier,
 	FillDirection: (self: UIListLayoutModifier, value: Field<Enum.FillDirection | Tween<Enum.FillDirection>>) -> UIListLayoutModifier,
@@ -3016,7 +3592,8 @@ export type UIListLayoutModifier = {
 	VerticalFlex: (self: UIListLayoutModifier, value: Field<Enum.UIFlexAlignment | Tween<Enum.UIFlexAlignment>>) -> UIListLayoutModifier,
 	Wraps: (self: UIListLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIListLayoutModifier,
 }
-export type UIListLayoutElem = NewChild | UIListLayoutOnChange | State<UIListLayoutOnChange>
+export type IntoUIListLayout = { AsUIListLayout: (self: any) -> UIListLayoutModifier }
+export type UIListLayoutElem = NewChild | UIListLayoutOnChange | State<UIListLayoutOnChange> | { read __quadModifier: "UIListLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" }
 export type UIListLayoutMapperElem = UIListLayoutElem | MapperDescriptor
 
 export type UIPaddingOnChange =
@@ -3029,10 +3606,12 @@ export type UIPaddingOnChange =
 	| 	{ Name: "PaddingTop", Callback: (UDim) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 export type UIPaddingModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIPadding", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIPaddingModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIPaddingModifier, factory: (UIPaddingModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIPaddingModifier, ...any) -> any,
+	As: <T>(self: UIPaddingModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIPadding: (self: UIPaddingModifier) -> UIPaddingModifier, -- 항등(Into<UIPadding> 구현)
 	Archivable: (self: UIPaddingModifier, value: Field<boolean | Tween<boolean>>) -> UIPaddingModifier,
 	Capabilities: (self: UIPaddingModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIPaddingModifier,
 	Name: (self: UIPaddingModifier, value: Field<string | Tween<string>>) -> UIPaddingModifier,
@@ -3042,7 +3621,8 @@ export type UIPaddingModifier = {
 	PaddingTop: (self: UIPaddingModifier, value: Field<UDim | Tween<UDim>>) -> UIPaddingModifier,
 	Sandboxed: (self: UIPaddingModifier, value: Field<boolean | Tween<boolean>>) -> UIPaddingModifier,
 }
-export type UIPaddingElem = NewChild | UIPaddingOnChange | State<UIPaddingOnChange>
+export type IntoUIPadding = { AsUIPadding: (self: any) -> UIPaddingModifier }
+export type UIPaddingElem = NewChild | UIPaddingOnChange | State<UIPaddingOnChange> | { read __quadModifier: "UIPadding" | "UIComponent" | "UIBase" | "Instance" }
 export type UIPaddingMapperElem = UIPaddingElem | MapperDescriptor
 
 export type UIPageLayoutOnChange =
@@ -3064,10 +3644,12 @@ export type UIPageLayoutOnChange =
 	| 	{ Name: "TweenTime", Callback: (number) -> () }
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
 export type UIPageLayoutModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIPageLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIPageLayoutModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIPageLayoutModifier, factory: (UIPageLayoutModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIPageLayoutModifier, ...any) -> any,
+	As: <T>(self: UIPageLayoutModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIPageLayout: (self: UIPageLayoutModifier) -> UIPageLayoutModifier, -- 항등(Into<UIPageLayout> 구현)
 	Animated: (self: UIPageLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIPageLayoutModifier,
 	Archivable: (self: UIPageLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIPageLayoutModifier,
 	Capabilities: (self: UIPageLayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIPageLayoutModifier,
@@ -3086,7 +3668,8 @@ export type UIPageLayoutModifier = {
 	TweenTime: (self: UIPageLayoutModifier, value: Field<number | Tween<number>>) -> UIPageLayoutModifier,
 	VerticalAlignment: (self: UIPageLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UIPageLayoutModifier,
 }
-export type UIPageLayoutElem = NewChild | UIPageLayoutOnChange | State<UIPageLayoutOnChange>
+export type IntoUIPageLayout = { AsUIPageLayout: (self: any) -> UIPageLayoutModifier }
+export type UIPageLayoutElem = NewChild | UIPageLayoutOnChange | State<UIPageLayoutOnChange> | { read __quadModifier: "UIPageLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" }
 export type UIPageLayoutMapperElem = UIPageLayoutElem | MapperDescriptor
 
 export type UIScaleOnChange =
@@ -3096,17 +3679,20 @@ export type UIScaleOnChange =
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "Scale", Callback: (number) -> () }
 export type UIScaleModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIScale", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIScaleModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIScaleModifier, factory: (UIScaleModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIScaleModifier, ...any) -> any,
+	As: <T>(self: UIScaleModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIScale: (self: UIScaleModifier) -> UIScaleModifier, -- 항등(Into<UIScale> 구현)
 	Archivable: (self: UIScaleModifier, value: Field<boolean | Tween<boolean>>) -> UIScaleModifier,
 	Capabilities: (self: UIScaleModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIScaleModifier,
 	Name: (self: UIScaleModifier, value: Field<string | Tween<string>>) -> UIScaleModifier,
 	Sandboxed: (self: UIScaleModifier, value: Field<boolean | Tween<boolean>>) -> UIScaleModifier,
 	Scale: (self: UIScaleModifier, value: Field<number | Tween<number>>) -> UIScaleModifier,
 }
-export type UIScaleElem = NewChild | UIScaleOnChange | State<UIScaleOnChange>
+export type IntoUIScale = { AsUIScale: (self: any) -> UIScaleModifier }
+export type UIScaleElem = NewChild | UIScaleOnChange | State<UIScaleOnChange> | { read __quadModifier: "UIScale" | "UIComponent" | "UIBase" | "Instance" }
 export type UIScaleMapperElem = UIScaleElem | MapperDescriptor
 
 export type UIShadowOnChange =
@@ -3124,10 +3710,12 @@ export type UIShadowOnChange =
 	| 	{ Name: "Transparency", Callback: (number) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type UIShadowModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIShadow", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIShadowModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIShadowModifier, factory: (UIShadowModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIShadowModifier, ...any) -> any,
+	As: <T>(self: UIShadowModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIShadow: (self: UIShadowModifier) -> UIShadowModifier, -- 항등(Into<UIShadow> 구현)
 	Archivable: (self: UIShadowModifier, value: Field<boolean | Tween<boolean>>) -> UIShadowModifier,
 	BlurRadius: (self: UIShadowModifier, value: Field<UDim | Tween<UDim>>) -> UIShadowModifier,
 	Capabilities: (self: UIShadowModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIShadowModifier,
@@ -3142,7 +3730,8 @@ export type UIShadowModifier = {
 	Transparency: (self: UIShadowModifier, value: Field<number | Tween<number>>) -> UIShadowModifier,
 	ZIndex: (self: UIShadowModifier, value: Field<number | Tween<number>>) -> UIShadowModifier,
 }
-export type UIShadowElem = NewChild | UIShadowOnChange | State<UIShadowOnChange>
+export type IntoUIShadow = { AsUIShadow: (self: any) -> UIShadowModifier }
+export type UIShadowElem = NewChild | UIShadowOnChange | State<UIShadowOnChange> | { read __quadModifier: "UIShadow" | "UIComponent" | "UIBase" | "Instance" }
 export type UIShadowMapperElem = UIShadowElem | MapperDescriptor
 
 export type UISizeConstraintOnChange =
@@ -3153,10 +3742,12 @@ export type UISizeConstraintOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 export type UISizeConstraintModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UISizeConstraint", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UISizeConstraintModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UISizeConstraintModifier, factory: (UISizeConstraintModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UISizeConstraintModifier, ...any) -> any,
+	As: <T>(self: UISizeConstraintModifier, name: string?) -> T, -- 무검사(11절)
+	AsUISizeConstraint: (self: UISizeConstraintModifier) -> UISizeConstraintModifier, -- 항등(Into<UISizeConstraint> 구현)
 	Archivable: (self: UISizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UISizeConstraintModifier,
 	Capabilities: (self: UISizeConstraintModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UISizeConstraintModifier,
 	MaxSize: (self: UISizeConstraintModifier, value: Field<Vector2 | Tween<Vector2>>) -> UISizeConstraintModifier,
@@ -3164,7 +3755,8 @@ export type UISizeConstraintModifier = {
 	Name: (self: UISizeConstraintModifier, value: Field<string | Tween<string>>) -> UISizeConstraintModifier,
 	Sandboxed: (self: UISizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UISizeConstraintModifier,
 }
-export type UISizeConstraintElem = NewChild | UISizeConstraintOnChange | State<UISizeConstraintOnChange>
+export type IntoUISizeConstraint = { AsUISizeConstraint: (self: any) -> UISizeConstraintModifier }
+export type UISizeConstraintElem = NewChild | UISizeConstraintOnChange | State<UISizeConstraintOnChange> | { read __quadModifier: "UISizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" }
 export type UISizeConstraintMapperElem = UISizeConstraintElem | MapperDescriptor
 
 export type UIStrokeOnChange =
@@ -3183,10 +3775,12 @@ export type UIStrokeOnChange =
 	| 	{ Name: "Transparency", Callback: (number) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type UIStrokeModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UIStroke", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UIStrokeModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UIStrokeModifier, factory: (UIStrokeModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIStrokeModifier, ...any) -> any,
+	As: <T>(self: UIStrokeModifier, name: string?) -> T, -- 무검사(11절)
+	AsUIStroke: (self: UIStrokeModifier) -> UIStrokeModifier, -- 항등(Into<UIStroke> 구현)
 	ApplyStrokeMode: (self: UIStrokeModifier, value: Field<Enum.ApplyStrokeMode | Tween<Enum.ApplyStrokeMode>>) -> UIStrokeModifier,
 	Archivable: (self: UIStrokeModifier, value: Field<boolean | Tween<boolean>>) -> UIStrokeModifier,
 	BorderOffset: (self: UIStrokeModifier, value: Field<UDim | Tween<UDim>>) -> UIStrokeModifier,
@@ -3202,7 +3796,8 @@ export type UIStrokeModifier = {
 	Transparency: (self: UIStrokeModifier, value: Field<number | Tween<number>>) -> UIStrokeModifier,
 	ZIndex: (self: UIStrokeModifier, value: Field<number | Tween<number>>) -> UIStrokeModifier,
 }
-export type UIStrokeElem = NewChild | UIStrokeOnChange | State<UIStrokeOnChange>
+export type IntoUIStroke = { AsUIStroke: (self: any) -> UIStrokeModifier }
+export type UIStrokeElem = NewChild | UIStrokeOnChange | State<UIStrokeOnChange> | { read __quadModifier: "UIStroke" | "UIComponent" | "UIBase" | "Instance" }
 export type UIStrokeMapperElem = UIStrokeElem | MapperDescriptor
 
 export type UITableLayoutOnChange =
@@ -3219,10 +3814,12 @@ export type UITableLayoutOnChange =
 	| 	{ Name: "SortOrder", Callback: (Enum.SortOrder) -> () }
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
 export type UITableLayoutModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UITableLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UITableLayoutModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UITableLayoutModifier, factory: (UITableLayoutModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UITableLayoutModifier, ...any) -> any,
+	As: <T>(self: UITableLayoutModifier, name: string?) -> T, -- 무검사(11절)
+	AsUITableLayout: (self: UITableLayoutModifier) -> UITableLayoutModifier, -- 항등(Into<UITableLayout> 구현)
 	Archivable: (self: UITableLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UITableLayoutModifier,
 	Capabilities: (self: UITableLayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UITableLayoutModifier,
 	FillDirection: (self: UITableLayoutModifier, value: Field<Enum.FillDirection | Tween<Enum.FillDirection>>) -> UITableLayoutModifier,
@@ -3236,7 +3833,8 @@ export type UITableLayoutModifier = {
 	SortOrder: (self: UITableLayoutModifier, value: Field<Enum.SortOrder | Tween<Enum.SortOrder>>) -> UITableLayoutModifier,
 	VerticalAlignment: (self: UITableLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UITableLayoutModifier,
 }
-export type UITableLayoutElem = NewChild | UITableLayoutOnChange | State<UITableLayoutOnChange>
+export type IntoUITableLayout = { AsUITableLayout: (self: any) -> UITableLayoutModifier }
+export type UITableLayoutElem = NewChild | UITableLayoutOnChange | State<UITableLayoutOnChange> | { read __quadModifier: "UITableLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" }
 export type UITableLayoutMapperElem = UITableLayoutElem | MapperDescriptor
 
 export type UITextSizeConstraintOnChange =
@@ -3247,10 +3845,12 @@ export type UITextSizeConstraintOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 export type UITextSizeConstraintModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "UITextSizeConstraint", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: UITextSizeConstraintModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: UITextSizeConstraintModifier, factory: (UITextSizeConstraintModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UITextSizeConstraintModifier, ...any) -> any,
+	As: <T>(self: UITextSizeConstraintModifier, name: string?) -> T, -- 무검사(11절)
+	AsUITextSizeConstraint: (self: UITextSizeConstraintModifier) -> UITextSizeConstraintModifier, -- 항등(Into<UITextSizeConstraint> 구현)
 	Archivable: (self: UITextSizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UITextSizeConstraintModifier,
 	Capabilities: (self: UITextSizeConstraintModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UITextSizeConstraintModifier,
 	MaxTextSize: (self: UITextSizeConstraintModifier, value: Field<number | Tween<number>>) -> UITextSizeConstraintModifier,
@@ -3258,7 +3858,8 @@ export type UITextSizeConstraintModifier = {
 	Name: (self: UITextSizeConstraintModifier, value: Field<string | Tween<string>>) -> UITextSizeConstraintModifier,
 	Sandboxed: (self: UITextSizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UITextSizeConstraintModifier,
 }
-export type UITextSizeConstraintElem = NewChild | UITextSizeConstraintOnChange | State<UITextSizeConstraintOnChange>
+export type IntoUITextSizeConstraint = { AsUITextSizeConstraint: (self: any) -> UITextSizeConstraintModifier }
+export type UITextSizeConstraintElem = NewChild | UITextSizeConstraintOnChange | State<UITextSizeConstraintOnChange> | { read __quadModifier: "UITextSizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" }
 export type UITextSizeConstraintMapperElem = UITextSizeConstraintElem | MapperDescriptor
 
 export type VideoFrameOnChange =
@@ -3308,10 +3909,12 @@ export type VideoFrameOnChange =
 	| 	{ Name: "Volume", Callback: (number) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type VideoFrameModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "VideoFrame", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: VideoFrameModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: VideoFrameModifier, factory: (VideoFrameModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: VideoFrameModifier, ...any) -> any,
+	As: <T>(self: VideoFrameModifier, name: string?) -> T, -- 무검사(11절)
+	AsVideoFrame: (self: VideoFrameModifier) -> VideoFrameModifier, -- 항등(Into<VideoFrame> 구현)
 	Active: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
 	AnchorPoint: (self: VideoFrameModifier, value: Field<Vector2 | Tween<Vector2>>) -> VideoFrameModifier,
 	Archivable: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
@@ -3358,7 +3961,8 @@ export type VideoFrameModifier = {
 	Volume: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
 	ZIndex: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
 }
-export type VideoFrameElem = NewChild | VideoFrameOnChange | State<VideoFrameOnChange>
+export type IntoVideoFrame = { AsVideoFrame: (self: any) -> VideoFrameModifier }
+export type VideoFrameElem = NewChild | VideoFrameOnChange | State<VideoFrameOnChange> | { read __quadModifier: "VideoFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type VideoFrameMapperElem = VideoFrameElem | MapperDescriptor
 
 export type ViewportFrameOnChange =
@@ -3405,10 +4009,12 @@ export type ViewportFrameOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
 export type ViewportFrameModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "ViewportFrame", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: ViewportFrameModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: ViewportFrameModifier, factory: (ViewportFrameModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ViewportFrameModifier, ...any) -> any,
+	As: <T>(self: ViewportFrameModifier, name: string?) -> T, -- 무검사(11절)
+	AsViewportFrame: (self: ViewportFrameModifier) -> ViewportFrameModifier, -- 항등(Into<ViewportFrame> 구현)
 	Active: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
 	Ambient: (self: ViewportFrameModifier, value: Field<Color3 | Tween<Color3>>) -> ViewportFrameModifier,
 	AnchorPoint: (self: ViewportFrameModifier, value: Field<Vector2 | Tween<Vector2>>) -> ViewportFrameModifier,
@@ -3452,7 +4058,8 @@ export type ViewportFrameModifier = {
 	Visible: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
 	ZIndex: (self: ViewportFrameModifier, value: Field<number | Tween<number>>) -> ViewportFrameModifier,
 }
-export type ViewportFrameElem = NewChild | ViewportFrameOnChange | State<ViewportFrameOnChange>
+export type IntoViewportFrame = { AsViewportFrame: (self: any) -> ViewportFrameModifier }
+export type ViewportFrameElem = NewChild | ViewportFrameOnChange | State<ViewportFrameOnChange> | { read __quadModifier: "ViewportFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
 export type ViewportFrameMapperElem = ViewportFrameElem | MapperDescriptor
 
 export type WorldModelOnChange =
@@ -3465,10 +4072,12 @@ export type WorldModelOnChange =
 	| 	{ Name: "UseWorkspaceCollisionGroups", Callback: (boolean) -> () }
 	| 	{ Name: "WorldPivot", Callback: (CFrame) -> () }
 export type WorldModelModifier = {
-	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	read __quadModifier: "WorldModel", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
 	Peek: <T>(self: WorldModelModifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: WorldModelModifier, factory: (WorldModelModifier) -> U) -> U,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: WorldModelModifier, ...any) -> any,
+	As: <T>(self: WorldModelModifier, name: string?) -> T, -- 무검사(11절)
+	AsWorldModel: (self: WorldModelModifier) -> WorldModelModifier, -- 항등(Into<WorldModel> 구현)
 	Archivable: (self: WorldModelModifier, value: Field<boolean | Tween<boolean>>) -> WorldModelModifier,
 	Capabilities: (self: WorldModelModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> WorldModelModifier,
 	ModelStreamingMode: (self: WorldModelModifier, value: Field<Enum.ModelStreamingMode | Tween<Enum.ModelStreamingMode>>) -> WorldModelModifier,
@@ -3478,8 +4087,27 @@ export type WorldModelModifier = {
 	UseWorkspaceCollisionGroups: (self: WorldModelModifier, value: Field<boolean | Tween<boolean>>) -> WorldModelModifier,
 	WorldPivot: (self: WorldModelModifier, value: Field<CFrame | Tween<CFrame>>) -> WorldModelModifier,
 }
-export type WorldModelElem = NewChild | WorldModelOnChange | State<WorldModelOnChange>
+export type IntoWorldModel = { AsWorldModel: (self: any) -> WorldModelModifier }
+export type WorldModelElem = NewChild | WorldModelOnChange | State<WorldModelOnChange> | { read __quadModifier: "WorldModel" | "WorldRoot" | "Model" | "PVInstance" | "Instance" }
 export type WorldModelMapperElem = WorldModelElem | MapperDescriptor
+
+export type WorldRootModifier = {
+	read __quadModifier: "WorldRoot", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
+	Peek: <T>(self: WorldRootModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
+	Overridden: (self: WorldRootModifier, ...any) -> any,
+	As: <T>(self: WorldRootModifier, name: string?) -> T, -- 무검사(11절)
+	AsWorldRoot: (self: WorldRootModifier) -> WorldRootModifier, -- 항등(Into<WorldRoot> 구현)
+	AsWorldModel: (self: WorldRootModifier) -> WorldModelModifier,
+	Archivable: (self: WorldRootModifier, value: Field<boolean | Tween<boolean>>) -> WorldRootModifier,
+	Capabilities: (self: WorldRootModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> WorldRootModifier,
+	ModelStreamingMode: (self: WorldRootModifier, value: Field<Enum.ModelStreamingMode | Tween<Enum.ModelStreamingMode>>) -> WorldRootModifier,
+	Name: (self: WorldRootModifier, value: Field<string | Tween<string>>) -> WorldRootModifier,
+	PrimaryPart: (self: WorldRootModifier, value: Field<BasePart | Tween<BasePart>>) -> WorldRootModifier,
+	Sandboxed: (self: WorldRootModifier, value: Field<boolean | Tween<boolean>>) -> WorldRootModifier,
+	WorldPivot: (self: WorldRootModifier, value: Field<CFrame | Tween<CFrame>>) -> WorldRootModifier,
+}
+export type IntoWorldRoot = { AsWorldRoot: (self: any) -> WorldRootModifier }
 
 -- D 네임스페이스 타입(H-305 (d′)) — `UseProvider` 확장 `RobloxExtension`이
 -- 싣는 풀 타입 표면. 아래 런타임 별칭 캐스트와 1:1 — 손 나열 금지 계약대로
@@ -3524,20 +4152,35 @@ export type DModifier = {
 	CanvasGroup: (...(CanvasGroupModifier | { [string]: any })) -> CanvasGroupModifier,
 	Folder: (...(FolderModifier | { [string]: any })) -> FolderModifier,
 	Frame: (...(FrameModifier | { [string]: any })) -> FrameModifier,
+	GuiBase: (...(GuiBaseModifier | { [string]: any })) -> GuiBaseModifier,
+	GuiBase2d: (...(GuiBase2dModifier | { [string]: any })) -> GuiBase2dModifier,
+	GuiButton: (...(GuiButtonModifier | { [string]: any })) -> GuiButtonModifier,
+	GuiLabel: (...(GuiLabelModifier | { [string]: any })) -> GuiLabelModifier,
+	GuiObject: (...(GuiObjectModifier | { [string]: any })) -> GuiObjectModifier,
 	ImageButton: (...(ImageButtonModifier | { [string]: any })) -> ImageButtonModifier,
 	ImageLabel: (...(ImageLabelModifier | { [string]: any })) -> ImageLabelModifier,
+	Instance: (...(InstanceModifier | { [string]: any })) -> InstanceModifier,
+	LayerCollector: (...(LayerCollectorModifier | { [string]: any })) -> LayerCollectorModifier,
+	Model: (...(ModelModifier | { [string]: any })) -> ModelModifier,
+	PVInstance: (...(PVInstanceModifier | { [string]: any })) -> PVInstanceModifier,
 	ScreenGui: (...(ScreenGuiModifier | { [string]: any })) -> ScreenGuiModifier,
 	ScrollingFrame: (...(ScrollingFrameModifier | { [string]: any })) -> ScrollingFrameModifier,
 	SurfaceGui: (...(SurfaceGuiModifier | { [string]: any })) -> SurfaceGuiModifier,
+	SurfaceGuiBase: (...(SurfaceGuiBaseModifier | { [string]: any })) -> SurfaceGuiBaseModifier,
 	TextBox: (...(TextBoxModifier | { [string]: any })) -> TextBoxModifier,
 	TextButton: (...(TextButtonModifier | { [string]: any })) -> TextButtonModifier,
 	TextLabel: (...(TextLabelModifier | { [string]: any })) -> TextLabelModifier,
 	UIAspectRatioConstraint: (...(UIAspectRatioConstraintModifier | { [string]: any })) -> UIAspectRatioConstraintModifier,
+	UIBase: (...(UIBaseModifier | { [string]: any })) -> UIBaseModifier,
+	UIComponent: (...(UIComponentModifier | { [string]: any })) -> UIComponentModifier,
+	UIConstraint: (...(UIConstraintModifier | { [string]: any })) -> UIConstraintModifier,
 	UICorner: (...(UICornerModifier | { [string]: any })) -> UICornerModifier,
 	UIDragDetector: (...(UIDragDetectorModifier | { [string]: any })) -> UIDragDetectorModifier,
 	UIFlexItem: (...(UIFlexItemModifier | { [string]: any })) -> UIFlexItemModifier,
 	UIGradient: (...(UIGradientModifier | { [string]: any })) -> UIGradientModifier,
 	UIGridLayout: (...(UIGridLayoutModifier | { [string]: any })) -> UIGridLayoutModifier,
+	UIGridStyleLayout: (...(UIGridStyleLayoutModifier | { [string]: any })) -> UIGridStyleLayoutModifier,
+	UILayout: (...(UILayoutModifier | { [string]: any })) -> UILayoutModifier,
 	UIListLayout: (...(UIListLayoutModifier | { [string]: any })) -> UIListLayoutModifier,
 	UIPadding: (...(UIPaddingModifier | { [string]: any })) -> UIPaddingModifier,
 	UIPageLayout: (...(UIPageLayoutModifier | { [string]: any })) -> UIPageLayoutModifier,
@@ -3550,6 +4193,7 @@ export type DModifier = {
 	VideoFrame: (...(VideoFrameModifier | { [string]: any })) -> VideoFrameModifier,
 	ViewportFrame: (...(ViewportFrameModifier | { [string]: any })) -> ViewportFrameModifier,
 	WorldModel: (...(WorldModelModifier | { [string]: any })) -> WorldModelModifier,
+	WorldRoot: (...(WorldRootModifier | { [string]: any })) -> WorldRootModifier,
 }
 export type D = {
 	New: <T>(className: string) -> (props: any) -> T,
@@ -3610,8 +4254,9 @@ return function(quad: any): D
 	-- D.Mapper — Claim용 디스크립터 생성기(claim-plan §2; 본체는 quad-base
 	-- Claim.luau의 newMapperClass — 여기선 클래스별 캐스트 별칭만, D.<Class> 동형)
 	local Mapper: { [string]: any } = { Root = quad.MapperRoot }
-	-- D.Modifier — 클래스별 타입드 Modifier 생성자(round17 §0 Q3 (a)): 런타임은
-	-- quad.Modifier 하나, 캐스트 별칭만 클래스별(D.Mapper와 같은 모양)
+	-- D.Modifier — 클래스별 타입드 Modifier 생성자(round17 §0 Q3 (a); 단위 ④):
+	-- quad.Modifier.Define(name, parent)이 돌려주는 태그 생성자 — 조상이 먼저
+	-- 등록돼야 하므로 체인 깊이 순. 런타임 병합 본문은 base 하나(construct)
 	local ModifierNS: { [string]: any } = {}
 	local D: { [string]: any } = { New = New, Mapper = Mapper, Modifier = ModifierNS }
 	D.BillboardGui = (New("BillboardGui") :: any) :: (BillboardGuiParam<BillboardGuiElem>) -> BillboardGui
@@ -3676,37 +4321,53 @@ return function(quad: any): D
 	Mapper.VideoFrame = (quad.newMapperClass("VideoFrame") :: any) :: (key: string | MapperRoot) -> (VideoFrameParam<VideoFrameMapperElem>) -> MapperDescriptor
 	Mapper.ViewportFrame = (quad.newMapperClass("ViewportFrame") :: any) :: (key: string | MapperRoot) -> (ViewportFrameParam<ViewportFrameMapperElem>) -> MapperDescriptor
 	Mapper.WorldModel = (quad.newMapperClass("WorldModel") :: any) :: (key: string | MapperRoot) -> (WorldModelParam<WorldModelMapperElem>) -> MapperDescriptor
-	ModifierNS.BillboardGui = (quad.Modifier :: any) :: (...(BillboardGuiModifier | { [string]: any })) -> BillboardGuiModifier
-	ModifierNS.Camera = (quad.Modifier :: any) :: (...(CameraModifier | { [string]: any })) -> CameraModifier
-	ModifierNS.CanvasGroup = (quad.Modifier :: any) :: (...(CanvasGroupModifier | { [string]: any })) -> CanvasGroupModifier
-	ModifierNS.Folder = (quad.Modifier :: any) :: (...(FolderModifier | { [string]: any })) -> FolderModifier
-	ModifierNS.Frame = (quad.Modifier :: any) :: (...(FrameModifier | { [string]: any })) -> FrameModifier
-	ModifierNS.ImageButton = (quad.Modifier :: any) :: (...(ImageButtonModifier | { [string]: any })) -> ImageButtonModifier
-	ModifierNS.ImageLabel = (quad.Modifier :: any) :: (...(ImageLabelModifier | { [string]: any })) -> ImageLabelModifier
-	ModifierNS.ScreenGui = (quad.Modifier :: any) :: (...(ScreenGuiModifier | { [string]: any })) -> ScreenGuiModifier
-	ModifierNS.ScrollingFrame = (quad.Modifier :: any) :: (...(ScrollingFrameModifier | { [string]: any })) -> ScrollingFrameModifier
-	ModifierNS.SurfaceGui = (quad.Modifier :: any) :: (...(SurfaceGuiModifier | { [string]: any })) -> SurfaceGuiModifier
-	ModifierNS.TextBox = (quad.Modifier :: any) :: (...(TextBoxModifier | { [string]: any })) -> TextBoxModifier
-	ModifierNS.TextButton = (quad.Modifier :: any) :: (...(TextButtonModifier | { [string]: any })) -> TextButtonModifier
-	ModifierNS.TextLabel = (quad.Modifier :: any) :: (...(TextLabelModifier | { [string]: any })) -> TextLabelModifier
-	ModifierNS.UIAspectRatioConstraint = (quad.Modifier :: any) :: (...(UIAspectRatioConstraintModifier | { [string]: any })) -> UIAspectRatioConstraintModifier
-	ModifierNS.UICorner = (quad.Modifier :: any) :: (...(UICornerModifier | { [string]: any })) -> UICornerModifier
-	ModifierNS.UIDragDetector = (quad.Modifier :: any) :: (...(UIDragDetectorModifier | { [string]: any })) -> UIDragDetectorModifier
-	ModifierNS.UIFlexItem = (quad.Modifier :: any) :: (...(UIFlexItemModifier | { [string]: any })) -> UIFlexItemModifier
-	ModifierNS.UIGradient = (quad.Modifier :: any) :: (...(UIGradientModifier | { [string]: any })) -> UIGradientModifier
-	ModifierNS.UIGridLayout = (quad.Modifier :: any) :: (...(UIGridLayoutModifier | { [string]: any })) -> UIGridLayoutModifier
-	ModifierNS.UIListLayout = (quad.Modifier :: any) :: (...(UIListLayoutModifier | { [string]: any })) -> UIListLayoutModifier
-	ModifierNS.UIPadding = (quad.Modifier :: any) :: (...(UIPaddingModifier | { [string]: any })) -> UIPaddingModifier
-	ModifierNS.UIPageLayout = (quad.Modifier :: any) :: (...(UIPageLayoutModifier | { [string]: any })) -> UIPageLayoutModifier
-	ModifierNS.UIScale = (quad.Modifier :: any) :: (...(UIScaleModifier | { [string]: any })) -> UIScaleModifier
-	ModifierNS.UIShadow = (quad.Modifier :: any) :: (...(UIShadowModifier | { [string]: any })) -> UIShadowModifier
-	ModifierNS.UISizeConstraint = (quad.Modifier :: any) :: (...(UISizeConstraintModifier | { [string]: any })) -> UISizeConstraintModifier
-	ModifierNS.UIStroke = (quad.Modifier :: any) :: (...(UIStrokeModifier | { [string]: any })) -> UIStrokeModifier
-	ModifierNS.UITableLayout = (quad.Modifier :: any) :: (...(UITableLayoutModifier | { [string]: any })) -> UITableLayoutModifier
-	ModifierNS.UITextSizeConstraint = (quad.Modifier :: any) :: (...(UITextSizeConstraintModifier | { [string]: any })) -> UITextSizeConstraintModifier
-	ModifierNS.VideoFrame = (quad.Modifier :: any) :: (...(VideoFrameModifier | { [string]: any })) -> VideoFrameModifier
-	ModifierNS.ViewportFrame = (quad.Modifier :: any) :: (...(ViewportFrameModifier | { [string]: any })) -> ViewportFrameModifier
-	ModifierNS.WorldModel = (quad.Modifier :: any) :: (...(WorldModelModifier | { [string]: any })) -> WorldModelModifier
+	ModifierNS.Instance = (quad.Modifier.Define("Instance") :: any) :: (...(InstanceModifier | { [string]: any })) -> InstanceModifier
+	ModifierNS.Folder = (quad.Modifier.Define("Folder", "Instance") :: any) :: (...(FolderModifier | { [string]: any })) -> FolderModifier
+	ModifierNS.GuiBase = (quad.Modifier.Define("GuiBase", "Instance") :: any) :: (...(GuiBaseModifier | { [string]: any })) -> GuiBaseModifier
+	ModifierNS.PVInstance = (quad.Modifier.Define("PVInstance", "Instance") :: any) :: (...(PVInstanceModifier | { [string]: any })) -> PVInstanceModifier
+	ModifierNS.UIBase = (quad.Modifier.Define("UIBase", "Instance") :: any) :: (...(UIBaseModifier | { [string]: any })) -> UIBaseModifier
+	ModifierNS.Camera = (quad.Modifier.Define("Camera", "PVInstance") :: any) :: (...(CameraModifier | { [string]: any })) -> CameraModifier
+	ModifierNS.GuiBase2d = (quad.Modifier.Define("GuiBase2d", "GuiBase") :: any) :: (...(GuiBase2dModifier | { [string]: any })) -> GuiBase2dModifier
+	ModifierNS.Model = (quad.Modifier.Define("Model", "PVInstance") :: any) :: (...(ModelModifier | { [string]: any })) -> ModelModifier
+	ModifierNS.UIComponent = (quad.Modifier.Define("UIComponent", "UIBase") :: any) :: (...(UIComponentModifier | { [string]: any })) -> UIComponentModifier
+	ModifierNS.GuiObject = (quad.Modifier.Define("GuiObject", "GuiBase2d") :: any) :: (...(GuiObjectModifier | { [string]: any })) -> GuiObjectModifier
+	ModifierNS.LayerCollector = (quad.Modifier.Define("LayerCollector", "GuiBase2d") :: any) :: (...(LayerCollectorModifier | { [string]: any })) -> LayerCollectorModifier
+	ModifierNS.UIConstraint = (quad.Modifier.Define("UIConstraint", "UIComponent") :: any) :: (...(UIConstraintModifier | { [string]: any })) -> UIConstraintModifier
+	ModifierNS.UICorner = (quad.Modifier.Define("UICorner", "UIComponent") :: any) :: (...(UICornerModifier | { [string]: any })) -> UICornerModifier
+	ModifierNS.UIDragDetector = (quad.Modifier.Define("UIDragDetector", "UIComponent") :: any) :: (...(UIDragDetectorModifier | { [string]: any })) -> UIDragDetectorModifier
+	ModifierNS.UIFlexItem = (quad.Modifier.Define("UIFlexItem", "UIComponent") :: any) :: (...(UIFlexItemModifier | { [string]: any })) -> UIFlexItemModifier
+	ModifierNS.UIGradient = (quad.Modifier.Define("UIGradient", "UIComponent") :: any) :: (...(UIGradientModifier | { [string]: any })) -> UIGradientModifier
+	ModifierNS.UILayout = (quad.Modifier.Define("UILayout", "UIComponent") :: any) :: (...(UILayoutModifier | { [string]: any })) -> UILayoutModifier
+	ModifierNS.UIPadding = (quad.Modifier.Define("UIPadding", "UIComponent") :: any) :: (...(UIPaddingModifier | { [string]: any })) -> UIPaddingModifier
+	ModifierNS.UIScale = (quad.Modifier.Define("UIScale", "UIComponent") :: any) :: (...(UIScaleModifier | { [string]: any })) -> UIScaleModifier
+	ModifierNS.UIShadow = (quad.Modifier.Define("UIShadow", "UIComponent") :: any) :: (...(UIShadowModifier | { [string]: any })) -> UIShadowModifier
+	ModifierNS.UIStroke = (quad.Modifier.Define("UIStroke", "UIComponent") :: any) :: (...(UIStrokeModifier | { [string]: any })) -> UIStrokeModifier
+	ModifierNS.WorldRoot = (quad.Modifier.Define("WorldRoot", "Model") :: any) :: (...(WorldRootModifier | { [string]: any })) -> WorldRootModifier
+	ModifierNS.BillboardGui = (quad.Modifier.Define("BillboardGui", "LayerCollector") :: any) :: (...(BillboardGuiModifier | { [string]: any })) -> BillboardGuiModifier
+	ModifierNS.CanvasGroup = (quad.Modifier.Define("CanvasGroup", "GuiObject") :: any) :: (...(CanvasGroupModifier | { [string]: any })) -> CanvasGroupModifier
+	ModifierNS.Frame = (quad.Modifier.Define("Frame", "GuiObject") :: any) :: (...(FrameModifier | { [string]: any })) -> FrameModifier
+	ModifierNS.GuiButton = (quad.Modifier.Define("GuiButton", "GuiObject") :: any) :: (...(GuiButtonModifier | { [string]: any })) -> GuiButtonModifier
+	ModifierNS.GuiLabel = (quad.Modifier.Define("GuiLabel", "GuiObject") :: any) :: (...(GuiLabelModifier | { [string]: any })) -> GuiLabelModifier
+	ModifierNS.ScreenGui = (quad.Modifier.Define("ScreenGui", "LayerCollector") :: any) :: (...(ScreenGuiModifier | { [string]: any })) -> ScreenGuiModifier
+	ModifierNS.ScrollingFrame = (quad.Modifier.Define("ScrollingFrame", "GuiObject") :: any) :: (...(ScrollingFrameModifier | { [string]: any })) -> ScrollingFrameModifier
+	ModifierNS.SurfaceGuiBase = (quad.Modifier.Define("SurfaceGuiBase", "LayerCollector") :: any) :: (...(SurfaceGuiBaseModifier | { [string]: any })) -> SurfaceGuiBaseModifier
+	ModifierNS.TextBox = (quad.Modifier.Define("TextBox", "GuiObject") :: any) :: (...(TextBoxModifier | { [string]: any })) -> TextBoxModifier
+	ModifierNS.UIAspectRatioConstraint = (quad.Modifier.Define("UIAspectRatioConstraint", "UIConstraint") :: any) :: (...(UIAspectRatioConstraintModifier | { [string]: any })) -> UIAspectRatioConstraintModifier
+	ModifierNS.UIGridStyleLayout = (quad.Modifier.Define("UIGridStyleLayout", "UILayout") :: any) :: (...(UIGridStyleLayoutModifier | { [string]: any })) -> UIGridStyleLayoutModifier
+	ModifierNS.UISizeConstraint = (quad.Modifier.Define("UISizeConstraint", "UIConstraint") :: any) :: (...(UISizeConstraintModifier | { [string]: any })) -> UISizeConstraintModifier
+	ModifierNS.UITextSizeConstraint = (quad.Modifier.Define("UITextSizeConstraint", "UIConstraint") :: any) :: (...(UITextSizeConstraintModifier | { [string]: any })) -> UITextSizeConstraintModifier
+	ModifierNS.VideoFrame = (quad.Modifier.Define("VideoFrame", "GuiObject") :: any) :: (...(VideoFrameModifier | { [string]: any })) -> VideoFrameModifier
+	ModifierNS.ViewportFrame = (quad.Modifier.Define("ViewportFrame", "GuiObject") :: any) :: (...(ViewportFrameModifier | { [string]: any })) -> ViewportFrameModifier
+	ModifierNS.WorldModel = (quad.Modifier.Define("WorldModel", "WorldRoot") :: any) :: (...(WorldModelModifier | { [string]: any })) -> WorldModelModifier
+	ModifierNS.ImageButton = (quad.Modifier.Define("ImageButton", "GuiButton") :: any) :: (...(ImageButtonModifier | { [string]: any })) -> ImageButtonModifier
+	ModifierNS.ImageLabel = (quad.Modifier.Define("ImageLabel", "GuiLabel") :: any) :: (...(ImageLabelModifier | { [string]: any })) -> ImageLabelModifier
+	ModifierNS.SurfaceGui = (quad.Modifier.Define("SurfaceGui", "SurfaceGuiBase") :: any) :: (...(SurfaceGuiModifier | { [string]: any })) -> SurfaceGuiModifier
+	ModifierNS.TextButton = (quad.Modifier.Define("TextButton", "GuiButton") :: any) :: (...(TextButtonModifier | { [string]: any })) -> TextButtonModifier
+	ModifierNS.TextLabel = (quad.Modifier.Define("TextLabel", "GuiLabel") :: any) :: (...(TextLabelModifier | { [string]: any })) -> TextLabelModifier
+	ModifierNS.UIGridLayout = (quad.Modifier.Define("UIGridLayout", "UIGridStyleLayout") :: any) :: (...(UIGridLayoutModifier | { [string]: any })) -> UIGridLayoutModifier
+	ModifierNS.UIListLayout = (quad.Modifier.Define("UIListLayout", "UIGridStyleLayout") :: any) :: (...(UIListLayoutModifier | { [string]: any })) -> UIListLayoutModifier
+	ModifierNS.UIPageLayout = (quad.Modifier.Define("UIPageLayout", "UIGridStyleLayout") :: any) :: (...(UIPageLayoutModifier | { [string]: any })) -> UIPageLayoutModifier
+	ModifierNS.UITableLayout = (quad.Modifier.Define("UITableLayout", "UIGridStyleLayout") :: any) :: (...(UITableLayoutModifier | { [string]: any })) -> UITableLayoutModifier
 	quad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨
 	return (D :: any) :: D
 end

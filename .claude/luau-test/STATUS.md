@@ -1,6 +1,8 @@
 # 스파이크 상태판 — **폴더가 곧 상태**
 
-> 마지막 갱신: **2026-09-03** — 신규 `30`(`OnChange(name, fn)` 배열부
+> 마지막 갱신: **2026-09-04** — 신규 `31`(새 솔버 유니언 서브타이핑 결함 +
+> 클래스 태그 마커/`As<Class>`/`Into` 최소형 + 교집합 Param 불성립) `done/`
+> 직행. 직전 갱신 **2026-09-03** — 신규 `30`(`OnChange(name, fn)` 배열부
 > 디스크립터 타이핑 — `K & keyof`/`index<>` 형태만 통과, 무주석 추론까지)
 > `done/` 직행. 직전 갱신 **2026-09-02** — 신규 `28`(`<Class>Param<E>` 공유 제네릭이
 > `D.<Class>`/`D.Mapper.<Class>` 두 소비자를 통과 — claim-plan §7-12·§9가
@@ -241,6 +243,7 @@ spec 대체 폐기 상태다(각 행 참고 — `03`은 통과로 들어와 있�
 | `14-type-nilable-default-overload` | ⚠️ 부분 — 의도한 오용은 막지만 정상 nilable 사용례까지 막아 현 스케치로는 채택 불가. **설계 결정은 아직 필요 없음**(대안이 이미 UB 경고로 존재)이라 `review-required`가 아님 |
 | `28-type-class-param-shared-generic` (타입체크 전용) | ✅ **[2026-09-02 신설, M5 단위 ② 착수 전 — claim-plan §9 요구]** `<Class>Param<E>` 공유 제네릭 메커니즘 통과 — 같은 Param을 `D.Frame`(E=NewChild)/`D.Mapper.Frame`(E=NewChild\|MapperDescriptor)이 공유하고 리턴만 다름, 기대 음성 3건만 정확히 발생(`Parent` 부재가 H-142의 타입판임을 겸증). 필드 유니언 구성은 자리표시자(round14 `H-298`이 정본화 대기) |
 | `30-type-onchange-array-descriptor` (타입체크 전용) | ✅ **[2026-09-03 신설, `OnChange` 배열부 역전 착수 전 — 사용자 제안의 실현 경계]** `K & keyof<PropTypes>` + `index<PropTypes, K>` 팩토리 + 클래스별 디스크립터 유니언 `E` — 양성 클린(무주석 추론·`State<디스크립터>` 캐스트 경유·같은 이름 둘), NEG 4줄만 진단. 기각 형태 셋(제네릭 K 싱글톤 넓힘 / 큰 싱글톤 유니언 `K &` / 오버로드 교집합)은 파일 헤더가 기록. 실물 규모 회귀는 `spec.onchangetypes`(test.sh `LuauSubtypingIterationLimit`) |
+| `31-type-union-subtyping-recursive-collision` (타입체크 전용) | ✅ **[2026-09-04 신설, M7 단위 ④ 착수 전 — 사용자 제안 스파이크의 격리판]** (Q1) 새 솔버 결함 — 재귀 함수 필드 + 유니언 멤버의 같은 이름 함수 필드 → 유니언 검사가 조용히 통과(그 줄은 의도적으로 NEG가 아님: 진단이 생기면 결함이 고쳐진 것), 나머지 조합은 정상 거부 / (Q2·Q3) `Apply` any 처방 뒤 클래스 태그 마커가 형제를 거부하고 상위·자기·무타입을 수용, `As<Desc>`·`As<<T>>()`·`Into<Class>`(self any) 성립 / (Q4) 교집합 Param은 키 있는 리터럴·`{}` 둘 다 거부. NEG 11줄. 실물 규모는 `spec.modifiertypes` + `audit/m7-unit4-as-modifier-2026-09-04.md`, 규칙은 `typing-limits.md` 8.9절 |
 | `29-type-useprovider-extension-d` (타입체크 전용) | ✅ **[2026-09-02 신설, `H-305` (d′) 확정 실측의 승격판]** 백엔드 표면(`D`)을 `UseProvider` 확장 `Self & P`로 실으면 소비자까지 캐스트 0 풀 타입 — 프로바이더→플러그인 체이닝 2겹 뒤에도 D 커링·Mapper·base 메소드·CheckedQuad 본문 배선 전부 생존, **호출 인자 타입 위반까지 잡힘**(기대 음성 정확히 2건). 테이블∩테이블(거주)이라 H10-3 함수∩테이블(무거주)과 계열이 다름이 요지. 실물 31클래스 규모 축은 test.sh `LuauTarjanChildLimit`(typing-limits 8.5절) |
 | `23-type-quadtypes-checkversion-addplugin` | **[2026-08-19 신규, 같은 날 후속으로 재작성]** ✅ 통과 — 실제 `quad-types`/`quad-base`/`type-version-check`로 `CheckedQuad<T, Pattern>`+`AddPlugin<Self,P>` 통합 검증. 재작성 과정에서 `type function`을 거친 값은 패스스루라도 이후 제네릭 self 체이닝이 조용히 깨진다는 새 Luau 함정 발견(`typing-limits.md` §6으로 승격), `export type function`/이중 꺾쇠 제네릭 인스턴스화 요구도 같이 실측 — 최종 설계(별도 가상 필드로 격리)는 양성/음성 경로 모두 클린 |
 

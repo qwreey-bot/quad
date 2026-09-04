@@ -42,9 +42,14 @@ echo "=== luau-lsp analyze --definitions=scripts/roblox-defs/globalTypes.d.luau 
 # 유니언(클래스당 수십 멤버)에 Color3/string처럼 멤버가 많은 타입의 콜백을
 # 대조하면 기본 한도에서 "Code is too complex" — 실측상 5만이면 클린, 10만으로
 # 핀(시간 무해, 1.8s대). 다른 한도 플래그 6종은 무효였다(typing-limits 8.7절).
+# LuauTypeInferIterationLimit(M7 단위 ④, 2026-09-04): 상위 클래스 Modifier 타입
+# (`GuiObjectModifier`류, 하위 `As<Class>` 메소드 수십 개)의 캐스트 자리와 그
+# 타입의 팩토리를 `Apply`에 넘기는 자리가 기본 한도(20000)에서 "too complex" —
+# 실측상 50만이면 클린, 100만으로 핀(시간 무해, 3.2s대; typing-limits 8.9절).
 lsp_out=$(mise exec -- luau-lsp analyze --flag:LuauSolverV2=true \
 	--flag:LuauTarjanChildLimit=160000 \
 	--flag:LuauSubtypingIterationLimit=100000 \
+	--flag:LuauTypeInferIterationLimit=1000000 \
 	--definitions=scripts/roblox-defs/globalTypes.d.luau \
 	--ignore "**/luau_packages/**" \
 	quad-roblox/src quad-roblox/test/spec.*.luau 2>&1) || fail=1

@@ -615,6 +615,12 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
    alias를 따로 뽑았는가?** → "Recursive type being used with different
    parameters"로 **거부**된다. 그 시그니처는 메소드 자리에 인라인할 것
    (§1 "정확한 경계" 각주).
+9. **[2026-09-04 신설, M7 단위 ④] 자기 타입을 참조하는 함수 필드를 가진
+   테이블을 유니언 슈퍼타입에 대조하는가?** → 유니언의 어느 멤버가 **같은
+   이름의 함수 필드**를 가지면 새 솔버가 다른 필드의 불일치를 무시하고
+   통과시킨다(8.9절). 마커로 소속을 검사하려면 그 테이블의 함수 필드에서
+   자기 참조를 빼거나(`Apply: (self: any, factory: (any) -> U)`), 이름 충돌을
+   생성기 게이트로 막을 것.
 
 > **실측 방법 주의**: `luau-analyze`가 진단 0건이어도 타입이 제대로
 > 해소됐다는 뜻이 아닙니다(1번이 정확히 그 사례). **`luau-analyze
@@ -650,11 +656,12 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
 ```json
 "luau-lsp.fflags.override": {
 	"LuauTarjanChildLimit": "160000",
-	"LuauSubtypingIterationLimit": "100000"
+	"LuauSubtypingIterationLimit": "100000",
+	"LuauTypeInferIterationLimit": "1000000"
 }
 ```
 
-(둘째는 8.7절 — Color3/string 콜백의 `OnChange` 유니언 대조. Studio의
+(셋째는 8.9절 — 상위 클래스 Modifier 캐스트 자리·상위 팩토리 `Apply` 자리. 둘째는 8.7절 — Color3/string 콜백의 `OnChange` 유니언 대조. Studio의
 스크립트 분석기는 플래그를 못 만지므로 거기선 같은 진단이 떠도 실행엔
 영향 없다.)
 
@@ -730,7 +737,7 @@ A/B 실측). 실사용은 `quad-types`의 `TagConstructor`/`AttributeConstructor
 
 ---
 
-## 8.8. 재귀 메소드 테이블 타입은 유니언에 직접 넣지 말고 마커로 — `{ read __quadModifier: true }`
+## 8.8. 재귀 메소드 테이블 타입은 유니언에 직접 넣지 말고 마커로 — `{ read __quadModifier: true }`(무타입) / 클래스 태그 문자열 유니언
 
 **[2026-09-04 실측, M7 단위 ③ — round17 `H-313`]** 클래스별 `<Class>Modifier`
 (자기 타입을 반환하는 setter 40~60개짜리 재귀 테이블 타입)를 children 원소
@@ -742,13 +749,69 @@ A/B 실측). 실사용은 `quad-types`의 `TagConstructor`/`AttributeConstructor
 수십 개)까지는 8.7절대로 버티지만 **재귀 메소드 테이블**은 정규화 비용이
 다르다.
 
-**처방**: 유니언엔 **마커 타입** `{ read __quadModifier: true }`만 넣고
-(`QuadTypes.ModifierMarker`, `NewChild` — `H-300`의 `None` 마커와 같은 관례,
-런타임 값에도 실제 필드), 클래스별 타입은 폭 서브타이핑으로 통과시킨다.
-잃는 것: children 자리에서의 **클래스 소속 검사**(Frame 안에 TextButton
-Modifier가 들어가도 타입은 통과) — 대신 setter 호출 자리(`frameMod:Text(...)`)가
-메소드 집합으로 잡는다. 같은 이유로 `<Class>Modifier`끼리의 구조적 서브타이핑은
-애초에 안 선다(§2, 스파이크 `09`).
+**처방**: 유니언엔 **마커 타입**만 넣고(`H-300`의 `None` 마커와 같은 관례,
+런타임 값에도 실제 필드), 클래스별 타입은 폭 서브타이핑으로 통과시킨다. 같은
+이유로 `<Class>Modifier`끼리의 구조적 서브타이핑은 애초에 안 선다(§2, 스파이크
+`09`). **[2026-09-04 단위 ④ 갱신]** 마커는 이제 **클래스 태그**다 — 무타입
+base는 `{ read __quadModifier: true }`(`QuadTypes.ModifierMarker`, `NewChild`),
+클래스별 `<Class>Elem`은 조상 체인 문자열 유니언 `{ read __quadModifier: "Frame"
+| "GuiObject" | … }` 한 멤버. 이걸로 잃었던 children 자리의 **클래스 소속
+검사**가 돌아왔다(`H-313` 닫힘) — 단, 그 검사가 실제로 서려면 8.9절의 처방
+(`Apply` 비재귀화)이 같이 필요하다. 실물 규모 실측: 문자열 마커 유니언 자체는
+현행과 같은 2.9s·too complex 0.
+
+## 8.9. 재귀 함수 필드 + 유니언 멤버의 같은 이름 메소드 = 유니언 검사가 조용히 통과한다 — `Apply`는 `any`, setter 이름은 게이트
+
+**[2026-09-04 실측, M7 단위 ④ — `luau-test/done/31`, `audit/m7-unit4-as-modifier-2026-09-04.md`]**
+새 솔버(luau-lsp 1.69.0)의 유니언 서브타이핑 결함. 규칙:
+
+> 서브타입 테이블에 **자기 타입을 참조하는 함수 필드**가 있고, 슈퍼타입
+> 유니언의 어느 멤버가 **같은 이름의 함수 필드**를 가지면, 다른 필드(마커
+> 싱글톤 등)가 불일치해도 검사가 **통과**한다.
+
+```lua
+type MarkA = { read __quadModifier: "A" }
+type Xn = { Zed: (self: Xn) -> number, Other: (self: Xn) -> string }
+type R3 = { read __quadModifier: "B", Zed: (self: R3) -> number }
+local v: Xn | MarkA = r3   -- 에러가 나야 하는데 조용히 통과
+```
+
+재귀 없는 충돌(`Zed: () -> number`)·충돌 없는 재귀·문자열 필드끼리의 충돌
+(OnChange 디스크립터의 `Name`)·단일 테이블 슈퍼타입은 전부 정상 거부 — 조건
+둘이 **동시에** 있어야 샌다. 한도 플래그가 아니라 판정 결함이라 플래그로 못
+고친다.
+
+**quad에 걸린 자리**: children 유니언엔 `Tag.Apply`·`State.Apply`가 있고, 생성
+`<Class>Modifier.Apply`가 `(self: X, factory: (X) -> U)`로 재귀였다 — 그래서 8.8절의
+클래스 태그 마커를 넣어도 형제 클래스 Modifier가 통과했다(`self: any`만 바꿔도
+factory 인자의 재귀만으로 샌다).
+
+**처방(사용자 확정)**:
+1. `Apply: <U>(self: any, factory: (any) -> U) -> U` — 재귀 포기. 주석 붙인
+   팩토리는 그대로 타입드, 무주석은 `any`(현행에서도 무주석은 에러였다).
+2. **생성기 게이트**: setter 이름이 children 유니언 멤버의 함수 필드(defs의
+   `Instance`/`Object` 메소드, quad-types의 `State`/`StateData`/`Tag`/`Attribute`
+   키, `Callback`)와 겹치면 `SystemExit` — 구멍이 조용히 다시 열리지 않게.
+   지금 스코프에선 충돌 0.
+3. 스파이크 `31`의 "결함" 줄에 진단이 생기면 결함이 고쳐진 것 — 그때 1을
+   되돌릴 수 있다.
+
+**같은 실측에서 확정된 인접 사실**:
+- `As` 문자열 인자형(`K & keyof<Descendants>` + `index<>`, 8.7절 형태)과 오버로드
+  교집합은 하위 40종짜리 선언에서 too complex — 한도 플래그 10종 무효. 검사형
+  캐스트는 **클래스별 메소드** `As<Desc>: (self) -> <Desc>Modifier`로만 선다.
+- 상위 클래스 Modifier 타입(조상 클래스 전부 — 개수는 `modifier-plan.md` 11절이 소스) + 하강 메소드는 `LuauTypeInferIterationLimit`
+  (기본 20000)을 넘긴다 — 캐스트 자리와 상위 팩토리를 `Apply`에 넘기는 자리.
+  50만이면 0건, **100만으로 핀**(`scripts/test.sh`). 상향 메소드(`TextLabel` →
+  `GuiObject`)까지 넣으면 상호 참조 순환으로 3.1s → 8.5s — 안 넣는다.
+- `Into<Class> = { As<Class>: (self: any) -> … }`의 `self`는 `any`여야 한다 —
+  인터페이스 타입을 self로 두면 반공변 때문에 실제 Modifier가 안 들어온다.
+- **교집합 Param은 성립하지 않는다**: `{ [number]: E } & SharedProps & …`는
+  리터럴이 conjunct마다 따로 대조돼 인덱서 conjunct가 문자열 키를 거부하고
+  `{}`는 `{number}`로 추론된다 — 공유 props 호이스팅은 평면 인라인 유지(검사
+  비용도 차이 없음 — 중복은 소스 부피일 뿐).
+- 새 솔버에서 `type(x) == "function"`으로 좁힌 변수는 최상위 `function` 타입이
+  돼 **호출이 막힌다** — 검사용 변수와 호출용 변수를 갈라 둘 것(`spec.d`).
 
 ---
 

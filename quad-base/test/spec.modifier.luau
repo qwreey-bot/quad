@@ -4,7 +4,8 @@
 	3(immutable clone 체이닝, `Modifier()`)·4(setter 리터럴/함수, 내부 저장소,
 	핸들러 계층 값 error)·4-1(4분기)·8(`Apply`)·9(`Overridden`·`Peek`)·2-1(`None`
 	실재값 vs `nil` 부재)절 + M2가 심은 `isModifier` 가드(7절)의 실물 재확인.
-	flatten/`ProcessedModifier`는 단위 ②(`spec.flatten`).
+	flatten/`ProcessedModifier`는 단위 ②(`spec.flatten`). 9~12절은 단위 ④(11절 —
+	클래스 태그·`Define`·검사형 `As<Class>()`·무검사 `As(name)`·예약 캐스트 접두).
 ]]
 
 local mock = require("./mock")
@@ -224,6 +225,108 @@ do
 		assert(not ok, "rejected: " .. label)
 		mock.assertBlamesUser(err, SPEC_FILE, "Modifier(...) " .. label)
 	end
+	print("PASS")
+end
+
+print()
+local R: any = nil -- 9절이 등록한 클래스 생성자(10~12절 공유)
+print("=== 9. Define(name, parent) — 공개 레지스트리, 태그 생성자, 재등록 규칙, 조상 먼저 (11절) ===")
+do
+	local Inst = Modifier.Define("SpecInstance")
+	local Gui = Modifier.Define("SpecGuiObject", "SpecInstance")
+	local Label = Modifier.Define("SpecTextLabel", "SpecGuiObject")
+	local Corner = Modifier.Define("SpecUICorner", "SpecInstance")
+	assert(type(Label) == "function", "Define returns the tagged constructor")
+	local t = Label({ Text = "x" }, Modifier():Bold(true))
+	assert(q.isModifier(t) and t.__quadModifier == "SpecTextLabel", "constructor tags the value with the class name")
+	assert(fieldOf(t, "Text") == "x" and fieldOf(t, "Bold") == true, "same merge body as Modifier(...) (H-310)")
+	assert(Modifier().__quadModifier == true, "base Modifier() stays untyped (true)")
+	assert(t:Text("y").__quadModifier == "SpecTextLabel", "setters keep the tag")
+	assert(Modifier.Define("SpecTextLabel", "SpecGuiObject") == Label, "re-Define with the same parent is idempotent (same ctor)")
+	for label, fn in {
+		["different parent"] = function()
+			Modifier.Define("SpecTextLabel", "SpecInstance")
+		end,
+		["unknown parent"] = function()
+			Modifier.Define("SpecOrphan", "SpecNope")
+		end,
+		["bad name"] = function()
+			Modifier.Define(5)
+		end,
+	} :: { [string]: () -> () } do
+		local ok, err = pcall(fn)
+		assert(not ok, "rejected: " .. label)
+		mock.assertBlamesUser(err, SPEC_FILE, "Define " .. label)
+	end
+	-- 컴포넌트 몫: 엔진 클래스와 같은 API로 자기 클래스를 얹는다(사용자 사례)
+	local Material = Modifier.Define("SpecMaterialButton", "SpecGuiObject")
+	assert(Material():Elevation(2).__quadModifier == "SpecMaterialButton", "custom class is first-class")
+	R = { Inst = Inst, Gui = Gui, Label = Label, Corner = Corner, Material = Material }
+	print("PASS")
+end
+
+print()
+print("=== 10. As<Class>() — 검사형 하강: 무타입·자기·조상 태그만 통과, 미등록·비조상은 사용자 줄 error ===")
+do
+	local g = R.Gui():Visible(true)
+	local down = g:AsSpecTextLabel()
+	assert(down.__quadModifier == "SpecTextLabel" and fieldOf(down, "Visible") == true, "downcast retags, fields kept")
+	assert(g.__quadModifier == "SpecGuiObject", "source untouched (immutable clone)")
+	assert(R.Inst():Name("n"):AsSpecGuiObject():AsSpecMaterialButton().__quadModifier == "SpecMaterialButton", "two-step descent")
+	assert(down:AsSpecTextLabel() == down or down:AsSpecTextLabel().__quadModifier == "SpecTextLabel", "identity cast")
+	assert(Modifier():X(1):AsSpecUICorner().__quadModifier == "SpecUICorner", "untyped (true) casts anywhere")
+	for label, fn in {
+		["unknown class"] = function()
+			g:AsSpecNope()
+		end,
+		["not an ancestor (sibling)"] = function()
+			g:AsSpecTextLabel():AsSpecUICorner()
+		end,
+		["upcast"] = function()
+			down:AsSpecGuiObject()
+		end,
+	} :: { [string]: () -> () } do
+		local ok, err = pcall(fn)
+		assert(not ok, "rejected: " .. label)
+		mock.assertBlamesUser(err, SPEC_FILE, "As<Class> " .. label)
+	end
+	print("PASS")
+end
+
+print()
+print("=== 11. As() / As(name) — 무검사: 인자 없으면 self, 이름은 존재 검사만(조상 무관), 잘못된 이름은 error ===")
+do
+	local corner = R.Corner():CornerRadius(4)
+	assert(corner:As() == corner, "As() is the value itself (type-level cast only)")
+	local forced = corner:As("SpecTextLabel")
+	assert(forced.__quadModifier == "SpecTextLabel" and fieldOf(forced, "CornerRadius") == 4, "As(name) retags without an ancestry check")
+	for label, fn in {
+		["unknown name"] = function()
+			corner:As("SpecNope")
+		end,
+		["non-string"] = function()
+			corner:As(3)
+		end,
+	} :: { [string]: () -> () } do
+		local ok, err = pcall(fn)
+		assert(not ok, "rejected: " .. label)
+		mock.assertBlamesUser(err, SPEC_FILE, "As(name) " .. label)
+	end
+	print("PASS")
+end
+
+print()
+print("=== 12. 예약 캐스트 접두 — As+대문자는 setter가 되지 않는다(오타가 필드로 새지 않음), As+소문자는 setter ===")
+do
+	local m = Modifier()
+	local ok = pcall(function()
+		m:AsTextLabl() -- 오타: 옛 런타임이면 필드 "AsTextLabl" = nil 의 조용한 no-op
+	end)
+	assert(not ok, "unknown As<Name> errors instead of minting a field")
+	assert(fieldOf(m:AspectRatio(2), "AspectRatio") == 2, "As + lowercase is an ordinary setter")
+	assert(fieldOf(m:Assume(1), "Assume") == 1, "lowercase after As stays a setter")
+	-- Overridden 결과는 무타입(입력 태그를 고르지 않는다 — 필요하면 As<Class>로)
+	assert(Modifier.Overridden(R.Gui():X(1), R.Label():Y(2)).__quadModifier == true, "Overridden result is untyped")
 	print("PASS")
 end
 

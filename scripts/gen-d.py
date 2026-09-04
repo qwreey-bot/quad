@@ -28,6 +28,7 @@ raw 덤프 취득(재생성 때만 네트워크 필요 — 테스트 경로 의�
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -104,6 +105,9 @@ def defs_knows(defs_text, luau_type):
 
 
 def chain_members(classes, name):
+    """(owner, member) up the superclass chain — owner is the LOWEST class that
+    declares the member (M7 단위 ④: 상위 클래스 Modifier 타입이 소유 클래스별
+    프로퍼티를 알아야 한다)."""
     seen = set()
     node = name
     while node in classes:
@@ -112,8 +116,18 @@ def chain_members(classes, name):
             if key in seen:
                 continue  # 하위 클래스의 오버라이드가 이김
             seen.add(key)
-            yield m
+            yield node, m
         node = classes[node].get("Superclass")
+
+
+def class_chain(classes, name):
+    """[name, parent, …, Instance] — `Object`(덤프의 루트)는 뺀다."""
+    out = []
+    node = name
+    while node in classes and node != "Object":
+        out.append(node)
+        node = classes[node].get("Superclass")
+    return out
 
 
 DEFS = ROOT / "scripts" / "roblox-defs" / "globalTypes.d.luau"
@@ -140,7 +154,7 @@ def normalize(raw_path, version):
             dropped.append(f"{name}: class newer than pinned defs (whole class dropped)")
             continue
         props, events = [], []
-        for m in chain_members(classes, name):
+        for owner, m in chain_members(classes, name):
             mtags = set(m.get("Tags") or [])
             if m["MemberType"] == "Property":
                 if m["Name"] == "Parent":
@@ -155,7 +169,7 @@ def normalize(raw_path, version):
                     dropped.append(f"{name}.{m['Name']}: type {t} newer than pinned defs")
                     t = None
                 if t is not None:
-                    props.append({"name": m["Name"], "type": t})
+                    props.append({"name": m["Name"], "type": t, "owner": owner})
             elif m["MemberType"] == "Event":
                 if mtags & EVENT_TAG_EXCLUDE:
                     continue
@@ -175,10 +189,12 @@ def normalize(raw_path, version):
                         pname = "_" + pname
                     params.append({"name": pname, "type": t})
                 if ok:
-                    events.append({"name": m["Name"], "params": params})
+                    events.append({"name": m["Name"], "params": params, "owner": owner})
         props.sort(key=lambda p: p["name"])
         events.sort(key=lambda e: e["name"])
-        surface[name] = {"props": props, "events": events}
+        # chain: 상위 클래스 Modifier 타입(M7 단위 ④)의 재료 — 조상 자체는 스코프
+        # 밖(비생성)이라 별도 항목이 없고, 프로퍼티는 하위의 owner로 되짚는다
+        surface[name] = {"props": props, "events": events, "chain": class_chain(classes, name)[1:]}
     out = {
         "dumpVersion": version,
         "apiVersion": raw.get("Version"),
@@ -218,9 +234,18 @@ def emit():
     L.append("\tModifier(M7 단위 ③, round17): 클래스별 <Class>Modifier(필드 setter — 값은")
     L.append("\tField<T | Tween<T>> = V | State<V> | None | 변환 함수, 자기 타입 반환; 예약 메소드")
     L.append("\tApply/Peek/Overridden; 이벤트는 제외 — 함수 인자는 변환 함수라 콜백과 겹친다)")
-    L.append("\t+ D.Modifier.<Class>() 캐스트 별칭(런타임은 quad.Modifier 하나, round17 Q3 (a))")
-    L.append("\t+ children엔 마커 `{ read __quadModifier: true }`로(NewChild, types.luau) — <Class>Modifier를")
-    L.append("\t유니언에 직접 넣으면 큰 클래스에서 too complex(실측); State<Modifier>는 7절이 error라 제외.")
+    L.append("\t+ D.Modifier.<Class>() 타입드 생성자(round17 Q3 (a) — 단위 ③엔 quad.Modifier 캐스트 별칭,")
+    L.append("\t단위 ④부터 아래 Define 태그 생성자)")
+    L.append("\t+ children엔 마커만(<Class>Modifier를 유니언에 직접 넣으면 큰 클래스에서 too complex —")
+    L.append("\ttyping-limits 8.8절): 무타입 base는 `{ read __quadModifier: true }`(NewChild, types.luau),")
+    L.append("\t클래스 태그는 조상 체인 마커 `{ read __quadModifier: \"Frame\" | \"GuiObject\" | … }`(<Class>Elem).")
+    L.append("\t단위 ④(2026-09-04, 사용자 설계 — modifier-plan 11절): 상위 클래스 Modifier 타입도 전부")
+    L.append("\t생성(스코프 클래스의 조상 전부 — GuiObjectModifier류; 개수는 이 파일의 <Class>Modifier 선언이")
+    L.append("\t소스), 검사형 하강 `As<Class>()`(하위 클래스 + 항등),")
+    L.append("\t무검사 `As<<T>>()`, 인터페이스 `Into<Class> = { As<Class>: (self: any) -> <Class>Modifier }`,")
+    L.append("\tApply는 self·factory 둘 다 any(8.9절 — 재귀 필드 + 유니언 멤버 메소드 이름 충돌 시")
+    L.append("\t유니언 검사가 조용히 통과하는 솔버 결함을 피해 클래스 소속 검사를 되찾음). 런타임은")
+    L.append("\tquad.Modifier.Define(name, parent)이 돌려주는 태그 생성자(조상 먼저 등록).")
     L.append("]]")
     L.append("")
     L.append('local QuadTypes = require("../luau_packages/quad_types")')
@@ -268,37 +293,133 @@ def emit():
     L.append("export type OnChangeDescriptor<K> = { Name: K, Callback: (index<PropTypes, K>) -> () }")
     L.append("export type OnChangeFn = <K>(name: K & keyof<PropTypes>, fn: (index<PropTypes, K>) -> ()) -> OnChangeDescriptor<K>")
     L.append("")
+    # ── 클래스 계층(M7 단위 ④) ──────────────────────────────────────────
+    # 조상(비생성 추상 클래스)도 Modifier 타입을 갖는다 — 프로퍼티는 스코프 하위
+    # 클래스들의 owner 필드로 되짚는다(surface `chain`/`owner`, normalize가 기록).
+    parent_of = {}
     for name in names:
+        chain = [name] + classes[name]["chain"]
+        for i, node in enumerate(chain):
+            parent_of[node] = chain[i + 1] if i + 1 < len(chain) else None
+    mod_classes = sorted(parent_of)  # 스코프 + 조상
+
+    def ancestors(node):
+        out = []
+        node = parent_of.get(node)
+        while node:
+            out.append(node)
+            node = parent_of.get(node)
+        return out
+
+    def descendants(node):
+        return sorted(m for m in mod_classes if m != node and node in ancestors(m))
+
+    def mod_props(node):
+        if node in classes:
+            return classes[node]["props"]
+        above = set(ancestors(node)) | {node}
+        acc = {}
+        for n in names:
+            if node in ancestors(n):
+                for p in classes[n]["props"]:
+                    if p["owner"] in above:
+                        acc[p["name"]] = p
+        return [acc[k] for k in sorted(acc)]
+
+    # ── 생성기 게이트(단위 ④) — 조용한 구멍 금지 ────────────────────────
+    # (1) `As` + 대문자 프로퍼티는 런타임 캐스트 접두와 충돌 → 생성 실패.
+    # (2) children 유니언 멤버(Instance·State·Tag·Attribute·OnChange 디스크립터)의
+    #     함수 필드와 같은 이름의 setter는 typing-limits 8.9절의 솔버 결함(재귀
+    #     필드 + 같은 이름 함수 필드 → 유니언 검사가 조용히 통과)을 다시 연다 →
+    #     생성 실패. 이름 집합은 defs(Instance/Object의 function 멤버)와 quad-types
+    #     소스(State/StateData/Tag/Attribute 블록의 키)에서 읽는다.
+    defs_text = DEFS.read_text()
+    union_member_functions = {"Callback"}  # OnChangeDescriptor
+    # defs: `declare extern type Instance extends Object with` / `declare extern type Object with`
+    # — 못 찾으면 게이트가 조용히 비는 대신 생성을 실패시킨다(리뷰 반영)
+    for cls in ("Instance", "Object"):
+        blk = re.search(rf"^declare extern type {cls}\b[^\n]*\n(.*?)^end", defs_text, re.S | re.M)
+        if not blk:
+            raise SystemExit(f"gate: could not find `declare extern type {cls}` in {DEFS}")
+        union_member_functions |= set(re.findall(r"^\s+function ([A-Za-z_]+)", blk.group(1), re.M))
+    qt = (ROOT / "quad-types" / "src" / "init.luau").read_text()
+
+    def type_body(tname):
+        # `export type X = ... {` 뒤 중괄호 균형으로 본문을 끊는다 — 한 줄 선언
+        # (`Attribute = { NameMap: … }`)도 다음 선언으로 넘치지 않게(리뷰 반영)
+        m = re.search(rf"^export type {re.escape(tname)} = ", qt, re.M)
+        if not m:
+            raise SystemExit(f"gate: could not find `export type {tname}` in quad-types")
+        i = qt.index("{", m.end())
+        depth, j = 0, i
+        while j < len(qt):
+            if qt[j] == "{":
+                depth += 1
+            elif qt[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    return qt[i + 1:j]
+            j += 1
+        raise SystemExit(f"gate: unbalanced braces in `export type {tname}`")
+
+    for tname in ("StateData<T>", "State<T>", "Tag", "Attribute"):
+        union_member_functions |= set(re.findall(r"(?:^|[{,])\s*(?:read )?([A-Za-z_]+):", type_body(tname)))
+    reserved = {"Apply", "Peek", "Overridden", "As"}
+    for node in mod_classes:
+        for p in mod_props(node):
+            if p["name"] in reserved:
+                # 런타임 `__index`가 예약 메소드를 먼저 잡아 그런 setter는 존재할 수
+                # 없다 — 조용한 절단 금지(파일 머리 규칙): 생성 자체를 실패시킨다
+                raise SystemExit(f"{node}.{p['name']}: property collides with a reserved Modifier method")
+            if re.match(r"^As[A-Z]", p["name"]):
+                raise SystemExit(f"{node}.{p['name']}: property matches the reserved cast prefix As<Class>")
+            if p["name"] in union_member_functions:
+                raise SystemExit(f"{node}.{p['name']}: setter name collides with a children-union member method (typing-limits 8.9)")
+
+    def emit_modifier(node):
+        props = mod_props(node)
+        desc = descendants(node)
+        L.append(f"export type {node}Modifier = {{")
+        L.append(f'\tread __quadModifier: "{node}", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴')
+        L.append(f"\tPeek: <T>(self: {node}Modifier, key: string) -> T | State<T> | None | nil,")
+        L.append("\tApply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)")
+        L.append(f"\tOverridden: (self: {node}Modifier, ...any) -> any,")
+        L.append(f"\tAs: <T>(self: {node}Modifier, name: string?) -> T, -- 무검사(11절)")
+        L.append(f"\tAs{node}: (self: {node}Modifier) -> {node}Modifier, -- 항등(Into<{node}> 구현)")
+        for d in desc:
+            L.append(f"\tAs{d}: (self: {node}Modifier) -> {d}Modifier,")
+        for p in props:
+            t = p["type"]
+            L.append(f"\t{p['name']}: (self: {node}Modifier, value: Field<{t} | Tween<{t}>>) -> {node}Modifier,")
+        L.append("}")
+        # Into<Class> — "이 클래스로 갈 수 있는 모든 것"(상위·자기·커스텀 구현체).
+        # self는 any여야 한다: self를 인터페이스 타입으로 두면 반공변 때문에
+        # setter를 가진 실제 Modifier가 안 들어온다(실측)
+        L.append(f"export type Into{node} = {{ As{node}: (self: any) -> {node}Modifier }}")
+
+    for name in mod_classes:
+        if name not in classes:
+            emit_modifier(name)
+            L.append("")
+            continue
         c = classes[name]
         L.append(f"export type {name}OnChange =")
         members = [f'\t{{ Name: "{p["name"]}", Callback: ({p["type"]}) -> () }}' for p in c["props"]]
         # 리뷰 반영: 프로퍼티가 0개인 클래스(지금은 없음 — 최소 Folder 4개)가
         # 생기면 우변 없는 별칭이 찍혀 파일 전체가 깨진다 → never
         L.append("\n\t| ".join(members) if members else "\tnever")
-        # 배열 원소 유니언은 클래스당 별칭 하나 — D/DMapper 타입과 런타임 캐스트
-        # 네 자리가 같은 별칭을 참조한다(손 나열 드리프트 방지, 리뷰 반영)
         # <Class>Modifier — 프로퍼티만(이벤트 제외: setter의 함수 인자는 변환 함수라
-        # 콜백과 구분 불가 — modifier-plan 4절), 예약 메소드 셋은 이름 충돌 시 드롭
-        reserved = {"Apply", "Peek", "Overridden"}
-        L.append(f"export type {name}Modifier = {{")
-        L.append("\tread __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)")
-        L.append(f"\tPeek: <T>(self: {name}Modifier, key: string) -> T | State<T> | None | nil,")
-        L.append(f"\tApply: <U>(self: {name}Modifier, factory: ({name}Modifier) -> U) -> U,")
-        L.append(f"\tOverridden: (self: {name}Modifier, ...any) -> any,")
-        for p in c["props"]:
-            if p["name"] in reserved:
-                # 런타임 `__index`가 예약 메소드를 먼저 잡아 그런 setter는 존재할 수
-                # 없다 — 조용한 절단 금지(파일 머리 규칙): 생성 자체를 실패시킨다
-                raise SystemExit(f"{name}.{p['name']}: property collides with a reserved Modifier method")
-            t = p["type"]
-            L.append(f"\t{p['name']}: (self: {name}Modifier, value: Field<{t} | Tween<{t}>>) -> {name}Modifier,")
-        L.append("}")
+        # 콜백과 구분 불가 — modifier-plan 4절)
+        emit_modifier(name)
         # ⚠️ <Class>Modifier는 Elem에 직접 넣지 않는다 — 재귀 메소드 수십 개짜리
         # 테이블 타입이 유니언에 들어가면 큰 클래스의 캐스트 자리에서 솔버가
-        # "too complex"(2026-09-04 실측 — 한도 플래그 대조는 typing-limits 8.8절이 소스). 대신 NewChild가
-        # 마커 `{ read __quadModifier: true }`를 담아 폭 서브타이핑으로 통과시킨다
-        # (types.luau) — 클래스 소속은 setter 호출 자리(<Class>Modifier 메소드 집합)가 맡는다.
-        L.append(f"export type {name}Elem = NewChild | {name}OnChange | State<{name}OnChange>")
+        # "too complex"(2026-09-04 실측 — typing-limits 8.8절). 대신 조상 체인 마커
+        # 하나로 폭 서브타이핑: 자기 클래스와 조상 클래스의 Modifier만 들어온다
+        # (다른 클래스는 태그 불일치로 거부 — 단위 ④가 되찾은 클래스 소속 검사).
+        # 배열 원소 유니언은 클래스당 별칭 하나 — D/DMapper 타입과 런타임 캐스트
+        # 네 자리가 같은 별칭을 참조한다(손 나열 드리프트 방지, 리뷰 반영)
+        marker = " | ".join(f'"{n}"' for n in [name] + ancestors(name))
+        L.append(f"export type {name}Elem = NewChild | {name}OnChange | State<{name}OnChange> | {{ read __quadModifier: {marker} }}")
         L.append(f"export type {name}MapperElem = {name}Elem | MapperDescriptor")
         L.append("")
     L.append("-- D 네임스페이스 타입(H-305 (d′)) — `UseProvider` 확장 `RobloxExtension`이")
@@ -312,7 +433,7 @@ def emit():
         )
     L.append("}")
     L.append("export type DModifier = {")
-    for name in names:
+    for name in mod_classes:
         L.append(f"\t{name}: (...({name}Modifier | {{ [string]: any }})) -> {name}Modifier,")
     L.append("}")
     L.append("export type D = {")
@@ -345,8 +466,9 @@ def emit():
     L.append("\t-- D.Mapper — Claim용 디스크립터 생성기(claim-plan §2; 본체는 quad-base")
     L.append("\t-- Claim.luau의 newMapperClass — 여기선 클래스별 캐스트 별칭만, D.<Class> 동형)")
     L.append("\tlocal Mapper: { [string]: any } = { Root = quad.MapperRoot }")
-    L.append("\t-- D.Modifier — 클래스별 타입드 Modifier 생성자(round17 §0 Q3 (a)): 런타임은")
-    L.append("\t-- quad.Modifier 하나, 캐스트 별칭만 클래스별(D.Mapper와 같은 모양)")
+    L.append("\t-- D.Modifier — 클래스별 타입드 Modifier 생성자(round17 §0 Q3 (a); 단위 ④):")
+    L.append("\t-- quad.Modifier.Define(name, parent)이 돌려주는 태그 생성자 — 조상이 먼저")
+    L.append("\t-- 등록돼야 하므로 체인 깊이 순. 런타임 병합 본문은 base 하나(construct)")
     L.append("\tlocal ModifierNS: { [string]: any } = {}")
     L.append("\tlocal D: { [string]: any } = { New = New, Mapper = Mapper, Modifier = ModifierNS }")
     for name in names:
@@ -355,8 +477,10 @@ def emit():
         L.append(
             f'\tMapper.{name} = (quad.newMapperClass("{name}") :: any) :: (key: string | MapperRoot) -> ({name}Param<{name}MapperElem>) -> MapperDescriptor'
         )
-    for name in names:
-        L.append(f"\tModifierNS.{name} = (quad.Modifier :: any) :: (...({name}Modifier | {{ [string]: any }})) -> {name}Modifier")
+    for name in sorted(mod_classes, key=lambda n: (len(ancestors(n)), n)):
+        parent = parent_of[name]
+        parg = f', "{parent}"' if parent else ""
+        L.append(f'\tModifierNS.{name} = (quad.Modifier.Define("{name}"{parg}) :: any) :: (...({name}Modifier | {{ [string]: any }})) -> {name}Modifier')
     L.append("\tquad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨")
     L.append("\treturn (D :: any) :: D")
     L.append("end")

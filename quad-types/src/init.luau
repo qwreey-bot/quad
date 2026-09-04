@@ -144,23 +144,39 @@ export type AttributeKeyConstructor = (name: string) -> AttributeKeyObject
 -- 값은 T | State<T> | None(삭제); nil은 거부(런타임 검증)
 export type AttributeSugar<T> = (name: string, value: T | State<T> | None) -> Attribute
 
--- ── Modifier (M7 단위 ①) — `base/modifier-plan.md` ─────────────────────
--- 런타임 표면만(예약 메소드 셋). 클래스별 필드 setter 타입(`<Class>Modifier`)은
+-- ── Modifier (M7 단위 ①·④) — `base/modifier-plan.md` ───────────────────
+-- 런타임 표면만(예약 메소드 넷). 클래스별 필드 setter 타입(`<Class>Modifier`)은
 -- 생성기(M7 단위 ③)가 찍고, `Overridden`은 스파이크 `09`대로 `any`.
 export type Modifier = {
-	-- 마커(H-300 관례, M7 단위 ③): 백엔드의 children 유니언이 클래스별
-	-- `<Class>Modifier`(재귀 메소드 수십 개)를 직접 담으면 솔버가 too complex라
-	-- 이 한 필드만 담는다 — 런타임 값에도 실제로 있다(Modifier.luau)
+	-- 마커(H-300 관례): `true` = 무타입(base `Modifier()`), 클래스 태그 값은
+	-- 클래스명 문자열 — 그 리터럴은 생성/사용자 정의 `<Class>Modifier` 타입이
+	-- 각자 선언한다(단위 ④, 11절). 런타임 값에도 실제로 있다(Modifier.luau)
 	read __quadModifier: true,
 	-- 정본 9절 `:Peek<<T>>(key)` — `store:Of<<T>>`와 같은 명시 인스턴스화 관례
 	Peek: <T>(self: Modifier, key: string) -> T | State<T> | None | nil,
-	Apply: <U>(self: Modifier, factory: (Modifier) -> U) -> U,
+	-- ⚠️ self·factory 둘 다 `any`(typing-limits 8.9절): 자기 타입을 참조하는
+	-- 함수 필드가 유니언 멤버(`Tag`/`State`)의 같은 이름 메소드와 만나면 새
+	-- 솔버의 유니언 검사가 조용히 통과한다 — children 자리의 클래스 소속
+	-- 검사를 살리려고 재귀를 포기(사용자 확정 2026-09-04). 주석 붙인 팩토리는
+	-- 그대로 타입드, 무주석 팩토리는 `any`.
+	Apply: <U>(self: any, factory: (any) -> U) -> U,
 	Overridden: (self: Modifier, ...any) -> any,
+	-- 무검사 캐스트(11절): 인자 없으면 self 그대로(타입만), 이름을 주면 존재
+	-- 검사 후 태그 교체. 검사형 `As<Class>()`는 클래스별 타입이 메소드로 찍는다
+	As: <T>(self: Modifier, name: string?) -> T,
 }
 -- `H-310`(사용자 확정 2026-09-04): 인자는 Modifier 또는 `{ field = value }` 테이블,
--- 뒤가 필드 단위로 덮어씀(Overridden 규칙) — `Modifier()` == `Modifier({})`
-export type ModifierConstructor = setmetatable<{ Overridden: (...any) -> any }, { __call: (self: any, ...(Modifier | { [string]: any })) -> Modifier }>
--- children 유니언용 마커 타입(위 `__quadModifier` 필드만) — 생성 `<Class>Modifier`도 이 필드를 가진다
+-- 뒤가 필드 단위로 덮어씀(Overridden 규칙) — `Modifier()` == `Modifier({})`.
+-- `Define(name, parent?)`(단위 ④): 모디파이어 클래스 등록 + 그 태그를 심는
+-- 생성자 반환 — 공개 API(프로바이더는 첫 사용자일 뿐, 컴포넌트도 같은 길)
+export type ModifierClassConstructor = (...(Modifier | { [string]: any })) -> Modifier
+export type ModifierConstructor = setmetatable<{
+	Overridden: (...any) -> any,
+	Define: (name: string, parent: string?) -> ModifierClassConstructor,
+}, { __call: (self: any, ...(Modifier | { [string]: any })) -> Modifier }>
+-- children 유니언용 마커 타입 — 무타입 base Modifier의 것(`true`). 클래스 태그
+-- 마커 `{ read __quadModifier: "Frame" | "GuiObject" | … }`는 생성기가 클래스별
+-- `<Class>Elem`에 찍는다(조상 체인 — 상위 클래스 Modifier가 하위 자식 자리에 감)
 export type ModifierMarker = { read __quadModifier: true }
 
 export type State<T> = StateData<T> & {

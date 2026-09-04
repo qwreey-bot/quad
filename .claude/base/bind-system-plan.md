@@ -229,8 +229,10 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
   타입드 스칼라 슈가는 `Attribute`를 돌려주므로 같은 멤버, `H10-15`. `OnChange`
   디스크립터는 여기가 아니라 클래스별 생성 별칭 `<Class>Elem`에 들어간다 —
   `onchange-plan.md`; **[2026-09-04 M7 확장 실행]** `ModifierMarker`
-  (`{ read __quadModifier: true }`) 합류 — 클래스별 `<Class>Modifier`가 아니라
-  마커만(`typing-limits.md` 8.8절, round17 `H-313`)). `H-298` (a)
+  (`{ read __quadModifier: true }` — 무타입 base Modifier) 합류 — 클래스별
+  `<Class>Modifier`가 아니라 마커만(`typing-limits.md` 8.8절); 클래스 태그
+  마커(자기 + 조상 체인 문자열 유니언)는 `OnChange`처럼 `<Class>Elem` 쪽이다
+  (단위 ④, `modifier-plan.md` 11절)). `H-298` (a)
   회신문의 "Ref류"는 그 예고로 해석해 M5 유니언에서 뺐다 — `Ref` leaf
   핸들러가 M8이라 지금 실으면 런타임이 없는 거짓 표면이 된다(`H-297`과
   같은 논리; 이 해석이 틀렸다면 사용자가 뒤집을 것). 정의 실물은

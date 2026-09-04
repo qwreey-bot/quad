@@ -1572,7 +1572,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `base/modifier-plan.md`의 flatten 절이 소스
 - [x] **[2026-09-04 단위 ①·③ — `Quad.Modifier: ModifierConstructor`, `Modifier`(마커 `__quadModifier` 포함)·`ModifierMarker`; 클래스별 타입은 quad-roblox 생성 파일이 소유]** **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Modifier` 관련
       표면이 노출돼야 하면 같이 갱신(위 M3 항목의 "마일스톤마다" 규칙)
-- [ ] **[2026-09-04 신설 — 후순위, M7 밖] 상위 클래스 Modifier 타입 생성**
+- [x] **[2026-09-04 같은 날 단위 ④(`H-314`)로 닫힘 — 조상 클래스 전부(`GuiObjectModifier`류 — 개수는 `modifier-plan.md` 11절이 소스) 생성 + 검사형 `As<Desc>()`/무검사 `As<<T>>()`/`Into<Class>`, `modifier-plan.md` 11절; 아래는 신설 당시 서술]** **[2026-09-04 신설 — 후순위, M7 밖] 상위 클래스 Modifier 타입 생성**
       (`GuiObjectModifier`/`GuiButtonModifier`류 — D 스코프의 creatable
       클래스만 찍는 M7 생성기 밖). **사용자 판정**(round17 §0 Q5 회신):
       *"textbutton/textlabel 전부 Boldify 같은걸 쓸 수 있어야 할텐데, 안 해두면

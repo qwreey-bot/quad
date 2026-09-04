@@ -91,7 +91,9 @@
 3. **클래스별 `<Class>OnChange` 유니언**(`{ Name: "Position", Callback:
    (UDim2) -> () } | …`)이 `D.<Class>`/`D.Mapper.<Class>`의 `E`에 합류
    (클래스당 별칭 `<Class>Elem = NewChild | <Class>OnChange |
-   State<<Class>OnChange>`, `<Class>MapperElem = <Class>Elem |
+   State<<Class>OnChange> | { read __quadModifier: "<Class>" | … }` — 마지막
+   멤버는 **[2026-09-04 M7 단위 ④]** 클래스 태그 마커(자기 + 조상 체인,
+   `modifier-plan.md` 11절), `<Class>MapperElem = <Class>Elem |
    MapperDescriptor` — 타입과 런타임 캐스트가 같은 별칭을 참조) — **클래스
    밖 이름**은 생성자 자리에서 거부된다(진단에 "too complex" 잡음이 함께 붙지만
    에러 자체는 난다).

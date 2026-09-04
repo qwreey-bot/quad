@@ -16,7 +16,9 @@
 	`NewChild` — the backend-agnostic core of the children-array element
 	union. Since 2026-09-03 the generated `D.<Class>Param<E>` is instantiated
 	with a per-class alias `<Class>Elem = NewChild | <Class>OnChange |
-	State<<Class>OnChange>` (src/D, `base/onchange-plan.md` "타이핑" 절) —
+	State<<Class>OnChange> | { read __quadModifier: "<Class>" | … }` (src/D,
+	`base/onchange-plan.md` "타이핑" 절; the last member is the class-tag
+	marker of M7 unit ④ — `base/modifier-plan.md` 11절) —
 	array-part descriptor kinds join THAT alias, not this union
 	(claim-plan §7-12). M5-era union: what actually works through
 	`drive` by the end of this milestone — a static child Instance
@@ -60,10 +62,12 @@ export type NewChild =
 	| QuadTypes.State<QuadTypes.Tag>
 	| QuadTypes.Attribute
 	| QuadTypes.State<QuadTypes.Attribute>
-	-- M7 단위 ③: Modifier는 MARKER로만(`{ read __quadModifier: true }`) — 클래스별
-	-- `<Class>Modifier`를 유니언에 직접 넣으면 큰 클래스의 캐스트 자리에서
-	-- "too complex"(2026-09-04 실측). 클래스 소속은 setter 호출 자리가 검사한다.
-	-- `State<Modifier>`는 modifier-plan 7절이 error라 타입에서도 없다.
+	-- M7 단위 ③·④: Modifier는 MARKER로만 — 클래스별 `<Class>Modifier`를 유니언에
+	-- 직접 넣으면 큰 클래스의 캐스트 자리에서 "too complex"(2026-09-04 실측,
+	-- typing-limits 8.8절). 여기(`true`)는 무타입 base `Modifier()`의 명시 허용이고,
+	-- 클래스 태그 마커 `{ read __quadModifier: "Frame" | "GuiObject" | … }`(자기 +
+	-- 조상 체인)는 생성 `<Class>Elem`이 담는다 — 그래서 형제 클래스 Modifier는
+	-- 거부된다(단위 ④, modifier-plan 11절). `State<Modifier>`는 7절이 error라 없다.
 	| QuadTypes.ModifierMarker
 
 -- `OnChange(name, fn)` descriptor (M10, `base/onchange-plan.md` — array-part

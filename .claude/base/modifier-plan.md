@@ -467,10 +467,14 @@ PA님 방식인 문자열 키 + 런타임 리플렉션으로 감, `base/event-pl
 클래스별 `<Class>Modifier`(프로퍼티 setter `(self, value: Field<T | Tween<T>>) ->
 <Class>Modifier` + 예약 메소드 셋, **이벤트 필드는 제외** — 4절의 "함수 인자는
 변환 함수" 규칙과 콜백이 겹쳐서)와 타입드 생성자 `D.Modifier.<Class>()`(round17
-§0 Q3 (a) — 런타임은 base `Modifier()` 하나, 클래스별 캐스트 별칭)를 찍는다.
-children 유니언은 클래스별 타입이 아니라 마커 `{ read __quadModifier: true }`만
-본다(`typing-limits.md` 8.8절 — 재귀 메소드 테이블을 유니언에 넣으면 too
-complex). `Overridden`은 9-2대로 `any`.
+§0 Q3 (a) — 단위 ③ 시점엔 런타임이 base `Modifier()` 하나에 클래스별 캐스트
+별칭이었고, **[2026-09-04 단위 ④]**부터는 `Modifier.Define(name, parent?)`이
+돌려주는 클래스별 태그 생성자다 — 11절)를 찍는다.
+children 유니언은 클래스별 타입이 아니라 마커만 본다(`typing-limits.md` 8.8절 —
+재귀 메소드 테이블을 유니언에 넣으면 too complex). `Overridden`은 9-2대로 `any`.
+**[2026-09-04 단위 ④]** 마커가 클래스 태그(조상 체인 문자열 유니언)로 바뀌어
+children 자리의 클래스 소속 검사가 돌아왔고, 상위 클래스(`GuiObjectModifier`류
+조상 전부)도 같이 생성된다 — 아래 11절(개수는 거기가 소스).
 
 `mod:UICorner(8)`가 실제로 어떻게 UICorner 자식을 만들어 붙이는지(v1의
 `Corner` 특수 프로퍼티 선례, 핸들러 배치 소견)는
@@ -590,6 +594,14 @@ setter 클로저(4번)와 이름이 겹치면 안 됨 — `__index`가 고정 �
 `Apply`를 기본 선택지로 유도할 것 — 아래 9번의 `Overridden`는 "이미 따로
 만들어진 modifier 값 두 개 이상을 합쳐야 하는" 경우로만 좁혀서 문서화(용도
 구분 절 참고).
+
+**[2026-09-04 타입 정정 — 단위 ④, `typing-limits.md` 8.9절]** `Apply`의 타입은
+`<U>(self: any, factory: (any) -> U) -> U`다 — self·factory 둘 다 `any`. 자기
+타입을 참조하는 함수 필드가 children 유니언 멤버(`Tag`/`State`)의 같은 이름
+메소드와 만나면 새 솔버의 유니언 검사가 조용히 통과해 11절의 클래스 소속
+검사가 무력화되기 때문(**사용자 확정**: *"apply 의 재귀를 포기하고 다른 부분의
+편의를 택하는건 동의해"*). 주석 붙인 팩토리(`function(mod: TextButtonModifier)`)는
+그대로 타입드이고, 무주석 팩토리는 예전의 에러 대신 `any`로 통과한다.
 
 **`Apply`는 `factory(self)` 그 이상도 이하도 아님 — 특별한 계약 없음,
 문서화 필요.** `factory` 내부가 `Peek`으로 State를 기대했는데 없다고
@@ -751,8 +763,9 @@ Modifier 인자를 받으면 `Overridden`과 같은 병합을 한다(사용자: 
 `Overridden(...: any): any`류로 느슨하게 열어 정적 체크를 포기 — 이건 임시
 처치로 명시하고, M7 실제 구현
 시점에 실 테스트 결과에 따라 다시 좁히는 걸 목표로 로드맵에 남김
-(`ROADMAP.md` M7). **[2026-09-04 M7 착수 회신, round17 §0 Q5]** 상위 클래스
-Modifier 타입 자체의 **생성**은 M7 밖 후순위로 확정 — 사용자: *"상위 클래스에
+(`ROADMAP.md` M7). **[2026-09-04 M7 착수 회신, round17 §0 Q5 — 같은 날 단위 ④로
+번복됨: 조상 클래스 Modifier 타입이 M7 안에서 생성됐다, 11절]** 당시엔 상위 클래스
+Modifier 타입 자체의 **생성**을 M7 밖 후순위로 확정했었다 — 사용자: *"상위 클래스에
 대해서 생성하는건 있을 필요가 있긴한 부분 … 다만 지금 당장 할 필요가 있냐
 하면 그건 아닐 수 있어"*(`TextButton`/`TextLabel`이 공유하는 `Boldify`류
 프리셋의 타입 자리). 그때 이 절의 한계를 넘는 메커니즘도 같이 결정한다
@@ -813,6 +826,88 @@ PropertyHandler가 판단).
 error" 규칙에 안 걸림(`Tween<T>`는 `process`/`retract`를 가진 dispatch
 참가자가 아니라 `None`처럼 순수 raw 데이터 값, 위 7번 절 "Slot/Tag/Attribute
 등" 목록에서 Tween을 뺀 정정 참고).
+
+### 11. 클래스 태그·`Define`·`As`·`Into` — 상위 클래스 Modifier와 검사형/무검사 캐스트 (2026-09-04 단위 ④, 사용자 설계)
+
+**계기**: 단위 ③이 children 자리의 클래스 소속 검사를 잃었고(`H-313` — 마커
+`{ read __quadModifier: true }`만 보므로 `Frame { textLabelMod }`가 통과), Q5
+상위 클래스 Modifier(`Boldify`를 TextLabel/TextButton이 같이 쓰기)가 후순위로
+남아 있었다. 사용자 제안 스파이크 둘의 실측(`audit/m7-unit4-as-modifier-2026-09-04.md`)
+에서 (1) 클래스 문자열 마커는 통과하지만 **`Apply`가 재귀인 한 검사가 새고**
+(8.9절 솔버 결함), (2) 공유 props의 `&` 호이스팅은 **성립하지 않는다**는 게
+드러났고, 이어진 대화에서 아래 구성이 확정됐다.
+
+**값의 태그**: 모든 Modifier 값은 `__quadModifier`에 태그를 갖는다 — base
+`Modifier()`는 `true`(무타입), 클래스 생성자가 만든 값은 **클래스명 문자열**
+(`"TextLabel"`). setter는 태그를 유지하고, `Overridden`은 무타입을 돌려준다
+(입력 태그 중 하나를 고르지 않는다). 생성/사용자 정의 `<Class>Modifier` 타입은
+같은 리터럴을 `read __quadModifier: "<Class>"`로 선언한다 — 타입이 약속하는
+태그가 곧 값의 태그(`H-300` 관례).
+
+**`Modifier.Define(name, parent?) -> ctor` — 공개 base API.** 모디파이어 클래스를
+등록하고 그 태그를 심는 생성자(`Modifier(...)`와 같은 병합 본문, `H-310`)를
+돌려준다. **프로바이더는 첫 사용자일 뿐 특권이 없다** — quad-roblox의 `D`는
+`UseProvider` 때 생성기가 찍은 47종(스코프 31 + 조상 16)을 이 API로 등록하고,
+컴포넌트 저자는 `MaterialButton.Modifier = quad.Modifier.Define("MaterialButton",
+"TextButton")`으로 자기 클래스를 같은 지위로 얹는다. **사용자 논거**: *"Modifier
+자체는 어느 엔진이든, 가상객체에 대한 상태이든 포괄해 … 엔진 단에 그걸 가능하게
+둔다는건 커스텀 modifier 를 허용하지 않게 된다는 말"* — 레지스트리를 엔진
+op로 두려던 첫 제안을 사용자가 되돌렸다. 부모는 먼저 등록돼 있어야 하고(조상
+먼저 — 생성기는 체인 깊이 순으로 찍는다), 같은 부모로 재등록하면 같은 생성자를
+돌려주며(두 모듈이 같은 클래스를 선언해도 됨), 다른 부모면 error. **이름 공간은
+하나다** — 프로바이더가 등록한 엔진 클래스명(`Model`, `Frame` …)과 컴포넌트의
+클래스명이 같은 표를 쓰므로, 같은 이름·같은 부모로 `Define`하면 엔진 클래스의
+생성자가 그대로 돌아온다(리뷰 지적, 2026-09-04 — 지금은 "같은 클래스의 재선언"과
+"우연한 동명"을 런타임이 구분할 수 없다는 사실만 문서화; 컴포넌트 클래스명은
+엔진 클래스명과 겹치지 않게 짓는 것이 저자 몫이고, 접두·네임스페이스 같은
+구조는 실제로 충돌이 관측되면 그때). 레지스트리는 모듈 수준이라 quad 두 벌 공존 시 Brand/None처럼 사본마다 갈린다(기존 계약).
+
+**검사형 하강 `mod:As<Class>()`** — 런타임: 대상이 미등록이면 error, 현재 태그가
+`true`(무타입)이거나 대상 자신이거나 대상의 **조상**이면 태그를 바꾼 클론을
+돌려주고, 아니면 error(형제·상향 모두). 타입: 클래스별 타입이 **자기 하위
+클래스와 자기 자신(항등)**만 `As<Desc>: (self) -> <Desc>Modifier` 메소드로
+가진다 — 자동완성이 곧 "내려갈 수 있는 목록"이고, 잎 클래스엔 하강 메소드가
+없다. **사용자 판정**: *"AsXXX 형식은 … 자동완성도 돕고, 바꿀 수 있는게 뭐가
+있는지 바로 보여서 좋은 생각이야"*. 문자열 인자형 `As("TextLabel")`(`K & keyof`
+/`index<>`)과 오버로드 교집합은 실물 규모에서 too complex(8.9절)라 못 간다.
+
+**무검사 `mod:As<<T>>()` / `mod:As(name)`** — *"상위 요소가 하위 요소를 알아야
+해 … D 에 없는걸 만들어야 해서 확장해야하는 경우 걸림이 될 수 있어. 따라서 :As
+무검사 방식도 같이 있어야한다"*(사용자). 인자 없으면 self 그대로(타입만 바꾸는
+캐스트 — 태그는 못 정하니 안 건드린다), 이름을 주면 **존재 검사만** 하고(오타
+방지) 조상 검사 없이 재태그한다. 상향(TextLabel → GuiObject)도 이 길 — 검사형
+상향 메소드는 상하위 상호 참조 순환으로 분석 시간이 3배가 돼 두지 않는다.
+
+**`Into<Class> = { As<Class>: (self: any) -> <Class>Modifier }`** — Rust `Into`처럼
+"그 클래스로 갈 수 있는 모든 것"의 인터페이스(사용자 제안). 상위 클래스
+Modifier(하강 메소드 보유)·자기 자신(항등 `As<Self>`)·D 밖의 커스텀 구현체(그
+메소드 하나만 구현)가 전부 만족한다 — 텍스트 처리자류 헬퍼는 `function
+Bold(m: IntoTextLabel) return m:AsTextLabel():FontFace(…) end` 하나로 셋을 다
+받고, 결과에서 다시 `As<목적지>`로 이어 갈 수 있다. `self`는 `any`여야 한다
+(인터페이스 타입을 self로 두면 반공변 때문에 실제 Modifier가 안 들어온다 —
+실측). 생성기가 클래스마다 찍고, 커스텀 클래스는 사용자가 같은 형태로 쓴다.
+
+**예약 캐스트 접두**: 런타임 `__index`는 예약 메소드(`Apply`/`Peek`/
+`Overridden`/`As`) → **`^As%u`(As 뒤 대문자)면 캐스트 경로** → 나머지만 setter.
+그래서 `mod:AsTextLabl()` 같은 오타는 필드 `AsTextLabl`을 조용히 만들지 않고
+error다 — **사용자 요구**: *"As로 시작하는건 전부 Cast 프리디파인드로 두고
+시작해야할것 같아"*(안 그러면 As가 프로퍼티처럼 동작해 타입도 런타임도 못 잡는
+구간이 생긴다). `AspectRatio`처럼 As 뒤가 소문자인 프로퍼티는 setter로 남고,
+생성기는 접두와 겹치는 프로퍼티를 만나면 생성을 실패시킨다. 정말 그런 이름이
+필요하면 `Modifier({ AssemblyMass = 1 })` 플레인 테이블 경로가 `__index`를
+우회한다.
+
+**children 자리**: `<Class>Elem`이 `{ read __quadModifier: "Frame" | "GuiObject"
+| "GuiBase2d" | "GuiBase" | "Instance" }` 한 멤버(자기 + 조상 체인)를 담는다 —
+자기 클래스와 상위 클래스의 Modifier만 들어오고 형제 클래스는 태그 불일치로
+거부(**`H-313` 닫힘**). 무타입 base 값은 `NewChild`의 `{ read __quadModifier:
+true }`로 명시 허용. 컴포넌트가 무엇을 받을지는 컴포넌트 param 타입이 정한다
+(`IntoMaterialButton`이든 마커든) — `<Class>Elem`은 `D.<Class>` 자리에만 걸린다.
+flatten과 나중의 "PreRef/Ref/PostRef 추출 + flatten" 슈가는 태그를 보지 않는다.
+
+**안 하는 것**: drive 시점에 태그와 실제 인스턴스 클래스를 `IsA`로 대조하는
+안전망 — 잘못된 필드는 Property 핸들러의 리플렉션 검사가 이미 error를 내고,
+`nativeIsA` op가 새로 필요해 관측된 문제가 아니다.
 
 ## 열린 질문 (`.claude/question.md`에도 취합)
 
