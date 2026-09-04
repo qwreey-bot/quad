@@ -225,4 +225,21 @@ do
 end
 
 print()
+print("=== 10. Modifier(M7 단위 ②) — D.Frame { mod, … }: flatten이 drive 안에서 돌아 필드가 프로퍼티로 앉는다 ===")
+do
+	local src = q.Source(3)
+	local mod = q.Modifier():Name("FromMod"):ZIndex(src):Visible(false)
+	local f = q.D.Frame({ mod, Visible = true }) :: any
+	assert(f.Name == "FromMod" and f.ZIndex == 3, "modifier fields landed as properties (State unwrapped)")
+	assert(f.Visible == true, "inline key beats the modifier")
+	src:Set(4)
+	assert(f.ZIndex == 4, "reactive field stays live")
+	-- 자식과 섞여도 오프셋 무영향
+	local c = Instance.new("TextLabel")
+	local f2 = q.D.Frame({ q.Modifier():Name("M"), c }) :: any
+	assert(c.Parent == f2 and q.Dispatch.getOffsetAt(f2, 2) == 0 and f2.Name == "M", "sentinel slot contributes 0; child mounts")
+	print("PASS")
+end
+
+print()
 print("=== ALL PASS ===")

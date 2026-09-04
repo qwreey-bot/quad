@@ -2309,3 +2309,10 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   `Modifier.luau`(콜러블 `Modifier()`, 예약 메소드 우선 `__index`, `FieldsKey`
   이중 clone, 4분기 setter, 핸들러 계층 값 error, `Overridden` 닷·콜론),
   quad-types 런타임 표면, `spec.modifier` 7절. round17 `H-309`.
+
+- `session/2026-09-04-02-m7-unit2-flatten.md` **[M7 단위 ② — flatten +
+  `ProcessedModifierHandler` + drive 봉합]** 정본 의사코드 둘의 1:1 전사;
+  Q4 (a)대로 `Dispatch.drive` 첫 줄이 flatten → `New` ③ 스텁 제거·`Claim`
+  자동 봉합. `spec.flatten` 3절·handlers 10·claim 8, Studio 3/3. round17
+  `H-311`. 관측: `None` 필드는 실물에서 Property nil 방어로 쓰기 건너뜀.
+

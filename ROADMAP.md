@@ -1521,7 +1521,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 - [x] **[2026-09-04 M7 단위 ① — `quad-base/src/Modifier.luau`, `spec.modifier` 7절, round17]** `Modifier()`(빈 인스턴스 바닥 생성자, 2026-08-07 열 번째 세션
       명시 — `Source(default)`/`Ref(default)`/`Store({defaults})`와 같은
       `Type(args)` 팩토리 관습, `modifier-plan.md` 3번)
-- [ ] **[2026-09-04 단위 ①이 절반 — immutable `table.clone` 체이닝(내부 저장소 `FieldsKey` 둘 다 clone)·형제 분기 무오염·재호출은 spec 2절; flatten은 단위 ②]** flatten-before-dispatch(`isModifier(v)`로 배열 항목 중 Modifier만
+- [x] **[2026-09-04 단위 ①(체이닝 — spec.modifier 2절) + 단위 ②(flatten — `Modifier.luau` export, `Dispatch.drive`의 첫 pre-pass로 호출(round17 Q4 (a)), spec.flatten 1~2절)]** flatten-before-dispatch(`isModifier(v)`로 배열 항목 중 Modifier만
       판별해 필드 merge, 나머지는 안 건드리고 통과 — 2026-08-07 열 번째
       세션 명시, `modifier-plan.md` 1번), immutable `table.clone` 체이닝 —
       `table.clone`이 메타테이블을 복사 아닌 참조로 공유해 제네릭 `__index`
@@ -1561,7 +1561,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       스크립트가 `Position: UDim2` 자리를 `UDim2 | Tween<UDim2>`로 만들면
       끝, Modifier 런타임/`__index` 자체엔 변경 없음 — `modifier-plan.md`
       10번, 2026-08-10 세션, `base/tween-plan.md`)
-- [ ] **⭐ [2026-08-24 신설, 6라운드 손 트레이싱 `H-35`]
+- [x] **[2026-09-04 단위 ② — HIGH 우선순위, InitDispatch가 None 쌍과 같이 등록, spec.flatten 3절]** **⭐ [2026-08-24 신설, 6라운드 손 트레이싱 `H-35`]
       `quad-base/Dispatch/Modifier.luau` — `ProcessedModifierHandler`.**
       `flatten`이 배열 자리를 `ProcessedModifier` 센티널로 소진하고, 이 전담
       nop 핸들러가 정상 `Dispatch.process` 경로에서 캐치해

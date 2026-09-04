@@ -2600,17 +2600,13 @@ export type D = {
 	(round14 H-299의 module.D 직접 대입 채널을 H-305 (d′)가 병합 채널로 이동).
 	New의 ①~④ 순서는 bind-system-plan 파이프라인 의사코드가 계약. ]]
 return function(quad: any): D
-	local function flatten(props: any): any
-		-- ③ 자리 — M7 Modifier 소진이 여기 온다(modifier-plan "flatten의
-		-- 정확한 형태" 정본). M5엔 Modifier 표면이 없어 항등.
-		return props
-	end
 	local function New<T>(className: string): (props: any) -> T
 		local function stage(props: any): T
 			local inst = Instance.new(className) -- ①
 			quad.nativeClaim(inst) -- ② 생성 직후 무조건, ③④보다 먼저
-			local flattened = flatten(props) -- ③
-			quad.Dispatch.drive(inst, flattened) -- ④
+			-- ③④ — flatten(Modifier 소진)은 drive의 첫 pre-pass(round17 Q4 (a),
+			-- 2026-09-04): New와 Claim이 같은 호출 자리를 쓴다
+			quad.Dispatch.drive(inst, props)
 			return inst :: any
 		end
 		-- H-238: 범위 밖 클래스의 D.New(name)(props) 경로도 blame이 사용자

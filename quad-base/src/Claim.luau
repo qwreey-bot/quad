@@ -25,11 +25,11 @@
 	    ProcessedModifier slots/indices away from `New`'s — the §2 caveat
 	    that motivated the choice);
 	  - descriptors hidden inside Modifier FIELDS are not visited by the
-	    DFS (flatten-consumed fields don't exist before M7 anyway — M7's
-	    flatten integration owns that seam, see also the flatten note);
-	  - `flatten` is D-internal (provider) so this path calls `drive`
-	    directly — identical while flatten is the identity (M5); wiring
-	    Modifier consumption into the Claim path is M7's seam;
+	    DFS (a Modifier is a property bag — a descriptor in a field is a
+	    misuse, and flatten only merges fields into the hash part);
+	  - [2026-09-04 M7 단위 ② — seam closed] flatten is owned by
+	    `Dispatch.drive` (round17 §0 Q4 (a)), so this path gets Modifier
+	    consumption for free by calling `drive` — nothing Claim-specific;
 	  - generic descriptor factory `newMapperClass(className)` + root
 	    sentinel `MapperRoot` live HERE (base) and `D.Mapper` re-exposes
 	    them as cast aliases / `D.Mapper.Root` (the confirmed user surface).

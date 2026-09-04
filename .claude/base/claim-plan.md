@@ -103,7 +103,7 @@ local cloned = Claim(template:Clone(), M.Frame(M.Root) {   -- 루트는 이름 �
   테이블을 in-place로 바꿀지 새 테이블을 만들지(그러면 `ProcessedModifier` 자리와
   인덱스가 `New`와 달라진다)와 Modifier 필드 안에 숨은 디스크립터를 DFS가 보는지는
   ~~구현 시 정할 것~~ **[2026-09-02 `H-303` 재량 확정 — 뒤집기 가능]**
-  in-place 교체 / DFS는 Modifier 필드를 안 봄(M7 flatten 통합의 몫) —
+  in-place 교체 / DFS는 Modifier 필드를 안 봄(**[2026-09-04]** M7 단위 ②로 닫힘 — flatten은 `Dispatch.drive`가 소유해 Claim 경로도 같은 호출 자리를 지난다, round17 Q4 (a)) —
   전체 재량 목록은 round14 `H-303` 행과 `quad-base/src/Claim.luau` 헤더가 소스. **같은 `inst`를 두 번 `Claim`하는 것도 error**(§7-7) —
   판정은 위 `nativeClaim` 항목(§7-10).
 - **⭐ [2026-08-28 후속, §7-9] 소유는 프로바이더 주입 op `nativeClaim(inst)`** —

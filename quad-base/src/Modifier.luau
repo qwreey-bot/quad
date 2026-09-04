@@ -31,8 +31,14 @@
 	contents are documented UB, not inspected. The mirror guard (a Modifier as
 	a State/Source VALUE) lives in Source.luau/State.luau since M2 (7절).
 
-	flatten / `ProcessedModifier` / `ProcessedModifierHandler` arrive in
-	단위 ② (same file, separate export).
+	flatten (단위 ②, "flatten의 정확한 형태" 절 as-is): in-place, reverse
+	`for` over the array part (later modifier wins because "already set →
+	skip" is first-writer-wins), inline hash keys — including inline `None` —
+	always win, each consumed slot becomes the `ProcessedModifier` sentinel
+	(no holes → array order kept). `Dispatch.drive` owns the call as its
+	first pre-pass (round17 §0 Q4 (a)) — `New` ③ and `Claim` both get it
+	through drive. `ProcessedModifierHandler` (Dispatch/Modifier.luau)
+	catches the sentinel and registers None/0 bookkeeping.
 ]]
 
 local Brand = require("./Brand")
@@ -141,7 +147,41 @@ table.freeze(Modifier)
 Err.setFuncLevel(getmetatable(Modifier).__call, SURFACE)
 Err.setFuncLevel(Overridden, SURFACE)
 
+-- internal sentinel that fills a consumed array slot (never user-facing —
+-- `Processed*` idiom, same frozen+named shape as `None`)
+local ProcessedModifier = table.freeze(setmetatable({ __quadProcessedModifier = true :: true }, {
+	__tostring = function()
+		return "ProcessedModifier"
+	end,
+}))
+
+-- flatten(input) -> input — canon pseudocode 1:1 (modifier-plan "flatten의
+-- 정확한 형태"). Mutates and returns the same table.
+local function flatten(input: { [any]: any }): { [any]: any }
+	-- TODO(H-312): a Modifier at a HASH key is not consumed (only the array
+	-- part is scanned) and reaches the key's handler raw — whether flatten
+	-- should reject it awaits the round17 §4 reply
+	for i = #input, 1, -1 do -- ⚠️ reverse: the LAST modifier must write first
+		local value = input[i]
+		if not isModifier(value) then
+			continue
+		end
+		input[i] = ProcessedModifier -- consume the slot, keep the array hole-free
+		for key, modValue in value[FieldsKey] do
+			if input[key] ~= nil then
+				-- already taken — an inline key (present before this loop, `None`
+				-- included) or a later modifier (visited earlier) wins
+				continue
+			end
+			input[key] = modValue
+		end
+	end
+	return input
+end
+
 return {
 	Modifier = Modifier,
-	_FieldsKey = FieldsKey, -- 단위 ② flatten / specs only (private)
+	flatten = flatten,
+	ProcessedModifier = ProcessedModifier,
+	_FieldsKey = FieldsKey, -- specs only (private)
 }

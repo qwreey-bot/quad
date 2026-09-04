@@ -182,4 +182,21 @@ do
 end
 
 print()
+print("=== 8. Modifier 혼입(M7 단위 ②) — 루트·매핑 자식 props의 Modifier가 drive 안 flatten으로 소진된다 ===")
+do
+	local root, title = makeTemplate()
+	local src = q.Source(0.75)
+	q.Claim(root, M.Frame(M.Root)({
+		q.Modifier():BackgroundTransparency(src),
+		M.TextLabel("Title")({ q.Modifier():Text("from mod"):Name("FromMod"), Name = "Inline" }),
+	}))
+	assert(root.BackgroundTransparency == 0.75, "root modifier field driven (State unwrapped)")
+	assert(title.Text == "from mod" and title.Name == "Inline", "child modifier fields driven; inline key wins")
+	src:Set(0.5)
+	assert(root.BackgroundTransparency == 0.5, "reactive field stays live through the Claim path")
+	assert(q.Dispatch.getOffsetAt(root, 2) == 0, "consumed modifier slot contributes 0 (mapped child sits at position 2 → offset counts slot 1 only)")
+	print("PASS")
+end
+
+print()
 print("=== ALL PASS ===")

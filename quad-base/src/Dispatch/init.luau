@@ -41,6 +41,8 @@ local Err = require("./ErrorNamespace")
 local InitBookkeeping = require("./Bookkeeping")
 local NoneModule = require("@self/None")
 local StoreBindModule = require("@self/StoreBind")
+local ProcessedModifierModule = require("@self/Modifier") -- M7 단위 ②
+local flatten = require("./Modifier").flatten -- M7 단위 ② — drive의 첫 pre-pass(round17 Q4 (a))
 
 local QuadTypes = require("../luau_packages/quad_types")
 local HandlerModule = require("@self/Handler")
@@ -286,6 +288,11 @@ local function Init(module: any)
 		-- Blocker + bk). Single generalized `for` gives array part before hash
 		-- part (`F-4-1` — a language behavior base leans on by contract;
 		-- spec.drive.luau measures it). Chain entry is always index 1.
+		-- ③ flatten — Modifier slots consumed in place (`ProcessedModifier`),
+		-- fields merged into the hash part. Owned HERE, not by `New` (round17
+		-- §0 Q4 (a), 2026-09-04): one call site serves `New` and `Claim` alike.
+		-- Runs before the batching test — it never changes the array length.
+		flatten(flattened)
 		local batching = flattened[1] ~= nil
 		local blocker = if batching then bookkeeping.getBlocker(inst) else nil
 		if blocker then
@@ -340,6 +347,9 @@ local function Init(module: any)
 	-- NoneHandler (recursion only) + NilHandler (the one place an empty array
 	-- position is registered out of the order math).
 	NoneModule.register(Dispatch)
+	-- M7 단위 ②: the flatten sentinel's nop terminal (`H-35`) — registered
+	-- with the None pair for the same self-ownership reason.
+	ProcessedModifierModule.register(Dispatch)
 	-- M4: StoreBind — the descending diff's own recursion, so it registers
 	-- here like the None pair, not from a value module (round13 §0 Q3 (a);
 	-- `H-278`'s scope was leaf handlers for one value type). It needs `module`

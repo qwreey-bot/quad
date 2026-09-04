@@ -276,18 +276,15 @@ local function New(className: string)
         --    [2026-08-28 `Claim` §7-9] 인라인이 아니라 주입 op `nativeClaim(inst)` 호출 —
         --    (0)의 코드는 그 op 안에만 산다(`Claim`도 같은 op를 부른다, `base/claim-plan.md`).
 
-        -- ③ flatten — Modifier 항목을 제자리에서 `ProcessedModifier`로 소진하고
-        --    필드를 해시 파트로 merge. 새 테이블 없음, `inst`를 안 받는 순수 변환
-        --    (`modifier-plan.md`의 "flatten의 정확한 형태"). `PreRef`/`PostRef`가
-        --    Modifier 필드에 오는 건 타입으로 차단돼 있어 여기선 안 다룬다.
-        --    ⚠️ [2026-09-04 round17 §0 Q4 (a) 확정 — 사용자] 이 ③은 ④ 안으로
-        --    들어간다: `Dispatch.drive`가 첫 pre-pass로 flatten을 소유하고(`Claim`도
-        --    자동 봉합), `New`의 이 줄은 사라진다. 실코드·이 의사코드의 갱신은
-        --    M7 단위 ②에서 — 그때까지 이 두 줄은 옛 모양으로 읽을 것.
-        local flattened = flatten(props)
-
-        -- ④ 디스패치 — pre-pass → 본체 → `postRefList`. 전부 `Dispatch.drive`가 소유.
-        Dispatch.drive(inst, flattened)
+        -- ③④ [2026-09-04 M7 단위 ② — round17 §0 Q4 (a), 사용자 확정] flatten은
+        --    `New`의 단계가 아니라 **`Dispatch.drive`의 첫 pre-pass**다 — Modifier
+        --    항목을 제자리에서 `ProcessedModifier`로 소진하고 필드를 해시 파트로
+        --    merge(새 테이블 없음, `inst`를 안 받는 순수 변환 — `modifier-plan.md`의
+        --    "flatten의 정확한 형태"). 호출 자리가 하나라 `Claim`도 같은 경로로
+        --    봉합된다(옛 모양: `New` ③이 `flatten(props)`를 따로 부르고 ④에 넘겼다).
+        --    `PreRef`/`PostRef`가 Modifier 필드에 오는 건 타입으로 차단돼 있어
+        --    flatten은 안 다룬다.
+        Dispatch.drive(inst, props)   -- ④ 디스패치 — flatten → pre-pass → 본체 → `postRefList`
 
         return inst   -- `D.Frame`은 이 함수에 캐스트만 얹은 별칭(위 확정)
     end
@@ -296,7 +293,7 @@ end
 
 ```lua
 -- quad-base: Dispatch/init.luau
-function Dispatch.drive(inst, flattened)
+function Dispatch.drive(inst, flattened)   -- [2026-09-04] 첫 줄이 `flatten(flattened)` — 위 ③④ 주석(단위 ②)
     -- ⓪ 배치 Blocker — **진입 직후** 켜고 `drive`가 할 일을 전부 마친 뒤(post-pass
     --    포함) 끈다: `dispatch-core-plan.md`의 `H-17` 계약(*"`drive` 전체를 `inst`
     --    전용 `Blocker`로 감싼다"* / *"`PostRef` 콜백은 게이트가 켜진 채로 실행된다"*).
