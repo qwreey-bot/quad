@@ -630,7 +630,7 @@ Bookkeeping` 의존 방향 제안) / Leaf 핸들러 등록 소유권을 각 객�
   하면 **기록 순서** 미스 → `canBound` 크래시가 가능하다. Observer/Effect의
   바인드 부수효과는 임의 사용자 코드를 동기 호출하지 않아 이 경로가 없다.
   실사용 패턴인지("드문 오용" 원칙 해당 여부) 불명 — 코드가 M8에나 생기므로
-  그때 기록 순서(SetWeak을 `v:Set` 앞으로?)를 확인할 것. `ref-plan.md`의
+  그때 기록 순서(SetWeak을 `v:Set` 앞으로?)를 확인할 것. `ref-plan.md`의 **[2026-09-04 확인 완료 — M8 round18 brief §0 Q4 (a), 사용자 확정: `ref-plan.md` 의사코드에서 `SetWeak`를 `Set` 앞으로 옮김]**
   해당 주석에도 같은 한정을 달아뒀다. **[감사 3라운드 보강]** 판단 시 기존
   확정 원칙 *"일반적인 재진입/무한루프는 방어 안 함"*(2026-08-04 —
   `dispatch-core-plan.md`/`gate-plan.md`/`slot-plan.md`가 인용)과의 관계를

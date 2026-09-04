@@ -1,0 +1,22 @@
+# M8 자율 구현 **18라운드** — 발견 원장 (Ref / PreRef / PostRef)
+
+> **이 파일이 무엇인가**: **[2026-09-04 신설]** M8(Ref/PreRef/PostRef) 자율
+> 구현 구간의 발견 전부 — 규약은 `m8-implementation-round18-brief.md`(§0
+> Q1~Q6 확정 — 회신 블록이 소스). 번호는 **`H-315`부터**(메인 직렬).
+> 갈래: ① 자율(코드+문서 같은 커밋) / ② §4 배치 회신 대기 / ③ 즉시 중단.
+> **상태의 소스는 이 파일 자신.**
+
+## 요약 표
+
+| 번호 | 갈래 | 심각도 | 한 줄 | 상태 |
+|---|---|---|---|---|
+| `H-315` | ① | 🟢 | **[단위 ① — `:Wait` + `PreRef`/`PostRef` 런타임]** `Ref.luau`에 `:Wait(thread?)`(nil → `coroutine.running()`을 `.Callbacks` thread 키로 넣고 `yield`, `:Set`이 소진·`self`로 resume; thread → 등록만·즉시 self; 비thread error; **항상 다음 `:Set`까지** — brief Q5 (a)), `PreRef.luau`/`PostRef.luau`(`Ref(default)` + `PreRefBrand`/`PostRefBrand` 다중 태깅 + H-300 마커 `__quadPreRef`/`__quadPostRef` + `_fired = false` — 소진·판정은 단위 ②), quad-types `Wait`·`PreRef<T> = Ref<T> & { read __quadPreRef: true }`·`PostRef<T>`·`Quad.PreRef`/`PostRef`, quad-base 최상위 export. `spec.ref` 12~14절(채워진 Ref에도 yield, 체이닝 `Wait():Wait()`, 외부 thread 등록만·dedup, 콜백과 공존), `spec.preref` 3절(브랜드 삼분·마커·`_fired`·값 자리). Studio 생략(순수 Lua — 브리프 Q1) | ✅ 구현 완료. 새 export type이라 `pesde install` 재실행 필요했음(relink만으론 `Unknown type QuadTypes.PreRef`) |
+| `H-316` | ① | 🟢 | **[문서 stale]** `ref-plan.md` "`Ref`의 retract" 절 배경 문장 *"Modifier 필드/Store 값 어디든 자유롭게"* 중 **Modifier 필드는 틀리다** — `modifier-plan.md` 4절(2026-08-09)이 Ref 계열의 Modifier 필드 진입을 즉시 error로 확정했고 실제 `Modifier.luau`의 `isHandlerLayerValue`가 `isRef`로 셋을 다 거부한다(spec.preref 3절이 실물로 확인). Store/State 값은 M2 가드가 `isModifier`만 보므로 `State<Ref>`가 성립 — 그쪽 서술은 유효 | ✅ 정본에 한정 각주(같은 절의 2026-08-18 "배열 전용" 한정과 짝) |
+
+| `H-317` | ① | 🟡 | **[단위 ① 끝 절차 `/code-review`]** `Ref<T>`의 self 반환 메소드가 `-> Ref<T>`로 고정돼 `PreRef(x):Callback(fn)` 첫 체이닝에서 `PreRef<T>` 마커(교집합)가 증발 — 타입이 막기로 한 Store/Source 값 진입이 관용구(`OnCreated`류가 이 모양)에서 조용히 열린다. 리뷰 제안대로 **`<Self>(self: Self, …) -> Self` 제네릭 self 메소드**로 전환(quad-types `Ref<T>` — `Set`/`Callback`/`WeakCallback`/`Uncallback`/`Wait`). 소형 실측: 체이닝 뒤 마커 보존·`Ref` → `PreRef` 거부·오타 T 거부·PreRef가 Ref 자리에 폭으로 들어감 전부 성립; 대안(메소드부 복제 / `RefMethods<Self, T>` 별칭)은 재귀 별칭 인자 한계(typing-limits §8 8번)로 기각 | ✅ 반영(`spec.preref` 타입 양성). **확인 항목**(타입 표면 변화 — 사용자 수용만): 다른 self 반환 타입(`State`/`Tag`/`Modifier`)엔 안 퍼뜨렸다 — 그쪽은 nominal 하위 타입이 없어 필요가 없다 |
+| `H-318` | ① | 🟢 | **[같은 리뷰]** 무인자 `:Wait()`가 비yieldable 컨텍스트(메타메소드·C 경계·CLI 최상위)에서 호스트의 raw yield 에러로 죽고 대기자 키가 남는다 → `coroutine.isyieldable()` 가드 + `errorBeforeNearest`(등록 뒤가 아니라 앞) | ✅ 반영. CLI 최상위는 `isyieldable()`이 참인데 호스트가 거부하는 케이스라 spec으로 못 잡음(리뷰 실측) — 기록만 |
+
+## §4 배치 회신 대기 (② 갈래)
+
+없음 — 열린 문항 0. 확인 항목 하나: `H-317`(`Ref<T>` 메소드 `<Self>` 제네릭 —
+수용 여부만).

@@ -49,11 +49,24 @@ export type Ref<T> = {
 	Revision: number,
 	Callbacks: { [RefCallback<T> | thread]: true }, -- 강한 해시맵 셋(+ M8 `:Wait` 대기자)
 	WeakCallbacks: { [RefCallback<T>]: true }, -- weak-key 테이블
-	Set: (self: Ref<T>, value: T) -> Ref<T>,
-	Callback: (self: Ref<T>, fn: RefCallback<T>) -> Ref<T>,
-	WeakCallback: (self: Ref<T>, fn: RefCallback<T>) -> Ref<T>,
-	Uncallback: (self: Ref<T>, fn: RefCallback<T>) -> Ref<T>,
+	-- self 반환 메소드는 `<Self>` 제네릭(M8 단위 ① 리뷰 반영, round18 `H-317`):
+	-- 반환을 `Ref<T>`로 고정하면 `PreRef(x):Callback(fn)` 체이닝에서 마커
+	-- (`PreRef<T>` 교집합)가 사라져 nominal 타입이 첫 호출에 증발한다. 소형
+	-- 실측: 체이닝·마커 보존·오타 T 거부·plain Ref → PreRef 거부 전부 성립
+	Set: <Self>(self: Self, value: T) -> Self,
+	Callback: <Self>(self: Self, fn: RefCallback<T>) -> Self,
+	WeakCallback: <Self>(self: Self, fn: RefCallback<T>) -> Self,
+	Uncallback: <Self>(self: Self, fn: RefCallback<T>) -> Self,
+	-- M8 단위 ①: 항상 다음 `:Set`까지 기다린다(brief §0 Q5 (a)); thread를 주면
+	-- 등록만 하고 즉시 self. 대기자는 `.Callbacks`의 thread 키(`:Set`이 소진·resume)
+	Wait: <Self>(self: Self, thread: thread?) -> Self,
 }
+-- M8 단위 ①: `PreRef`/`PostRef` — 런타임은 `Ref` 그대로, 마커 필드로 nominal
+-- (H-300 관례 — 런타임 값에도 실제 필드). fire 시점만 다르다(`ref-plan.md`
+-- "`phase` 옵션 폐기 → 위치로 표현, `PreRef` 신설" 절 / "`PostRef`" 절).
+-- children 배열 리터럴 전용 — Modifier 필드·Source·Store 값으로는 타입 차단.
+export type PreRef<T> = Ref<T> & { read __quadPreRef: true }
+export type PostRef<T> = Ref<T> & { read __quadPostRef: true }
 
 -- ── 반응형 코어(M2 단위 2) ────────────────────────────────────────────
 -- 선언 스타일은 `.claude/base/typing-limits.md` §1②의 "데이터부/메소드부" 쪼개기 —
@@ -345,6 +358,8 @@ export type Quad = {
 	Relate: () -> Relate,
 	Void: (...any) -> (),
 	Ref: <T>(default: T) -> Ref<T>,
+	PreRef: <T>(default: T) -> PreRef<T>, -- M8 단위 ①
+	PostRef: <T>(default: T) -> PostRef<T>,
 	-- 단위 2. `State`는 런타임 생성자가 없다(파생 전용) — 타입만 위에서 export.
 	Source: <T>(v: T) -> Source<T>,
 	Store: <T>(defaults: T?) -> Store<T>,

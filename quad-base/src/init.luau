@@ -17,6 +17,8 @@ local Relate = require("@self/Relate")
 local Err = require("@self/ErrorNamespace")
 local Brand = require("@self/Brand")
 local Ref = require("@self/Ref")
+local PreRef = require("@self/PreRef") -- M8 단위 ①
+local PostRef = require("@self/PostRef")
 local Void = require("@self/Void")
 local QuadTypes = require("./luau_packages/quad_types")
 local InitDebug = require("@self/Debug")
@@ -60,6 +62,8 @@ local function New(): Quad
 		errorNamespace = Err,
 		None = None, -- M3 단위 2 — 센티널(`architecture.md` 최상위 export)
 		Ref = Ref,
+		PreRef = PreRef, -- M8 단위 ① — 런타임은 Ref, 브랜드·_fired만 다름
+		PostRef = PostRef,
 		Blocker = Blocker, -- 단위 4 — 게이트 정책 잎 모듈(인스턴스 간 공유)
 		isEpoch = Brand.isEpoch,
 		isSource = Brand.isSource,

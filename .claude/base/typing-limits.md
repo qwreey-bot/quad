@@ -622,6 +622,11 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
    자기 참조를 빼거나(`Apply: (self: any, factory: (any) -> U)`), 이름 충돌을
    생성기 게이트로 막을 것.
 
+10. **[2026-09-04 신설, M8 단위 ①, round18 `H-317`] nominal 하위 타입(교집합
+   마커 — `PreRef<T> = Ref<T> & { read __quadPreRef: true }`)이 있는 타입의 self
+   반환 메소드는 `<Self>(self: Self, …) -> Self`로** — 반환을 `Ref<T>`로 고정하면
+   첫 체이닝에서 마커가 증발한다. `RefMethods<Self, T>` 별칭으로 빼는 형태는
+   8번의 재귀 별칭 인자 한계에 걸리므로 메소드 자리의 제네릭으로 둔다.
 > **실측 방법 주의**: `luau-analyze`가 진단 0건이어도 타입이 제대로
 > 해소됐다는 뜻이 아닙니다(1번이 정확히 그 사례). **`luau-analyze
 > --annotate`로 추론된 실제 타입을 눈으로 확인**하고, 가능하면

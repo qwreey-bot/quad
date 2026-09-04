@@ -2339,3 +2339,10 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   Q3 children `Ref` 타입은 8.9절 결함 때문에 스파이크 선행, Q4 재진입은
   `SetWeak` 순서 정정 권고).
 
+- `session/2026-09-04-06-m8-unit1-wait-preref-postref.md` **[M8 §0 확정 + 단위
+  ①]** Q1~Q5 (a), Q6 전제 정정(`PostRef`는 부모 부착 무보장 — 사용자), Q4
+  `SetWeak` 순서 정정을 정본 의사코드에 반영, Q5 Option 값은 사용자 몫으로
+  등재. 단위 ①: `:Wait`(항상 다음 `:Set`까지) + `PreRef`/`PostRef`(Ref 런타임
+  + 브랜드 + 마커 + `_fired`), 타입, `spec.ref` 12~14절·`spec.preref`. `H-315`/
+  `H-316`.
+

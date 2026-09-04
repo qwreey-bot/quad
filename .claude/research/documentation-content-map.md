@@ -267,7 +267,8 @@ additional-primitives-plan.md`의 "문서화 백로그" 절이 원자료)**:
    **[2026-08-14 아홉 번째 세션] `PostRef`가 생겨 이 프레이밍은 3항이 됨**
    — "pre-hook / hook / post-hook"으로 자연히 확장되고, 특히
    `PostRef`("두 패스가 전부 끝난 뒤")가 **자기 서브트리 완성은 보장하되
-   자기가 부모에 붙기 전**이라는 점은 React `componentDidMount`와의 대조
+   부모 부착 여부는 보장하지 않는다**(**[2026-09-04 정정, M8 Q6]** 옛 "붙기
+   전"은 리터럴 중첩에만 맞음)는 점은 React `componentDidMount`와의 대조
    소재로 좋음(`ref-plan.md`의 "`PostRef`" 절, `base/lifecycle-hooks-plan.md`).
    **[해소됨, 2026-08-12 여섯 번째 세션]** 취소 가능 여부 — PreRef는
    취소 개념 자체가 없고(**[정정, 2026-08-14 두 번째 세션]** 근거가

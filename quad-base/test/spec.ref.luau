@@ -258,4 +258,71 @@ do
 end
 
 print()
+print("=== 12. [M8 단위 ①] :Wait() — 자기 코루틴을 대기자로 넣고 yield, 다음 :Set에 self로 재개, 채워져 있어도 기다린다 (Q5 (a)) ===")
+do
+	local r = Ref(1) -- 이미 채워진 Ref
+	local log = {}
+	local co = coroutine.create(function()
+		local got = r:Wait()
+		table.insert(log, got == r and ("resumed:" .. tostring(r.Value)) or "wrong")
+		local again = r:Wait():Wait() -- 체이닝: 두 번 연속 기다린다
+		table.insert(log, again == r and ("twice:" .. tostring(r.Value)) or "wrong")
+	end)
+	coroutine.resume(co)
+	assert(#log == 0 and coroutine.status(co) == "suspended", "Wait yields even though .Value is already 1 (no early return)")
+	assert(r.Callbacks[co] == true, "the running coroutine is the waiter key")
+	r:Set(2)
+	assert(log[1] == "resumed:2" and coroutine.status(co) == "suspended", "resumed by :Set with the Ref itself, then waiting again")
+	r:Set(3)
+	assert(coroutine.status(co) == "suspended" and #log == 1, "second Wait consumed the third value, third Wait pending")
+	r:Set(4)
+	assert(log[2] == "twice:4" and coroutine.status(co) == "dead", "chained Wait resolves on the next Set each time")
+	assert(r.Callbacks[co] == nil, "waiter consumed after the last resume")
+	print("PASS")
+end
+
+print()
+print("=== 13. :Wait(thread) — 남의 thread는 등록만, 즉시 self 반환, 정지시키지 않는다; thread가 아니면 error ===")
+do
+	local r = Ref(0)
+	local got: any = nil
+	local other = coroutine.create(function()
+		got = coroutine.yield()
+	end)
+	coroutine.resume(other) -- 어딘가에서 이미 정지해 있는 thread
+	local ret = r:Wait(other)
+	assert(ret == r, "explicit-thread form returns self immediately")
+	assert(r.Callbacks[other] == true and coroutine.status(other) == "suspended", "registered only, nothing resumed")
+	assert(r:Wait(other) == r and r.Callbacks[other] == true, "dedup: same thread twice is one entry")
+	r:Set(9)
+	assert(got == r and coroutine.status(other) == "dead", "the other thread is resumed by :Set with the Ref")
+	local ok, err = pcall(function()
+		r:Wait(42 :: any)
+	end)
+	assert(not ok, "non-thread argument is rejected")
+	assert(string.find(tostring(err), "spec.ref.luau", 1, true) ~= nil, "blame is the user's line: " .. tostring(err))
+	print("PASS")
+end
+
+print()
+print("=== 14. Wait 대기자와 Callback 공존 — 같은 :Set이 콜백을 호출하고 대기자를 소진, 콜백은 유지 ===")
+do
+	local r = Ref(0)
+	local calls = 0
+	r:Callback(function()
+		calls += 1
+	end)
+	assert(calls == 1, "registration fires once")
+	local co = coroutine.create(function()
+		r:Wait()
+	end)
+	coroutine.resume(co)
+	r:Set(1)
+	assert(calls == 2 and coroutine.status(co) == "dead" and r.Callbacks[co] == nil, "callback ran and waiter consumed")
+	r:Set(2)
+	assert(calls == 3, "callback stays, waiter does not come back")
+	print("PASS")
+end
+
+print()
 print("=== ALL PASS ===")

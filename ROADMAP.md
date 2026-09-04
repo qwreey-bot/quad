@@ -1589,7 +1589,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 - [x] ~~**[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Ref` 필드 추가~~
       — **[2026-08-27 `H-128` 후속]** `Ref` 최소형과 함께 M2 공통 기반으로
       이동(그 체크박스). `PreRef`/`PostRef` 필드는 아래 항목이 얹는다
-- [ ] `Ref.luau`의 **나머지** — `:Wait(thread?)`(self 반환). **[2026-08-27
+- [x] **[2026-09-04 M8 단위 ① — `Ref.luau` `:Wait`(항상 다음 `:Set`까지, brief Q5 (a)) + `PreRef.luau`/`PostRef.luau`(Ref 런타임 + 브랜드 + 마커 + `_fired`), quad-types `PreRef<T>`/`PostRef<T>`·`Quad` 필드, `spec.ref` 12~14절·`spec.preref`; pre-pass 자체는 아래 단위 ② 체크박스 몫, round18 `H-315`]** `Ref.luau`의 **나머지** — `:Wait(thread?)`(self 반환). **[2026-08-27
       9라운드 `H-128`] 최소형은 M2 "공통 기반" 절로 앞당겨졌다**(표면 목록은
       그 체크박스가 소스 — 여기 반복하지 않는다) — `Ref`가 `Epoch`를 만족한다는 2026-08-25 확정
       (7라운드 `H-58`/`H-64`/`H-70`: `.Revision`은 `:Set()`이 `Source`와 같은
@@ -1632,8 +1632,10 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       타입 차단, `_fired` 1회용 가드). `Dispatch.drive`가 해시 파트까지
       끝낸 뒤 `postRefList`를 순회하며 각 `PostRef`를 fire — 배열 재순회가
       아니라 실제 개수만큼의 짧은 루프. **보장 범위 주의**: 자기 서브트리
-      완성은 보장하되 **이 인스턴스가 부모에 붙는 것보다는 먼저**임
-      — `base/ref-plan.md` "`PostRef`" 절
+      완성만 보장하고 **부모 부착 여부는 어느 쪽도 보장하지 않는다**
+      (**[2026-09-04 M8 brief Q6 정정]** 리터럴 중첩에선 아직 안 붙어 있고,
+      `Claim`/기존 `.Parent`면 붙어 있는 채로 fire) — `base/ref-plan.md`
+      "`PostRef`" 절
 - [ ] `PostRef` 동적 경로 가드 Handler — `PreRef`의 것과 완전한 거울상
       (`{priority = HANDLER_PRIORITY_FALLBACK, isHandlable = v is PostRef,
       process = error(...)}`), 같은 절 참고

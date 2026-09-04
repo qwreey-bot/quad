@@ -2,7 +2,8 @@
 	Ref — general value box. Minimal M2 form (`ROADMAP.md` M2 "공통 기반",
 	9라운드 `H-128`): `.Value` / `.Revision` / `:Set` / `:Callback` /
 	`:WeakCallback` / `:Uncallback` + `isRef`, and `EpochBrand` membership.
-	`:Wait`, `PreRef`/`PostRef` and the dispatch handlers stay in M8.
+	M8 단위 ① adds `:Wait(thread?)` (below); `PreRef`/`PostRef` live in their
+	own files (same runtime, brand + `_fired`), the dispatch handlers in unit ②.
 
 	Sources, as-is:
 	  - `.claude/base/ref-plan.md` "API 모양" (surface, self-returning
@@ -103,6 +104,36 @@ function RefImpl.Callback<T>(self: Ref<T>, fn: Callback<T>): Ref<T>
 	return self
 end
 
+-- `:Wait(thread?)` — the waiter side of the thread-key branch in `:Set`.
+-- No argument: capture the running coroutine, register it as a waiter and
+-- yield here; `:Set` consumes the key and resumes it with the Ref itself, so
+-- `ref:Wait().Value` reads the fresh value. ALWAYS waits for the NEXT `:Set`,
+-- filled or not (M8 brief §0 Q5 (a), user: "항상 기다리면 돼" — `nil` is a
+-- legitimate value in `Ref<<T?>>`, so "filled" is not decidable here; the
+-- `if ref.Value then … else ref:Wait().Value` idiom does the pre-check).
+-- An explicit thread: register only and return at once — a coroutine can
+-- only suspend itself, never someone else's already-suspended thread
+-- (`ref-plan.md` "API 모양"). Dedup is free (set semantics).
+function RefImpl.Wait<T>(self: Ref<T>, thread: thread?): Ref<T>
+	if thread ~= nil then
+		if type(thread) ~= "thread" then
+			Err.errorBeforeNearest(`Ref: Wait(thread) expects a thread (got {typeof(thread)})`, SURFACE)
+		end
+		self.Callbacks[thread] = true
+		return self
+	end
+	if not coroutine.isyieldable() then
+		-- a raw `coroutine.yield` here would surface as the host's
+		-- "attempt to yield across metamethod/C-call boundary" with quad blamed
+		-- (review finding) — say what the caller did wrong instead
+		Err.errorBeforeNearest("Ref: Wait() must be called from a yieldable coroutine (pass a thread to register a waiter without yielding)", SURFACE)
+	end
+	local running = coroutine.running()
+	self.Callbacks[running] = true
+	coroutine.yield() -- resumed by `:Set` with `self` — the return below is the same value
+	return self
+end
+
 -- Detaches a user-registered callback. Both tables — a weakly registered
 -- callback is otherwise impossible to remove and keeps firing.
 -- Dedup on registration means there is never a "how many times" question.
@@ -125,7 +156,7 @@ local function Ref<T>(default: T): Ref<T>
 end
 
 -- `H-231`: public surface joins the shared error-namespace tag layer
-for _, fn in { RefImpl.Set, RefImpl.Callback, RefImpl.WeakCallback, RefImpl.Uncallback, Ref } do
+for _, fn in { RefImpl.Set, RefImpl.Callback, RefImpl.WeakCallback, RefImpl.Uncallback, RefImpl.Wait, Ref } do
 	Err.setFuncLevel(fn, SURFACE)
 end
 
