@@ -63,3 +63,13 @@ documentation-content-map·README 두 행, `Modifier 필드` 잔여 2곳, round1
 숫자 키 분기·nop 본문 공용화·브랜드 조회 축소·PreRef/PostRef 공용 팩토리·
 미사용 인자 반영. Studio 재실측(순서 정정 뒤) 3/3.
 
+## 5. 단위 ③ 스파이크 — `H-321`
+
+실물 D + quad-types로 `<Class>Elem`에 `Ref<Frame?>`를 직접 넣어 봤다: 형제
+클래스 `PreRef`·`State<Ref>`·오타는 거부되는데 **plain `Ref<TextLabel?>`와
+`Ref<nil>`이 통과**(8.9절 — `<Self>` 제네릭이어도). 반공변 팬텀 필드
+`read __quadRefAccepts: (T) -> ()` + 클래스별 마커 `{ read __quadRefAccepts:
+(Frame) -> () }`는 4/4 거부·양성 통과·2.6s. 소형 재현(`luau-test/32`)은 직접
+멤버 케이스를 잡아버려 실물을 대표하지 못했다(헤더에 기록). 새 메커니즘이라
+Q3 회신대로 §4 문항으로 올리고 멈춤.
+
