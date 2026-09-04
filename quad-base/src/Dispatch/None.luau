@@ -46,6 +46,17 @@ local None = table.freeze(setmetatable({ __quadNone = true :: true }, {
 
 local module = { None = None }
 
+-- The terminal "empty slot" registration every nop handler does (NilHandler,
+-- ProcessedModifier/PreRef/PostRef): offsetSource FIRST, then length 0 —
+-- the release-order contract (`H-39`, setLength ends in gatedRecompute).
+-- One body so the order cannot drift between the four sites (review, M8 ②).
+-- `anchor` is the `setLength` 4th argument the `Processed*` canon blocks pass
+-- (`inst`, `H-35`); NilHandler passes none.
+function module.registerEmptySlot(dispatch: QuadTypes.Dispatch, inst: any, k: any, anchor: any?)
+	dispatch.setOffsetSource(inst, k, None)
+	dispatch.setLength(inst, k, 0, anchor)
+end
+
 -- Called by InitDispatch once per module instance, after the Dispatch table
 -- is assembled — the handlers close over that instance's dispatch (the
 -- factory pattern, `H-174`). addHandler tags the received functions into the
@@ -77,8 +88,7 @@ function module.register(dispatch: QuadTypes.Dispatch)
 		priority = dispatch.HANDLER_PRIORITY_HIGH,
 		process = function(inst: any, k: any, _v: any, _index: number): (any?, boolean) -> ()
 			-- no recursion — already nil, nothing further to hand down
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0)
+			module.registerEmptySlot(dispatch, inst, k)
 			return Void
 		end,
 	})

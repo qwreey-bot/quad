@@ -21,17 +21,13 @@
 local Brand = require("./Brand")
 local QuadTypes = require("../luau_packages/quad_types")
 local Err = require("./ErrorNamespace")
-local Ref = require("./Ref")
+local tagged = require("./Ref")._tagged
 local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 
 export type PostRef<T> = QuadTypes.PostRef<T>
 
 local function PostRef<T>(default: T): PostRef<T>
-	local self: any = Ref(default)
-	Brand.PostRefBrand:register(self)
-	self.__quadPostRef = true
-	self._fired = false
-	return self :: PostRef<T>
+	return tagged(default, Brand.PostRefBrand, "__quadPostRef") :: PostRef<T>
 end
 
 Err.setFuncLevel(PostRef, SURFACE) -- `H-231`

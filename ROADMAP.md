@@ -1600,17 +1600,17 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       런타임 재사용 + children 배열 전용, Modifier/Store 타입 차단,
       위치 무관 호이스팅 pre-pass — `base/ref-plan.md` "`phase`
       옵션 폐기 → 위치로 표현, `PreRef` 신설" 절 + "API 모양" 절)
-- [ ] `(v=Ref)` 매치 핸들러 — children 배열의 숫자 슬롯에 놓인
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** `(v=Ref)` 매치 핸들러 — children 배열의 숫자 슬롯에 놓인
       `Ref(default)` 인스턴스를 인식해 바인드(별도 `CreatedRef` 래퍼
       없음 — 이름 자체가 폐기됨, 아래 참고)
-- [ ] **이중 배치 방지**(`question.md` 0-W, 2026-08-14 열한 번째 세션
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** **이중 배치 방지**(`question.md` 0-W, 2026-08-14 열한 번째 세션
       해소) — `RefLeafHandler.process`가 실제 바인딩 분기에서
       `bindLifetime(inst, v)`를, 실제 언바인딩 분기에서 `unbindLifetime(v)`를
       호출. 새 `Relate` 불필요 — `bindLifetime`이 이미 내장한 `canBound`
       이중 바인딩 가드를 재사용하는 것뿐(같은 `Ref`가 이미 다른 자리에
       살아있으면 그 자리에서 즉시 error) — `base/ref-plan.md` "이중 배치
       방지" 절
-- [ ] `PreRef`/`PostRef` pre-pass — 새 `Dispatch.*` 함수 없이
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** `PreRef`/`PostRef` pre-pass — 새 `Dispatch.*` 함수 없이
       `Dispatch.drive(inst, flattened)` 자신이 **본체 루프 전에** 배열
       파트를 **한 번** 훑어(**[2026-08-22 정정]** 여기 "두 패스(배열→해시)
       루프 전에"라고 적혀 있었으나 본체는 단일 일반화 `for`다 — `F-4-1`), `PreRef`는 그 자리에서 fire하고
@@ -1626,7 +1626,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `ProcessedPostRef` 처리** — 아래 `Processed*Handler` 항목이 그 자리를
       정상 본체 루프로 마저 처리)
       — `base/ref-plan.md` "PreRef" 절 / "`PostRef`" 절
-- [ ] **[2026-08-14 아홉 번째 세션 신설]** `PostRef.luau` + 본체 루프 뒤
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** **[2026-08-14 아홉 번째 세션 신설]** `PostRef.luau` + 본체 루프 뒤
       `postRefList` 소비 루프 — `PreRef.luau`와 같은 방식(`Ref` 런타임
       재사용 + 브랜드 태그만 다름, children 배열 리터럴 전용, Modifier/Store
       타입 차단, `_fired` 1회용 가드). `Dispatch.drive`가 해시 파트까지
@@ -1636,10 +1636,10 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       (**[2026-09-04 M8 brief Q6 정정]** 리터럴 중첩에선 아직 안 붙어 있고,
       `Claim`/기존 `.Parent`면 붙어 있는 채로 fire) — `base/ref-plan.md`
       "`PostRef`" 절
-- [ ] `PostRef` 동적 경로 가드 Handler — `PreRef`의 것과 완전한 거울상
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** `PostRef` 동적 경로 가드 Handler — `PreRef`의 것과 완전한 거울상
       (`{priority = HANDLER_PRIORITY_FALLBACK, isHandlable = v is PostRef,
       process = error(...)}`), 같은 절 참고
-- [ ] `PreRef` 동적 경로 가드 Handler — `{priority =
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** `PreRef` 동적 경로 가드 Handler — `{priority =
       HANDLER_PRIORITY_FALLBACK, isHandlable = v is PreRef, process =
       error(...)}` 형태로 정상 우선순위 레지스트리에 등록(`k` 타입 안
       가림), `NoneHandler`와 같은 "한 값 종류 전담" 패턴. 리터럴 배열
@@ -1650,7 +1650,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `Tag`/`Attribute`와 같은 이유)와 `Observer`/`EffectHandle`에도 같은
       패턴의 가드가 추가됨은 `base/source-state-plan.md`/`base/effect-plan.md`의
       "동적 경로 가드" 절 참고
-- [ ] **[2026-08-14 두 번째 세션 신설]** `ProcessedPreRefHandler` +
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** **[2026-08-14 두 번째 세션 신설]** `ProcessedPreRefHandler` +
       **[아홉 번째 세션] `ProcessedPostRefHandler`**(완전한 거울상, 코드
       한 글자 차이) — `{isHandlable = v == Processed*Ref, process =
       setLength(0)+setOffsetSource(None)+no-op retract}` 형태로 정상
@@ -1658,7 +1658,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       패턴. pre-pass가 소진시킨 자리가 Length/Offset에 "0 기여"를 등록할
       책임을 지는 자리 — `base/ref-plan.md` "PreRef" 절 / "`PostRef`" 절,
       `base/dispatch-core-plan.md` "Length/Offset" 절
-- [ ] Ref 콜백/대기자 실행 루프 — **[2026-08-24 6라운드 `H-7`로 재작성]**
+- [x] **[M2 공통 기반이 이미 구현(`Ref.luau` `:Set` — 2026-08-28), `:Wait`는 M8 단위 ①(`H-315`)]** Ref 콜백/대기자 실행 루프 — **[2026-08-24 6라운드 `H-7`로 재작성]**
       `.Callbacks`는 **`{[callback|thread] = true}` 해시맵 셋**이다(배열 아님).
       `:Set(value)`는 **`.Value`를 먼저 쓰고**, **순회 전 스냅샷을 뜬 뒤**
       (`pairs` 순회 중 새 키 추가가 Lua에서 미정의라 — `H-23`과 같은 처방)
@@ -1683,7 +1683,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `:Wait(thread?)`는 그대로 — `thread`가 `nil`이면
       `coroutine.running()` 캡처+yield, 있으면 등록만 하고 즉시 `self`
       반환(남의 thread를 여기서 대신 정지시킬 수 없어서)
-- [ ] **[2026-08-24 신설, 6라운드 `H-7` / 2026-08-25 범위 축소, 7라운드 `H-58`]**
+- [x] **[M2 공통 기반이 이미 구현(`Ref.luau`, `spec.ref` 6절)]** **[2026-08-24 신설, 6라운드 `H-7` / 2026-08-25 범위 축소, 7라운드 `H-58`]**
       `Ref:Uncallback(fn)` — 해제 경로(강·약 두 테이블을 다 본다).
       **⚠️ `Effect`는 더 이상 이걸 안 부른다** — 여기 한때 *"`Effect`가 자기
       `Ref` dep 콜백을 뗄 때 쓰고(`_refCallbacks`에 보관해둔 바로 그 클로저를
@@ -1729,6 +1729,13 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       안전하게 유지되는 것은 항상 weak로 잡는다"가 일반 규칙).
       `base/lifecycle-pattern.md`의 "`bindLifetime` / `canBound` /
       `canExecute` / `unbindLifetime`" 절
+
+- [ ] **[2026-09-04 M8 단위 ③ — round18 brief §1·§0 Q3]** children 자리의
+      `Ref`/`PreRef`/`PostRef` **타입 표면** — 스파이크 `32` 선행(`Ref<T>`의
+      불변성 + 8.9절 결함(`Callback` 이름 충돌)으로 `<Class>Elem`에 직접 넣을 수
+      있는지), 결과대로 `quad-roblox/src/types.luau` `NewChild` 또는 생성기
+      `<Class>Elem`/`<Class>MapperElem` 확장 + `spec.reftypes`. 런타임 핸들러
+      (위 체크박스들)는 단위 ②로 끝났고 이 항목이 M8의 마지막이다
 
 ## M9 — 컴포넌트 합성 레이어
 

@@ -15,7 +15,7 @@
 local Void = require("../Void")
 local QuadTypes = require("../../luau_packages/quad_types")
 local ModifierModule = require("../Modifier")
-local None = require("./None").None
+local NoneModule = require("./None")
 
 local ProcessedModifier = ModifierModule.ProcessedModifier
 
@@ -29,8 +29,7 @@ function module.register(dispatch: QuadTypes.Dispatch)
 		end,
 		priority = dispatch.HANDLER_PRIORITY_HIGH, -- "매우 높음, ProcessedPreRefHandler와 동급"
 		process = function(inst: any, k: any, _v: any, _index: number): (any?, boolean) -> ()
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0, inst)
+			NoneModule.registerEmptySlot(dispatch, inst, k, inst) -- offsetSource → length 0 (`H-35`)
 			return Void
 		end,
 	})

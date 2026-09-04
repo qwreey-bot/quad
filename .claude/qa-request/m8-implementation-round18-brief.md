@@ -133,3 +133,12 @@ M10 하자는 동형 규칙. **[M8 변경]** Studio 실측은 단위 ②에만 �
 
 **[2026-09-04 단위 ① 완료 — round18 `H-315`]** 위 표대로 구현. 부수 발견
 `H-316`(정본의 "Modifier 필드 어디든" 옛 문장 한정).
+
+**단위 ② 계획(착수 시 작성, 같은 날 완료 — `H-319`)**
+
+| 파일 | 내용 | 옮겨 적는 절 |
+|---|---|---|
+| `quad-base/src/Dispatch/Ref.luau`(신설) | `ProcessedPreRef`/`ProcessedPostRef` 센티널, `prePass(inst, flattened) -> postRefList?`(index 순서 한 번 — PreRef: `_fired` 가드·슬롯 소진·`v:Set(inst)`, PostRef: 가드·소진·push), `firePostRefs`, `register(dispatch)`(Processed 둘 — `ProcessedModifierHandler` 모양). **배치 근거**: 센티널은 Dispatch의 개념이고 `Ref.luau`가 Dispatch를 require하므로 Dispatch 쪽이 Ref를 require하면 순환 — M7 `Dispatch/Modifier.luau`와 같은 이유 | "PreRef" 절 pre-pass·`ProcessedPreRefHandler` 블록, "`PostRef`" 절 메커니즘 1~3 |
+| `quad-base/src/Dispatch/init.luau` | `drive`: `flatten` 뒤·배치 판정 앞에 `prePass`, 본체 루프 뒤·배치 닫기(⓪') **앞** `firePostRefs`(게이트 켜진 채 — `H-17`); InitDispatch가 Processed 둘 등록 | bind-system 파이프라인 (a)/(c)/⓪', dispatch-core `H-17` 절 |
+| `quad-base/src/Ref.luau` | `registerDispatchHandlers`(`H-278`): `RefLeafHandler`(HIGH, `number k ∧ isRef ∧ ¬isPreRef ∧ ¬isPostRef`, `H-39` 부기, `Relate` dedup, `bindLifetime` → `SetWeak` → `Set`(Q4), retractor 언바인딩·`Set(nil)`·조건부 relate 정리), `PreRef`/`PostRef` 동적 경로 가드(FALLBACK, `typeof(k)` 실은 `errorBefore`). 모듈 반환이 `{ Ref, Init }`으로 바뀜 | "`Ref`의 retract" 절, "이중 배치 방지" 절, "동적 경로 가드 Handler도 거울상으로 하나 더" 절 |
+| `quad-base/test/spec.refhandlers.luau` | leaf 바인딩·이중 배치·`State<Ref>` 재바인드(spurious 포함)·Q4 재진입·PreRef 호이스팅/순서/부기/재사용·PostRef 순서/부모 무보장/재사용·가드 셋 | — |

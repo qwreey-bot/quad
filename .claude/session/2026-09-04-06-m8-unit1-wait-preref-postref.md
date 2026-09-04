@@ -40,3 +40,26 @@ documentation-content-map·README 두 행, `Modifier 필드` 잔여 2곳, round1
 `<Self>` 제네릭으로(`H-317`, 소형 실측 뒤 반영; 확인 항목으로 §4에), `:Wait()`
 `isyieldable` 가드(`H-318`). doc-check ERROR 0, test.sh 39 파일 통과.
 
+## 4. 단위 ② — 핸들러 넷 + drive pre-pass
+
+체크리스트(dispatch-core-plan "Handler 작성 체크리스트") 1~8 재독 후 착수.
+배치: `Dispatch/Ref.luau`(pre-pass·`postRefList`·센티널·`Processed*` 핸들러 —
+`Ref.luau`가 Dispatch를 require하므로 순환 회피, M7 `Dispatch/Modifier.luau`
+선례) / `Ref.luau`(`RefLeafHandler` + 가드 둘, `H-278`). `spec.refhandlers` — Q4
+재진입 케이스가 dedup으로 통과함을 실물로 확인. Studio: rojo serve가 죽어
+있어(sourcemap 워처만) 재기동 → 플러그인 autoReconnect가 잠시 뒤 잡힘 → 8/8
+(`audit/m8-unit2-studio-2026-09-04.md`). `H-320`.
+
+감사 1라운드가 **정본과의 순서 모순 둘**을 잡았다 — PostRef fire를 배치
+종료·recompute 뒤에 뒀는데 정본(`H-17` 두 곳·bind-system (c))은 배치 닫기
+**앞**(게이트 켜진 채, recompute 하나가 catch-up)이고, pre-pass의 소진/fire
+순서도 정본과 반대로 써 놓고 "재드라이브 안전"이라는 근거 없는 재량을 붙였다.
+둘 다 정본대로 되돌림(갈래 ① — 문서가 답을 가진 것). spec에 게이트 켜짐 단언·
+`State<PostRef>` 가드·`Processed*` retract no-op 추가, ROADMAP M8에 단위 ③
+`[ ]` 신설(체크박스 100%가 M8 완료로 읽히던 문제).
+리뷰 7건 — 첫째가 무거웠다: pre-pass를 게이트 `On()` 앞에 둬서(정본 ⓪→(a)
+위반) PreRef 콜백이 부기를 건드리면 recompute가 죽는 걸 리뷰가 실측으로
+잡았다 → 게이트 뒤로. `_fired` 시점은 정본대로 유지(기각 기록), 가드 문구
+숫자 키 분기·nop 본문 공용화·브랜드 조회 축소·PreRef/PostRef 공용 팩토리·
+미사용 인자 반영. Studio 재실측(순서 정정 뒤) 3/3.
+

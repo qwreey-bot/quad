@@ -43,6 +43,7 @@ local NoneModule = require("@self/None")
 local StoreBindModule = require("@self/StoreBind")
 local ProcessedModifierModule = require("@self/Modifier") -- M7 단위 ②
 local flatten = require("./Modifier").flatten -- M7 단위 ② — drive의 첫 pre-pass(round17 Q4 (a))
+local RefPrePass = require("@self/Ref") -- M8 단위 ② — (a) PreRef/PostRef pre-pass + (c) postRefList
 
 local QuadTypes = require("../luau_packages/quad_types")
 local HandlerModule = require("@self/Handler")
@@ -298,8 +299,24 @@ local function Init(module: any)
 		if blocker then
 			blocker:On()
 		end
+		-- (a) M8 단위 ②: PreRef fires here (hoisted, index order), PostRef is
+		-- collected; both slots become `Processed*Ref` so the array stays
+		-- hole-free for the body loop (Dispatch/Ref.luau). AFTER the gate opens
+		-- (canon ⓪ → (a)): a PreRef callback that touches this inst's
+		-- bookkeeping must be absorbed like everything else in the batch
+		-- (review finding — before the gate it crashed in recompute).
+		local postRefList = RefPrePass.prePass(inst, flattened)
 		for k, v in flattened do
 			process(inst, k, v, 1)
+		end
+		-- (c) M8 단위 ②: PostRef fires after the body loop, BEFORE the batch
+		-- closes — the gate is still on, so a callback's `slot:Add`-style
+		-- mutation is absorbed and the single recompute below catches up
+		-- (`H-17`: "post-pass 포함 … 한 뒤 OffWithoutEmit"; bind-system
+		-- pipeline (c) precedes ⓪'). Every child of this instance is already
+		-- placed physically by its handler (ref-plan "`PostRef`" 절).
+		if postRefList then
+			RefPrePass.firePostRefs(inst, postRefList)
 		end
 		-- ⓪' close the batch once, after everything — then exactly one
 		-- recompute, itself gated against reentry (`H-119`).
@@ -350,6 +367,7 @@ local function Init(module: any)
 	-- M7 단위 ②: the flatten sentinel's nop terminal (`H-35`) — registered
 	-- with the None pair for the same self-ownership reason.
 	ProcessedModifierModule.register(Dispatch)
+	RefPrePass.register(Dispatch) -- M8 단위 ② — ProcessedPreRef/PostRef 전담 핸들러
 	-- M4: StoreBind — the descending diff's own recursion, so it registers
 	-- here like the None pair, not from a value module (round13 §0 Q3 (a);
 	-- `H-278`'s scope was leaf handlers for one value type). It needs `module`

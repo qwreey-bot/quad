@@ -77,9 +77,11 @@
    진행 중** — 규약 `qa-request/m8-implementation-round18-brief.md` §0 Q1~Q6
    확정(Q1~Q5 (a), Q6는 전제 정정 — `PostRef`는 부모 부착 여부를 보장하지
    않음; Q4로 정본 `RefLeafHandler` 의사코드의 `SetWeak` 순서 정정). **단위
-   ① 완료**(`:Wait` + `PreRef`/`PostRef` 런타임·타입·spec, `H-315`), 발견
-   원장은 `m8-implementation-round18.md`, 진행 소스는 ROADMAP M8 체크박스,
-   단위 구성은 brief §1. 다음은 단위 ②(핸들러 넷 + drive pre-pass + Studio). **M10 잔여는
+   ①·② 완료**(① `:Wait` + `PreRef`/`PostRef` 런타임·타입 `H-315` / ②
+   `RefLeafHandler`·가드 둘·`Processed*Ref` 둘·drive pre-pass `H-319`, 배치
+   `H-320`), 발견 원장은 `m8-implementation-round18.md`, 진행 소스는 ROADMAP
+   M8 체크박스, 단위 구성은 brief §1. 단위 ② Studio 8/8
+   (`audit/m8-unit2-studio-2026-09-04.md`). 다음은 단위 ③(children 자리 `Ref` 타입 — Q3 스파이크 `32` 선행). **M10 잔여는
    InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
    목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
    (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지

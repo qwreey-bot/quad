@@ -16,7 +16,8 @@
 local Relate = require("@self/Relate")
 local Err = require("@self/ErrorNamespace")
 local Brand = require("@self/Brand")
-local Ref = require("@self/Ref")
+local RefModule = require("@self/Ref") -- M8 단위 ②부터 { Ref, Init } — Init이 leaf 핸들러·가드 등록(H-278)
+local Ref = RefModule.Ref
 local PreRef = require("@self/PreRef") -- M8 단위 ①
 local PostRef = require("@self/PostRef")
 local Void = require("@self/Void")
@@ -162,6 +163,7 @@ local function New(): Quad
 	module:RunInit(Observer.Init) -- 단위 3 — 레지스트리 둘의 소유 모듈(`H-99`)
 	module:RunInit(Effect.Init)
 	module:RunInit(InitDispatch) -- M3 단위 1 — 인스턴스별 레지스트리 + chains
+	module:RunInit(RefModule.Init) -- M8 단위 ② — RefLeafHandler + PreRef/PostRef 가드(자기 등록)
 	module:RunInit(InitClaim) -- M5 단위 ④ — Claim + 매퍼 디스크립터(claim-plan)
 	module:RunInit(SlotInit) -- M6 — top-level Slot 값 타입 + SlotHandler(자기 등록)
 	-- M10 (round16 spike) — Tag/Attribute 값 + 핸들러(자기 등록, `H-278` 관례)

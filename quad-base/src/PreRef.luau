@@ -20,17 +20,13 @@
 local Brand = require("./Brand")
 local QuadTypes = require("../luau_packages/quad_types")
 local Err = require("./ErrorNamespace")
-local Ref = require("./Ref")
+local tagged = require("./Ref")._tagged
 local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 
 export type PreRef<T> = QuadTypes.PreRef<T>
 
 local function PreRef<T>(default: T): PreRef<T>
-	local self: any = Ref(default)
-	Brand.PreRefBrand:register(self)
-	self.__quadPreRef = true
-	self._fired = false
-	return self :: PreRef<T>
+	return tagged(default, Brand.PreRefBrand, "__quadPreRef") :: PreRef<T>
 end
 
 Err.setFuncLevel(PreRef, SURFACE) -- `H-231`
