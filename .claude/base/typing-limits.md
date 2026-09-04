@@ -634,7 +634,11 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
 작업량 동일), 한도 플래그 중 **`LuauTarjanChildLimit`만이 유효 레버**
 (`LuauTypeInferRecursionLimit`/`IterationLimit`/`NormalizeCacheLimit`은
 무효). `scripts/test.sh`가 quad-roblox 그룹에 `40000`을 실어 전 그룹
-클린·1.2s대(성능 무해). 부수 관측 하나: 그 교집합 결과 타입
+클린·1.2s대(성능 무해). **[2026-09-04 M7 단위 ③]** 클래스별 `<Class>Modifier`
+(재귀 setter 수십 개)가 클래스 수만큼(소스는 `quad-roblox/dump/api-surface.json`)
++ `DModifier` 별칭이 더해져 40000을 다시 넘김 →
+**160000**(4.3s대, 무해). 별칭 존재 비용은 클래스 수 × 멤버 수에 비례하므로
+생성 표면이 늘 때마다 이 값을 재실측할 것. 부수 관측 하나: 그 교집합 결과 타입
 (`Quad & RobloxExtension`)을 `any` 파라미터로 흘리는 클로저 추론은
 한도를 더 올려도(200000) 안 풀린다 — 경계에서 `:: any` 캐스트 한 번이
 정답(`spec.robloxfactory.luau`의 주석 달린 자리). 에디터(luau-lsp) 쪽도
@@ -645,7 +649,7 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
 
 ```json
 "luau-lsp.fflags.override": {
-	"LuauTarjanChildLimit": "40000",
+	"LuauTarjanChildLimit": "160000",
 	"LuauSubtypingIterationLimit": "100000"
 }
 ```
@@ -723,6 +727,28 @@ A/B 실측). 실사용은 `quad-types`의 `TagConstructor`/`AttributeConstructor
    만든다(`q.Source(OnChange(...) :: FrameOnChange)`). 반응형 자식
    `q.Source(frame)` vs `State<Instance>`도 같은 규칙이다(선행 한계 —
    `q.Source(frame :: Instance)`).
+
+---
+
+## 8.8. 재귀 메소드 테이블 타입은 유니언에 직접 넣지 말고 마커로 — `{ read __quadModifier: true }`
+
+**[2026-09-04 실측, M7 단위 ③ — round17 `H-313`]** 클래스별 `<Class>Modifier`
+(자기 타입을 반환하는 setter 40~60개짜리 재귀 테이블 타입)를 children 원소
+유니언 `<Class>Elem`에 직접 넣으면, 큰 클래스(`ScrollingFrame`/`ImageLabel`/
+`SurfaceGui`)의 `D.<Class> :: (Param<Elem>) -> Class` **캐스트 자리에서
+"Code is too complex"** — 한도 플래그 15종(`SolverConstraintLimit`을 올리면
+지점만 옮겨감) 전부 무효 — **8.5절의 `LuauTarjanChildLimit`도 이 증상엔 안
+듣는다**(그 절은 별칭 존재 비용, 이건 유니언 정규화 비용 — 별개). 유니언 멤버 셋(`<Class>OnChange`, 디스크립터 테이블
+수십 개)까지는 8.7절대로 버티지만 **재귀 메소드 테이블**은 정규화 비용이
+다르다.
+
+**처방**: 유니언엔 **마커 타입** `{ read __quadModifier: true }`만 넣고
+(`QuadTypes.ModifierMarker`, `NewChild` — `H-300`의 `None` 마커와 같은 관례,
+런타임 값에도 실제 필드), 클래스별 타입은 폭 서브타이핑으로 통과시킨다.
+잃는 것: children 자리에서의 **클래스 소속 검사**(Frame 안에 TextButton
+Modifier가 들어가도 타입은 통과) — 대신 setter 호출 자리(`frameMod:Text(...)`)가
+메소드 집합으로 잡는다. 같은 이유로 `<Class>Modifier`끼리의 구조적 서브타이핑은
+애초에 안 선다(§2, 스파이크 `09`).
 
 ---
 

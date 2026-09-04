@@ -13,6 +13,12 @@
 	OnChangeFn(`K & keyof<PropTypes>` / `index<PropTypes, K>` — 이름 오타·콜백
 	타입·무주석 추론까지, luau-test 30) + 클래스별 <Class>OnChange 유니언이 E에
 	합류(클래스 밖 이름은 생성자 자리에서 거부).
+	Modifier(M7 단위 ③, round17): 클래스별 <Class>Modifier(필드 setter — 값은
+	Field<T | Tween<T>> = V | State<V> | None | 변환 함수, 자기 타입 반환; 예약 메소드
+	Apply/Peek/Overridden; 이벤트는 제외 — 함수 인자는 변환 함수라 콜백과 겹친다)
+	+ D.Modifier.<Class>() 캐스트 별칭(런타임은 quad.Modifier 하나, round17 Q3 (a))
+	+ children엔 마커 `{ read __quadModifier: true }`로(NewChild, types.luau) — <Class>Modifier를
+	유니언에 직접 넣으면 큰 클래스에서 too complex(실측); State<Modifier>는 7절이 error라 제외.
 ]]
 
 local QuadTypes = require("../luau_packages/quad_types")
@@ -24,6 +30,9 @@ type NewChild = Types.NewChild
 type None = QuadTypes.None
 type MapperDescriptor = QuadTypes.MapperDescriptor
 type MapperRoot = QuadTypes.MapperRoot
+-- Modifier 필드 setter의 값 타입(modifier-plan 4·4-1·10절): 리터럴 V | State<V> |
+-- None(unsetter) | 변환 함수(old는 '현재 저장된 그대로' — V | State<V> | None | nil)
+export type Field<V> = V | State<V> | None | ((old: V | State<V> | None | nil) -> V | State<V> | None | nil)
 
 export type BillboardGuiParam<E> = {
 	[number]: E,
@@ -1666,6 +1675,41 @@ export type BillboardGuiOnChange =
 	| 	{ Name: "StudsOffset", Callback: (Vector3) -> () }
 	| 	{ Name: "StudsOffsetWorldSpace", Callback: (Vector3) -> () }
 	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
+export type BillboardGuiModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: BillboardGuiModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: BillboardGuiModifier, factory: (BillboardGuiModifier) -> U) -> U,
+	Overridden: (self: BillboardGuiModifier, ...any) -> any,
+	Active: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
+	Adornee: (self: BillboardGuiModifier, value: Field<Instance | Tween<Instance>>) -> BillboardGuiModifier,
+	AlwaysOnTop: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
+	Archivable: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
+	AutoLocalize: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
+	Brightness: (self: BillboardGuiModifier, value: Field<number | Tween<number>>) -> BillboardGuiModifier,
+	Capabilities: (self: BillboardGuiModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> BillboardGuiModifier,
+	ClipsDescendants: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
+	DistanceStep: (self: BillboardGuiModifier, value: Field<number | Tween<number>>) -> BillboardGuiModifier,
+	Enabled: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
+	ExtentsOffset: (self: BillboardGuiModifier, value: Field<Vector3 | Tween<Vector3>>) -> BillboardGuiModifier,
+	ExtentsOffsetWorldSpace: (self: BillboardGuiModifier, value: Field<Vector3 | Tween<Vector3>>) -> BillboardGuiModifier,
+	LightInfluence: (self: BillboardGuiModifier, value: Field<number | Tween<number>>) -> BillboardGuiModifier,
+	MaxDistance: (self: BillboardGuiModifier, value: Field<number | Tween<number>>) -> BillboardGuiModifier,
+	Name: (self: BillboardGuiModifier, value: Field<string | Tween<string>>) -> BillboardGuiModifier,
+	PlayerToHideFrom: (self: BillboardGuiModifier, value: Field<Instance | Tween<Instance>>) -> BillboardGuiModifier,
+	ResetOnSpawn: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
+	RootLocalizationTable: (self: BillboardGuiModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> BillboardGuiModifier,
+	Sandboxed: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
+	SelectionBehaviorDown: (self: BillboardGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> BillboardGuiModifier,
+	SelectionBehaviorLeft: (self: BillboardGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> BillboardGuiModifier,
+	SelectionBehaviorRight: (self: BillboardGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> BillboardGuiModifier,
+	SelectionBehaviorUp: (self: BillboardGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> BillboardGuiModifier,
+	SelectionGroup: (self: BillboardGuiModifier, value: Field<boolean | Tween<boolean>>) -> BillboardGuiModifier,
+	Size: (self: BillboardGuiModifier, value: Field<UDim2 | Tween<UDim2>>) -> BillboardGuiModifier,
+	SizeOffset: (self: BillboardGuiModifier, value: Field<Vector2 | Tween<Vector2>>) -> BillboardGuiModifier,
+	StudsOffset: (self: BillboardGuiModifier, value: Field<Vector3 | Tween<Vector3>>) -> BillboardGuiModifier,
+	StudsOffsetWorldSpace: (self: BillboardGuiModifier, value: Field<Vector3 | Tween<Vector3>>) -> BillboardGuiModifier,
+	ZIndexBehavior: (self: BillboardGuiModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> BillboardGuiModifier,
+}
 export type BillboardGuiElem = NewChild | BillboardGuiOnChange | State<BillboardGuiOnChange>
 export type BillboardGuiMapperElem = BillboardGuiElem | MapperDescriptor
 
@@ -1685,6 +1729,27 @@ export type CameraOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "VRTiltAndRollEnabled", Callback: (boolean) -> () }
+export type CameraModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: CameraModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: CameraModifier, factory: (CameraModifier) -> U) -> U,
+	Overridden: (self: CameraModifier, ...any) -> any,
+	Archivable: (self: CameraModifier, value: Field<boolean | Tween<boolean>>) -> CameraModifier,
+	CFrame: (self: CameraModifier, value: Field<CFrame | Tween<CFrame>>) -> CameraModifier,
+	CameraSubject: (self: CameraModifier, value: Field<Instance | Tween<Instance>>) -> CameraModifier,
+	CameraType: (self: CameraModifier, value: Field<Enum.CameraType | Tween<Enum.CameraType>>) -> CameraModifier,
+	Capabilities: (self: CameraModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> CameraModifier,
+	DiagonalFieldOfView: (self: CameraModifier, value: Field<number | Tween<number>>) -> CameraModifier,
+	FieldOfView: (self: CameraModifier, value: Field<number | Tween<number>>) -> CameraModifier,
+	FieldOfViewMode: (self: CameraModifier, value: Field<Enum.FieldOfViewMode | Tween<Enum.FieldOfViewMode>>) -> CameraModifier,
+	Focus: (self: CameraModifier, value: Field<CFrame | Tween<CFrame>>) -> CameraModifier,
+	HeadLocked: (self: CameraModifier, value: Field<boolean | Tween<boolean>>) -> CameraModifier,
+	HeadScale: (self: CameraModifier, value: Field<number | Tween<number>>) -> CameraModifier,
+	MaxAxisFieldOfView: (self: CameraModifier, value: Field<number | Tween<number>>) -> CameraModifier,
+	Name: (self: CameraModifier, value: Field<string | Tween<string>>) -> CameraModifier,
+	Sandboxed: (self: CameraModifier, value: Field<boolean | Tween<boolean>>) -> CameraModifier,
+	VRTiltAndRollEnabled: (self: CameraModifier, value: Field<boolean | Tween<boolean>>) -> CameraModifier,
+}
 export type CameraElem = NewChild | CameraOnChange | State<CameraOnChange>
 export type CameraMapperElem = CameraElem | MapperDescriptor
 
@@ -1727,6 +1792,50 @@ export type CanvasGroupOnChange =
 	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type CanvasGroupModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: CanvasGroupModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: CanvasGroupModifier, factory: (CanvasGroupModifier) -> U) -> U,
+	Overridden: (self: CanvasGroupModifier, ...any) -> any,
+	Active: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
+	AnchorPoint: (self: CanvasGroupModifier, value: Field<Vector2 | Tween<Vector2>>) -> CanvasGroupModifier,
+	Archivable: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
+	AutoLocalize: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
+	AutomaticSize: (self: CanvasGroupModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> CanvasGroupModifier,
+	BackgroundColor3: (self: CanvasGroupModifier, value: Field<Color3 | Tween<Color3>>) -> CanvasGroupModifier,
+	BackgroundTransparency: (self: CanvasGroupModifier, value: Field<number | Tween<number>>) -> CanvasGroupModifier,
+	BorderColor3: (self: CanvasGroupModifier, value: Field<Color3 | Tween<Color3>>) -> CanvasGroupModifier,
+	BorderMode: (self: CanvasGroupModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> CanvasGroupModifier,
+	BorderSizePixel: (self: CanvasGroupModifier, value: Field<number | Tween<number>>) -> CanvasGroupModifier,
+	Capabilities: (self: CanvasGroupModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> CanvasGroupModifier,
+	ClipsDescendants: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
+	GroupColor3: (self: CanvasGroupModifier, value: Field<Color3 | Tween<Color3>>) -> CanvasGroupModifier,
+	GroupTransparency: (self: CanvasGroupModifier, value: Field<number | Tween<number>>) -> CanvasGroupModifier,
+	InputSink: (self: CanvasGroupModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> CanvasGroupModifier,
+	Interactable: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
+	LayoutOrder: (self: CanvasGroupModifier, value: Field<number | Tween<number>>) -> CanvasGroupModifier,
+	Name: (self: CanvasGroupModifier, value: Field<string | Tween<string>>) -> CanvasGroupModifier,
+	NextSelectionDown: (self: CanvasGroupModifier, value: Field<GuiObject | Tween<GuiObject>>) -> CanvasGroupModifier,
+	NextSelectionLeft: (self: CanvasGroupModifier, value: Field<GuiObject | Tween<GuiObject>>) -> CanvasGroupModifier,
+	NextSelectionRight: (self: CanvasGroupModifier, value: Field<GuiObject | Tween<GuiObject>>) -> CanvasGroupModifier,
+	NextSelectionUp: (self: CanvasGroupModifier, value: Field<GuiObject | Tween<GuiObject>>) -> CanvasGroupModifier,
+	Position: (self: CanvasGroupModifier, value: Field<UDim2 | Tween<UDim2>>) -> CanvasGroupModifier,
+	RootLocalizationTable: (self: CanvasGroupModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> CanvasGroupModifier,
+	Rotation: (self: CanvasGroupModifier, value: Field<number | Tween<number>>) -> CanvasGroupModifier,
+	Sandboxed: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
+	Selectable: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
+	SelectionBehaviorDown: (self: CanvasGroupModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> CanvasGroupModifier,
+	SelectionBehaviorLeft: (self: CanvasGroupModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> CanvasGroupModifier,
+	SelectionBehaviorRight: (self: CanvasGroupModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> CanvasGroupModifier,
+	SelectionBehaviorUp: (self: CanvasGroupModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> CanvasGroupModifier,
+	SelectionGroup: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
+	SelectionImageObject: (self: CanvasGroupModifier, value: Field<GuiObject | Tween<GuiObject>>) -> CanvasGroupModifier,
+	SelectionOrder: (self: CanvasGroupModifier, value: Field<number | Tween<number>>) -> CanvasGroupModifier,
+	Size: (self: CanvasGroupModifier, value: Field<UDim2 | Tween<UDim2>>) -> CanvasGroupModifier,
+	SizeConstraint: (self: CanvasGroupModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> CanvasGroupModifier,
+	Visible: (self: CanvasGroupModifier, value: Field<boolean | Tween<boolean>>) -> CanvasGroupModifier,
+	ZIndex: (self: CanvasGroupModifier, value: Field<number | Tween<number>>) -> CanvasGroupModifier,
+}
 export type CanvasGroupElem = NewChild | CanvasGroupOnChange | State<CanvasGroupOnChange>
 export type CanvasGroupMapperElem = CanvasGroupElem | MapperDescriptor
 
@@ -1735,6 +1844,16 @@ export type FolderOnChange =
 	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type FolderModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: FolderModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: FolderModifier, factory: (FolderModifier) -> U) -> U,
+	Overridden: (self: FolderModifier, ...any) -> any,
+	Archivable: (self: FolderModifier, value: Field<boolean | Tween<boolean>>) -> FolderModifier,
+	Capabilities: (self: FolderModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> FolderModifier,
+	Name: (self: FolderModifier, value: Field<string | Tween<string>>) -> FolderModifier,
+	Sandboxed: (self: FolderModifier, value: Field<boolean | Tween<boolean>>) -> FolderModifier,
+}
 export type FolderElem = NewChild | FolderOnChange | State<FolderOnChange>
 export type FolderMapperElem = FolderElem | MapperDescriptor
 
@@ -1776,6 +1895,49 @@ export type FrameOnChange =
 	| 	{ Name: "Style", Callback: (Enum.FrameStyle) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type FrameModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: FrameModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: FrameModifier, factory: (FrameModifier) -> U) -> U,
+	Overridden: (self: FrameModifier, ...any) -> any,
+	Active: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
+	AnchorPoint: (self: FrameModifier, value: Field<Vector2 | Tween<Vector2>>) -> FrameModifier,
+	Archivable: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
+	AutoLocalize: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
+	AutomaticSize: (self: FrameModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> FrameModifier,
+	BackgroundColor3: (self: FrameModifier, value: Field<Color3 | Tween<Color3>>) -> FrameModifier,
+	BackgroundTransparency: (self: FrameModifier, value: Field<number | Tween<number>>) -> FrameModifier,
+	BorderColor3: (self: FrameModifier, value: Field<Color3 | Tween<Color3>>) -> FrameModifier,
+	BorderMode: (self: FrameModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> FrameModifier,
+	BorderSizePixel: (self: FrameModifier, value: Field<number | Tween<number>>) -> FrameModifier,
+	Capabilities: (self: FrameModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> FrameModifier,
+	ClipsDescendants: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
+	InputSink: (self: FrameModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> FrameModifier,
+	Interactable: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
+	LayoutOrder: (self: FrameModifier, value: Field<number | Tween<number>>) -> FrameModifier,
+	Name: (self: FrameModifier, value: Field<string | Tween<string>>) -> FrameModifier,
+	NextSelectionDown: (self: FrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> FrameModifier,
+	NextSelectionLeft: (self: FrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> FrameModifier,
+	NextSelectionRight: (self: FrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> FrameModifier,
+	NextSelectionUp: (self: FrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> FrameModifier,
+	Position: (self: FrameModifier, value: Field<UDim2 | Tween<UDim2>>) -> FrameModifier,
+	RootLocalizationTable: (self: FrameModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> FrameModifier,
+	Rotation: (self: FrameModifier, value: Field<number | Tween<number>>) -> FrameModifier,
+	Sandboxed: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
+	Selectable: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
+	SelectionBehaviorDown: (self: FrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> FrameModifier,
+	SelectionBehaviorLeft: (self: FrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> FrameModifier,
+	SelectionBehaviorRight: (self: FrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> FrameModifier,
+	SelectionBehaviorUp: (self: FrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> FrameModifier,
+	SelectionGroup: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
+	SelectionImageObject: (self: FrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> FrameModifier,
+	SelectionOrder: (self: FrameModifier, value: Field<number | Tween<number>>) -> FrameModifier,
+	Size: (self: FrameModifier, value: Field<UDim2 | Tween<UDim2>>) -> FrameModifier,
+	SizeConstraint: (self: FrameModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> FrameModifier,
+	Style: (self: FrameModifier, value: Field<Enum.FrameStyle | Tween<Enum.FrameStyle>>) -> FrameModifier,
+	Visible: (self: FrameModifier, value: Field<boolean | Tween<boolean>>) -> FrameModifier,
+	ZIndex: (self: FrameModifier, value: Field<number | Tween<number>>) -> FrameModifier,
+}
 export type FrameElem = NewChild | FrameOnChange | State<FrameOnChange>
 export type FrameMapperElem = FrameElem | MapperDescriptor
 
@@ -1837,6 +1999,69 @@ export type ImageButtonOnChange =
 	| 	{ Name: "TileSize", Callback: (UDim2) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type ImageButtonModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: ImageButtonModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: ImageButtonModifier, factory: (ImageButtonModifier) -> U) -> U,
+	Overridden: (self: ImageButtonModifier, ...any) -> any,
+	Active: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	AnchorPoint: (self: ImageButtonModifier, value: Field<Vector2 | Tween<Vector2>>) -> ImageButtonModifier,
+	Archivable: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	AutoButtonColor: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	AutoLocalize: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	AutomaticSize: (self: ImageButtonModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> ImageButtonModifier,
+	BackgroundColor3: (self: ImageButtonModifier, value: Field<Color3 | Tween<Color3>>) -> ImageButtonModifier,
+	BackgroundTransparency: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
+	BorderColor3: (self: ImageButtonModifier, value: Field<Color3 | Tween<Color3>>) -> ImageButtonModifier,
+	BorderMode: (self: ImageButtonModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> ImageButtonModifier,
+	BorderSizePixel: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
+	Capabilities: (self: ImageButtonModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> ImageButtonModifier,
+	ClipsDescendants: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	HoverHapticEffect: (self: ImageButtonModifier, value: Field<HapticEffect | Tween<HapticEffect>>) -> ImageButtonModifier,
+	HoverImage: (self: ImageButtonModifier, value: Field<Content | Tween<Content>>) -> ImageButtonModifier,
+	HoverImageContent: (self: ImageButtonModifier, value: Field<Content | Tween<Content>>) -> ImageButtonModifier,
+	Image: (self: ImageButtonModifier, value: Field<Content | Tween<Content>>) -> ImageButtonModifier,
+	ImageColor3: (self: ImageButtonModifier, value: Field<Color3 | Tween<Color3>>) -> ImageButtonModifier,
+	ImageContent: (self: ImageButtonModifier, value: Field<Content | Tween<Content>>) -> ImageButtonModifier,
+	ImageRectOffset: (self: ImageButtonModifier, value: Field<Vector2 | Tween<Vector2>>) -> ImageButtonModifier,
+	ImageRectSize: (self: ImageButtonModifier, value: Field<Vector2 | Tween<Vector2>>) -> ImageButtonModifier,
+	ImageTransparency: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
+	InputSink: (self: ImageButtonModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> ImageButtonModifier,
+	Interactable: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	LayoutOrder: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
+	Modal: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	Name: (self: ImageButtonModifier, value: Field<string | Tween<string>>) -> ImageButtonModifier,
+	NextSelectionDown: (self: ImageButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageButtonModifier,
+	NextSelectionLeft: (self: ImageButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageButtonModifier,
+	NextSelectionRight: (self: ImageButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageButtonModifier,
+	NextSelectionUp: (self: ImageButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageButtonModifier,
+	Position: (self: ImageButtonModifier, value: Field<UDim2 | Tween<UDim2>>) -> ImageButtonModifier,
+	PressHapticEffect: (self: ImageButtonModifier, value: Field<HapticEffect | Tween<HapticEffect>>) -> ImageButtonModifier,
+	PressedImage: (self: ImageButtonModifier, value: Field<Content | Tween<Content>>) -> ImageButtonModifier,
+	PressedImageContent: (self: ImageButtonModifier, value: Field<Content | Tween<Content>>) -> ImageButtonModifier,
+	ResampleMode: (self: ImageButtonModifier, value: Field<Enum.ResamplerMode | Tween<Enum.ResamplerMode>>) -> ImageButtonModifier,
+	RootLocalizationTable: (self: ImageButtonModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> ImageButtonModifier,
+	Rotation: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
+	Sandboxed: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	ScaleType: (self: ImageButtonModifier, value: Field<Enum.ScaleType | Tween<Enum.ScaleType>>) -> ImageButtonModifier,
+	Selectable: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	Selected: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	SelectionBehaviorDown: (self: ImageButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ImageButtonModifier,
+	SelectionBehaviorLeft: (self: ImageButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ImageButtonModifier,
+	SelectionBehaviorRight: (self: ImageButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ImageButtonModifier,
+	SelectionBehaviorUp: (self: ImageButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ImageButtonModifier,
+	SelectionGroup: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	SelectionImageObject: (self: ImageButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageButtonModifier,
+	SelectionOrder: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
+	Size: (self: ImageButtonModifier, value: Field<UDim2 | Tween<UDim2>>) -> ImageButtonModifier,
+	SizeConstraint: (self: ImageButtonModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> ImageButtonModifier,
+	SliceCenter: (self: ImageButtonModifier, value: Field<Rect | Tween<Rect>>) -> ImageButtonModifier,
+	SliceScale: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
+	Style: (self: ImageButtonModifier, value: Field<Enum.ButtonStyle | Tween<Enum.ButtonStyle>>) -> ImageButtonModifier,
+	TileSize: (self: ImageButtonModifier, value: Field<UDim2 | Tween<UDim2>>) -> ImageButtonModifier,
+	Visible: (self: ImageButtonModifier, value: Field<boolean | Tween<boolean>>) -> ImageButtonModifier,
+	ZIndex: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
+}
 export type ImageButtonElem = NewChild | ImageButtonOnChange | State<ImageButtonOnChange>
 export type ImageButtonMapperElem = ImageButtonElem | MapperDescriptor
 
@@ -1888,6 +2113,59 @@ export type ImageLabelOnChange =
 	| 	{ Name: "TileSize", Callback: (UDim2) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type ImageLabelModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: ImageLabelModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: ImageLabelModifier, factory: (ImageLabelModifier) -> U) -> U,
+	Overridden: (self: ImageLabelModifier, ...any) -> any,
+	Active: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
+	AnchorPoint: (self: ImageLabelModifier, value: Field<Vector2 | Tween<Vector2>>) -> ImageLabelModifier,
+	Archivable: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
+	AutoLocalize: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
+	AutomaticSize: (self: ImageLabelModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> ImageLabelModifier,
+	BackgroundColor3: (self: ImageLabelModifier, value: Field<Color3 | Tween<Color3>>) -> ImageLabelModifier,
+	BackgroundTransparency: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
+	BorderColor3: (self: ImageLabelModifier, value: Field<Color3 | Tween<Color3>>) -> ImageLabelModifier,
+	BorderMode: (self: ImageLabelModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> ImageLabelModifier,
+	BorderSizePixel: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
+	Capabilities: (self: ImageLabelModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> ImageLabelModifier,
+	ClipsDescendants: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
+	Image: (self: ImageLabelModifier, value: Field<Content | Tween<Content>>) -> ImageLabelModifier,
+	ImageColor3: (self: ImageLabelModifier, value: Field<Color3 | Tween<Color3>>) -> ImageLabelModifier,
+	ImageContent: (self: ImageLabelModifier, value: Field<Content | Tween<Content>>) -> ImageLabelModifier,
+	ImageRectOffset: (self: ImageLabelModifier, value: Field<Vector2 | Tween<Vector2>>) -> ImageLabelModifier,
+	ImageRectSize: (self: ImageLabelModifier, value: Field<Vector2 | Tween<Vector2>>) -> ImageLabelModifier,
+	ImageTransparency: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
+	InputSink: (self: ImageLabelModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> ImageLabelModifier,
+	Interactable: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
+	LayoutOrder: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
+	Name: (self: ImageLabelModifier, value: Field<string | Tween<string>>) -> ImageLabelModifier,
+	NextSelectionDown: (self: ImageLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageLabelModifier,
+	NextSelectionLeft: (self: ImageLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageLabelModifier,
+	NextSelectionRight: (self: ImageLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageLabelModifier,
+	NextSelectionUp: (self: ImageLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageLabelModifier,
+	Position: (self: ImageLabelModifier, value: Field<UDim2 | Tween<UDim2>>) -> ImageLabelModifier,
+	ResampleMode: (self: ImageLabelModifier, value: Field<Enum.ResamplerMode | Tween<Enum.ResamplerMode>>) -> ImageLabelModifier,
+	RootLocalizationTable: (self: ImageLabelModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> ImageLabelModifier,
+	Rotation: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
+	Sandboxed: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
+	ScaleType: (self: ImageLabelModifier, value: Field<Enum.ScaleType | Tween<Enum.ScaleType>>) -> ImageLabelModifier,
+	Selectable: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
+	SelectionBehaviorDown: (self: ImageLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ImageLabelModifier,
+	SelectionBehaviorLeft: (self: ImageLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ImageLabelModifier,
+	SelectionBehaviorRight: (self: ImageLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ImageLabelModifier,
+	SelectionBehaviorUp: (self: ImageLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ImageLabelModifier,
+	SelectionGroup: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
+	SelectionImageObject: (self: ImageLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ImageLabelModifier,
+	SelectionOrder: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
+	Size: (self: ImageLabelModifier, value: Field<UDim2 | Tween<UDim2>>) -> ImageLabelModifier,
+	SizeConstraint: (self: ImageLabelModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> ImageLabelModifier,
+	SliceCenter: (self: ImageLabelModifier, value: Field<Rect | Tween<Rect>>) -> ImageLabelModifier,
+	SliceScale: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
+	TileSize: (self: ImageLabelModifier, value: Field<UDim2 | Tween<UDim2>>) -> ImageLabelModifier,
+	Visible: (self: ImageLabelModifier, value: Field<boolean | Tween<boolean>>) -> ImageLabelModifier,
+	ZIndex: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
+}
 export type ImageLabelElem = NewChild | ImageLabelOnChange | State<ImageLabelOnChange>
 export type ImageLabelMapperElem = ImageLabelElem | MapperDescriptor
 
@@ -1911,6 +2189,31 @@ export type ScreenGuiOnChange =
 	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
 	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
+export type ScreenGuiModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: ScreenGuiModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: ScreenGuiModifier, factory: (ScreenGuiModifier) -> U) -> U,
+	Overridden: (self: ScreenGuiModifier, ...any) -> any,
+	Archivable: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
+	AutoLocalize: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
+	Capabilities: (self: ScreenGuiModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> ScreenGuiModifier,
+	ClipToDeviceSafeArea: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
+	DisplayOrder: (self: ScreenGuiModifier, value: Field<number | Tween<number>>) -> ScreenGuiModifier,
+	Enabled: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
+	IgnoreGuiInset: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
+	Name: (self: ScreenGuiModifier, value: Field<string | Tween<string>>) -> ScreenGuiModifier,
+	ResetOnSpawn: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
+	RootLocalizationTable: (self: ScreenGuiModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> ScreenGuiModifier,
+	SafeAreaCompatibility: (self: ScreenGuiModifier, value: Field<Enum.SafeAreaCompatibility | Tween<Enum.SafeAreaCompatibility>>) -> ScreenGuiModifier,
+	Sandboxed: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
+	ScreenInsets: (self: ScreenGuiModifier, value: Field<Enum.ScreenInsets | Tween<Enum.ScreenInsets>>) -> ScreenGuiModifier,
+	SelectionBehaviorDown: (self: ScreenGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ScreenGuiModifier,
+	SelectionBehaviorLeft: (self: ScreenGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ScreenGuiModifier,
+	SelectionBehaviorRight: (self: ScreenGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ScreenGuiModifier,
+	SelectionBehaviorUp: (self: ScreenGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ScreenGuiModifier,
+	SelectionGroup: (self: ScreenGuiModifier, value: Field<boolean | Tween<boolean>>) -> ScreenGuiModifier,
+	ZIndexBehavior: (self: ScreenGuiModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> ScreenGuiModifier,
+}
 export type ScreenGuiElem = NewChild | ScreenGuiOnChange | State<ScreenGuiOnChange>
 export type ScreenGuiMapperElem = ScreenGuiElem | MapperDescriptor
 
@@ -1969,6 +2272,66 @@ export type ScrollingFrameOnChange =
 	| 	{ Name: "VerticalScrollBarPosition", Callback: (Enum.VerticalScrollBarPosition) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type ScrollingFrameModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: ScrollingFrameModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: ScrollingFrameModifier, factory: (ScrollingFrameModifier) -> U) -> U,
+	Overridden: (self: ScrollingFrameModifier, ...any) -> any,
+	Active: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	AnchorPoint: (self: ScrollingFrameModifier, value: Field<Vector2 | Tween<Vector2>>) -> ScrollingFrameModifier,
+	Archivable: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	AutoLocalize: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	AutomaticCanvasSize: (self: ScrollingFrameModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> ScrollingFrameModifier,
+	AutomaticSize: (self: ScrollingFrameModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> ScrollingFrameModifier,
+	BackgroundColor3: (self: ScrollingFrameModifier, value: Field<Color3 | Tween<Color3>>) -> ScrollingFrameModifier,
+	BackgroundTransparency: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
+	BorderColor3: (self: ScrollingFrameModifier, value: Field<Color3 | Tween<Color3>>) -> ScrollingFrameModifier,
+	BorderMode: (self: ScrollingFrameModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> ScrollingFrameModifier,
+	BorderSizePixel: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
+	BottomImage: (self: ScrollingFrameModifier, value: Field<Content | Tween<Content>>) -> ScrollingFrameModifier,
+	BottomImageContent: (self: ScrollingFrameModifier, value: Field<Content | Tween<Content>>) -> ScrollingFrameModifier,
+	CanvasPosition: (self: ScrollingFrameModifier, value: Field<Vector2 | Tween<Vector2>>) -> ScrollingFrameModifier,
+	CanvasSize: (self: ScrollingFrameModifier, value: Field<UDim2 | Tween<UDim2>>) -> ScrollingFrameModifier,
+	Capabilities: (self: ScrollingFrameModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> ScrollingFrameModifier,
+	ClipsDescendants: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	ElasticBehavior: (self: ScrollingFrameModifier, value: Field<Enum.ElasticBehavior | Tween<Enum.ElasticBehavior>>) -> ScrollingFrameModifier,
+	HorizontalScrollBarInset: (self: ScrollingFrameModifier, value: Field<Enum.ScrollBarInset | Tween<Enum.ScrollBarInset>>) -> ScrollingFrameModifier,
+	InputSink: (self: ScrollingFrameModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> ScrollingFrameModifier,
+	Interactable: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	LayoutOrder: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
+	MidImage: (self: ScrollingFrameModifier, value: Field<Content | Tween<Content>>) -> ScrollingFrameModifier,
+	MidImageContent: (self: ScrollingFrameModifier, value: Field<Content | Tween<Content>>) -> ScrollingFrameModifier,
+	Name: (self: ScrollingFrameModifier, value: Field<string | Tween<string>>) -> ScrollingFrameModifier,
+	NextSelectionDown: (self: ScrollingFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ScrollingFrameModifier,
+	NextSelectionLeft: (self: ScrollingFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ScrollingFrameModifier,
+	NextSelectionRight: (self: ScrollingFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ScrollingFrameModifier,
+	NextSelectionUp: (self: ScrollingFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ScrollingFrameModifier,
+	Position: (self: ScrollingFrameModifier, value: Field<UDim2 | Tween<UDim2>>) -> ScrollingFrameModifier,
+	RootLocalizationTable: (self: ScrollingFrameModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> ScrollingFrameModifier,
+	Rotation: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
+	Sandboxed: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	ScrollBarImageColor3: (self: ScrollingFrameModifier, value: Field<Color3 | Tween<Color3>>) -> ScrollingFrameModifier,
+	ScrollBarImageTransparency: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
+	ScrollBarThickness: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
+	ScrollingDirection: (self: ScrollingFrameModifier, value: Field<Enum.ScrollingDirection | Tween<Enum.ScrollingDirection>>) -> ScrollingFrameModifier,
+	ScrollingEnabled: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	Selectable: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	SelectionBehaviorDown: (self: ScrollingFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ScrollingFrameModifier,
+	SelectionBehaviorLeft: (self: ScrollingFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ScrollingFrameModifier,
+	SelectionBehaviorRight: (self: ScrollingFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ScrollingFrameModifier,
+	SelectionBehaviorUp: (self: ScrollingFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ScrollingFrameModifier,
+	SelectionGroup: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	SelectionImageObject: (self: ScrollingFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ScrollingFrameModifier,
+	SelectionOrder: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
+	Size: (self: ScrollingFrameModifier, value: Field<UDim2 | Tween<UDim2>>) -> ScrollingFrameModifier,
+	SizeConstraint: (self: ScrollingFrameModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> ScrollingFrameModifier,
+	TopImage: (self: ScrollingFrameModifier, value: Field<Content | Tween<Content>>) -> ScrollingFrameModifier,
+	TopImageContent: (self: ScrollingFrameModifier, value: Field<Content | Tween<Content>>) -> ScrollingFrameModifier,
+	VerticalScrollBarInset: (self: ScrollingFrameModifier, value: Field<Enum.ScrollBarInset | Tween<Enum.ScrollBarInset>>) -> ScrollingFrameModifier,
+	VerticalScrollBarPosition: (self: ScrollingFrameModifier, value: Field<Enum.VerticalScrollBarPosition | Tween<Enum.VerticalScrollBarPosition>>) -> ScrollingFrameModifier,
+	Visible: (self: ScrollingFrameModifier, value: Field<boolean | Tween<boolean>>) -> ScrollingFrameModifier,
+	ZIndex: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
+}
 export type ScrollingFrameElem = NewChild | ScrollingFrameOnChange | State<ScrollingFrameOnChange>
 export type ScrollingFrameMapperElem = ScrollingFrameElem | MapperDescriptor
 
@@ -2000,6 +2363,39 @@ export type SurfaceGuiOnChange =
 	| 	{ Name: "ToolPunchThroughDistance", Callback: (number) -> () }
 	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
 	| 	{ Name: "ZOffset", Callback: (number) -> () }
+export type SurfaceGuiModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: SurfaceGuiModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: SurfaceGuiModifier, factory: (SurfaceGuiModifier) -> U) -> U,
+	Overridden: (self: SurfaceGuiModifier, ...any) -> any,
+	Active: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
+	Adornee: (self: SurfaceGuiModifier, value: Field<Instance | Tween<Instance>>) -> SurfaceGuiModifier,
+	AlwaysOnTop: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
+	Archivable: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
+	AutoLocalize: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
+	Brightness: (self: SurfaceGuiModifier, value: Field<number | Tween<number>>) -> SurfaceGuiModifier,
+	CanvasSize: (self: SurfaceGuiModifier, value: Field<Vector2 | Tween<Vector2>>) -> SurfaceGuiModifier,
+	Capabilities: (self: SurfaceGuiModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> SurfaceGuiModifier,
+	ClipsDescendants: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
+	Enabled: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
+	Face: (self: SurfaceGuiModifier, value: Field<Enum.NormalId | Tween<Enum.NormalId>>) -> SurfaceGuiModifier,
+	LightInfluence: (self: SurfaceGuiModifier, value: Field<number | Tween<number>>) -> SurfaceGuiModifier,
+	MaxDistance: (self: SurfaceGuiModifier, value: Field<number | Tween<number>>) -> SurfaceGuiModifier,
+	Name: (self: SurfaceGuiModifier, value: Field<string | Tween<string>>) -> SurfaceGuiModifier,
+	PixelsPerStud: (self: SurfaceGuiModifier, value: Field<number | Tween<number>>) -> SurfaceGuiModifier,
+	ResetOnSpawn: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
+	RootLocalizationTable: (self: SurfaceGuiModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> SurfaceGuiModifier,
+	Sandboxed: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
+	SelectionBehaviorDown: (self: SurfaceGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> SurfaceGuiModifier,
+	SelectionBehaviorLeft: (self: SurfaceGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> SurfaceGuiModifier,
+	SelectionBehaviorRight: (self: SurfaceGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> SurfaceGuiModifier,
+	SelectionBehaviorUp: (self: SurfaceGuiModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> SurfaceGuiModifier,
+	SelectionGroup: (self: SurfaceGuiModifier, value: Field<boolean | Tween<boolean>>) -> SurfaceGuiModifier,
+	SizingMode: (self: SurfaceGuiModifier, value: Field<Enum.SurfaceGuiSizingMode | Tween<Enum.SurfaceGuiSizingMode>>) -> SurfaceGuiModifier,
+	ToolPunchThroughDistance: (self: SurfaceGuiModifier, value: Field<number | Tween<number>>) -> SurfaceGuiModifier,
+	ZIndexBehavior: (self: SurfaceGuiModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> SurfaceGuiModifier,
+	ZOffset: (self: SurfaceGuiModifier, value: Field<number | Tween<number>>) -> SurfaceGuiModifier,
+}
 export type SurfaceGuiElem = NewChild | SurfaceGuiOnChange | State<SurfaceGuiOnChange>
 export type SurfaceGuiMapperElem = SurfaceGuiElem | MapperDescriptor
 
@@ -2065,6 +2461,73 @@ export type TextBoxOnChange =
 	| 	{ Name: "TextYAlignment", Callback: (Enum.TextYAlignment) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type TextBoxModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: TextBoxModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: TextBoxModifier, factory: (TextBoxModifier) -> U) -> U,
+	Overridden: (self: TextBoxModifier, ...any) -> any,
+	Active: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	AnchorPoint: (self: TextBoxModifier, value: Field<Vector2 | Tween<Vector2>>) -> TextBoxModifier,
+	Archivable: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	AutoLocalize: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	AutomaticSize: (self: TextBoxModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> TextBoxModifier,
+	BackgroundColor3: (self: TextBoxModifier, value: Field<Color3 | Tween<Color3>>) -> TextBoxModifier,
+	BackgroundTransparency: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	BorderColor3: (self: TextBoxModifier, value: Field<Color3 | Tween<Color3>>) -> TextBoxModifier,
+	BorderMode: (self: TextBoxModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> TextBoxModifier,
+	BorderSizePixel: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	Capabilities: (self: TextBoxModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> TextBoxModifier,
+	ClearTextOnFocus: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	ClipsDescendants: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	CursorPosition: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	FontFace: (self: TextBoxModifier, value: Field<Font | Tween<Font>>) -> TextBoxModifier,
+	InputSink: (self: TextBoxModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> TextBoxModifier,
+	Interactable: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	LayoutOrder: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	LineHeight: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	MaxVisibleGraphemes: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	MultiLine: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	Name: (self: TextBoxModifier, value: Field<string | Tween<string>>) -> TextBoxModifier,
+	NextSelectionDown: (self: TextBoxModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextBoxModifier,
+	NextSelectionLeft: (self: TextBoxModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextBoxModifier,
+	NextSelectionRight: (self: TextBoxModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextBoxModifier,
+	NextSelectionUp: (self: TextBoxModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextBoxModifier,
+	OpenTypeFeatures: (self: TextBoxModifier, value: Field<string | Tween<string>>) -> TextBoxModifier,
+	PlaceholderColor3: (self: TextBoxModifier, value: Field<Color3 | Tween<Color3>>) -> TextBoxModifier,
+	PlaceholderText: (self: TextBoxModifier, value: Field<string | Tween<string>>) -> TextBoxModifier,
+	Position: (self: TextBoxModifier, value: Field<UDim2 | Tween<UDim2>>) -> TextBoxModifier,
+	RichText: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	RootLocalizationTable: (self: TextBoxModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> TextBoxModifier,
+	Rotation: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	Sandboxed: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	Selectable: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	SelectionBehaviorDown: (self: TextBoxModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextBoxModifier,
+	SelectionBehaviorLeft: (self: TextBoxModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextBoxModifier,
+	SelectionBehaviorRight: (self: TextBoxModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextBoxModifier,
+	SelectionBehaviorUp: (self: TextBoxModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextBoxModifier,
+	SelectionGroup: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	SelectionImageObject: (self: TextBoxModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextBoxModifier,
+	SelectionOrder: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	SelectionStart: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	ShowNativeInput: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	Size: (self: TextBoxModifier, value: Field<UDim2 | Tween<UDim2>>) -> TextBoxModifier,
+	SizeConstraint: (self: TextBoxModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> TextBoxModifier,
+	Text: (self: TextBoxModifier, value: Field<string | Tween<string>>) -> TextBoxModifier,
+	TextColor3: (self: TextBoxModifier, value: Field<Color3 | Tween<Color3>>) -> TextBoxModifier,
+	TextDirection: (self: TextBoxModifier, value: Field<Enum.TextDirection | Tween<Enum.TextDirection>>) -> TextBoxModifier,
+	TextEditable: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	TextScaled: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	TextSize: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	TextStrokeColor3: (self: TextBoxModifier, value: Field<Color3 | Tween<Color3>>) -> TextBoxModifier,
+	TextStrokeTransparency: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	TextTransparency: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+	TextTruncate: (self: TextBoxModifier, value: Field<Enum.TextTruncate | Tween<Enum.TextTruncate>>) -> TextBoxModifier,
+	TextWrapped: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	TextXAlignment: (self: TextBoxModifier, value: Field<Enum.TextXAlignment | Tween<Enum.TextXAlignment>>) -> TextBoxModifier,
+	TextYAlignment: (self: TextBoxModifier, value: Field<Enum.TextYAlignment | Tween<Enum.TextYAlignment>>) -> TextBoxModifier,
+	Visible: (self: TextBoxModifier, value: Field<boolean | Tween<boolean>>) -> TextBoxModifier,
+	ZIndex: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
+}
 export type TextBoxElem = NewChild | TextBoxOnChange | State<TextBoxOnChange>
 export type TextBoxMapperElem = TextBoxElem | MapperDescriptor
 
@@ -2128,6 +2591,71 @@ export type TextButtonOnChange =
 	| 	{ Name: "TextYAlignment", Callback: (Enum.TextYAlignment) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type TextButtonModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: TextButtonModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: TextButtonModifier, factory: (TextButtonModifier) -> U) -> U,
+	Overridden: (self: TextButtonModifier, ...any) -> any,
+	Active: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	AnchorPoint: (self: TextButtonModifier, value: Field<Vector2 | Tween<Vector2>>) -> TextButtonModifier,
+	Archivable: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	AutoButtonColor: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	AutoLocalize: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	AutomaticSize: (self: TextButtonModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> TextButtonModifier,
+	BackgroundColor3: (self: TextButtonModifier, value: Field<Color3 | Tween<Color3>>) -> TextButtonModifier,
+	BackgroundTransparency: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	BorderColor3: (self: TextButtonModifier, value: Field<Color3 | Tween<Color3>>) -> TextButtonModifier,
+	BorderMode: (self: TextButtonModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> TextButtonModifier,
+	BorderSizePixel: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	Capabilities: (self: TextButtonModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> TextButtonModifier,
+	ClipsDescendants: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	FontFace: (self: TextButtonModifier, value: Field<Font | Tween<Font>>) -> TextButtonModifier,
+	HoverHapticEffect: (self: TextButtonModifier, value: Field<HapticEffect | Tween<HapticEffect>>) -> TextButtonModifier,
+	InputSink: (self: TextButtonModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> TextButtonModifier,
+	Interactable: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	LayoutOrder: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	LineHeight: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	MaxVisibleGraphemes: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	Modal: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	Name: (self: TextButtonModifier, value: Field<string | Tween<string>>) -> TextButtonModifier,
+	NextSelectionDown: (self: TextButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextButtonModifier,
+	NextSelectionLeft: (self: TextButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextButtonModifier,
+	NextSelectionRight: (self: TextButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextButtonModifier,
+	NextSelectionUp: (self: TextButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextButtonModifier,
+	OpenTypeFeatures: (self: TextButtonModifier, value: Field<string | Tween<string>>) -> TextButtonModifier,
+	Position: (self: TextButtonModifier, value: Field<UDim2 | Tween<UDim2>>) -> TextButtonModifier,
+	PressHapticEffect: (self: TextButtonModifier, value: Field<HapticEffect | Tween<HapticEffect>>) -> TextButtonModifier,
+	RichText: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	RootLocalizationTable: (self: TextButtonModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> TextButtonModifier,
+	Rotation: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	Sandboxed: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	Selectable: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	Selected: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	SelectionBehaviorDown: (self: TextButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextButtonModifier,
+	SelectionBehaviorLeft: (self: TextButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextButtonModifier,
+	SelectionBehaviorRight: (self: TextButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextButtonModifier,
+	SelectionBehaviorUp: (self: TextButtonModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextButtonModifier,
+	SelectionGroup: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	SelectionImageObject: (self: TextButtonModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextButtonModifier,
+	SelectionOrder: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	Size: (self: TextButtonModifier, value: Field<UDim2 | Tween<UDim2>>) -> TextButtonModifier,
+	SizeConstraint: (self: TextButtonModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> TextButtonModifier,
+	Style: (self: TextButtonModifier, value: Field<Enum.ButtonStyle | Tween<Enum.ButtonStyle>>) -> TextButtonModifier,
+	Text: (self: TextButtonModifier, value: Field<string | Tween<string>>) -> TextButtonModifier,
+	TextColor3: (self: TextButtonModifier, value: Field<Color3 | Tween<Color3>>) -> TextButtonModifier,
+	TextDirection: (self: TextButtonModifier, value: Field<Enum.TextDirection | Tween<Enum.TextDirection>>) -> TextButtonModifier,
+	TextScaled: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	TextSize: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	TextStrokeColor3: (self: TextButtonModifier, value: Field<Color3 | Tween<Color3>>) -> TextButtonModifier,
+	TextStrokeTransparency: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	TextTransparency: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+	TextTruncate: (self: TextButtonModifier, value: Field<Enum.TextTruncate | Tween<Enum.TextTruncate>>) -> TextButtonModifier,
+	TextWrapped: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	TextXAlignment: (self: TextButtonModifier, value: Field<Enum.TextXAlignment | Tween<Enum.TextXAlignment>>) -> TextButtonModifier,
+	TextYAlignment: (self: TextButtonModifier, value: Field<Enum.TextYAlignment | Tween<Enum.TextYAlignment>>) -> TextButtonModifier,
+	Visible: (self: TextButtonModifier, value: Field<boolean | Tween<boolean>>) -> TextButtonModifier,
+	ZIndex: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
+}
 export type TextButtonElem = NewChild | TextButtonOnChange | State<TextButtonOnChange>
 export type TextButtonMapperElem = TextButtonElem | MapperDescriptor
 
@@ -2185,6 +2713,65 @@ export type TextLabelOnChange =
 	| 	{ Name: "TextYAlignment", Callback: (Enum.TextYAlignment) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type TextLabelModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: TextLabelModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: TextLabelModifier, factory: (TextLabelModifier) -> U) -> U,
+	Overridden: (self: TextLabelModifier, ...any) -> any,
+	Active: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	AnchorPoint: (self: TextLabelModifier, value: Field<Vector2 | Tween<Vector2>>) -> TextLabelModifier,
+	Archivable: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	AutoLocalize: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	AutomaticSize: (self: TextLabelModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> TextLabelModifier,
+	BackgroundColor3: (self: TextLabelModifier, value: Field<Color3 | Tween<Color3>>) -> TextLabelModifier,
+	BackgroundTransparency: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	BorderColor3: (self: TextLabelModifier, value: Field<Color3 | Tween<Color3>>) -> TextLabelModifier,
+	BorderMode: (self: TextLabelModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> TextLabelModifier,
+	BorderSizePixel: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	Capabilities: (self: TextLabelModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> TextLabelModifier,
+	ClipsDescendants: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	FontFace: (self: TextLabelModifier, value: Field<Font | Tween<Font>>) -> TextLabelModifier,
+	InputSink: (self: TextLabelModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> TextLabelModifier,
+	Interactable: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	LayoutOrder: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	LineHeight: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	MaxVisibleGraphemes: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	Name: (self: TextLabelModifier, value: Field<string | Tween<string>>) -> TextLabelModifier,
+	NextSelectionDown: (self: TextLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextLabelModifier,
+	NextSelectionLeft: (self: TextLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextLabelModifier,
+	NextSelectionRight: (self: TextLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextLabelModifier,
+	NextSelectionUp: (self: TextLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextLabelModifier,
+	OpenTypeFeatures: (self: TextLabelModifier, value: Field<string | Tween<string>>) -> TextLabelModifier,
+	Position: (self: TextLabelModifier, value: Field<UDim2 | Tween<UDim2>>) -> TextLabelModifier,
+	RichText: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	RootLocalizationTable: (self: TextLabelModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> TextLabelModifier,
+	Rotation: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	Sandboxed: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	Selectable: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	SelectionBehaviorDown: (self: TextLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextLabelModifier,
+	SelectionBehaviorLeft: (self: TextLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextLabelModifier,
+	SelectionBehaviorRight: (self: TextLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextLabelModifier,
+	SelectionBehaviorUp: (self: TextLabelModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> TextLabelModifier,
+	SelectionGroup: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	SelectionImageObject: (self: TextLabelModifier, value: Field<GuiObject | Tween<GuiObject>>) -> TextLabelModifier,
+	SelectionOrder: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	Size: (self: TextLabelModifier, value: Field<UDim2 | Tween<UDim2>>) -> TextLabelModifier,
+	SizeConstraint: (self: TextLabelModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> TextLabelModifier,
+	Text: (self: TextLabelModifier, value: Field<string | Tween<string>>) -> TextLabelModifier,
+	TextColor3: (self: TextLabelModifier, value: Field<Color3 | Tween<Color3>>) -> TextLabelModifier,
+	TextDirection: (self: TextLabelModifier, value: Field<Enum.TextDirection | Tween<Enum.TextDirection>>) -> TextLabelModifier,
+	TextScaled: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	TextSize: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	TextStrokeColor3: (self: TextLabelModifier, value: Field<Color3 | Tween<Color3>>) -> TextLabelModifier,
+	TextStrokeTransparency: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	TextTransparency: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+	TextTruncate: (self: TextLabelModifier, value: Field<Enum.TextTruncate | Tween<Enum.TextTruncate>>) -> TextLabelModifier,
+	TextWrapped: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	TextXAlignment: (self: TextLabelModifier, value: Field<Enum.TextXAlignment | Tween<Enum.TextXAlignment>>) -> TextLabelModifier,
+	TextYAlignment: (self: TextLabelModifier, value: Field<Enum.TextYAlignment | Tween<Enum.TextYAlignment>>) -> TextLabelModifier,
+	Visible: (self: TextLabelModifier, value: Field<boolean | Tween<boolean>>) -> TextLabelModifier,
+	ZIndex: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
+}
 export type TextLabelElem = NewChild | TextLabelOnChange | State<TextLabelOnChange>
 export type TextLabelMapperElem = TextLabelElem | MapperDescriptor
 
@@ -2196,6 +2783,19 @@ export type UIAspectRatioConstraintOnChange =
 	| 	{ Name: "DominantAxis", Callback: (Enum.DominantAxis) -> () }
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type UIAspectRatioConstraintModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIAspectRatioConstraintModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIAspectRatioConstraintModifier, factory: (UIAspectRatioConstraintModifier) -> U) -> U,
+	Overridden: (self: UIAspectRatioConstraintModifier, ...any) -> any,
+	Archivable: (self: UIAspectRatioConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UIAspectRatioConstraintModifier,
+	AspectRatio: (self: UIAspectRatioConstraintModifier, value: Field<number | Tween<number>>) -> UIAspectRatioConstraintModifier,
+	AspectType: (self: UIAspectRatioConstraintModifier, value: Field<Enum.AspectType | Tween<Enum.AspectType>>) -> UIAspectRatioConstraintModifier,
+	Capabilities: (self: UIAspectRatioConstraintModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIAspectRatioConstraintModifier,
+	DominantAxis: (self: UIAspectRatioConstraintModifier, value: Field<Enum.DominantAxis | Tween<Enum.DominantAxis>>) -> UIAspectRatioConstraintModifier,
+	Name: (self: UIAspectRatioConstraintModifier, value: Field<string | Tween<string>>) -> UIAspectRatioConstraintModifier,
+	Sandboxed: (self: UIAspectRatioConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UIAspectRatioConstraintModifier,
+}
 export type UIAspectRatioConstraintElem = NewChild | UIAspectRatioConstraintOnChange | State<UIAspectRatioConstraintOnChange>
 export type UIAspectRatioConstraintMapperElem = UIAspectRatioConstraintElem | MapperDescriptor
 
@@ -2209,6 +2809,21 @@ export type UICornerOnChange =
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "TopLeftRadius", Callback: (UDim) -> () }
 	| 	{ Name: "TopRightRadius", Callback: (UDim) -> () }
+export type UICornerModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UICornerModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UICornerModifier, factory: (UICornerModifier) -> U) -> U,
+	Overridden: (self: UICornerModifier, ...any) -> any,
+	Archivable: (self: UICornerModifier, value: Field<boolean | Tween<boolean>>) -> UICornerModifier,
+	BottomLeftRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
+	BottomRightRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
+	Capabilities: (self: UICornerModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UICornerModifier,
+	CornerRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
+	Name: (self: UICornerModifier, value: Field<string | Tween<string>>) -> UICornerModifier,
+	Sandboxed: (self: UICornerModifier, value: Field<boolean | Tween<boolean>>) -> UICornerModifier,
+	TopLeftRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
+	TopRightRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
+}
 export type UICornerElem = NewChild | UICornerOnChange | State<UICornerOnChange>
 export type UICornerMapperElem = UICornerElem | MapperDescriptor
 
@@ -2239,6 +2854,38 @@ export type UIDragDetectorOnChange =
 	| 	{ Name: "SelectionModeDragSpeed", Callback: (UDim2) -> () }
 	| 	{ Name: "SelectionModeRotateSpeed", Callback: (number) -> () }
 	| 	{ Name: "UIDragSpeedAxisMapping", Callback: (Enum.UIDragSpeedAxisMapping) -> () }
+export type UIDragDetectorModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIDragDetectorModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIDragDetectorModifier, factory: (UIDragDetectorModifier) -> U) -> U,
+	Overridden: (self: UIDragDetectorModifier, ...any) -> any,
+	ActivatedCursorIcon: (self: UIDragDetectorModifier, value: Field<Content | Tween<Content>>) -> UIDragDetectorModifier,
+	ActivatedCursorIconContent: (self: UIDragDetectorModifier, value: Field<Content | Tween<Content>>) -> UIDragDetectorModifier,
+	Archivable: (self: UIDragDetectorModifier, value: Field<boolean | Tween<boolean>>) -> UIDragDetectorModifier,
+	BoundingBehavior: (self: UIDragDetectorModifier, value: Field<Enum.UIDragDetectorBoundingBehavior | Tween<Enum.UIDragDetectorBoundingBehavior>>) -> UIDragDetectorModifier,
+	BoundingUI: (self: UIDragDetectorModifier, value: Field<GuiBase2d | Tween<GuiBase2d>>) -> UIDragDetectorModifier,
+	Capabilities: (self: UIDragDetectorModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIDragDetectorModifier,
+	CursorIcon: (self: UIDragDetectorModifier, value: Field<Content | Tween<Content>>) -> UIDragDetectorModifier,
+	CursorIconContent: (self: UIDragDetectorModifier, value: Field<Content | Tween<Content>>) -> UIDragDetectorModifier,
+	DragAxis: (self: UIDragDetectorModifier, value: Field<Vector2 | Tween<Vector2>>) -> UIDragDetectorModifier,
+	DragRelativity: (self: UIDragDetectorModifier, value: Field<Enum.UIDragDetectorDragRelativity | Tween<Enum.UIDragDetectorDragRelativity>>) -> UIDragDetectorModifier,
+	DragRotation: (self: UIDragDetectorModifier, value: Field<number | Tween<number>>) -> UIDragDetectorModifier,
+	DragSpace: (self: UIDragDetectorModifier, value: Field<Enum.UIDragDetectorDragSpace | Tween<Enum.UIDragDetectorDragSpace>>) -> UIDragDetectorModifier,
+	DragStyle: (self: UIDragDetectorModifier, value: Field<Enum.UIDragDetectorDragStyle | Tween<Enum.UIDragDetectorDragStyle>>) -> UIDragDetectorModifier,
+	DragUDim2: (self: UIDragDetectorModifier, value: Field<UDim2 | Tween<UDim2>>) -> UIDragDetectorModifier,
+	Enabled: (self: UIDragDetectorModifier, value: Field<boolean | Tween<boolean>>) -> UIDragDetectorModifier,
+	MaxDragAngle: (self: UIDragDetectorModifier, value: Field<number | Tween<number>>) -> UIDragDetectorModifier,
+	MaxDragTranslation: (self: UIDragDetectorModifier, value: Field<UDim2 | Tween<UDim2>>) -> UIDragDetectorModifier,
+	MinDragAngle: (self: UIDragDetectorModifier, value: Field<number | Tween<number>>) -> UIDragDetectorModifier,
+	MinDragTranslation: (self: UIDragDetectorModifier, value: Field<UDim2 | Tween<UDim2>>) -> UIDragDetectorModifier,
+	Name: (self: UIDragDetectorModifier, value: Field<string | Tween<string>>) -> UIDragDetectorModifier,
+	ReferenceUIInstance: (self: UIDragDetectorModifier, value: Field<GuiObject | Tween<GuiObject>>) -> UIDragDetectorModifier,
+	ResponseStyle: (self: UIDragDetectorModifier, value: Field<Enum.UIDragDetectorResponseStyle | Tween<Enum.UIDragDetectorResponseStyle>>) -> UIDragDetectorModifier,
+	Sandboxed: (self: UIDragDetectorModifier, value: Field<boolean | Tween<boolean>>) -> UIDragDetectorModifier,
+	SelectionModeDragSpeed: (self: UIDragDetectorModifier, value: Field<UDim2 | Tween<UDim2>>) -> UIDragDetectorModifier,
+	SelectionModeRotateSpeed: (self: UIDragDetectorModifier, value: Field<number | Tween<number>>) -> UIDragDetectorModifier,
+	UIDragSpeedAxisMapping: (self: UIDragDetectorModifier, value: Field<Enum.UIDragSpeedAxisMapping | Tween<Enum.UIDragSpeedAxisMapping>>) -> UIDragDetectorModifier,
+}
 export type UIDragDetectorElem = NewChild | UIDragDetectorOnChange | State<UIDragDetectorOnChange>
 export type UIDragDetectorMapperElem = UIDragDetectorElem | MapperDescriptor
 
@@ -2251,6 +2898,20 @@ export type UIFlexItemOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "ShrinkRatio", Callback: (number) -> () }
+export type UIFlexItemModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIFlexItemModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIFlexItemModifier, factory: (UIFlexItemModifier) -> U) -> U,
+	Overridden: (self: UIFlexItemModifier, ...any) -> any,
+	Archivable: (self: UIFlexItemModifier, value: Field<boolean | Tween<boolean>>) -> UIFlexItemModifier,
+	Capabilities: (self: UIFlexItemModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIFlexItemModifier,
+	FlexMode: (self: UIFlexItemModifier, value: Field<Enum.UIFlexMode | Tween<Enum.UIFlexMode>>) -> UIFlexItemModifier,
+	GrowRatio: (self: UIFlexItemModifier, value: Field<number | Tween<number>>) -> UIFlexItemModifier,
+	ItemLineAlignment: (self: UIFlexItemModifier, value: Field<Enum.ItemLineAlignment | Tween<Enum.ItemLineAlignment>>) -> UIFlexItemModifier,
+	Name: (self: UIFlexItemModifier, value: Field<string | Tween<string>>) -> UIFlexItemModifier,
+	Sandboxed: (self: UIFlexItemModifier, value: Field<boolean | Tween<boolean>>) -> UIFlexItemModifier,
+	ShrinkRatio: (self: UIFlexItemModifier, value: Field<number | Tween<number>>) -> UIFlexItemModifier,
+}
 export type UIFlexItemElem = NewChild | UIFlexItemOnChange | State<UIFlexItemOnChange>
 export type UIFlexItemMapperElem = UIFlexItemElem | MapperDescriptor
 
@@ -2267,6 +2928,24 @@ export type UIGradientOnChange =
 	| 	{ Name: "TileMode", Callback: (Enum.GradientTileMode) -> () }
 	| 	{ Name: "Transparency", Callback: (NumberSequence) -> () }
 	| 	{ Name: "Type", Callback: (Enum.GradientType) -> () }
+export type UIGradientModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIGradientModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIGradientModifier, factory: (UIGradientModifier) -> U) -> U,
+	Overridden: (self: UIGradientModifier, ...any) -> any,
+	Archivable: (self: UIGradientModifier, value: Field<boolean | Tween<boolean>>) -> UIGradientModifier,
+	Capabilities: (self: UIGradientModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIGradientModifier,
+	Color: (self: UIGradientModifier, value: Field<ColorSequence | Tween<ColorSequence>>) -> UIGradientModifier,
+	Enabled: (self: UIGradientModifier, value: Field<boolean | Tween<boolean>>) -> UIGradientModifier,
+	Name: (self: UIGradientModifier, value: Field<string | Tween<string>>) -> UIGradientModifier,
+	Offset: (self: UIGradientModifier, value: Field<Vector2 | Tween<Vector2>>) -> UIGradientModifier,
+	Rotation: (self: UIGradientModifier, value: Field<number | Tween<number>>) -> UIGradientModifier,
+	Sandboxed: (self: UIGradientModifier, value: Field<boolean | Tween<boolean>>) -> UIGradientModifier,
+	Scale: (self: UIGradientModifier, value: Field<number | Tween<number>>) -> UIGradientModifier,
+	TileMode: (self: UIGradientModifier, value: Field<Enum.GradientTileMode | Tween<Enum.GradientTileMode>>) -> UIGradientModifier,
+	Transparency: (self: UIGradientModifier, value: Field<NumberSequence | Tween<NumberSequence>>) -> UIGradientModifier,
+	Type: (self: UIGradientModifier, value: Field<Enum.GradientType | Tween<Enum.GradientType>>) -> UIGradientModifier,
+}
 export type UIGradientElem = NewChild | UIGradientOnChange | State<UIGradientOnChange>
 export type UIGradientMapperElem = UIGradientElem | MapperDescriptor
 
@@ -2283,6 +2962,24 @@ export type UIGridLayoutOnChange =
 	| 	{ Name: "SortOrder", Callback: (Enum.SortOrder) -> () }
 	| 	{ Name: "StartCorner", Callback: (Enum.StartCorner) -> () }
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+export type UIGridLayoutModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIGridLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIGridLayoutModifier, factory: (UIGridLayoutModifier) -> U) -> U,
+	Overridden: (self: UIGridLayoutModifier, ...any) -> any,
+	Archivable: (self: UIGridLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIGridLayoutModifier,
+	Capabilities: (self: UIGridLayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIGridLayoutModifier,
+	CellPadding: (self: UIGridLayoutModifier, value: Field<UDim2 | Tween<UDim2>>) -> UIGridLayoutModifier,
+	CellSize: (self: UIGridLayoutModifier, value: Field<UDim2 | Tween<UDim2>>) -> UIGridLayoutModifier,
+	FillDirection: (self: UIGridLayoutModifier, value: Field<Enum.FillDirection | Tween<Enum.FillDirection>>) -> UIGridLayoutModifier,
+	FillDirectionMaxCells: (self: UIGridLayoutModifier, value: Field<number | Tween<number>>) -> UIGridLayoutModifier,
+	HorizontalAlignment: (self: UIGridLayoutModifier, value: Field<Enum.HorizontalAlignment | Tween<Enum.HorizontalAlignment>>) -> UIGridLayoutModifier,
+	Name: (self: UIGridLayoutModifier, value: Field<string | Tween<string>>) -> UIGridLayoutModifier,
+	Sandboxed: (self: UIGridLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIGridLayoutModifier,
+	SortOrder: (self: UIGridLayoutModifier, value: Field<Enum.SortOrder | Tween<Enum.SortOrder>>) -> UIGridLayoutModifier,
+	StartCorner: (self: UIGridLayoutModifier, value: Field<Enum.StartCorner | Tween<Enum.StartCorner>>) -> UIGridLayoutModifier,
+	VerticalAlignment: (self: UIGridLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UIGridLayoutModifier,
+}
 export type UIGridLayoutElem = NewChild | UIGridLayoutOnChange | State<UIGridLayoutOnChange>
 export type UIGridLayoutMapperElem = UIGridLayoutElem | MapperDescriptor
 
@@ -2300,6 +2997,25 @@ export type UIListLayoutOnChange =
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
 	| 	{ Name: "VerticalFlex", Callback: (Enum.UIFlexAlignment) -> () }
 	| 	{ Name: "Wraps", Callback: (boolean) -> () }
+export type UIListLayoutModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIListLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIListLayoutModifier, factory: (UIListLayoutModifier) -> U) -> U,
+	Overridden: (self: UIListLayoutModifier, ...any) -> any,
+	Archivable: (self: UIListLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIListLayoutModifier,
+	Capabilities: (self: UIListLayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIListLayoutModifier,
+	FillDirection: (self: UIListLayoutModifier, value: Field<Enum.FillDirection | Tween<Enum.FillDirection>>) -> UIListLayoutModifier,
+	HorizontalAlignment: (self: UIListLayoutModifier, value: Field<Enum.HorizontalAlignment | Tween<Enum.HorizontalAlignment>>) -> UIListLayoutModifier,
+	HorizontalFlex: (self: UIListLayoutModifier, value: Field<Enum.UIFlexAlignment | Tween<Enum.UIFlexAlignment>>) -> UIListLayoutModifier,
+	ItemLineAlignment: (self: UIListLayoutModifier, value: Field<Enum.ItemLineAlignment | Tween<Enum.ItemLineAlignment>>) -> UIListLayoutModifier,
+	Name: (self: UIListLayoutModifier, value: Field<string | Tween<string>>) -> UIListLayoutModifier,
+	Padding: (self: UIListLayoutModifier, value: Field<UDim | Tween<UDim>>) -> UIListLayoutModifier,
+	Sandboxed: (self: UIListLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIListLayoutModifier,
+	SortOrder: (self: UIListLayoutModifier, value: Field<Enum.SortOrder | Tween<Enum.SortOrder>>) -> UIListLayoutModifier,
+	VerticalAlignment: (self: UIListLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UIListLayoutModifier,
+	VerticalFlex: (self: UIListLayoutModifier, value: Field<Enum.UIFlexAlignment | Tween<Enum.UIFlexAlignment>>) -> UIListLayoutModifier,
+	Wraps: (self: UIListLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIListLayoutModifier,
+}
 export type UIListLayoutElem = NewChild | UIListLayoutOnChange | State<UIListLayoutOnChange>
 export type UIListLayoutMapperElem = UIListLayoutElem | MapperDescriptor
 
@@ -2312,6 +3028,20 @@ export type UIPaddingOnChange =
 	| 	{ Name: "PaddingRight", Callback: (UDim) -> () }
 	| 	{ Name: "PaddingTop", Callback: (UDim) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type UIPaddingModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIPaddingModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIPaddingModifier, factory: (UIPaddingModifier) -> U) -> U,
+	Overridden: (self: UIPaddingModifier, ...any) -> any,
+	Archivable: (self: UIPaddingModifier, value: Field<boolean | Tween<boolean>>) -> UIPaddingModifier,
+	Capabilities: (self: UIPaddingModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIPaddingModifier,
+	Name: (self: UIPaddingModifier, value: Field<string | Tween<string>>) -> UIPaddingModifier,
+	PaddingBottom: (self: UIPaddingModifier, value: Field<UDim | Tween<UDim>>) -> UIPaddingModifier,
+	PaddingLeft: (self: UIPaddingModifier, value: Field<UDim | Tween<UDim>>) -> UIPaddingModifier,
+	PaddingRight: (self: UIPaddingModifier, value: Field<UDim | Tween<UDim>>) -> UIPaddingModifier,
+	PaddingTop: (self: UIPaddingModifier, value: Field<UDim | Tween<UDim>>) -> UIPaddingModifier,
+	Sandboxed: (self: UIPaddingModifier, value: Field<boolean | Tween<boolean>>) -> UIPaddingModifier,
+}
 export type UIPaddingElem = NewChild | UIPaddingOnChange | State<UIPaddingOnChange>
 export type UIPaddingMapperElem = UIPaddingElem | MapperDescriptor
 
@@ -2333,6 +3063,29 @@ export type UIPageLayoutOnChange =
 	| 	{ Name: "TouchInputEnabled", Callback: (boolean) -> () }
 	| 	{ Name: "TweenTime", Callback: (number) -> () }
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+export type UIPageLayoutModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIPageLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIPageLayoutModifier, factory: (UIPageLayoutModifier) -> U) -> U,
+	Overridden: (self: UIPageLayoutModifier, ...any) -> any,
+	Animated: (self: UIPageLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIPageLayoutModifier,
+	Archivable: (self: UIPageLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIPageLayoutModifier,
+	Capabilities: (self: UIPageLayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIPageLayoutModifier,
+	Circular: (self: UIPageLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIPageLayoutModifier,
+	EasingDirection: (self: UIPageLayoutModifier, value: Field<Enum.EasingDirection | Tween<Enum.EasingDirection>>) -> UIPageLayoutModifier,
+	EasingStyle: (self: UIPageLayoutModifier, value: Field<Enum.EasingStyle | Tween<Enum.EasingStyle>>) -> UIPageLayoutModifier,
+	FillDirection: (self: UIPageLayoutModifier, value: Field<Enum.FillDirection | Tween<Enum.FillDirection>>) -> UIPageLayoutModifier,
+	GamepadInputEnabled: (self: UIPageLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIPageLayoutModifier,
+	HorizontalAlignment: (self: UIPageLayoutModifier, value: Field<Enum.HorizontalAlignment | Tween<Enum.HorizontalAlignment>>) -> UIPageLayoutModifier,
+	Name: (self: UIPageLayoutModifier, value: Field<string | Tween<string>>) -> UIPageLayoutModifier,
+	Padding: (self: UIPageLayoutModifier, value: Field<UDim | Tween<UDim>>) -> UIPageLayoutModifier,
+	Sandboxed: (self: UIPageLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIPageLayoutModifier,
+	ScrollWheelInputEnabled: (self: UIPageLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIPageLayoutModifier,
+	SortOrder: (self: UIPageLayoutModifier, value: Field<Enum.SortOrder | Tween<Enum.SortOrder>>) -> UIPageLayoutModifier,
+	TouchInputEnabled: (self: UIPageLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIPageLayoutModifier,
+	TweenTime: (self: UIPageLayoutModifier, value: Field<number | Tween<number>>) -> UIPageLayoutModifier,
+	VerticalAlignment: (self: UIPageLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UIPageLayoutModifier,
+}
 export type UIPageLayoutElem = NewChild | UIPageLayoutOnChange | State<UIPageLayoutOnChange>
 export type UIPageLayoutMapperElem = UIPageLayoutElem | MapperDescriptor
 
@@ -2342,6 +3095,17 @@ export type UIScaleOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "Scale", Callback: (number) -> () }
+export type UIScaleModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIScaleModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIScaleModifier, factory: (UIScaleModifier) -> U) -> U,
+	Overridden: (self: UIScaleModifier, ...any) -> any,
+	Archivable: (self: UIScaleModifier, value: Field<boolean | Tween<boolean>>) -> UIScaleModifier,
+	Capabilities: (self: UIScaleModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIScaleModifier,
+	Name: (self: UIScaleModifier, value: Field<string | Tween<string>>) -> UIScaleModifier,
+	Sandboxed: (self: UIScaleModifier, value: Field<boolean | Tween<boolean>>) -> UIScaleModifier,
+	Scale: (self: UIScaleModifier, value: Field<number | Tween<number>>) -> UIScaleModifier,
+}
 export type UIScaleElem = NewChild | UIScaleOnChange | State<UIScaleOnChange>
 export type UIScaleMapperElem = UIScaleElem | MapperDescriptor
 
@@ -2359,6 +3123,25 @@ export type UIShadowOnChange =
 	| 	{ Name: "Spread", Callback: (UDim2) -> () }
 	| 	{ Name: "Transparency", Callback: (number) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type UIShadowModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIShadowModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIShadowModifier, factory: (UIShadowModifier) -> U) -> U,
+	Overridden: (self: UIShadowModifier, ...any) -> any,
+	Archivable: (self: UIShadowModifier, value: Field<boolean | Tween<boolean>>) -> UIShadowModifier,
+	BlurRadius: (self: UIShadowModifier, value: Field<UDim | Tween<UDim>>) -> UIShadowModifier,
+	Capabilities: (self: UIShadowModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIShadowModifier,
+	Color: (self: UIShadowModifier, value: Field<Color3 | Tween<Color3>>) -> UIShadowModifier,
+	Enabled: (self: UIShadowModifier, value: Field<boolean | Tween<boolean>>) -> UIShadowModifier,
+	Inset: (self: UIShadowModifier, value: Field<boolean | Tween<boolean>>) -> UIShadowModifier,
+	Name: (self: UIShadowModifier, value: Field<string | Tween<string>>) -> UIShadowModifier,
+	Offset: (self: UIShadowModifier, value: Field<UDim2 | Tween<UDim2>>) -> UIShadowModifier,
+	Sandboxed: (self: UIShadowModifier, value: Field<boolean | Tween<boolean>>) -> UIShadowModifier,
+	ShowBehindParent: (self: UIShadowModifier, value: Field<boolean | Tween<boolean>>) -> UIShadowModifier,
+	Spread: (self: UIShadowModifier, value: Field<UDim2 | Tween<UDim2>>) -> UIShadowModifier,
+	Transparency: (self: UIShadowModifier, value: Field<number | Tween<number>>) -> UIShadowModifier,
+	ZIndex: (self: UIShadowModifier, value: Field<number | Tween<number>>) -> UIShadowModifier,
+}
 export type UIShadowElem = NewChild | UIShadowOnChange | State<UIShadowOnChange>
 export type UIShadowMapperElem = UIShadowElem | MapperDescriptor
 
@@ -2369,6 +3152,18 @@ export type UISizeConstraintOnChange =
 	| 	{ Name: "MinSize", Callback: (Vector2) -> () }
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type UISizeConstraintModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UISizeConstraintModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UISizeConstraintModifier, factory: (UISizeConstraintModifier) -> U) -> U,
+	Overridden: (self: UISizeConstraintModifier, ...any) -> any,
+	Archivable: (self: UISizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UISizeConstraintModifier,
+	Capabilities: (self: UISizeConstraintModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UISizeConstraintModifier,
+	MaxSize: (self: UISizeConstraintModifier, value: Field<Vector2 | Tween<Vector2>>) -> UISizeConstraintModifier,
+	MinSize: (self: UISizeConstraintModifier, value: Field<Vector2 | Tween<Vector2>>) -> UISizeConstraintModifier,
+	Name: (self: UISizeConstraintModifier, value: Field<string | Tween<string>>) -> UISizeConstraintModifier,
+	Sandboxed: (self: UISizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UISizeConstraintModifier,
+}
 export type UISizeConstraintElem = NewChild | UISizeConstraintOnChange | State<UISizeConstraintOnChange>
 export type UISizeConstraintMapperElem = UISizeConstraintElem | MapperDescriptor
 
@@ -2387,6 +3182,26 @@ export type UIStrokeOnChange =
 	| 	{ Name: "Thickness", Callback: (number) -> () }
 	| 	{ Name: "Transparency", Callback: (number) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type UIStrokeModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UIStrokeModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UIStrokeModifier, factory: (UIStrokeModifier) -> U) -> U,
+	Overridden: (self: UIStrokeModifier, ...any) -> any,
+	ApplyStrokeMode: (self: UIStrokeModifier, value: Field<Enum.ApplyStrokeMode | Tween<Enum.ApplyStrokeMode>>) -> UIStrokeModifier,
+	Archivable: (self: UIStrokeModifier, value: Field<boolean | Tween<boolean>>) -> UIStrokeModifier,
+	BorderOffset: (self: UIStrokeModifier, value: Field<UDim | Tween<UDim>>) -> UIStrokeModifier,
+	BorderStrokePosition: (self: UIStrokeModifier, value: Field<Enum.BorderStrokePosition | Tween<Enum.BorderStrokePosition>>) -> UIStrokeModifier,
+	Capabilities: (self: UIStrokeModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UIStrokeModifier,
+	Color: (self: UIStrokeModifier, value: Field<Color3 | Tween<Color3>>) -> UIStrokeModifier,
+	Enabled: (self: UIStrokeModifier, value: Field<boolean | Tween<boolean>>) -> UIStrokeModifier,
+	LineJoinMode: (self: UIStrokeModifier, value: Field<Enum.LineJoinMode | Tween<Enum.LineJoinMode>>) -> UIStrokeModifier,
+	Name: (self: UIStrokeModifier, value: Field<string | Tween<string>>) -> UIStrokeModifier,
+	Sandboxed: (self: UIStrokeModifier, value: Field<boolean | Tween<boolean>>) -> UIStrokeModifier,
+	StrokeSizingMode: (self: UIStrokeModifier, value: Field<Enum.StrokeSizingMode | Tween<Enum.StrokeSizingMode>>) -> UIStrokeModifier,
+	Thickness: (self: UIStrokeModifier, value: Field<number | Tween<number>>) -> UIStrokeModifier,
+	Transparency: (self: UIStrokeModifier, value: Field<number | Tween<number>>) -> UIStrokeModifier,
+	ZIndex: (self: UIStrokeModifier, value: Field<number | Tween<number>>) -> UIStrokeModifier,
+}
 export type UIStrokeElem = NewChild | UIStrokeOnChange | State<UIStrokeOnChange>
 export type UIStrokeMapperElem = UIStrokeElem | MapperDescriptor
 
@@ -2403,6 +3218,24 @@ export type UITableLayoutOnChange =
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "SortOrder", Callback: (Enum.SortOrder) -> () }
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+export type UITableLayoutModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UITableLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UITableLayoutModifier, factory: (UITableLayoutModifier) -> U) -> U,
+	Overridden: (self: UITableLayoutModifier, ...any) -> any,
+	Archivable: (self: UITableLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UITableLayoutModifier,
+	Capabilities: (self: UITableLayoutModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UITableLayoutModifier,
+	FillDirection: (self: UITableLayoutModifier, value: Field<Enum.FillDirection | Tween<Enum.FillDirection>>) -> UITableLayoutModifier,
+	FillEmptySpaceColumns: (self: UITableLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UITableLayoutModifier,
+	FillEmptySpaceRows: (self: UITableLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UITableLayoutModifier,
+	HorizontalAlignment: (self: UITableLayoutModifier, value: Field<Enum.HorizontalAlignment | Tween<Enum.HorizontalAlignment>>) -> UITableLayoutModifier,
+	MajorAxis: (self: UITableLayoutModifier, value: Field<Enum.TableMajorAxis | Tween<Enum.TableMajorAxis>>) -> UITableLayoutModifier,
+	Name: (self: UITableLayoutModifier, value: Field<string | Tween<string>>) -> UITableLayoutModifier,
+	Padding: (self: UITableLayoutModifier, value: Field<UDim2 | Tween<UDim2>>) -> UITableLayoutModifier,
+	Sandboxed: (self: UITableLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UITableLayoutModifier,
+	SortOrder: (self: UITableLayoutModifier, value: Field<Enum.SortOrder | Tween<Enum.SortOrder>>) -> UITableLayoutModifier,
+	VerticalAlignment: (self: UITableLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UITableLayoutModifier,
+}
 export type UITableLayoutElem = NewChild | UITableLayoutOnChange | State<UITableLayoutOnChange>
 export type UITableLayoutMapperElem = UITableLayoutElem | MapperDescriptor
 
@@ -2413,6 +3246,18 @@ export type UITextSizeConstraintOnChange =
 	| 	{ Name: "MinTextSize", Callback: (number) -> () }
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+export type UITextSizeConstraintModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: UITextSizeConstraintModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: UITextSizeConstraintModifier, factory: (UITextSizeConstraintModifier) -> U) -> U,
+	Overridden: (self: UITextSizeConstraintModifier, ...any) -> any,
+	Archivable: (self: UITextSizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UITextSizeConstraintModifier,
+	Capabilities: (self: UITextSizeConstraintModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> UITextSizeConstraintModifier,
+	MaxTextSize: (self: UITextSizeConstraintModifier, value: Field<number | Tween<number>>) -> UITextSizeConstraintModifier,
+	MinTextSize: (self: UITextSizeConstraintModifier, value: Field<number | Tween<number>>) -> UITextSizeConstraintModifier,
+	Name: (self: UITextSizeConstraintModifier, value: Field<string | Tween<string>>) -> UITextSizeConstraintModifier,
+	Sandboxed: (self: UITextSizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UITextSizeConstraintModifier,
+}
 export type UITextSizeConstraintElem = NewChild | UITextSizeConstraintOnChange | State<UITextSizeConstraintOnChange>
 export type UITextSizeConstraintMapperElem = UITextSizeConstraintElem | MapperDescriptor
 
@@ -2462,6 +3307,57 @@ export type VideoFrameOnChange =
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "Volume", Callback: (number) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type VideoFrameModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: VideoFrameModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: VideoFrameModifier, factory: (VideoFrameModifier) -> U) -> U,
+	Overridden: (self: VideoFrameModifier, ...any) -> any,
+	Active: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	AnchorPoint: (self: VideoFrameModifier, value: Field<Vector2 | Tween<Vector2>>) -> VideoFrameModifier,
+	Archivable: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	AutoLocalize: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	AutomaticSize: (self: VideoFrameModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> VideoFrameModifier,
+	BackgroundColor3: (self: VideoFrameModifier, value: Field<Color3 | Tween<Color3>>) -> VideoFrameModifier,
+	BackgroundTransparency: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+	BorderColor3: (self: VideoFrameModifier, value: Field<Color3 | Tween<Color3>>) -> VideoFrameModifier,
+	BorderMode: (self: VideoFrameModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> VideoFrameModifier,
+	BorderSizePixel: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+	Capabilities: (self: VideoFrameModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> VideoFrameModifier,
+	ClipsDescendants: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	InputSink: (self: VideoFrameModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> VideoFrameModifier,
+	Interactable: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	LayoutOrder: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+	Looped: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	Name: (self: VideoFrameModifier, value: Field<string | Tween<string>>) -> VideoFrameModifier,
+	NextSelectionDown: (self: VideoFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> VideoFrameModifier,
+	NextSelectionLeft: (self: VideoFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> VideoFrameModifier,
+	NextSelectionRight: (self: VideoFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> VideoFrameModifier,
+	NextSelectionUp: (self: VideoFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> VideoFrameModifier,
+	Playing: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	Position: (self: VideoFrameModifier, value: Field<UDim2 | Tween<UDim2>>) -> VideoFrameModifier,
+	RollOffMaxDistance: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+	RollOffMinDistance: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+	RollOffMode: (self: VideoFrameModifier, value: Field<Enum.RollOffMode | Tween<Enum.RollOffMode>>) -> VideoFrameModifier,
+	RootLocalizationTable: (self: VideoFrameModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> VideoFrameModifier,
+	Rotation: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+	Sandboxed: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	Selectable: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	SelectionBehaviorDown: (self: VideoFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> VideoFrameModifier,
+	SelectionBehaviorLeft: (self: VideoFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> VideoFrameModifier,
+	SelectionBehaviorRight: (self: VideoFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> VideoFrameModifier,
+	SelectionBehaviorUp: (self: VideoFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> VideoFrameModifier,
+	SelectionGroup: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	SelectionImageObject: (self: VideoFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> VideoFrameModifier,
+	SelectionOrder: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+	Size: (self: VideoFrameModifier, value: Field<UDim2 | Tween<UDim2>>) -> VideoFrameModifier,
+	SizeConstraint: (self: VideoFrameModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> VideoFrameModifier,
+	TimePosition: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+	Video: (self: VideoFrameModifier, value: Field<Content | Tween<Content>>) -> VideoFrameModifier,
+	VideoContent: (self: VideoFrameModifier, value: Field<Content | Tween<Content>>) -> VideoFrameModifier,
+	Visible: (self: VideoFrameModifier, value: Field<boolean | Tween<boolean>>) -> VideoFrameModifier,
+	Volume: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+	ZIndex: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
+}
 export type VideoFrameElem = NewChild | VideoFrameOnChange | State<VideoFrameOnChange>
 export type VideoFrameMapperElem = VideoFrameElem | MapperDescriptor
 
@@ -2508,6 +3404,54 @@ export type ViewportFrameOnChange =
 	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+export type ViewportFrameModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: ViewportFrameModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: ViewportFrameModifier, factory: (ViewportFrameModifier) -> U) -> U,
+	Overridden: (self: ViewportFrameModifier, ...any) -> any,
+	Active: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
+	Ambient: (self: ViewportFrameModifier, value: Field<Color3 | Tween<Color3>>) -> ViewportFrameModifier,
+	AnchorPoint: (self: ViewportFrameModifier, value: Field<Vector2 | Tween<Vector2>>) -> ViewportFrameModifier,
+	Archivable: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
+	AutoLocalize: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
+	AutomaticSize: (self: ViewportFrameModifier, value: Field<Enum.AutomaticSize | Tween<Enum.AutomaticSize>>) -> ViewportFrameModifier,
+	BackgroundColor3: (self: ViewportFrameModifier, value: Field<Color3 | Tween<Color3>>) -> ViewportFrameModifier,
+	BackgroundTransparency: (self: ViewportFrameModifier, value: Field<number | Tween<number>>) -> ViewportFrameModifier,
+	BorderColor3: (self: ViewportFrameModifier, value: Field<Color3 | Tween<Color3>>) -> ViewportFrameModifier,
+	BorderMode: (self: ViewportFrameModifier, value: Field<Enum.BorderMode | Tween<Enum.BorderMode>>) -> ViewportFrameModifier,
+	BorderSizePixel: (self: ViewportFrameModifier, value: Field<number | Tween<number>>) -> ViewportFrameModifier,
+	Capabilities: (self: ViewportFrameModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> ViewportFrameModifier,
+	ClipsDescendants: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
+	CurrentCamera: (self: ViewportFrameModifier, value: Field<Camera | Tween<Camera>>) -> ViewportFrameModifier,
+	ImageColor3: (self: ViewportFrameModifier, value: Field<Color3 | Tween<Color3>>) -> ViewportFrameModifier,
+	ImageTransparency: (self: ViewportFrameModifier, value: Field<number | Tween<number>>) -> ViewportFrameModifier,
+	InputSink: (self: ViewportFrameModifier, value: Field<Enum.InputSink | Tween<Enum.InputSink>>) -> ViewportFrameModifier,
+	Interactable: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
+	LayoutOrder: (self: ViewportFrameModifier, value: Field<number | Tween<number>>) -> ViewportFrameModifier,
+	LightColor: (self: ViewportFrameModifier, value: Field<Color3 | Tween<Color3>>) -> ViewportFrameModifier,
+	LightDirection: (self: ViewportFrameModifier, value: Field<Vector3 | Tween<Vector3>>) -> ViewportFrameModifier,
+	Name: (self: ViewportFrameModifier, value: Field<string | Tween<string>>) -> ViewportFrameModifier,
+	NextSelectionDown: (self: ViewportFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ViewportFrameModifier,
+	NextSelectionLeft: (self: ViewportFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ViewportFrameModifier,
+	NextSelectionRight: (self: ViewportFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ViewportFrameModifier,
+	NextSelectionUp: (self: ViewportFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ViewportFrameModifier,
+	Position: (self: ViewportFrameModifier, value: Field<UDim2 | Tween<UDim2>>) -> ViewportFrameModifier,
+	RootLocalizationTable: (self: ViewportFrameModifier, value: Field<LocalizationTable | Tween<LocalizationTable>>) -> ViewportFrameModifier,
+	Rotation: (self: ViewportFrameModifier, value: Field<number | Tween<number>>) -> ViewportFrameModifier,
+	Sandboxed: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
+	Selectable: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
+	SelectionBehaviorDown: (self: ViewportFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ViewportFrameModifier,
+	SelectionBehaviorLeft: (self: ViewportFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ViewportFrameModifier,
+	SelectionBehaviorRight: (self: ViewportFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ViewportFrameModifier,
+	SelectionBehaviorUp: (self: ViewportFrameModifier, value: Field<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>>) -> ViewportFrameModifier,
+	SelectionGroup: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
+	SelectionImageObject: (self: ViewportFrameModifier, value: Field<GuiObject | Tween<GuiObject>>) -> ViewportFrameModifier,
+	SelectionOrder: (self: ViewportFrameModifier, value: Field<number | Tween<number>>) -> ViewportFrameModifier,
+	Size: (self: ViewportFrameModifier, value: Field<UDim2 | Tween<UDim2>>) -> ViewportFrameModifier,
+	SizeConstraint: (self: ViewportFrameModifier, value: Field<Enum.SizeConstraint | Tween<Enum.SizeConstraint>>) -> ViewportFrameModifier,
+	Visible: (self: ViewportFrameModifier, value: Field<boolean | Tween<boolean>>) -> ViewportFrameModifier,
+	ZIndex: (self: ViewportFrameModifier, value: Field<number | Tween<number>>) -> ViewportFrameModifier,
+}
 export type ViewportFrameElem = NewChild | ViewportFrameOnChange | State<ViewportFrameOnChange>
 export type ViewportFrameMapperElem = ViewportFrameElem | MapperDescriptor
 
@@ -2520,6 +3464,20 @@ export type WorldModelOnChange =
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "UseWorkspaceCollisionGroups", Callback: (boolean) -> () }
 	| 	{ Name: "WorldPivot", Callback: (CFrame) -> () }
+export type WorldModelModifier = {
+	read __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)
+	Peek: <T>(self: WorldModelModifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: WorldModelModifier, factory: (WorldModelModifier) -> U) -> U,
+	Overridden: (self: WorldModelModifier, ...any) -> any,
+	Archivable: (self: WorldModelModifier, value: Field<boolean | Tween<boolean>>) -> WorldModelModifier,
+	Capabilities: (self: WorldModelModifier, value: Field<SecurityCapabilities | Tween<SecurityCapabilities>>) -> WorldModelModifier,
+	ModelStreamingMode: (self: WorldModelModifier, value: Field<Enum.ModelStreamingMode | Tween<Enum.ModelStreamingMode>>) -> WorldModelModifier,
+	Name: (self: WorldModelModifier, value: Field<string | Tween<string>>) -> WorldModelModifier,
+	PrimaryPart: (self: WorldModelModifier, value: Field<BasePart | Tween<BasePart>>) -> WorldModelModifier,
+	Sandboxed: (self: WorldModelModifier, value: Field<boolean | Tween<boolean>>) -> WorldModelModifier,
+	UseWorkspaceCollisionGroups: (self: WorldModelModifier, value: Field<boolean | Tween<boolean>>) -> WorldModelModifier,
+	WorldPivot: (self: WorldModelModifier, value: Field<CFrame | Tween<CFrame>>) -> WorldModelModifier,
+}
 export type WorldModelElem = NewChild | WorldModelOnChange | State<WorldModelOnChange>
 export type WorldModelMapperElem = WorldModelElem | MapperDescriptor
 
@@ -2560,9 +3518,43 @@ export type DMapper = {
 	ViewportFrame: (key: string | MapperRoot) -> (ViewportFrameParam<ViewportFrameMapperElem>) -> MapperDescriptor,
 	WorldModel: (key: string | MapperRoot) -> (WorldModelParam<WorldModelMapperElem>) -> MapperDescriptor,
 }
+export type DModifier = {
+	BillboardGui: () -> BillboardGuiModifier,
+	Camera: () -> CameraModifier,
+	CanvasGroup: () -> CanvasGroupModifier,
+	Folder: () -> FolderModifier,
+	Frame: () -> FrameModifier,
+	ImageButton: () -> ImageButtonModifier,
+	ImageLabel: () -> ImageLabelModifier,
+	ScreenGui: () -> ScreenGuiModifier,
+	ScrollingFrame: () -> ScrollingFrameModifier,
+	SurfaceGui: () -> SurfaceGuiModifier,
+	TextBox: () -> TextBoxModifier,
+	TextButton: () -> TextButtonModifier,
+	TextLabel: () -> TextLabelModifier,
+	UIAspectRatioConstraint: () -> UIAspectRatioConstraintModifier,
+	UICorner: () -> UICornerModifier,
+	UIDragDetector: () -> UIDragDetectorModifier,
+	UIFlexItem: () -> UIFlexItemModifier,
+	UIGradient: () -> UIGradientModifier,
+	UIGridLayout: () -> UIGridLayoutModifier,
+	UIListLayout: () -> UIListLayoutModifier,
+	UIPadding: () -> UIPaddingModifier,
+	UIPageLayout: () -> UIPageLayoutModifier,
+	UIScale: () -> UIScaleModifier,
+	UIShadow: () -> UIShadowModifier,
+	UISizeConstraint: () -> UISizeConstraintModifier,
+	UIStroke: () -> UIStrokeModifier,
+	UITableLayout: () -> UITableLayoutModifier,
+	UITextSizeConstraint: () -> UITextSizeConstraintModifier,
+	VideoFrame: () -> VideoFrameModifier,
+	ViewportFrame: () -> ViewportFrameModifier,
+	WorldModel: () -> WorldModelModifier,
+}
 export type D = {
 	New: <T>(className: string) -> (props: any) -> T,
 	Mapper: DMapper,
+	Modifier: DModifier,
 	BillboardGui: (BillboardGuiParam<BillboardGuiElem>) -> BillboardGui,
 	Camera: (CameraParam<CameraElem>) -> Camera,
 	CanvasGroup: (CanvasGroupParam<CanvasGroupElem>) -> CanvasGroup,
@@ -2618,7 +3610,10 @@ return function(quad: any): D
 	-- D.Mapper — Claim용 디스크립터 생성기(claim-plan §2; 본체는 quad-base
 	-- Claim.luau의 newMapperClass — 여기선 클래스별 캐스트 별칭만, D.<Class> 동형)
 	local Mapper: { [string]: any } = { Root = quad.MapperRoot }
-	local D: { [string]: any } = { New = New, Mapper = Mapper }
+	-- D.Modifier — 클래스별 타입드 Modifier 생성자(round17 §0 Q3 (a)): 런타임은
+	-- quad.Modifier 하나, 캐스트 별칭만 클래스별(D.Mapper와 같은 모양)
+	local ModifierNS: { [string]: any } = {}
+	local D: { [string]: any } = { New = New, Mapper = Mapper, Modifier = ModifierNS }
 	D.BillboardGui = (New("BillboardGui") :: any) :: (BillboardGuiParam<BillboardGuiElem>) -> BillboardGui
 	D.Camera = (New("Camera") :: any) :: (CameraParam<CameraElem>) -> Camera
 	D.CanvasGroup = (New("CanvasGroup") :: any) :: (CanvasGroupParam<CanvasGroupElem>) -> CanvasGroup
@@ -2681,6 +3676,37 @@ return function(quad: any): D
 	Mapper.VideoFrame = (quad.newMapperClass("VideoFrame") :: any) :: (key: string | MapperRoot) -> (VideoFrameParam<VideoFrameMapperElem>) -> MapperDescriptor
 	Mapper.ViewportFrame = (quad.newMapperClass("ViewportFrame") :: any) :: (key: string | MapperRoot) -> (ViewportFrameParam<ViewportFrameMapperElem>) -> MapperDescriptor
 	Mapper.WorldModel = (quad.newMapperClass("WorldModel") :: any) :: (key: string | MapperRoot) -> (WorldModelParam<WorldModelMapperElem>) -> MapperDescriptor
+	ModifierNS.BillboardGui = (quad.Modifier :: any) :: () -> BillboardGuiModifier
+	ModifierNS.Camera = (quad.Modifier :: any) :: () -> CameraModifier
+	ModifierNS.CanvasGroup = (quad.Modifier :: any) :: () -> CanvasGroupModifier
+	ModifierNS.Folder = (quad.Modifier :: any) :: () -> FolderModifier
+	ModifierNS.Frame = (quad.Modifier :: any) :: () -> FrameModifier
+	ModifierNS.ImageButton = (quad.Modifier :: any) :: () -> ImageButtonModifier
+	ModifierNS.ImageLabel = (quad.Modifier :: any) :: () -> ImageLabelModifier
+	ModifierNS.ScreenGui = (quad.Modifier :: any) :: () -> ScreenGuiModifier
+	ModifierNS.ScrollingFrame = (quad.Modifier :: any) :: () -> ScrollingFrameModifier
+	ModifierNS.SurfaceGui = (quad.Modifier :: any) :: () -> SurfaceGuiModifier
+	ModifierNS.TextBox = (quad.Modifier :: any) :: () -> TextBoxModifier
+	ModifierNS.TextButton = (quad.Modifier :: any) :: () -> TextButtonModifier
+	ModifierNS.TextLabel = (quad.Modifier :: any) :: () -> TextLabelModifier
+	ModifierNS.UIAspectRatioConstraint = (quad.Modifier :: any) :: () -> UIAspectRatioConstraintModifier
+	ModifierNS.UICorner = (quad.Modifier :: any) :: () -> UICornerModifier
+	ModifierNS.UIDragDetector = (quad.Modifier :: any) :: () -> UIDragDetectorModifier
+	ModifierNS.UIFlexItem = (quad.Modifier :: any) :: () -> UIFlexItemModifier
+	ModifierNS.UIGradient = (quad.Modifier :: any) :: () -> UIGradientModifier
+	ModifierNS.UIGridLayout = (quad.Modifier :: any) :: () -> UIGridLayoutModifier
+	ModifierNS.UIListLayout = (quad.Modifier :: any) :: () -> UIListLayoutModifier
+	ModifierNS.UIPadding = (quad.Modifier :: any) :: () -> UIPaddingModifier
+	ModifierNS.UIPageLayout = (quad.Modifier :: any) :: () -> UIPageLayoutModifier
+	ModifierNS.UIScale = (quad.Modifier :: any) :: () -> UIScaleModifier
+	ModifierNS.UIShadow = (quad.Modifier :: any) :: () -> UIShadowModifier
+	ModifierNS.UISizeConstraint = (quad.Modifier :: any) :: () -> UISizeConstraintModifier
+	ModifierNS.UIStroke = (quad.Modifier :: any) :: () -> UIStrokeModifier
+	ModifierNS.UITableLayout = (quad.Modifier :: any) :: () -> UITableLayoutModifier
+	ModifierNS.UITextSizeConstraint = (quad.Modifier :: any) :: () -> UITextSizeConstraintModifier
+	ModifierNS.VideoFrame = (quad.Modifier :: any) :: () -> VideoFrameModifier
+	ModifierNS.ViewportFrame = (quad.Modifier :: any) :: () -> ViewportFrameModifier
+	ModifierNS.WorldModel = (quad.Modifier :: any) :: () -> WorldModelModifier
 	quad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨
 	return (D :: any) :: D
 end

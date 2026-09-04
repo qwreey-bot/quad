@@ -1511,7 +1511,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `Handlers/Slot.luau`, 지금은 `EngineOps.luau`)
 ## M7 — Modifier
 
-- [ ] **[2026-08-27 9라운드 `H-142` 후속, `/code-review`]** 생성기가 찍는
+- [x] **[2026-09-04 M7 단위 ③ — 덤프 층이 이미 `Parent`를 빼므로(M5 Q5 (a)) 생성 `<Class>Modifier`에도 없음, `spec.modifiertypes`]** **[2026-08-27 9라운드 `H-142` 후속, `/code-review`]** 생성기가 찍는
       `FrameModifier`류 메소드 목록에서도 **`Parent`를 제외**할 것 — props
       타입에서만 빼면 `Modifier():Parent(x)`가 타입을 통과하고 `flatten`이
       `Parent`를 해시 파트로 merge해 런타임에서야 죽는다. `PreRef`/`PostRef`가
@@ -1531,7 +1531,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 - [x] **[2026-09-04 단위 ①]** `Modifier.Overridden(mod1, mod2, ...)`(이름 확정, 구 `Merge`→`Override`,
       2026-08-08 세션) — 필드별 raw 덮어쓰기, 특별한 State/함수 분기
       불필요(`modifier-plan.md` 9번)
-- [ ] `Overridden`가 서브타입 관계인 서로 다른 Modifier 타입(예: `FrameModifier`/
+- [x] **[2026-09-04 단위 ③ — quad-types·생성 타입 모두 `Overridden: (...any) -> any`]** `Overridden`가 서브타입 관계인 서로 다른 Modifier 타입(예: `FrameModifier`/
       `GuiObjectModifier`)을 섞을 때의 타입 시그니처 — **[해소됨,
       2026-08-13 첫 실측 라운드]** `luau-test/09`로 실측 완료, 우려대로
       깨짐 확인됨 → `Overridden(...: any): any`로 느슨하게 열어두는 게
@@ -1557,7 +1557,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > M7에서는 **Modifier 쪽 표면만** 다룹니다 — 인라인 키/setter로 필드를
 > 지우는 용법과 `Peek` 반환 타입에 `None`을 추가하는 것(`modifier-plan.md`
 > 2-1번).
-- [ ] 프로퍼티류 필드 타입에 `T' = T | Tween<T>` 치환 반영(타입 생성
+- [x] **[2026-09-04 단위 ③ — 생성 `Field<T | Tween<T>>` 별칭, 런타임 변경 0]** 프로퍼티류 필드 타입에 `T' = T | Tween<T>` 치환 반영(타입 생성
       스크립트가 `Position: UDim2` 자리를 `UDim2 | Tween<UDim2>`로 만들면
       끝, Modifier 런타임/`__index` 자체엔 변경 없음 — `modifier-plan.md`
       10번, 2026-08-10 세션, `base/tween-plan.md`)
@@ -1570,7 +1570,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `Frame{...}` 호출은 전부 이 핸들러를 거치는데** 색인 두 곳에서 통째로
       빠져 있어 구현자가 존재 자체를 놓칠 수 있던 자리다. 의사코드는
       `base/modifier-plan.md`의 flatten 절이 소스
-- [ ] **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Modifier` 관련
+- [x] **[2026-09-04 단위 ①·③ — `Quad.Modifier: ModifierConstructor`, `Modifier`(마커 `__quadModifier` 포함)·`ModifierMarker`; 클래스별 타입은 quad-roblox 생성 파일이 소유]** **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Modifier` 관련
       표면이 노출돼야 하면 같이 갱신(위 M3 항목의 "마일스톤마다" 규칙)
 - [ ] **[2026-09-04 신설 — 후순위, M7 밖] 상위 클래스 Modifier 타입 생성**
       (`GuiObjectModifier`/`GuiButtonModifier`류 — D 스코프의 creatable

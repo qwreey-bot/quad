@@ -215,6 +215,12 @@ def emit():
     L.append("\tOnChangeFn(`K & keyof<PropTypes>` / `index<PropTypes, K>` — 이름 오타·콜백")
     L.append("\t타입·무주석 추론까지, luau-test 30) + 클래스별 <Class>OnChange 유니언이 E에")
     L.append("\t합류(클래스 밖 이름은 생성자 자리에서 거부).")
+    L.append("\tModifier(M7 단위 ③, round17): 클래스별 <Class>Modifier(필드 setter — 값은")
+    L.append("\tField<T | Tween<T>> = V | State<V> | None | 변환 함수, 자기 타입 반환; 예약 메소드")
+    L.append("\tApply/Peek/Overridden; 이벤트는 제외 — 함수 인자는 변환 함수라 콜백과 겹친다)")
+    L.append("\t+ D.Modifier.<Class>() 캐스트 별칭(런타임은 quad.Modifier 하나, round17 Q3 (a))")
+    L.append("\t+ children엔 마커 `{ read __quadModifier: true }`로(NewChild, types.luau) — <Class>Modifier를")
+    L.append("\t유니언에 직접 넣으면 큰 클래스에서 too complex(실측); State<Modifier>는 7절이 error라 제외.")
     L.append("]]")
     L.append("")
     L.append('local QuadTypes = require("../luau_packages/quad_types")')
@@ -226,6 +232,9 @@ def emit():
     L.append("type None = QuadTypes.None")
     L.append("type MapperDescriptor = QuadTypes.MapperDescriptor")
     L.append("type MapperRoot = QuadTypes.MapperRoot")
+    L.append("-- Modifier 필드 setter의 값 타입(modifier-plan 4·4-1·10절): 리터럴 V | State<V> |")
+    L.append("-- None(unsetter) | 변환 함수(old는 '현재 저장된 그대로' — V | State<V> | None | nil)")
+    L.append("export type Field<V> = V | State<V> | None | ((old: V | State<V> | None | nil) -> V | State<V> | None | nil)")
     L.append("")
     names = sorted(classes.keys())
     for name in names:
@@ -268,6 +277,27 @@ def emit():
         L.append("\n\t| ".join(members) if members else "\tnever")
         # 배열 원소 유니언은 클래스당 별칭 하나 — D/DMapper 타입과 런타임 캐스트
         # 네 자리가 같은 별칭을 참조한다(손 나열 드리프트 방지, 리뷰 반영)
+        # <Class>Modifier — 프로퍼티만(이벤트 제외: setter의 함수 인자는 변환 함수라
+        # 콜백과 구분 불가 — modifier-plan 4절), 예약 메소드 셋은 이름 충돌 시 드롭
+        reserved = {"Apply", "Peek", "Overridden"}
+        L.append(f"export type {name}Modifier = {{")
+        L.append("\tread __quadModifier: true, -- 마커(H-300 관례) — children 유니언은 이 마커만 본다(아래 Elem 주석)")
+        L.append(f"\tPeek: <T>(self: {name}Modifier, key: string) -> T | State<T> | None | nil,")
+        L.append(f"\tApply: <U>(self: {name}Modifier, factory: ({name}Modifier) -> U) -> U,")
+        L.append(f"\tOverridden: (self: {name}Modifier, ...any) -> any,")
+        for p in c["props"]:
+            if p["name"] in reserved:
+                # 런타임 `__index`가 예약 메소드를 먼저 잡아 그런 setter는 존재할 수
+                # 없다 — 조용한 절단 금지(파일 머리 규칙): 생성 자체를 실패시킨다
+                raise SystemExit(f"{name}.{p['name']}: property collides with a reserved Modifier method")
+            t = p["type"]
+            L.append(f"\t{p['name']}: (self: {name}Modifier, value: Field<{t} | Tween<{t}>>) -> {name}Modifier,")
+        L.append("}")
+        # ⚠️ <Class>Modifier는 Elem에 직접 넣지 않는다 — 재귀 메소드 수십 개짜리
+        # 테이블 타입이 유니언에 들어가면 큰 클래스의 캐스트 자리에서 솔버가
+        # "too complex"(2026-09-04 실측 — 한도 플래그 대조는 typing-limits 8.8절이 소스). 대신 NewChild가
+        # 마커 `{ read __quadModifier: true }`를 담아 폭 서브타이핑으로 통과시킨다
+        # (types.luau) — 클래스 소속은 setter 호출 자리(<Class>Modifier 메소드 집합)가 맡는다.
         L.append(f"export type {name}Elem = NewChild | {name}OnChange | State<{name}OnChange>")
         L.append(f"export type {name}MapperElem = {name}Elem | MapperDescriptor")
         L.append("")
@@ -281,9 +311,14 @@ def emit():
             f"\t{name}: (key: string | MapperRoot) -> ({name}Param<{name}MapperElem>) -> MapperDescriptor,"
         )
     L.append("}")
+    L.append("export type DModifier = {")
+    for name in names:
+        L.append(f"\t{name}: () -> {name}Modifier,")
+    L.append("}")
     L.append("export type D = {")
     L.append("\tNew: <T>(className: string) -> (props: any) -> T,")
     L.append("\tMapper: DMapper,")
+    L.append("\tModifier: DModifier,")
     for name in names:
         L.append(f"\t{name}: ({name}Param<{name}Elem>) -> {name},")
     L.append("}")
@@ -310,13 +345,18 @@ def emit():
     L.append("\t-- D.Mapper — Claim용 디스크립터 생성기(claim-plan §2; 본체는 quad-base")
     L.append("\t-- Claim.luau의 newMapperClass — 여기선 클래스별 캐스트 별칭만, D.<Class> 동형)")
     L.append("\tlocal Mapper: { [string]: any } = { Root = quad.MapperRoot }")
-    L.append("\tlocal D: { [string]: any } = { New = New, Mapper = Mapper }")
+    L.append("\t-- D.Modifier — 클래스별 타입드 Modifier 생성자(round17 §0 Q3 (a)): 런타임은")
+    L.append("\t-- quad.Modifier 하나, 캐스트 별칭만 클래스별(D.Mapper와 같은 모양)")
+    L.append("\tlocal ModifierNS: { [string]: any } = {}")
+    L.append("\tlocal D: { [string]: any } = { New = New, Mapper = Mapper, Modifier = ModifierNS }")
     for name in names:
         L.append(f'\tD.{name} = (New("{name}") :: any) :: ({name}Param<{name}Elem>) -> {name}')
     for name in names:
         L.append(
             f'\tMapper.{name} = (quad.newMapperClass("{name}") :: any) :: (key: string | MapperRoot) -> ({name}Param<{name}MapperElem>) -> MapperDescriptor'
         )
+    for name in names:
+        L.append(f"\tModifierNS.{name} = (quad.Modifier :: any) :: () -> {name}Modifier")
     L.append("\tquad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨")
     L.append("\treturn (D :: any) :: D")
     L.append("end")

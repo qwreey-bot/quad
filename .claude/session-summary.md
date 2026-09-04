@@ -2316,3 +2316,10 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   자동 봉합. `spec.flatten` 3절·handlers 10·claim 8, Studio 3/3. round17
   `H-311`. 관측: `None` 필드는 실물에서 Property nil 방어로 쓰기 건너뜀.
 
+- `session/2026-09-04-03-m7-unit3-generator.md` **[M7 단위 ③ — 생성기
+  `<Class>Modifier` + `D.Modifier.<Class>()`]** `Field<V>` 별칭 setter 타입·
+  이벤트 제외·`DModifier` 캐스트 별칭(Q3 (a)). 클래스별 재귀 타입을 children
+  유니언에 넣으면 too complex(플래그 15종 무효) → 마커 `{ read __quadModifier:
+  true }`만(typing-limits 8.8 신설), Tarjan 40000→160000. `spec.modifiertypes`,
+  round17 `H-313`. M7 단위 ①~③ 완료 — §4 회신 대기 `H-310`/`H-312`.
+

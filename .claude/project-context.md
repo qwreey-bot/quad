@@ -40,7 +40,7 @@ fork 둘이 worktree에서 M6/M10을 mock 축으로 선행 구현했고 **메인
 잔여 목록은 ROADMAP M10 배너가 소스(남은 건 InstanceShorthand, M11 이후
 권고); **[2026-09-04] M7(Modifier) 자율 구현 구간 진행 중** — 규약
 `qa-request/m7-implementation-round17-brief.md` §0 확정(Q5는 후순위), 단위
-①·② 완료 — 단위 구성은 brief §1, 진행 소스는 ROADMAP M7 체크박스, 발견
+①~③ 완료(§4 회신 대기 `H-310`/`H-312`) — 단위 구성은 brief §1, 진행 소스는 ROADMAP M7 체크박스, 발견
 원장은 `-round17.md`(`H-309`~) —
 **M4도 같은 방식의 자율 구간으로 2026-09-01 착수·종결**(사용자 조건부
 승인으로 규약 `qa-request/m4-implementation-round13-brief.md` §0 전량 (a)

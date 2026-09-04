@@ -27,13 +27,20 @@ do
 					assert(type(mv) == "function", "Mapper." .. mname .. " must be an alias")
 				end
 			end
+		elseif name == "Modifier" then
+			-- M7 단위 ③: 클래스별 타입드 Modifier 생성자 네임스페이스(round17 Q3 (a)) —
+			-- 런타임은 quad.Modifier 하나, 클래스별 캐스트 별칭
+			assert(type(v) == "table", "D.Modifier is a namespace of per-class aliases")
+			for mname, mv in v :: { [string]: any } do
+				assert(mv == q.Modifier, "Modifier." .. mname .. " must alias quad.Modifier")
+			end
 		else
 			assert(type(v) == "function", name .. " must be a function (alias or New)")
 		end
 		n += 1
 	end
-	assert(n >= 3, "aliases + New + Mapper exist")
-	print(`PASS ({n - 2} aliases + New + Mapper)`)
+	assert(n >= 4, "aliases + New + Mapper + Modifier exist")
+	print(`PASS ({n - 3} aliases + New + Mapper + Modifier)`)
 end
 
 print()

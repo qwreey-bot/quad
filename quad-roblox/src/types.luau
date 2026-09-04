@@ -60,6 +60,11 @@ export type NewChild =
 	| QuadTypes.State<QuadTypes.Tag>
 	| QuadTypes.Attribute
 	| QuadTypes.State<QuadTypes.Attribute>
+	-- M7 단위 ③: Modifier는 MARKER로만(`{ read __quadModifier: true }`) — 클래스별
+	-- `<Class>Modifier`를 유니언에 직접 넣으면 큰 클래스의 캐스트 자리에서
+	-- "too complex"(2026-09-04 실측). 클래스 소속은 setter 호출 자리가 검사한다.
+	-- `State<Modifier>`는 modifier-plan 7절이 error라 타입에서도 없다.
+	| QuadTypes.ModifierMarker
 
 -- `OnChange(name, fn)` descriptor (M10, `base/onchange-plan.md` — array-part
 -- value since the 2026-09-03 reversal): frozen `{ Name, Callback }`,

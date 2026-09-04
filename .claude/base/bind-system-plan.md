@@ -142,7 +142,8 @@ DeclarativeInstance.luau`(PA님 작성, UI 포함 전반적 설계 패턴을 시
 Injection과 완전히 겹쳐 실제로 오해가 있었던 전례가 있고, `D`는 (1)
 "Instance" 전용 개념이 아니라 quad-* 전반의 declare 요소로 확장 가능하며,
 (2) 엔진 종속 없이 다른 백엔드에서도 재사용 가능하고, (3) `D.FrameModifier`류
-타입 프리픽스가 짧아야 한다는 실용적 제약을 만족한다. 한 글자 식별자라
+타입 프리픽스가 짧아야 한다는 실용적 제약을 만족한다(**[2026-09-04 M7 단위 ③]**
+실물은 타입 `<Class>Modifier`(생성 `D` 모듈 export) + 값 `D.Modifier.<Class>()`). 한 글자 식별자라
 grep이 어렵고 이름만으로 뜻이 안 드러나는 게 유일한 단점이었으므로,
 **문서에서 `D`가 처음 나오는 자리에서는 항상 `D`(Declarative)로 풀어쓴다**
 (표기 규약은 `base/architecture.md`의 "코드 스타일 — 네이밍 케이싱" 절).
@@ -227,7 +228,9 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
   M10 확장 실행]** `Tag | State<Tag> | Attribute | State<Attribute>` 합류 —
   타입드 스칼라 슈가는 `Attribute`를 돌려주므로 같은 멤버, `H10-15`. `OnChange`
   디스크립터는 여기가 아니라 클래스별 생성 별칭 `<Class>Elem`에 들어간다 —
-  `onchange-plan.md`). `H-298` (a)
+  `onchange-plan.md`; **[2026-09-04 M7 확장 실행]** `ModifierMarker`
+  (`{ read __quadModifier: true }`) 합류 — 클래스별 `<Class>Modifier`가 아니라
+  마커만(`typing-limits.md` 8.8절, round17 `H-313`)). `H-298` (a)
   회신문의 "Ref류"는 그 예고로 해석해 M5 유니언에서 뺐다 — `Ref` leaf
   핸들러가 M8이라 지금 실으면 런타임이 없는 거짓 표면이 된다(`H-297`과
   같은 논리; 이 해석이 틀렸다면 사용자가 뒤집을 것). 정의 실물은

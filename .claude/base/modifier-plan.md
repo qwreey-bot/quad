@@ -443,6 +443,15 @@ PA님 방식인 문자열 키 + 런타임 리플렉션으로 감, `base/event-pl
 "이벤트 바인딩 — self 미전달" 절 참고. Modifier는 이벤트가 아니라 Store/인스턴스
 생성과 같은 카테고리라 dot-access 관습이 그대로 적용됨.)
 
+**[2026-09-04 구현됨 — M7 단위 ③, round17 `H-313`]** 생성기(`scripts/gen-d.py`)가
+클래스별 `<Class>Modifier`(프로퍼티 setter `(self, value: Field<T | Tween<T>>) ->
+<Class>Modifier` + 예약 메소드 셋, **이벤트 필드는 제외** — 4절의 "함수 인자는
+변환 함수" 규칙과 콜백이 겹쳐서)와 타입드 생성자 `D.Modifier.<Class>()`(round17
+§0 Q3 (a) — 런타임은 base `Modifier()` 하나, 클래스별 캐스트 별칭)를 찍는다.
+children 유니언은 클래스별 타입이 아니라 마커 `{ read __quadModifier: true }`만
+본다(`typing-limits.md` 8.8절 — 재귀 메소드 테이블을 유니언에 넣으면 too
+complex). `Overridden`은 9-2대로 `any`.
+
 `mod:UICorner(8)`가 실제로 어떻게 UICorner 자식을 만들어 붙이는지(v1의
 `Corner` 특수 프로퍼티 선례, 핸들러 배치 소견)는
 `base/ui-shorthand-plan.md` 참고 — 이 문서는 Modifier 값 자체의

@@ -65,7 +65,11 @@ end
 local ModifierMT = {}
 
 local function newModifier(fields: { [any]: any }): any
-	local mod = setmetatable({ [FieldsKey] = table.freeze(fields) }, ModifierMT)
+	-- `__quadModifier`: type MARKER (H-300 idiom) so the backend children
+	-- union can admit every generated `<Class>Modifier` by width subtyping
+	-- (unit ③ — putting the recursive per-class table types into the union
+	-- blows the solver). A literal key, so it never reaches `__index`.
+	local mod = setmetatable({ [FieldsKey] = table.freeze(fields), __quadModifier = true }, ModifierMT)
 	ModifierBrand:register(mod)
 	return table.freeze(mod)
 end

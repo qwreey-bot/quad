@@ -36,12 +36,14 @@ echo "=== luau-lsp analyze --definitions=scripts/roblox-defs/globalTypes.d.luau 
 # LuauTarjanChildLimit: 생성 `export type D`/`DMapper`(31클래스 Param 인스턴스화,
 # H-305 d′)가 기본 한도(10000)를 넘어 "Code is too complex"를 낸다 — 실측상
 # 40000이면 전 그룹 클린, 1.2s대(성능 무해). 한도 자체의 등재는 typing-limits.
+# [2026-09-04 M7 단위 ③] 클래스별 `<Class>Modifier`(재귀 setter 수십 개) + `DModifier`
+# 네임스페이스가 더해져 40000으로 다시 넘침 — 160000이면 클린(실측), 시간 무해.
 # LuauSubtypingIterationLimit(M10 OnChange, 2026-09-03): 생성 `<Class>OnChange`
 # 유니언(클래스당 수십 멤버)에 Color3/string처럼 멤버가 많은 타입의 콜백을
 # 대조하면 기본 한도에서 "Code is too complex" — 실측상 5만이면 클린, 10만으로
 # 핀(시간 무해, 1.8s대). 다른 한도 플래그 6종은 무효였다(typing-limits 8.7절).
 lsp_out=$(mise exec -- luau-lsp analyze --flag:LuauSolverV2=true \
-	--flag:LuauTarjanChildLimit=40000 \
+	--flag:LuauTarjanChildLimit=160000 \
 	--flag:LuauSubtypingIterationLimit=100000 \
 	--definitions=scripts/roblox-defs/globalTypes.d.luau \
 	--ignore "**/luau_packages/**" \

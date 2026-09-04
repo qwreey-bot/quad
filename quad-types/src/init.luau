@@ -148,12 +148,18 @@ export type AttributeSugar<T> = (name: string, value: T | State<T> | None) -> At
 -- 런타임 표면만(예약 메소드 셋). 클래스별 필드 setter 타입(`<Class>Modifier`)은
 -- 생성기(M7 단위 ③)가 찍고, `Overridden`은 스파이크 `09`대로 `any`.
 export type Modifier = {
+	-- 마커(H-300 관례, M7 단위 ③): 백엔드의 children 유니언이 클래스별
+	-- `<Class>Modifier`(재귀 메소드 수십 개)를 직접 담으면 솔버가 too complex라
+	-- 이 한 필드만 담는다 — 런타임 값에도 실제로 있다(Modifier.luau)
+	read __quadModifier: true,
 	-- 정본 9절 `:Peek<<T>>(key)` — `store:Of<<T>>`와 같은 명시 인스턴스화 관례
 	Peek: <T>(self: Modifier, key: string) -> T | State<T> | None | nil,
 	Apply: <U>(self: Modifier, factory: (Modifier) -> U) -> U,
 	Overridden: (self: Modifier, ...any) -> any,
 }
 export type ModifierConstructor = setmetatable<{ Overridden: (...any) -> any }, { __call: (self: any) -> Modifier }>
+-- children 유니언용 마커 타입(위 `__quadModifier` 필드만) — 생성 `<Class>Modifier`도 이 필드를 가진다
+export type ModifierMarker = { read __quadModifier: true }
 
 export type State<T> = StateData<T> & {
 	-- deps는 `...any`다 — 타입팩 `D...`로 위치 인자를 좁히는 형태는 strict에서 콜백 dep
