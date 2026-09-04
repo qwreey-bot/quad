@@ -2334,3 +2334,8 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   `As<Desc>()` 메소드/무검사 `As<<T>>()`/`Into<Class>`/공개 레지스트리(엔진 op
   제안은 사용자가 되돌림 — 커스텀 Modifier 허용; `Define` 하나 → 사용자 결정으로
   `TypedFactory`/`DefineSubtype` 분리, 부모 여럿 허용)/예약 접두 `^As%u`. 상위 클래스 16종 생성(Q5 닫힘), `H-313` 소멸, Studio 8/8. `H-314`.
+  **[같은 세션 후속]** 사용자 지시로 M8 규약 문항지
+  `qa-request/m8-implementation-round18-brief.md` 신설(§0 Q1~Q6 회신 대기 —
+  Q3 children `Ref` 타입은 8.9절 결함 때문에 스파이크 선행, Q4 재진입은
+  `SetWeak` 순서 정정 권고).
+
