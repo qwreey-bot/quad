@@ -22,8 +22,8 @@ type Tween<T> = Types.Tween<T>
 local q = Quad.New():UseProvider(QuadRoblox)
 
 -- D에 없는 커스텀 Modifier 클래스(컴포넌트 몫) — 타입 별칭 + `Into` 구현만으로
--- D의 클래스와 같은 지위(modifier-plan 11절). 런타임 등록은 `Modifier.Define`
--- 한 줄(spec.modifier 9절).
+-- D의 클래스와 같은 지위(modifier-plan 11절). 런타임은 `TypedFactory<<T>>(name)` +
+-- `DefineSubtype(parent, name)`(spec.modifier 9절).
 type MaterialButtonModifier = {
 	read __quadModifier: "MaterialButton",
 	Elevation: (self: MaterialButtonModifier, value: DModule.Field<number>) -> MaterialButtonModifier,
@@ -33,6 +33,10 @@ type MaterialButtonModifier = {
 
 local function _neverCalled(custom: MaterialButtonModifier)
 	local D = q.D
+	-- 사용자 정의 클래스의 타입드 생성자 — T는 호출자가 명시(`As<<T>>()`와 같은 관례)
+	local MaterialButton = q.Modifier.TypedFactory<<MaterialButtonModifier>>("MaterialButton")
+	q.Modifier.DefineSubtype("TextButton", "MaterialButton")
+	local made = MaterialButton({ Text = "m" }):Elevation(1):AsMaterialButton()
 	-- 클래스별 setter: 리터럴 / State / None / 변환 함수(old는 저장된 그대로)
 	-- State 필드: `State<T>`는 `Set` 때문에 불변이라 필드 값 유니언(`UDim2 | Tween<UDim2>`)
 	-- 으로 캐스트해 만든다(typing-limits 8.7 캐비엇 5 — 반응형 자식·OnChange와 같은 규칙)
@@ -86,7 +90,7 @@ local function _neverCalled(custom: MaterialButtonModifier)
 	local baseMod = q.Modifier() -- base 무타입 Modifier는 `true` 마커로 명시 허용
 	local f2 = D.Frame({ baseMod })
 	local mapped = D.Mapper.TextLabel("Body")({ g, t })
-	return peeked, b, b2, merged, merged2, same, forced, toCustom, fr, i2, i3, i4, f, l, tb, f2, mapped
+	return peeked, b, b2, merged, merged2, same, forced, toCustom, fr, i2, i3, i4, f, l, tb, f2, mapped, made
 end
 
 print("=== ALL PASS ===")

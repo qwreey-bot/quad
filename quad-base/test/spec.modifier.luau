@@ -5,7 +5,7 @@
 	핸들러 계층 값 error)·4-1(4분기)·8(`Apply`)·9(`Overridden`·`Peek`)·2-1(`None`
 	실재값 vs `nil` 부재)절 + M2가 심은 `isModifier` 가드(7절)의 실물 재확인.
 	flatten/`ProcessedModifier`는 단위 ②(`spec.flatten`). 9~12절은 단위 ④(11절 —
-	클래스 태그·`Define`·검사형 `As<Class>()`·무검사 `As(name)`·예약 캐스트 접두).
+	클래스 태그·`TypedFactory`/`DefineSubtype`·검사형 `As<Class>()`·무검사 `As(name)`·예약 캐스트 접두).
 ]]
 
 local mock = require("./mock")
@@ -230,37 +230,48 @@ end
 
 print()
 local R: any = nil -- 9절이 등록한 클래스 생성자(10~12절 공유)
-print("=== 9. Define(name, parent) — 공개 레지스트리, 태그 생성자, 재등록 규칙, 조상 먼저 (11절) ===")
+print("=== 9. TypedFactory(name) / DefineSubtype(parent, subtype) — 한 함수에 한 일, dedup, 부모 여럿, 순환 거부 (11절) ===")
 do
-	local Inst = Modifier.Define("SpecInstance")
-	local Gui = Modifier.Define("SpecGuiObject", "SpecInstance")
-	local Label = Modifier.Define("SpecTextLabel", "SpecGuiObject")
-	local Corner = Modifier.Define("SpecUICorner", "SpecInstance")
-	assert(type(Label) == "function", "Define returns the tagged constructor")
+	local TF, DS = Modifier.TypedFactory, Modifier.DefineSubtype
+	-- 관계는 순서 자유(양쪽 이름이 같이 알려진다) — 잎부터 등록해도 된다
+	DS("SpecGuiObject", "SpecTextLabel")
+	DS("SpecInstance", "SpecGuiObject")
+	DS("SpecInstance", "SpecUICorner")
+	local Inst, Gui, Label, Corner = TF("SpecInstance"), TF("SpecGuiObject"), TF("SpecTextLabel"), TF("SpecUICorner")
+	assert(type(Label) == "function", "TypedFactory returns the tagged constructor")
 	local t = Label({ Text = "x" }, Modifier():Bold(true))
 	assert(q.isModifier(t) and t.__quadModifier == "SpecTextLabel", "constructor tags the value with the class name")
 	assert(fieldOf(t, "Text") == "x" and fieldOf(t, "Bold") == true, "same merge body as Modifier(...) (H-310)")
 	assert(Modifier().__quadModifier == true, "base Modifier() stays untyped (true)")
 	assert(t:Text("y").__quadModifier == "SpecTextLabel", "setters keep the tag")
-	assert(Modifier.Define("SpecTextLabel", "SpecGuiObject") == Label, "re-Define with the same parent is idempotent (same ctor)")
+	assert(TF("SpecTextLabel") == Label, "TypedFactory dedup: same name → same ctor")
+	DS("SpecGuiObject", "SpecTextLabel") -- 같은 간선 재등록은 no-op
+	-- 부모 여럿(인터페이스): 컴포넌트 클래스가 엔진 클래스와 인터페이스를 동시에 상속
+	DS("SpecTextButton", "SpecMaterialButton")
+	DS("SpecGuiObject", "SpecTextButton")
+	DS("SpecElevated", "SpecMaterialButton")
+	local Material = TF("SpecMaterialButton")
+	assert(Material():Elevation(2).__quadModifier == "SpecMaterialButton", "custom class is first-class")
+	assert(TF("SpecElevated")():Elevation(1):AsSpecMaterialButton().__quadModifier == "SpecMaterialButton", "descent through the interface parent")
+	assert(Inst():AsSpecMaterialButton().__quadModifier == "SpecMaterialButton", "descent through the engine parent path")
 	for label, fn in {
-		["different parent"] = function()
-			Modifier.Define("SpecTextLabel", "SpecInstance")
+		["cycle"] = function()
+			DS("SpecTextLabel", "SpecInstance")
 		end,
-		["unknown parent"] = function()
-			Modifier.Define("SpecOrphan", "SpecNope")
+		["self edge"] = function()
+			DS("SpecInstance", "SpecInstance")
 		end,
 		["bad name"] = function()
-			Modifier.Define(5)
+			TF(5)
+		end,
+		["bad parent"] = function()
+			DS(nil, "SpecX")
 		end,
 	} :: { [string]: () -> () } do
 		local ok, err = pcall(fn)
 		assert(not ok, "rejected: " .. label)
-		mock.assertBlamesUser(err, SPEC_FILE, "Define " .. label)
+		mock.assertBlamesUser(err, SPEC_FILE, "registry " .. label)
 	end
-	-- 컴포넌트 몫: 엔진 클래스와 같은 API로 자기 클래스를 얹는다(사용자 사례)
-	local Material = Modifier.Define("SpecMaterialButton", "SpecGuiObject")
-	assert(Material():Elevation(2).__quadModifier == "SpecMaterialButton", "custom class is first-class")
 	R = { Inst = Inst, Gui = Gui, Label = Label, Corner = Corner, Material = Material }
 	print("PASS")
 end

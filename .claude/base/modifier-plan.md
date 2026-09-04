@@ -468,8 +468,9 @@ PA님 방식인 문자열 키 + 런타임 리플렉션으로 감, `base/event-pl
 <Class>Modifier` + 예약 메소드 셋, **이벤트 필드는 제외** — 4절의 "함수 인자는
 변환 함수" 규칙과 콜백이 겹쳐서)와 타입드 생성자 `D.Modifier.<Class>()`(round17
 §0 Q3 (a) — 단위 ③ 시점엔 런타임이 base `Modifier()` 하나에 클래스별 캐스트
-별칭이었고, **[2026-09-04 단위 ④]**부터는 `Modifier.Define(name, parent?)`이
-돌려주는 클래스별 태그 생성자다 — 11절)를 찍는다.
+별칭이었고, **[2026-09-04 단위 ④]**부터는 `Modifier.TypedFactory(name)`이
+돌려주는 클래스별 태그 생성자 + `DefineSubtype(parent, name)` 간선이다 — 11절)를
+찍는다.
 children 유니언은 클래스별 타입이 아니라 마커만 본다(`typing-limits.md` 8.8절 —
 재귀 메소드 테이블을 유니언에 넣으면 too complex). `Overridden`은 9-2대로 `any`.
 **[2026-09-04 단위 ④]** 마커가 클래스 태그(조상 체인 문자열 유니언)로 바뀌어
@@ -827,7 +828,7 @@ error" 규칙에 안 걸림(`Tween<T>`는 `process`/`retract`를 가진 dispatch
 참가자가 아니라 `None`처럼 순수 raw 데이터 값, 위 7번 절 "Slot/Tag/Attribute
 등" 목록에서 Tween을 뺀 정정 참고).
 
-### 11. 클래스 태그·`Define`·`As`·`Into` — 상위 클래스 Modifier와 검사형/무검사 캐스트 (2026-09-04 단위 ④, 사용자 설계)
+### 11. 클래스 태그·`TypedFactory`/`DefineSubtype`·`As`·`Into` — 상위 클래스 Modifier와 검사형/무검사 캐스트 (2026-09-04 단위 ④, 사용자 설계)
 
 **계기**: 단위 ③이 children 자리의 클래스 소속 검사를 잃었고(`H-313` — 마커
 `{ read __quadModifier: true }`만 보므로 `Frame { textLabelMod }`가 통과), Q5
@@ -844,27 +845,40 @@ error" 규칙에 안 걸림(`Tween<T>`는 `process`/`retract`를 가진 dispatch
 같은 리터럴을 `read __quadModifier: "<Class>"`로 선언한다 — 타입이 약속하는
 태그가 곧 값의 태그(`H-300` 관례).
 
-**`Modifier.Define(name, parent?) -> ctor` — 공개 base API.** 모디파이어 클래스를
-등록하고 그 태그를 심는 생성자(`Modifier(...)`와 같은 병합 본문, `H-310`)를
-돌려준다. **프로바이더는 첫 사용자일 뿐 특권이 없다** — quad-roblox의 `D`는
-`UseProvider` 때 생성기가 찍은 47종(스코프 31 + 조상 16)을 이 API로 등록하고,
-컴포넌트 저자는 `MaterialButton.Modifier = quad.Modifier.Define("MaterialButton",
-"TextButton")`으로 자기 클래스를 같은 지위로 얹는다. **사용자 논거**: *"Modifier
-자체는 어느 엔진이든, 가상객체에 대한 상태이든 포괄해 … 엔진 단에 그걸 가능하게
-둔다는건 커스텀 modifier 를 허용하지 않게 된다는 말"* — 레지스트리를 엔진
-op로 두려던 첫 제안을 사용자가 되돌렸다. 부모는 먼저 등록돼 있어야 하고(조상
-먼저 — 생성기는 체인 깊이 순으로 찍는다), 같은 부모로 재등록하면 같은 생성자를
-돌려주며(두 모듈이 같은 클래스를 선언해도 됨), 다른 부모면 error. **이름 공간은
-하나다** — 프로바이더가 등록한 엔진 클래스명(`Model`, `Frame` …)과 컴포넌트의
-클래스명이 같은 표를 쓰므로, 같은 이름·같은 부모로 `Define`하면 엔진 클래스의
-생성자가 그대로 돌아온다(리뷰 지적, 2026-09-04 — 지금은 "같은 클래스의 재선언"과
-"우연한 동명"을 런타임이 구분할 수 없다는 사실만 문서화; 컴포넌트 클래스명은
-엔진 클래스명과 겹치지 않게 짓는 것이 저자 몫이고, 접두·네임스페이스 같은
-구조는 실제로 충돌이 관측되면 그때). 레지스트리는 모듈 수준이라 quad 두 벌 공존 시 Brand/None처럼 사본마다 갈린다(기존 계약).
+**`Modifier.TypedFactory<<T>>(name) -> ctor` / `Modifier.DefineSubtype(parent, subtype)`
+— 공개 base API, 함수 하나에 일 하나.** 처음엔 `Define(name, parent?)` 하나가
+이름 등록·관계 등록·생성자 반환 셋을 했는데 같은 날 사용자가 갈랐다 — *"Define
+은 단순해져야해. 하나의 동작만 하도록 만들고 싶어 … 지금껏 하나가 둘 이상의
+작용을 하려 하면 분리하려 했던건 기본 원칙 같은거라서"*(`conventions.md`의 "하나의
+무언가가 두 일을" 원칙). 그래서:
+- **`TypedFactory<<T>>(name)`**: 이름을 알리고 그 태그를 심는 생성자(`Modifier(...)`와
+  같은 병합 본문, `H-310`)를 돌려준다. 관계는 모른다. `T`는 호출자가 명시하고 그
+  타입은 사용자가 전부 쓴다(*"입력 T는 유저가 전부 타입을 구현해야하고"* —
+  생성기는 D 스코프 것만 찍는다). **dedup**: 같은 이름은 항상 같은 생성자.
+- **`DefineSubtype(parent, subtype)`**: 간선 `subtype ⊂ parent` 하나만 등록한다.
+  양쪽 이름이 같이 알려지므로 등록 순서가 자유롭고, **한 subtype에 부모가 여럿**
+  들어갈 수 있다 — 인터페이스·다중 상속(*"갈래 상 다중상속을 전혀 지원하지 않는게
+  일반적이지만(로블록스 엔진 기준) … modifier 자체는 그게 지원 될 수 있다고 봄.
+  값이 있거나 없을 수 있고, 서브타입으론 멀쩡히 계속 내려가거든"*). 같은 간선
+  재등록은 no-op, 거부하는 것은 순환뿐.
+**프로바이더는 첫 사용자일 뿐 특권이 없다** — quad-roblox의 `D`는 `UseProvider`
+때 생성기가 찍은 클래스 전부(스코프 + 조상 — 개수는 생성 파일의 `<Class>Modifier`
+선언이 소스)를 이 둘로 등록하고, 컴포넌트 저자는
+`MaterialButton.Modifier = quad.Modifier.TypedFactory<<MaterialButtonModifier>>("MaterialButton")`
++ `quad.Modifier.DefineSubtype("TextButton", "MaterialButton")`로 자기 클래스를
+같은 지위로 얹는다. **사용자 논거**: *"Modifier 자체는 어느 엔진이든, 가상객체에
+대한 상태이든 포괄해 … 엔진 단에 그걸 가능하게 둔다는건 커스텀 modifier 를
+허용하지 않게 된다는 말"* — 레지스트리를 엔진 op로 두려던 첫 제안을 사용자가
+되돌렸다. **이름 공간은 하나다** — 프로바이더가 등록한 엔진 클래스명(`Model`,
+`Frame` …)과 컴포넌트의 클래스명이 같은 표를 쓰므로 같은 이름은 한 클래스다
+(리뷰 지적, 2026-09-04 — 부모 여럿을 허용하는 순간 이건 정의대로의 동작이고,
+컴포넌트 클래스명을 엔진 클래스명과 겹치지 않게 짓는 것이 저자 몫). 레지스트리는
+모듈 수준이라 quad 두 벌 공존 시 Brand/None처럼 사본마다 갈린다(기존 계약).
 
 **검사형 하강 `mod:As<Class>()`** — 런타임: 대상이 미등록이면 error, 현재 태그가
-`true`(무타입)이거나 대상 자신이거나 대상의 **조상**이면 태그를 바꾼 클론을
-돌려주고, 아니면 error(형제·상향 모두). 타입: 클래스별 타입이 **자기 하위
+`true`(무타입)이거나 대상 자신이거나 대상의 **조상**(모든 부모 경로의 합집합 —
+인터페이스 쪽 경로도 인정)이면 태그를 바꾼 클론을 돌려주고, 아니면 error(형제·
+상향 모두). 타입: 클래스별 타입이 **자기 하위
 클래스와 자기 자신(항등)**만 `As<Desc>: (self) -> <Desc>Modifier` 메소드로
 가진다 — 자동완성이 곧 "내려갈 수 있는 목록"이고, 잎 클래스엔 하강 메소드가
 없다. **사용자 판정**: *"AsXXX 형식은 … 자동완성도 돕고, 바꿀 수 있는게 뭐가
@@ -904,6 +918,18 @@ error다 — **사용자 요구**: *"As로 시작하는건 전부 Cast 프리디
 true }`로 명시 허용. 컴포넌트가 무엇을 받을지는 컴포넌트 param 타입이 정한다
 (`IntoMaterialButton`이든 마커든) — `<Class>Elem`은 `D.<Class>` 자리에만 걸린다.
 flatten과 나중의 "PreRef/Ref/PostRef 추출 + flatten" 슈가는 태그를 보지 않는다.
+
+**타입 쪽은 단일 상속 트리만 생성한다 — 다중 부모의 타입은 사용자 몫.** 런타임
+레지스트리는 DAG(부모 여럿)이지만 생성기의 `As<Desc>`·`Into<Class>`·`<Class>Elem`
+마커는 엔진의 단일 상속 체인만 걷는다. 인터페이스 방향(`Elevated → MaterialButton`)의
+`As`/`Into`와 커스텀 클래스의 Modifier 타입은 저자가 직접 쓴다 — **사용자 확정**
+(*"입력 T는 유저가 전부 타입을 구현해야하고"*). 따라오는 경계 하나: 커스텀
+태그(`"MaterialButton"`)는 생성 `<Class>Elem` 마커 유니언에 없으므로 `D.TextButton {
+materialMod }`는 **런타임은 통과하고 타입만 거부**한다 — 그 자리엔 무검사
+`materialMod:As<<TextButtonModifier>>()`(타입만) 또는 `As("TextButton")`(재태그)을
+쓰고, 컴포넌트 자신의 자식 자리는 자기 param 타입(`IntoMaterialButton` 등)이
+정하므로 이 경계가 없다(감사 지적 2026-09-04 — 생성기가 커스텀 인터페이스
+타입까지 찍는 확장은 실수요가 관측되면 그때).
 
 **안 하는 것**: drive 시점에 태그와 실제 인스턴스 클래스를 `IsA`로 대조하는
 안전망 — 잘못된 필드는 Property 핸들러의 리플렉션 검사가 이미 error를 내고,

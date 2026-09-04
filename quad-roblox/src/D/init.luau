@@ -17,7 +17,7 @@
 	Field<T | Tween<T>> = V | State<V> | None | 변환 함수, 자기 타입 반환; 예약 메소드
 	Apply/Peek/Overridden; 이벤트는 제외 — 함수 인자는 변환 함수라 콜백과 겹친다)
 	+ D.Modifier.<Class>() 타입드 생성자(round17 Q3 (a) — 단위 ③엔 quad.Modifier 캐스트 별칭,
-	단위 ④부터 아래 Define 태그 생성자)
+	단위 ④부터 아래 TypedFactory 태그 생성자)
 	+ children엔 마커만(<Class>Modifier를 유니언에 직접 넣으면 큰 클래스에서 too complex —
 	typing-limits 8.8절): 무타입 base는 `{ read __quadModifier: true }`(NewChild, types.luau),
 	클래스 태그는 조상 체인 마커 `{ read __quadModifier: "Frame" | "GuiObject" | … }`(<Class>Elem).
@@ -27,7 +27,7 @@
 	무검사 `As<<T>>()`, 인터페이스 `Into<Class> = { As<Class>: (self: any) -> <Class>Modifier }`,
 	Apply는 self·factory 둘 다 any(8.9절 — 재귀 필드 + 유니언 멤버 메소드 이름 충돌 시
 	유니언 검사가 조용히 통과하는 솔버 결함을 피해 클래스 소속 검사를 되찾음). 런타임은
-	quad.Modifier.Define(name, parent)이 돌려주는 태그 생성자(조상 먼저 등록).
+	quad.Modifier.TypedFactory(name)이 돌려주는 태그 생성자 + DefineSubtype(parent, name) 간선.
 ]]
 
 local QuadTypes = require("../luau_packages/quad_types")
@@ -4255,8 +4255,8 @@ return function(quad: any): D
 	-- Claim.luau의 newMapperClass — 여기선 클래스별 캐스트 별칭만, D.<Class> 동형)
 	local Mapper: { [string]: any } = { Root = quad.MapperRoot }
 	-- D.Modifier — 클래스별 타입드 Modifier 생성자(round17 §0 Q3 (a); 단위 ④):
-	-- quad.Modifier.Define(name, parent)이 돌려주는 태그 생성자 — 조상이 먼저
-	-- 등록돼야 하므로 체인 깊이 순. 런타임 병합 본문은 base 하나(construct)
+	-- quad.Modifier.TypedFactory(name)이 돌려주는 태그 생성자(런타임 병합 본문은
+	-- base 하나) + DefineSubtype(parent, name) 간선 — 둘 다 dedup이라 순서 자유
 	local ModifierNS: { [string]: any } = {}
 	local D: { [string]: any } = { New = New, Mapper = Mapper, Modifier = ModifierNS }
 	D.BillboardGui = (New("BillboardGui") :: any) :: (BillboardGuiParam<BillboardGuiElem>) -> BillboardGui
@@ -4321,53 +4321,99 @@ return function(quad: any): D
 	Mapper.VideoFrame = (quad.newMapperClass("VideoFrame") :: any) :: (key: string | MapperRoot) -> (VideoFrameParam<VideoFrameMapperElem>) -> MapperDescriptor
 	Mapper.ViewportFrame = (quad.newMapperClass("ViewportFrame") :: any) :: (key: string | MapperRoot) -> (ViewportFrameParam<ViewportFrameMapperElem>) -> MapperDescriptor
 	Mapper.WorldModel = (quad.newMapperClass("WorldModel") :: any) :: (key: string | MapperRoot) -> (WorldModelParam<WorldModelMapperElem>) -> MapperDescriptor
-	ModifierNS.Instance = (quad.Modifier.Define("Instance") :: any) :: (...(InstanceModifier | { [string]: any })) -> InstanceModifier
-	ModifierNS.Folder = (quad.Modifier.Define("Folder", "Instance") :: any) :: (...(FolderModifier | { [string]: any })) -> FolderModifier
-	ModifierNS.GuiBase = (quad.Modifier.Define("GuiBase", "Instance") :: any) :: (...(GuiBaseModifier | { [string]: any })) -> GuiBaseModifier
-	ModifierNS.PVInstance = (quad.Modifier.Define("PVInstance", "Instance") :: any) :: (...(PVInstanceModifier | { [string]: any })) -> PVInstanceModifier
-	ModifierNS.UIBase = (quad.Modifier.Define("UIBase", "Instance") :: any) :: (...(UIBaseModifier | { [string]: any })) -> UIBaseModifier
-	ModifierNS.Camera = (quad.Modifier.Define("Camera", "PVInstance") :: any) :: (...(CameraModifier | { [string]: any })) -> CameraModifier
-	ModifierNS.GuiBase2d = (quad.Modifier.Define("GuiBase2d", "GuiBase") :: any) :: (...(GuiBase2dModifier | { [string]: any })) -> GuiBase2dModifier
-	ModifierNS.Model = (quad.Modifier.Define("Model", "PVInstance") :: any) :: (...(ModelModifier | { [string]: any })) -> ModelModifier
-	ModifierNS.UIComponent = (quad.Modifier.Define("UIComponent", "UIBase") :: any) :: (...(UIComponentModifier | { [string]: any })) -> UIComponentModifier
-	ModifierNS.GuiObject = (quad.Modifier.Define("GuiObject", "GuiBase2d") :: any) :: (...(GuiObjectModifier | { [string]: any })) -> GuiObjectModifier
-	ModifierNS.LayerCollector = (quad.Modifier.Define("LayerCollector", "GuiBase2d") :: any) :: (...(LayerCollectorModifier | { [string]: any })) -> LayerCollectorModifier
-	ModifierNS.UIConstraint = (quad.Modifier.Define("UIConstraint", "UIComponent") :: any) :: (...(UIConstraintModifier | { [string]: any })) -> UIConstraintModifier
-	ModifierNS.UICorner = (quad.Modifier.Define("UICorner", "UIComponent") :: any) :: (...(UICornerModifier | { [string]: any })) -> UICornerModifier
-	ModifierNS.UIDragDetector = (quad.Modifier.Define("UIDragDetector", "UIComponent") :: any) :: (...(UIDragDetectorModifier | { [string]: any })) -> UIDragDetectorModifier
-	ModifierNS.UIFlexItem = (quad.Modifier.Define("UIFlexItem", "UIComponent") :: any) :: (...(UIFlexItemModifier | { [string]: any })) -> UIFlexItemModifier
-	ModifierNS.UIGradient = (quad.Modifier.Define("UIGradient", "UIComponent") :: any) :: (...(UIGradientModifier | { [string]: any })) -> UIGradientModifier
-	ModifierNS.UILayout = (quad.Modifier.Define("UILayout", "UIComponent") :: any) :: (...(UILayoutModifier | { [string]: any })) -> UILayoutModifier
-	ModifierNS.UIPadding = (quad.Modifier.Define("UIPadding", "UIComponent") :: any) :: (...(UIPaddingModifier | { [string]: any })) -> UIPaddingModifier
-	ModifierNS.UIScale = (quad.Modifier.Define("UIScale", "UIComponent") :: any) :: (...(UIScaleModifier | { [string]: any })) -> UIScaleModifier
-	ModifierNS.UIShadow = (quad.Modifier.Define("UIShadow", "UIComponent") :: any) :: (...(UIShadowModifier | { [string]: any })) -> UIShadowModifier
-	ModifierNS.UIStroke = (quad.Modifier.Define("UIStroke", "UIComponent") :: any) :: (...(UIStrokeModifier | { [string]: any })) -> UIStrokeModifier
-	ModifierNS.WorldRoot = (quad.Modifier.Define("WorldRoot", "Model") :: any) :: (...(WorldRootModifier | { [string]: any })) -> WorldRootModifier
-	ModifierNS.BillboardGui = (quad.Modifier.Define("BillboardGui", "LayerCollector") :: any) :: (...(BillboardGuiModifier | { [string]: any })) -> BillboardGuiModifier
-	ModifierNS.CanvasGroup = (quad.Modifier.Define("CanvasGroup", "GuiObject") :: any) :: (...(CanvasGroupModifier | { [string]: any })) -> CanvasGroupModifier
-	ModifierNS.Frame = (quad.Modifier.Define("Frame", "GuiObject") :: any) :: (...(FrameModifier | { [string]: any })) -> FrameModifier
-	ModifierNS.GuiButton = (quad.Modifier.Define("GuiButton", "GuiObject") :: any) :: (...(GuiButtonModifier | { [string]: any })) -> GuiButtonModifier
-	ModifierNS.GuiLabel = (quad.Modifier.Define("GuiLabel", "GuiObject") :: any) :: (...(GuiLabelModifier | { [string]: any })) -> GuiLabelModifier
-	ModifierNS.ScreenGui = (quad.Modifier.Define("ScreenGui", "LayerCollector") :: any) :: (...(ScreenGuiModifier | { [string]: any })) -> ScreenGuiModifier
-	ModifierNS.ScrollingFrame = (quad.Modifier.Define("ScrollingFrame", "GuiObject") :: any) :: (...(ScrollingFrameModifier | { [string]: any })) -> ScrollingFrameModifier
-	ModifierNS.SurfaceGuiBase = (quad.Modifier.Define("SurfaceGuiBase", "LayerCollector") :: any) :: (...(SurfaceGuiBaseModifier | { [string]: any })) -> SurfaceGuiBaseModifier
-	ModifierNS.TextBox = (quad.Modifier.Define("TextBox", "GuiObject") :: any) :: (...(TextBoxModifier | { [string]: any })) -> TextBoxModifier
-	ModifierNS.UIAspectRatioConstraint = (quad.Modifier.Define("UIAspectRatioConstraint", "UIConstraint") :: any) :: (...(UIAspectRatioConstraintModifier | { [string]: any })) -> UIAspectRatioConstraintModifier
-	ModifierNS.UIGridStyleLayout = (quad.Modifier.Define("UIGridStyleLayout", "UILayout") :: any) :: (...(UIGridStyleLayoutModifier | { [string]: any })) -> UIGridStyleLayoutModifier
-	ModifierNS.UISizeConstraint = (quad.Modifier.Define("UISizeConstraint", "UIConstraint") :: any) :: (...(UISizeConstraintModifier | { [string]: any })) -> UISizeConstraintModifier
-	ModifierNS.UITextSizeConstraint = (quad.Modifier.Define("UITextSizeConstraint", "UIConstraint") :: any) :: (...(UITextSizeConstraintModifier | { [string]: any })) -> UITextSizeConstraintModifier
-	ModifierNS.VideoFrame = (quad.Modifier.Define("VideoFrame", "GuiObject") :: any) :: (...(VideoFrameModifier | { [string]: any })) -> VideoFrameModifier
-	ModifierNS.ViewportFrame = (quad.Modifier.Define("ViewportFrame", "GuiObject") :: any) :: (...(ViewportFrameModifier | { [string]: any })) -> ViewportFrameModifier
-	ModifierNS.WorldModel = (quad.Modifier.Define("WorldModel", "WorldRoot") :: any) :: (...(WorldModelModifier | { [string]: any })) -> WorldModelModifier
-	ModifierNS.ImageButton = (quad.Modifier.Define("ImageButton", "GuiButton") :: any) :: (...(ImageButtonModifier | { [string]: any })) -> ImageButtonModifier
-	ModifierNS.ImageLabel = (quad.Modifier.Define("ImageLabel", "GuiLabel") :: any) :: (...(ImageLabelModifier | { [string]: any })) -> ImageLabelModifier
-	ModifierNS.SurfaceGui = (quad.Modifier.Define("SurfaceGui", "SurfaceGuiBase") :: any) :: (...(SurfaceGuiModifier | { [string]: any })) -> SurfaceGuiModifier
-	ModifierNS.TextButton = (quad.Modifier.Define("TextButton", "GuiButton") :: any) :: (...(TextButtonModifier | { [string]: any })) -> TextButtonModifier
-	ModifierNS.TextLabel = (quad.Modifier.Define("TextLabel", "GuiLabel") :: any) :: (...(TextLabelModifier | { [string]: any })) -> TextLabelModifier
-	ModifierNS.UIGridLayout = (quad.Modifier.Define("UIGridLayout", "UIGridStyleLayout") :: any) :: (...(UIGridLayoutModifier | { [string]: any })) -> UIGridLayoutModifier
-	ModifierNS.UIListLayout = (quad.Modifier.Define("UIListLayout", "UIGridStyleLayout") :: any) :: (...(UIListLayoutModifier | { [string]: any })) -> UIListLayoutModifier
-	ModifierNS.UIPageLayout = (quad.Modifier.Define("UIPageLayout", "UIGridStyleLayout") :: any) :: (...(UIPageLayoutModifier | { [string]: any })) -> UIPageLayoutModifier
-	ModifierNS.UITableLayout = (quad.Modifier.Define("UITableLayout", "UIGridStyleLayout") :: any) :: (...(UITableLayoutModifier | { [string]: any })) -> UITableLayoutModifier
+	ModifierNS.BillboardGui = (quad.Modifier.TypedFactory("BillboardGui") :: any) :: (...(BillboardGuiModifier | { [string]: any })) -> BillboardGuiModifier
+	ModifierNS.Camera = (quad.Modifier.TypedFactory("Camera") :: any) :: (...(CameraModifier | { [string]: any })) -> CameraModifier
+	ModifierNS.CanvasGroup = (quad.Modifier.TypedFactory("CanvasGroup") :: any) :: (...(CanvasGroupModifier | { [string]: any })) -> CanvasGroupModifier
+	ModifierNS.Folder = (quad.Modifier.TypedFactory("Folder") :: any) :: (...(FolderModifier | { [string]: any })) -> FolderModifier
+	ModifierNS.Frame = (quad.Modifier.TypedFactory("Frame") :: any) :: (...(FrameModifier | { [string]: any })) -> FrameModifier
+	ModifierNS.GuiBase = (quad.Modifier.TypedFactory("GuiBase") :: any) :: (...(GuiBaseModifier | { [string]: any })) -> GuiBaseModifier
+	ModifierNS.GuiBase2d = (quad.Modifier.TypedFactory("GuiBase2d") :: any) :: (...(GuiBase2dModifier | { [string]: any })) -> GuiBase2dModifier
+	ModifierNS.GuiButton = (quad.Modifier.TypedFactory("GuiButton") :: any) :: (...(GuiButtonModifier | { [string]: any })) -> GuiButtonModifier
+	ModifierNS.GuiLabel = (quad.Modifier.TypedFactory("GuiLabel") :: any) :: (...(GuiLabelModifier | { [string]: any })) -> GuiLabelModifier
+	ModifierNS.GuiObject = (quad.Modifier.TypedFactory("GuiObject") :: any) :: (...(GuiObjectModifier | { [string]: any })) -> GuiObjectModifier
+	ModifierNS.ImageButton = (quad.Modifier.TypedFactory("ImageButton") :: any) :: (...(ImageButtonModifier | { [string]: any })) -> ImageButtonModifier
+	ModifierNS.ImageLabel = (quad.Modifier.TypedFactory("ImageLabel") :: any) :: (...(ImageLabelModifier | { [string]: any })) -> ImageLabelModifier
+	ModifierNS.Instance = (quad.Modifier.TypedFactory("Instance") :: any) :: (...(InstanceModifier | { [string]: any })) -> InstanceModifier
+	ModifierNS.LayerCollector = (quad.Modifier.TypedFactory("LayerCollector") :: any) :: (...(LayerCollectorModifier | { [string]: any })) -> LayerCollectorModifier
+	ModifierNS.Model = (quad.Modifier.TypedFactory("Model") :: any) :: (...(ModelModifier | { [string]: any })) -> ModelModifier
+	ModifierNS.PVInstance = (quad.Modifier.TypedFactory("PVInstance") :: any) :: (...(PVInstanceModifier | { [string]: any })) -> PVInstanceModifier
+	ModifierNS.ScreenGui = (quad.Modifier.TypedFactory("ScreenGui") :: any) :: (...(ScreenGuiModifier | { [string]: any })) -> ScreenGuiModifier
+	ModifierNS.ScrollingFrame = (quad.Modifier.TypedFactory("ScrollingFrame") :: any) :: (...(ScrollingFrameModifier | { [string]: any })) -> ScrollingFrameModifier
+	ModifierNS.SurfaceGui = (quad.Modifier.TypedFactory("SurfaceGui") :: any) :: (...(SurfaceGuiModifier | { [string]: any })) -> SurfaceGuiModifier
+	ModifierNS.SurfaceGuiBase = (quad.Modifier.TypedFactory("SurfaceGuiBase") :: any) :: (...(SurfaceGuiBaseModifier | { [string]: any })) -> SurfaceGuiBaseModifier
+	ModifierNS.TextBox = (quad.Modifier.TypedFactory("TextBox") :: any) :: (...(TextBoxModifier | { [string]: any })) -> TextBoxModifier
+	ModifierNS.TextButton = (quad.Modifier.TypedFactory("TextButton") :: any) :: (...(TextButtonModifier | { [string]: any })) -> TextButtonModifier
+	ModifierNS.TextLabel = (quad.Modifier.TypedFactory("TextLabel") :: any) :: (...(TextLabelModifier | { [string]: any })) -> TextLabelModifier
+	ModifierNS.UIAspectRatioConstraint = (quad.Modifier.TypedFactory("UIAspectRatioConstraint") :: any) :: (...(UIAspectRatioConstraintModifier | { [string]: any })) -> UIAspectRatioConstraintModifier
+	ModifierNS.UIBase = (quad.Modifier.TypedFactory("UIBase") :: any) :: (...(UIBaseModifier | { [string]: any })) -> UIBaseModifier
+	ModifierNS.UIComponent = (quad.Modifier.TypedFactory("UIComponent") :: any) :: (...(UIComponentModifier | { [string]: any })) -> UIComponentModifier
+	ModifierNS.UIConstraint = (quad.Modifier.TypedFactory("UIConstraint") :: any) :: (...(UIConstraintModifier | { [string]: any })) -> UIConstraintModifier
+	ModifierNS.UICorner = (quad.Modifier.TypedFactory("UICorner") :: any) :: (...(UICornerModifier | { [string]: any })) -> UICornerModifier
+	ModifierNS.UIDragDetector = (quad.Modifier.TypedFactory("UIDragDetector") :: any) :: (...(UIDragDetectorModifier | { [string]: any })) -> UIDragDetectorModifier
+	ModifierNS.UIFlexItem = (quad.Modifier.TypedFactory("UIFlexItem") :: any) :: (...(UIFlexItemModifier | { [string]: any })) -> UIFlexItemModifier
+	ModifierNS.UIGradient = (quad.Modifier.TypedFactory("UIGradient") :: any) :: (...(UIGradientModifier | { [string]: any })) -> UIGradientModifier
+	ModifierNS.UIGridLayout = (quad.Modifier.TypedFactory("UIGridLayout") :: any) :: (...(UIGridLayoutModifier | { [string]: any })) -> UIGridLayoutModifier
+	ModifierNS.UIGridStyleLayout = (quad.Modifier.TypedFactory("UIGridStyleLayout") :: any) :: (...(UIGridStyleLayoutModifier | { [string]: any })) -> UIGridStyleLayoutModifier
+	ModifierNS.UILayout = (quad.Modifier.TypedFactory("UILayout") :: any) :: (...(UILayoutModifier | { [string]: any })) -> UILayoutModifier
+	ModifierNS.UIListLayout = (quad.Modifier.TypedFactory("UIListLayout") :: any) :: (...(UIListLayoutModifier | { [string]: any })) -> UIListLayoutModifier
+	ModifierNS.UIPadding = (quad.Modifier.TypedFactory("UIPadding") :: any) :: (...(UIPaddingModifier | { [string]: any })) -> UIPaddingModifier
+	ModifierNS.UIPageLayout = (quad.Modifier.TypedFactory("UIPageLayout") :: any) :: (...(UIPageLayoutModifier | { [string]: any })) -> UIPageLayoutModifier
+	ModifierNS.UIScale = (quad.Modifier.TypedFactory("UIScale") :: any) :: (...(UIScaleModifier | { [string]: any })) -> UIScaleModifier
+	ModifierNS.UIShadow = (quad.Modifier.TypedFactory("UIShadow") :: any) :: (...(UIShadowModifier | { [string]: any })) -> UIShadowModifier
+	ModifierNS.UISizeConstraint = (quad.Modifier.TypedFactory("UISizeConstraint") :: any) :: (...(UISizeConstraintModifier | { [string]: any })) -> UISizeConstraintModifier
+	ModifierNS.UIStroke = (quad.Modifier.TypedFactory("UIStroke") :: any) :: (...(UIStrokeModifier | { [string]: any })) -> UIStrokeModifier
+	ModifierNS.UITableLayout = (quad.Modifier.TypedFactory("UITableLayout") :: any) :: (...(UITableLayoutModifier | { [string]: any })) -> UITableLayoutModifier
+	ModifierNS.UITextSizeConstraint = (quad.Modifier.TypedFactory("UITextSizeConstraint") :: any) :: (...(UITextSizeConstraintModifier | { [string]: any })) -> UITextSizeConstraintModifier
+	ModifierNS.VideoFrame = (quad.Modifier.TypedFactory("VideoFrame") :: any) :: (...(VideoFrameModifier | { [string]: any })) -> VideoFrameModifier
+	ModifierNS.ViewportFrame = (quad.Modifier.TypedFactory("ViewportFrame") :: any) :: (...(ViewportFrameModifier | { [string]: any })) -> ViewportFrameModifier
+	ModifierNS.WorldModel = (quad.Modifier.TypedFactory("WorldModel") :: any) :: (...(WorldModelModifier | { [string]: any })) -> WorldModelModifier
+	ModifierNS.WorldRoot = (quad.Modifier.TypedFactory("WorldRoot") :: any) :: (...(WorldRootModifier | { [string]: any })) -> WorldRootModifier
+	quad.Modifier.DefineSubtype("LayerCollector", "BillboardGui")
+	quad.Modifier.DefineSubtype("PVInstance", "Camera")
+	quad.Modifier.DefineSubtype("GuiObject", "CanvasGroup")
+	quad.Modifier.DefineSubtype("Instance", "Folder")
+	quad.Modifier.DefineSubtype("GuiObject", "Frame")
+	quad.Modifier.DefineSubtype("Instance", "GuiBase")
+	quad.Modifier.DefineSubtype("GuiBase", "GuiBase2d")
+	quad.Modifier.DefineSubtype("GuiObject", "GuiButton")
+	quad.Modifier.DefineSubtype("GuiObject", "GuiLabel")
+	quad.Modifier.DefineSubtype("GuiBase2d", "GuiObject")
+	quad.Modifier.DefineSubtype("GuiButton", "ImageButton")
+	quad.Modifier.DefineSubtype("GuiLabel", "ImageLabel")
+	quad.Modifier.DefineSubtype("GuiBase2d", "LayerCollector")
+	quad.Modifier.DefineSubtype("PVInstance", "Model")
+	quad.Modifier.DefineSubtype("Instance", "PVInstance")
+	quad.Modifier.DefineSubtype("LayerCollector", "ScreenGui")
+	quad.Modifier.DefineSubtype("GuiObject", "ScrollingFrame")
+	quad.Modifier.DefineSubtype("SurfaceGuiBase", "SurfaceGui")
+	quad.Modifier.DefineSubtype("LayerCollector", "SurfaceGuiBase")
+	quad.Modifier.DefineSubtype("GuiObject", "TextBox")
+	quad.Modifier.DefineSubtype("GuiButton", "TextButton")
+	quad.Modifier.DefineSubtype("GuiLabel", "TextLabel")
+	quad.Modifier.DefineSubtype("UIConstraint", "UIAspectRatioConstraint")
+	quad.Modifier.DefineSubtype("Instance", "UIBase")
+	quad.Modifier.DefineSubtype("UIBase", "UIComponent")
+	quad.Modifier.DefineSubtype("UIComponent", "UIConstraint")
+	quad.Modifier.DefineSubtype("UIComponent", "UICorner")
+	quad.Modifier.DefineSubtype("UIComponent", "UIDragDetector")
+	quad.Modifier.DefineSubtype("UIComponent", "UIFlexItem")
+	quad.Modifier.DefineSubtype("UIComponent", "UIGradient")
+	quad.Modifier.DefineSubtype("UIGridStyleLayout", "UIGridLayout")
+	quad.Modifier.DefineSubtype("UILayout", "UIGridStyleLayout")
+	quad.Modifier.DefineSubtype("UIComponent", "UILayout")
+	quad.Modifier.DefineSubtype("UIGridStyleLayout", "UIListLayout")
+	quad.Modifier.DefineSubtype("UIComponent", "UIPadding")
+	quad.Modifier.DefineSubtype("UIGridStyleLayout", "UIPageLayout")
+	quad.Modifier.DefineSubtype("UIComponent", "UIScale")
+	quad.Modifier.DefineSubtype("UIComponent", "UIShadow")
+	quad.Modifier.DefineSubtype("UIConstraint", "UISizeConstraint")
+	quad.Modifier.DefineSubtype("UIComponent", "UIStroke")
+	quad.Modifier.DefineSubtype("UIGridStyleLayout", "UITableLayout")
+	quad.Modifier.DefineSubtype("UIConstraint", "UITextSizeConstraint")
+	quad.Modifier.DefineSubtype("GuiObject", "VideoFrame")
+	quad.Modifier.DefineSubtype("GuiObject", "ViewportFrame")
+	quad.Modifier.DefineSubtype("WorldRoot", "WorldModel")
+	quad.Modifier.DefineSubtype("Model", "WorldRoot")
 	quad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨
 	return (D :: any) :: D
 end

@@ -22,18 +22,30 @@
 	                                          --   State/function branching
 	                                          --   (values are already baked)
 
-	Class tags + casts (M7 단위 ④, 2026-09-04 — modifier-plan 11절, user design):
-	  Modifier.Define(name, parent?) -> ctor  -- register a modifier CLASS (any
-	                                          --   engine class, component, or
-	                                          --   virtual object — base owns the
-	                                          --   registry, the provider is just
-	                                          --   its first client); returns the
-	                                          --   tagged constructor (same shape
-	                                          --   as Modifier(...), tag = name)
+	Class tags + casts (M7 단위 ④, 2026-09-04 — modifier-plan 11절, user design;
+	one job per function — user rule):
+	  Modifier.TypedFactory(name) -> ctor     -- name a modifier CLASS (any engine
+	                                          --   class, component, or virtual
+	                                          --   object — base owns the registry,
+	                                          --   the provider is just its first
+	                                          --   client) and get its tagged
+	                                          --   constructor (same shape as
+	                                          --   Modifier(...), tag = name). Knows
+	                                          --   nothing about relations. Dedup:
+	                                          --   same name → same ctor
+	  Modifier.DefineSubtype(parent, subtype) -- register ONE edge subtype ⊂ parent
+	                                          --   (both names become known). A
+	                                          --   subtype may get several parents
+	                                          --   (interfaces / multiple parents —
+	                                          --   fields are just present-or-absent,
+	                                          --   so nothing can conflict). Dedup:
+	                                          --   same edge → no-op. Only a cycle
+	                                          --   is refused
 	  mod:As<Name>() -> mod'                  -- CHECKED downcast: Name must be
-	                                          --   Defined and mod's tag must be
+	                                          --   known and mod's tag must be
 	                                          --   untyped (true), Name itself, or
-	                                          --   an ancestor of Name; else error
+	                                          --   an ancestor of Name (union over
+	                                          --   every parent path); else error
 	  mod:As() / mod:As(name) -> mod'         -- UNCHECKED: no arg = self as-is
 	                                          --   (type-only cast); name = retag
 	                                          --   with existence check only
@@ -107,19 +119,34 @@ local function newModifier(fields: { [any]: any }, tag: any): any
 	return table.freeze(mod)
 end
 
--- ── class registry (Define / As) ────────────────────────────────────────────
--- name -> parent name | false (root). Module-level like Brand/None: two
--- coexisting quad-base copies get separate registries (documented copy-split).
-local defined: { [string]: string | false } = {}
+-- ── class registry (TypedFactory / DefineSubtype / As) ─────────────────────
+-- known names + parent SETS (a subtype may have several parents). Module-level
+-- like Brand/None: two coexisting quad-base copies get separate registries
+-- (documented copy-split).
+local known: { [string]: true } = {}
+local parents: { [string]: { [string]: true } } = {}
 local constructors: { [string]: any } = {}
 
+-- is `ancestor` reachable from `name` upward (or equal)? Union over every
+-- parent path; `seen` guards the walk (cycles are refused at registration,
+-- but a bounded walk costs nothing).
 local function isAncestorOrSelf(ancestor: string, name: string): boolean
-	local node: any = name
-	while node do
-		if node == ancestor then
-			return true
+	if ancestor == name then
+		return true
+	end
+	local seen: { [string]: true } = {}
+	local stack = { name }
+	while #stack > 0 do
+		local node = table.remove(stack) :: string
+		for parent in parents[node] or {} do
+			if parent == ancestor then
+				return true
+			end
+			if not seen[parent] then
+				seen[parent] = true
+				table.insert(stack, parent)
+			end
 		end
-		node = defined[node] or nil
 	end
 	return false
 end
@@ -151,8 +178,8 @@ function methods.As(self: any, name: any): any
 	if type(name) ~= "string" then
 		Err.errorBeforeNearest(`Modifier: As(name) expects a class name string (got {typeof(name)})`, SURFACE)
 	end
-	if defined[name] == nil then
-		Err.errorBeforeNearest(`Modifier: unknown modifier class "{name}" — Modifier.Define it first`, SURFACE)
+	if not known[name] then
+		Err.errorBeforeNearest(`Modifier: unknown modifier class "{name}" — Modifier.TypedFactory/DefineSubtype it first`, SURFACE)
 	end
 	return retag(self, name)
 end
@@ -193,8 +220,8 @@ local function castClosure(target: string): (any) -> any
 		return cached
 	end
 	local closure = function(selfArg: any): any
-		if defined[target] == nil then
-			Err.errorBeforeNearest(`Modifier: unknown modifier class "{target}" — Modifier.Define it first (or use :As(name) for an unchecked cast)`, SURFACE)
+		if not known[target] then
+			Err.errorBeforeNearest(`Modifier: unknown modifier class "{target}" — Modifier.TypedFactory/DefineSubtype it first (or use :As(name) for an unchecked cast)`, SURFACE)
 		end
 		local tag = selfArg.__quadModifier
 		if tag ~= true and tag ~= target and not isAncestorOrSelf(tag, target) then
@@ -260,7 +287,7 @@ local function isPlainFieldTable(arg: any): boolean
 	return type(arg) == "table" and getmetatable(arg) == nil and not isState(arg) and not isHandlerLayerValue(arg)
 end
 
--- shared by `Modifier(...)` (tag true) and every Define'd constructor (tag =
+-- shared by `Modifier(...)` (tag true) and every TypedFactory constructor (tag =
 -- class name) — one merge body, the tag is the only difference
 local function construct(tag: any, ...: any): any
 	local merged: { [any]: any } = {}
@@ -290,33 +317,25 @@ local function construct(tag: any, ...: any): any
 	return newModifier(merged, tag)
 end
 
--- Modifier.Define(name, parent?) -> ctor (11절, user design 2026-09-04): a
--- PUBLIC base API — the provider registers its engine classes through it at
--- UseProvider and component authors register theirs the same way (a
--- `MaterialButtonModifier` with custom fields is as first-class as
--- `FrameModifier`). `parent` must already be Defined (ancestors first).
--- Re-Define with the same parent returns the same constructor (idempotent —
--- two modules may both declare a class); a different parent is an error.
-local function Define(name: any, parent: any): any
+local function checkName(fn: string, what: string, name: any)
 	if type(name) ~= "string" or name == "" then
-		Err.errorBeforeNearest(`Modifier.Define: name must be a non-empty string (got {typeof(name)})`, SURFACE)
+		Err.errorBeforeNearest(`Modifier.{fn}: {what} must be a non-empty class name string (got {typeof(name)})`, SURFACE)
 	end
-	if parent ~= nil then
-		if type(parent) ~= "string" then
-			Err.errorBeforeNearest(`Modifier.Define: parent must be a class name string (got {typeof(parent)})`, SURFACE)
-		end
-		if defined[parent] == nil then
-			Err.errorBeforeNearest(`Modifier.Define: parent "{parent}" of "{name}" is not Defined yet — Define ancestors first`, SURFACE)
-		end
-	end
-	local existing = defined[name]
+end
+
+-- Modifier.TypedFactory(name) -> ctor (11절, user design 2026-09-04): ONE job —
+-- make `name` known and return its tagged constructor. A PUBLIC base API: the
+-- provider registers its engine classes through it at UseProvider and
+-- component authors register theirs the same way (a `MaterialButtonModifier`
+-- with custom fields is as first-class as `FrameModifier`). Dedup: the same
+-- name always returns the same constructor (two modules may both ask).
+local function TypedFactory(name: any): any
+	checkName("TypedFactory", "name", name)
+	local existing = constructors[name]
 	if existing ~= nil then
-		if existing ~= (parent or false) then
-			Err.errorBeforeNearest(`Modifier.Define: "{name}" is already Defined with parent "{tostring(existing or nil)}" (asked for "{tostring(parent)}")`, SURFACE)
-		end
-		return constructors[name]
+		return existing
 	end
-	defined[name] = parent or false
+	known[name] = true
 	local ctor = function(...: any): any
 		return construct(name, ...)
 	end
@@ -325,7 +344,28 @@ local function Define(name: any, parent: any): any
 	return ctor
 end
 
-local Modifier = setmetatable({ Overridden = Overridden, Define = Define }, {
+-- Modifier.DefineSubtype(parent, subtype) (11절): ONE job — register the edge
+-- `subtype ⊂ parent`. Both names become known (so order of registration is
+-- free), a subtype may collect several parents (interfaces / multiple
+-- inheritance — modifier fields are present-or-absent, nothing conflicts),
+-- the same edge twice is a no-op, and only a cycle is refused.
+local function DefineSubtype(parent: any, subtype: any)
+	checkName("DefineSubtype", "parent", parent)
+	checkName("DefineSubtype", "subtype", subtype)
+	if parent == subtype or isAncestorOrSelf(subtype, parent) then
+		Err.errorBeforeNearest(`Modifier.DefineSubtype: "{subtype}" ⊂ "{parent}" would make a cycle`, SURFACE)
+	end
+	known[parent] = true
+	known[subtype] = true
+	local set = parents[subtype]
+	if set == nil then
+		set = {}
+		parents[subtype] = set
+	end
+	set[parent] = true
+end
+
+local Modifier = setmetatable({ Overridden = Overridden, TypedFactory = TypedFactory, DefineSubtype = DefineSubtype }, {
 	__call = function(_self: any, ...: any): any
 		return construct(true, ...)
 	end,
@@ -336,7 +376,8 @@ table.freeze(Modifier)
 -- Modifier.Overridden and as the colon method — same function object)
 Err.setFuncLevel(getmetatable(Modifier).__call, SURFACE)
 Err.setFuncLevel(Overridden, SURFACE)
-Err.setFuncLevel(Define, SURFACE)
+Err.setFuncLevel(TypedFactory, SURFACE)
+Err.setFuncLevel(DefineSubtype, SURFACE)
 Err.setFuncLevel(methods.As, SURFACE)
 
 -- internal sentinel that fills a consumed array slot (never user-facing —

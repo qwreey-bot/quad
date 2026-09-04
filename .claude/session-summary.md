@@ -2329,8 +2329,8 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   절, 정본 각주. round17 §4엔 `H-313` 마커 계약 확인만 남음.
 
 - `session/2026-09-04-05-m7-unit4-class-tags-as-into.md` **[M7 단위 ④ — 클래스
-  태그·`Define`·`As`·`Into`, 사용자 설계]** 사용자 제안 스파이크 둘 실측 →
+  태그·`TypedFactory`/`DefineSubtype`·`As`·`Into`, 사용자 설계]** 사용자 제안 스파이크 둘 실측 →
   새 솔버 유니언 서브타이핑 결함 발견(재귀 필드 + 이름 충돌) → `Apply` any →
-  `As<Desc>()` 메소드/무검사 `As<<T>>()`/`Into<Class>`/`Modifier.Define` 공개
-  레지스트리(엔진 op 제안은 사용자가 되돌림 — 커스텀 Modifier 허용)/예약 접두
-  `^As%u`. 상위 클래스 16종 생성(Q5 닫힘), `H-313` 소멸, Studio 8/8. `H-314`.
+  `As<Desc>()` 메소드/무검사 `As<<T>>()`/`Into<Class>`/공개 레지스트리(엔진 op
+  제안은 사용자가 되돌림 — 커스텀 Modifier 허용; `Define` 하나 → 사용자 결정으로
+  `TypedFactory`/`DefineSubtype` 분리, 부모 여럿 허용)/예약 접두 `^As%u`. 상위 클래스 16종 생성(Q5 닫힘), `H-313` 소멸, Studio 8/8. `H-314`.

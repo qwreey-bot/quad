@@ -235,7 +235,7 @@ def emit():
     L.append("\tField<T | Tween<T>> = V | State<V> | None | 변환 함수, 자기 타입 반환; 예약 메소드")
     L.append("\tApply/Peek/Overridden; 이벤트는 제외 — 함수 인자는 변환 함수라 콜백과 겹친다)")
     L.append("\t+ D.Modifier.<Class>() 타입드 생성자(round17 Q3 (a) — 단위 ③엔 quad.Modifier 캐스트 별칭,")
-    L.append("\t단위 ④부터 아래 Define 태그 생성자)")
+    L.append("\t단위 ④부터 아래 TypedFactory 태그 생성자)")
     L.append("\t+ children엔 마커만(<Class>Modifier를 유니언에 직접 넣으면 큰 클래스에서 too complex —")
     L.append("\ttyping-limits 8.8절): 무타입 base는 `{ read __quadModifier: true }`(NewChild, types.luau),")
     L.append("\t클래스 태그는 조상 체인 마커 `{ read __quadModifier: \"Frame\" | \"GuiObject\" | … }`(<Class>Elem).")
@@ -245,7 +245,7 @@ def emit():
     L.append("\t무검사 `As<<T>>()`, 인터페이스 `Into<Class> = { As<Class>: (self: any) -> <Class>Modifier }`,")
     L.append("\tApply는 self·factory 둘 다 any(8.9절 — 재귀 필드 + 유니언 멤버 메소드 이름 충돌 시")
     L.append("\t유니언 검사가 조용히 통과하는 솔버 결함을 피해 클래스 소속 검사를 되찾음). 런타임은")
-    L.append("\tquad.Modifier.Define(name, parent)이 돌려주는 태그 생성자(조상 먼저 등록).")
+    L.append("\tquad.Modifier.TypedFactory(name)이 돌려주는 태그 생성자 + DefineSubtype(parent, name) 간선.")
     L.append("]]")
     L.append("")
     L.append('local QuadTypes = require("../luau_packages/quad_types")')
@@ -467,8 +467,8 @@ def emit():
     L.append("\t-- Claim.luau의 newMapperClass — 여기선 클래스별 캐스트 별칭만, D.<Class> 동형)")
     L.append("\tlocal Mapper: { [string]: any } = { Root = quad.MapperRoot }")
     L.append("\t-- D.Modifier — 클래스별 타입드 Modifier 생성자(round17 §0 Q3 (a); 단위 ④):")
-    L.append("\t-- quad.Modifier.Define(name, parent)이 돌려주는 태그 생성자 — 조상이 먼저")
-    L.append("\t-- 등록돼야 하므로 체인 깊이 순. 런타임 병합 본문은 base 하나(construct)")
+    L.append("\t-- quad.Modifier.TypedFactory(name)이 돌려주는 태그 생성자(런타임 병합 본문은")
+    L.append("\t-- base 하나) + DefineSubtype(parent, name) 간선 — 둘 다 dedup이라 순서 자유")
     L.append("\tlocal ModifierNS: { [string]: any } = {}")
     L.append("\tlocal D: { [string]: any } = { New = New, Mapper = Mapper, Modifier = ModifierNS }")
     for name in names:
@@ -477,10 +477,12 @@ def emit():
         L.append(
             f'\tMapper.{name} = (quad.newMapperClass("{name}") :: any) :: (key: string | MapperRoot) -> ({name}Param<{name}MapperElem>) -> MapperDescriptor'
         )
-    for name in sorted(mod_classes, key=lambda n: (len(ancestors(n)), n)):
+    for name in mod_classes:
+        L.append(f'\tModifierNS.{name} = (quad.Modifier.TypedFactory("{name}") :: any) :: (...({name}Modifier | {{ [string]: any }})) -> {name}Modifier')
+    for name in mod_classes:
         parent = parent_of[name]
-        parg = f', "{parent}"' if parent else ""
-        L.append(f'\tModifierNS.{name} = (quad.Modifier.Define("{name}"{parg}) :: any) :: (...({name}Modifier | {{ [string]: any }})) -> {name}Modifier')
+        if parent:
+            L.append(f'\tquad.Modifier.DefineSubtype("{parent}", "{name}")')
     L.append("\tquad.errorNamespace.setFuncLevel(New, QuadTypes.ERROR_LEVEL_SURFACE) -- 별칭·스테이지는 New 안에서 태그됨")
     L.append("\treturn (D :: any) :: D")
     L.append("end")

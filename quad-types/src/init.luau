@@ -167,12 +167,15 @@ export type Modifier = {
 }
 -- `H-310`(사용자 확정 2026-09-04): 인자는 Modifier 또는 `{ field = value }` 테이블,
 -- 뒤가 필드 단위로 덮어씀(Overridden 규칙) — `Modifier()` == `Modifier({})`.
--- `Define(name, parent?)`(단위 ④): 모디파이어 클래스 등록 + 그 태그를 심는
--- 생성자 반환 — 공개 API(프로바이더는 첫 사용자일 뿐, 컴포넌트도 같은 길)
-export type ModifierClassConstructor = (...(Modifier | { [string]: any })) -> Modifier
+-- 단위 ④(사용자 확정 — 함수 하나에 일 하나): `TypedFactory<<T>>(name)`은 클래스
+-- 이름을 알리고 그 태그를 심는 생성자를 돌려준다(T는 호출자가 쓴 그 클래스의
+-- Modifier 타입 — 생성 `<Class>Modifier`나 사용자 정의), `DefineSubtype(parent,
+-- subtype)`은 관계 간선 하나만 등록한다(부모 여럿 허용 — 인터페이스). 둘 다
+-- 공개 API(프로바이더는 첫 사용자일 뿐, 컴포넌트도 같은 길), 둘 다 dedup.
 export type ModifierConstructor = setmetatable<{
 	Overridden: (...any) -> any,
-	Define: (name: string, parent: string?) -> ModifierClassConstructor,
+	TypedFactory: <T>(name: string) -> (...(Modifier | { [string]: any })) -> T,
+	DefineSubtype: (parent: string, subtype: string) -> (),
 }, { __call: (self: any, ...(Modifier | { [string]: any })) -> Modifier }>
 -- children 유니언용 마커 타입 — 무타입 base Modifier의 것(`true`). 클래스 태그
 -- 마커 `{ read __quadModifier: "Frame" | "GuiObject" | … }`는 생성기가 클래스별

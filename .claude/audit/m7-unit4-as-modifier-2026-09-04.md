@@ -90,7 +90,21 @@ setter / Into 불만족·잘못된 반환 / 오타 키 회귀 / Mapper 자리). 
 | 5 | `quad.Modifier.Define("MaterialButton", "TextButton")` 커스텀 클래스 — 생성자 태그, `Into` 형 헬퍼가 GuiObject Modifier를 받아 하강, `As("MaterialButton")` 무검사 재태그, 재-Define 동일 생성자 | PASS |
 | 6 | 커스텀 클래스 값이 `D.TextButton{}`를 구동 / 상향 `AsTextButton()` 거부 / `As("TextButton")`은 강제 | PASS |
 | 7 | `Overridden` 결과 무타입 + `As()` 무인자 항등 | PASS |
-| 8 | `Define` error — 다른 부모로 재등록 / 미등록 부모 | PASS |
+| 8 | **[소멸된 규칙 — 그 시점 계약, 4절 분리 뒤엔 반대로 허용됨]** `Define` error — 다른 부모로 재등록 / 미등록 부모 | PASS(당시) |
 
 첫 시도의 FAIL 하나는 스모크 자체의 오류였다(6번을 `Material(...):AsTextButton()`
 상향으로 적어 검사형이 정확히 거부) — 결함이 아니라 계약 확인.
+
+## 4. 후속 — `Define` 분리 뒤 재실측 (같은 날)
+
+사용자 결정(*"Define 은 단순해져야해. 하나의 동작만"*)으로 `Define(name, parent?)`을
+`TypedFactory(name)`(이름 + 태그 생성자) / `DefineSubtype(parent, subtype)`(간선 하나,
+부모 여럿 허용)으로 가른 뒤 Studio 스모크 8/8 재실측 — 위 표의 1~4·7과 같은
+항목(8행은 규칙이 반전돼 제외 — 다른 부모 재등록은 이제 부모 추가, 미등록 부모는
+성립하지 않는 케이스)에 더해: 부모 둘(`TextButton` + 인터페이스 `Elevated`)을 가진
+`MaterialButton`이 두 경로 모두에서 `AsMaterialButton()` 하강 통과, 잎부터 등록해도
+됨(순서 자유), 같은 간선 재등록 no-op, 순환(`DefineSubtype("MaterialButton",
+"TextButton")`) 거부, `TypedFactory` 같은 이름 → 같은 생성자. 위 3절 표 5행의
+`Define` 표기는 개명 전 기록이고(dedup 계약은 `TypedFactory`로 그대로 산다),
+8행은 위 태그대로 소멸된 규칙이다.
+

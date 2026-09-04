@@ -102,3 +102,16 @@ Modifier는 타입 별칭 + Define 한 줄; 컴포넌트가 무엇을 받을지�
 클로저 + `errorBeforeNearest`로(`H-231` 계약); 단일 이름 공간은 11절에 문서화.
 doc-check ERROR 0, test.sh 38 파일 통과.
 
+## 6. `Define` 분리 — 사용자 결정
+
+확인 항목 설명을 듣고 사용자: *"Define 은 단순해져야해. 하나의 동작만 하도록
+만들고 싶어. 갈래 상 다중상속을 전혀 지원하지 않는게 일반적이지만.(로블록스 엔진
+기준) 인터페이스를 쓴다던가 등 해서 여럿을 Define 으로 넣고 싶다면? modifier
+자체는 그게 지원 될 수 있다고 봄. 값이 있거나 없을 수 있고, 서브타입으론 멀쩡히
+계속 내려가거든. 따라서 DefineSubtype(Parent, Subtype) 처럼 서브타입이 내려가는
+구조에, TypedFactory<T>('name') -> T 식이 되는게 맞다고 봐. … 나머지는 다
+괜찮아보여. 그리고 Dedup 은 되는거겠지?"* → `TypedFactory<<T>>(name)` +
+`DefineSubtype(parent, subtype)`(부모 여럿, 순서 자유, 순환만 거부, 둘 다 dedup).
+부수로 재량 항목 2("다른 부모 재등록 error")·3("부모 먼저")이 사라졌고, 나머지
+재량은 사용자 수용 — round17 §4 열린 문항 0. Studio 8/8 재실측.
+
