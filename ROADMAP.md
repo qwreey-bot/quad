@@ -1518,17 +1518,17 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       Modifier 타입으로 차단되는 것과 같은 자리(`base/bind-system-plan.md`의
       `H-142` 항목).
 
-- [ ] `Modifier()`(빈 인스턴스 바닥 생성자, 2026-08-07 열 번째 세션
+- [x] **[2026-09-04 M7 단위 ① — `quad-base/src/Modifier.luau`, `spec.modifier` 7절, round17]** `Modifier()`(빈 인스턴스 바닥 생성자, 2026-08-07 열 번째 세션
       명시 — `Source(default)`/`Ref(default)`/`Store({defaults})`와 같은
       `Type(args)` 팩토리 관습, `modifier-plan.md` 3번)
-- [ ] flatten-before-dispatch(`isModifier(v)`로 배열 항목 중 Modifier만
+- [ ] **[2026-09-04 단위 ①이 절반 — immutable `table.clone` 체이닝(내부 저장소 `FieldsKey` 둘 다 clone)·형제 분기 무오염·재호출은 spec 2절; flatten은 단위 ②]** flatten-before-dispatch(`isModifier(v)`로 배열 항목 중 Modifier만
       판별해 필드 merge, 나머지는 안 건드리고 통과 — 2026-08-07 열 번째
       세션 명시, `modifier-plan.md` 1번), immutable `table.clone` 체이닝 —
       `table.clone`이 메타테이블을 복사 아닌 참조로 공유해 제네릭 `__index`
       기반 체이닝이 안 끊긴다는 메커니즘은 확인됨(2026-08-12 열일곱 번째
       세션, `modifier-plan.md` "`table.clone`의 정확한 동작" 절) — 실제
       Luau 실행 확인은 `luau-test`의 `17-modifier-index-tableclone-chaining.luau`
-- [ ] `Modifier.Overridden(mod1, mod2, ...)`(이름 확정, 구 `Merge`→`Override`,
+- [x] **[2026-09-04 단위 ①]** `Modifier.Overridden(mod1, mod2, ...)`(이름 확정, 구 `Merge`→`Override`,
       2026-08-08 세션) — 필드별 raw 덮어쓰기, 특별한 State/함수 분기
       불필요(`modifier-plan.md` 9번)
 - [ ] `Overridden`가 서브타입 관계인 서로 다른 Modifier 타입(예: `FrameModifier`/
@@ -1536,12 +1536,12 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       2026-08-13 첫 실측 라운드]** `luau-test/09`로 실측 완료, 우려대로
       깨짐 확인됨 → `Overridden(...: any): any`로 느슨하게 열어두는 게
       실제 구현 방향(`modifier-plan.md` 9-2번)
-- [ ] `State<Modifier>` 조합에 `isModifier` 기반 명시적 error 적용
+- [x] **[2026-09-04 단위 ① — M2가 심은 가드(Source 생성자·Set·Compute 캐시)를 실물 Modifier로 재확인, spec 7절; 타입 차단은 시도 안 함]** `State<Modifier>` 조합에 `isModifier` 기반 명시적 error 적용
       (`modifier-plan.md` 7번, 2026-08-09 세션 확정) — 타입 차단은
       되면 좋은 보너스로 선택 검증(필수 아님)
-- [ ] `:Apply(factory)` 팩토리 함수 체이닝(`modifier-plan.md` 8번, 예약 키
+- [x] **[2026-09-04 단위 ① — 예약 메소드 셋(`Apply`/`Peek`/`Overridden`)이 제네릭 setter보다 먼저 잡힘, spec 1·4절]** `:Apply(factory)` 팩토리 함수 체이닝(`modifier-plan.md` 8번, 예약 키
       `Apply`가 제네릭 `__index` 필드 setter와 안 겹치는지 확인)
-- [ ] `:Peek<<T>>(key): T|State<T>|nil` 필드 읽기 접근자 +
+- [x] **[2026-09-04 단위 ① — `Peek`은 raw 그대로(State 핸들·`None`·`nil` 구별), `isState`/`isSource`는 M2 Brand]** `:Peek<<T>>(key): T|State<T>|nil` 필드 읽기 접근자 +
       `isState(x)`/`isSource(x): boolean`(**[2026-08-21 갱신]** 인스턴스
       브랜드 멤버십 기반 — `isSource(x)`는 `SourceBrand:is(x)`, `isState`는
       그 위에 `StateBrand:is(x)`를 OR로 얹은 상위 개념. 옛 "공유 레지스트리 +
@@ -1572,6 +1572,17 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `base/modifier-plan.md`의 flatten 절이 소스
 - [ ] **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Modifier` 관련
       표면이 노출돼야 하면 같이 갱신(위 M3 항목의 "마일스톤마다" 규칙)
+- [ ] **[2026-09-04 신설 — 후순위, M7 밖] 상위 클래스 Modifier 타입 생성**
+      (`GuiObjectModifier`/`GuiButtonModifier`류 — D 스코프의 creatable
+      클래스만 찍는 M7 생성기 밖). **사용자 판정**(round17 §0 Q5 회신):
+      *"textbutton/textlabel 전부 Boldify 같은걸 쓸 수 있어야 할텐데, 안 해두면
+      둘 다 따로 만들어야 하는 부분이라서. 상위 클래스에 대해서 생성하는건
+      있을 필요가 있긴한 부분 … 다만 지금 당장 할 필요가 있냐 하면 그건 아닐
+      수 있어"* — 최종 설계엔 필요하지만 다음 개발을 막지 않으므로 M7 뒤.
+      착수 시 같이 정할 것: 스파이크 `09`(setter가 자기 타입을 반환해 구조적
+      서브타이핑이 안 섬)를 넘어 상위 타입 팩토리 `(GuiObjectModifier) ->
+      GuiObjectModifier`가 `FrameModifier`를 받는 메커니즘(`modifier-plan.md`
+      9-2, `typing-limits.md` §2).
 
 ## M8 — Ref
 

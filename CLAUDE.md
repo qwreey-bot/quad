@@ -21,7 +21,10 @@ M6 잔여 전부 닫힘, `H6-9`~`H6-24`, §4 회신 반영 완료) + **M10 엔�
 `H10-13`; 같은 날 사용자 제안으로 `OnChange`는 배열부 값 `OnChange(name, fn)`
 으로 역전·재구현 `H10-14` — 초기값 발화 계약·생성기 타이핑; 이어서
 `AttributeKey` 무타입화 + 타입드 스칼라 슈가 `StringAttribute(name, value)`
-`H10-15`로 round16 열린 문항 0 — 다음은 사용자 지시로 M7 규약 문항지)** —
+`H10-15`로 round16 열린 문항 0) — **[2026-09-04] M7(Modifier) 자율 구현
+구간 진행 중**: 규약 `.claude/qa-request/m7-implementation-round17-brief.md`
+§0 확정, 단위 ① 완료 — 단위 구성·진행 소스는 그 brief §1과
+`ROADMAP.md` M7 체크박스, 발견 원장은 `-round17.md`** —
 **M4는 같은 날 자율 구간으로 착수·종결**(사용자 조건부 승인 — 규약
 `.claude/qa-request/m4-implementation-round13-brief.md` §0 전량 (a), 발견
 `-round13.md`(`H-287`~; §4 열린 문항 0): `Dispatch/StoreBind.luau` +

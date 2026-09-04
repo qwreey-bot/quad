@@ -34,6 +34,7 @@ local None = require("@self/Dispatch/None").None
 local TagModule = require("@self/Tag")
 local AttributeKeyModule = require("@self/AttributeKey")
 local AttributeModule = require("@self/Attribute")
+local ModifierModule = require("@self/Modifier") -- M7 단위 ①(값 런타임 — 핸들러는 단위 ②)
 
 type Quad = QuadTypes.Quad
 
@@ -81,6 +82,7 @@ local function New(): Quad
 		-- setmetatable<A,B> 타입 표기로 리터럴 `:: Quad`를 그대로 통과한다 —
 		-- fork의 잠정 `:: any` 캐스트는 통합에서 제거(typing-limits 8.6절)
 		Tag = TagModule.Tag,
+		Modifier = ModifierModule.Modifier,
 		Attribute = AttributeModule.Attribute,
 		AttributeKey = AttributeKeyModule.AttributeKey,
 		-- [2026-09-03 사용자 확정] 스칼라 패밀리는 그룹 위의 타입드 슈가

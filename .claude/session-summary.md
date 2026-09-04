@@ -2302,3 +2302,10 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   말미에 M7 규약 문항지 `qa-request/m7-implementation-round17-brief.md` 신설
   (§0 Q1~Q5, 회신 대기 — Q3 타입드 생성자 표면·Q4 flatten 호출 주체가
   사용자 결정 자리).
+
+- `session/2026-09-04-01-m7-unit1-modifier.md` **[M7 착수 — §0 회신 +
+  단위 ① Modifier 값 런타임]** Q1~Q4 (a), Q5 상위 클래스 Modifier 타입은
+  "후순위 확정"(사용자: 최종 설계엔 필요, 지금은 아님 — ROADMAP M7 항목).
+  `Modifier.luau`(콜러블 `Modifier()`, 예약 메소드 우선 `__index`, `FieldsKey`
+  이중 clone, 4분기 setter, 핸들러 계층 값 error, `Overridden` 닷·콜론),
+  quad-types 런타임 표면, `spec.modifier` 7절. round17 `H-309`.

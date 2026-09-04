@@ -280,6 +280,10 @@ local function New(className: string)
         --    필드를 해시 파트로 merge. 새 테이블 없음, `inst`를 안 받는 순수 변환
         --    (`modifier-plan.md`의 "flatten의 정확한 형태"). `PreRef`/`PostRef`가
         --    Modifier 필드에 오는 건 타입으로 차단돼 있어 여기선 안 다룬다.
+        --    ⚠️ [2026-09-04 round17 §0 Q4 (a) 확정 — 사용자] 이 ③은 ④ 안으로
+        --    들어간다: `Dispatch.drive`가 첫 pre-pass로 flatten을 소유하고(`Claim`도
+        --    자동 봉합), `New`의 이 줄은 사라진다. 실코드·이 의사코드의 갱신은
+        --    M7 단위 ②에서 — 그때까지 이 두 줄은 옛 모양으로 읽을 것.
         local flattened = flatten(props)
 
         -- ④ 디스패치 — pre-pass → 본체 → `postRefList`. 전부 `Dispatch.drive`가 소유.

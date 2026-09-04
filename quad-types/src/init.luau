@@ -144,6 +144,17 @@ export type AttributeKeyConstructor = (name: string) -> AttributeKeyObject
 -- 값은 T | State<T> | None(삭제); nil은 거부(런타임 검증)
 export type AttributeSugar<T> = (name: string, value: T | State<T> | None) -> Attribute
 
+-- ── Modifier (M7 단위 ①) — `base/modifier-plan.md` ─────────────────────
+-- 런타임 표면만(예약 메소드 셋). 클래스별 필드 setter 타입(`<Class>Modifier`)은
+-- 생성기(M7 단위 ③)가 찍고, `Overridden`은 스파이크 `09`대로 `any`.
+export type Modifier = {
+	-- 정본 9절 `:Peek<<T>>(key)` — `store:Of<<T>>`와 같은 명시 인스턴스화 관례
+	Peek: <T>(self: Modifier, key: string) -> T | State<T> | None | nil,
+	Apply: <U>(self: Modifier, factory: (Modifier) -> U) -> U,
+	Overridden: (self: Modifier, ...any) -> any,
+}
+export type ModifierConstructor = setmetatable<{ Overridden: (...any) -> any }, { __call: (self: any) -> Modifier }>
+
 export type State<T> = StateData<T> & {
 	-- deps는 `...any`다 — 타입팩 `D...`로 위치 인자를 좁히는 형태는 strict에서 콜백 dep
 	-- 추론이 `{read Get: ...}`로 뒤틀려 정상 호출까지 막힌다(M2 단위 2 실측, 스파이크 15가
@@ -408,6 +419,7 @@ export type Quad = {
 	-- 제네릭 추론을 오염시키던 시절의 것. 실측·잔여 구멍(__call 인자
 	-- 무검사)은 typing-limits 8.6절이 소스)
 	Tag: TagConstructor,
+	Modifier: ModifierConstructor, -- M7 단위 ①
 	Attribute: AttributeConstructor,
 	AttributeKey: AttributeKeyConstructor,
 	StringAttribute: AttributeSugar<string>,

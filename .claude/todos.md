@@ -53,10 +53,13 @@
    무타입 프리미티브(제네릭 폐기), 타입은 배열부 슈가
    `StringAttribute(name, value)`류(= 단일 항목 그룹)가 진다
    (`session/2026-09-03-06-attribute-sugar.md`, `H10-15`) — round16 §표 열린
-   문항 0. 에디터 fflags는 문서화만(typing-limits 8.5). **사용자 지시로 M7 규약 문항지
-   작성 완료 — `qa-request/m7-implementation-round17-brief.md` §0 다섯 문항
-   회신 대기**(권고 전부 (a); Q3 `D.Modifier.<Class>()`·Q4 drive가 flatten
-   소유는 새 이름·배치라 사용자 결정 필요). **M10 잔여는
+   문항 0. 에디터 fflags는 문서화만(typing-limits 8.5). **⭐⭐⭐ [2026-09-04] M7(Modifier) 자율 구현
+   구간 착수** — 규약 `qa-request/m7-implementation-round17-brief.md` §0
+   Q1~Q4 권고 (a) 확정, Q5는 (a)로 착수하되 상위 클래스 Modifier 타입은
+   "후순위 확정"(ROADMAP M7 항목). **단위 ① 완료**(2026-09-04) — 단위
+   구성은 brief §1이 소스(여기서 나열하지 않는다), 진행 소스는 ROADMAP M7
+   체크박스, 발견 원장은 `m7-implementation-round17.md`(`H-309`부터; §4
+   회신 대기 `H-310` — `Modifier(...)` 인자 모양). **M10 잔여는
    InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
    목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
    (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지

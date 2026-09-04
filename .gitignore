@@ -16,3 +16,6 @@ lune_packages/
 sourcemap.json
 .relink-manifest
 *ignoreme*
+
+# 크래시가 남기는 코어 덤프(2026-09-04 — luau-lsp 실측 중 한 번 생김)
+core.[0-9]*
