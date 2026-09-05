@@ -47,7 +47,8 @@ export type OnChangeFn = DModule.OnChangeFn
 export type AnimateInfo = Types.AnimateInfo
 export type AnimateFn = Types.AnimateFn
 -- M11 단위 ③: `Animate`(tween-plan "`Animate` 콤비네이터" 절)도 같은 병합 —
--- `q.Source(v):Apply(q.Animate{ Time = 0.3 })` → `State<T | Tween<T>>`
+-- `q.Source(v):Apply(q.Animate{ Time = 0.3 })` → 선언 타입 `State<Tween<any>>`(`H-334` — 정직한
+-- `State<T | Tween<T>>`는 슬롯 유니언에서 too complex, `types.luau` 주석)
 export type RobloxExtension = { D: DModule.D, OnChange: OnChangeFn, Animate: AnimateFn }
 
 local function QuadRoblox<T>(quad: T): RobloxExtension
