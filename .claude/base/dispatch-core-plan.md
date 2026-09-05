@@ -1200,7 +1200,7 @@ retractor 생략의 `2`는 **[2026-08-31 `H-222` (a) 사용자 확정]** —
   | `ObserverLeafHandler` / `EffectLeafHandler`(**[2026-09-01 `H-278`]** 옛 결합 `ObserverEffectLeafHandler`가 소유 모듈별 둘로) | 말단 | `bindLifetime` (+ 부기 — `H-39`) |
   | `ProcessedPreRefHandler` / `ProcessedPostRefHandler` | 말단 | 없음(부기만) |
   | `ProcessedModifierHandler` | 말단 | 없음(부기만 — `H-35`) |
-  | `UICornerHandler` | 말단 | 자식 Instance 생성/제거 |
+  | `UICornerHandler` | 말단 | 자식 Instance 생성/제거 **[2026-09-06]** 실제 등록명은 `InstanceShorthand` 하나(키 넷 — round20) |
 
   **[2026-08-24 `H-39`/`H-35`] 이 표 자체가 비대칭을 드러내고 있었다** —
   `NilHandler` 행엔 부기가 적혀 있는데 바로 아래 `RefLeafHandler` 행엔

@@ -219,6 +219,15 @@ Modifier/Ref/자식을 구분"이 이미 v1의 유일한 해법이었던 패턴 
 
 ## 최종 결론: 컴포넌트 경계 modifier/Ref 전달 (2026-08-04, 확정)
 
+**[2026-09-06 구현 검증 — M9, round21]** 이 절의 관례를 실물 컴포넌트로 정식화했다 —
+`quad-roblox/test/spec.component.luau`(플레인 함수 `MaterialButton(props)`: `props.Modifier or
+None`/`props.Ref or None`/자식 전달·`Modifier.Overridden`·Slot 반환 `ItemList`·커스텀 클래스
+Modifier의 `As("TextButton")` 상향)와 `spec.componenttypes.luau`(strict — props 타입에 생성
+`IntoTextButton`·`Ref<TextButton?>`). 새 배선 없이 전부 기존 핸들러 조합으로 동작한다.
+**남은 것 둘은 사용자 문항**(round21 §4): 경계 필드 이름(가칭 `Modifier`/`Ref` 유지 권고)과
+`H-340` — 커스텀 클래스 Modifier의 커스텀 필드를 벗겨 부모 클래스로 넘길 연산이 없다
+(`:Field(None)`은 키 제거가 아니라 `None` 디스패치). 아래는 2026-08-04 확정 원문.
+
 ### 1. Named parameter로 경계를 넘김 — 리프 레벨과는 다른 계약
 
 컴포넌트 함수(`function(props) return Frame{...} end`)는 `Frame{...}`처럼
@@ -333,6 +342,9 @@ Ref를 받으면 그냥 전부 실행하면 됨 — Ref 콜백 리스트는 애�
 만들어진 modifier 값들을 밀어넣는 경우)를 못 풀어서 기각됨.
 
 ## 남은 열린 질문 (`.claude/question.md`에도 취합, 전부 후순위 — 이름만 남음)
+
+**[2026-09-06]** 이름 문항은 round21 brief §0 Q2로 사용자에게 올라가 있다(가칭 그대로 권고).
+`Component` 래퍼는 Q3 (a) — 만들지 않는다. 아래는 당시 서술.
 
 - **정확한 API 이름**: `Component`(플레인 함수 규약이라 별도 래퍼가 필요한지
   자체도 불확실 — 아마 불필요), `Source`/`State` 독립 생성자·타입 이름,

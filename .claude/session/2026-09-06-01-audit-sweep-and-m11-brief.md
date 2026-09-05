@@ -137,3 +137,14 @@ tween-plan 본문 문장·dispatch-core `None` 캐비엇 M11 줄·머리말 3층
 (GuiObject 계열 10클래스 Param·Modifier에 키 넷, `H-336`) — "too complex"는 이번엔
 `LuauSolverConstraintLimit`이 푼다(`H-337`; Tarjan·TypeInfer 무효) → Studio 6/6
 (`audit/m10-shorthand-studio-2026-09-06.md`). §4 열린 문항 0. **M10 잔여 없음.**
+
+## 11. M9 — 컴포넌트 합성 관례 검증 (round21 `H-340`/`H-341`)
+
+정본 "최종 결론" 관례를 `spec.component`(플레인 함수 `MaterialButton(props)` —
+`props.Modifier or None`/`props.Ref or None`/자식 전달·`Overridden`·Slot 반환 `ItemList`·
+커스텀 클래스 `As("TextButton")` 상향)와 `spec.componenttypes`(strict)로 정식화 —
+새 배선 없음. 발견: 검사형 `As<Parent>`는 정본대로 하강 전용(상향 거부 정상)이지만,
+**커스텀 필드를 벗겨 부모 클래스로 넘길 연산이 없다**(`:Field(None)`은 키 제거가
+아니라 `None` 디스패치 → `no handler matched key Elevation`) — `H-340` 사용자 문항
+(권고 `Without`). 경계 필드 이름은 brief Q2 문항(가칭 유지 권고). Slot 물리 순서는
+백로그 항목 재확인(`H-341`). **열린 마일스톤 없음.**

@@ -1747,9 +1747,9 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 
 ## M9 — 컴포넌트 합성 레이어
 
-- [ ] 플레인 함수 컴포넌트 관례 문서화/예제
-- [ ] `props.Modifier`/`props.Ref` 전달 관례를 정식 컴포넌트로 검증(M0
-      스파이크를 정식화)
+- [x] **[2026-09-06 M9 — round21]** 플레인 함수 컴포넌트 관례 문서화/예제(정본 "최종 결론" 절 배너 + `spec.component` 예제 셋 — 사이트 문서는 백로그)
+- [x] **[2026-09-06 M9 — round21, §4 문항 둘: 필드 이름 Q2·`H-340` 커스텀 필드 제거 연산]** `props.Modifier`/`props.Ref` 전달 관례를 정식 컴포넌트로 검증(M0
+      스파이크를 정식화 — `quad-roblox/test/spec.component.luau`·`spec.componenttypes.luau`, CLI 49/49, Studio 생략)
 
 ## M10 — Event / OnChange / Attribute / Tag
 
@@ -1798,8 +1798,9 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > 발화 계약)과 `H10-12`의 OnChange 몫(생성 `E` 확장)을 닫았고, `H10-12`의
 > `AttributeKey` 몫도 같은 날 사용자 확정 "한 발 얹기"(`H10-15` — `AttributeKey`
 > 무타입 프리미티브 + 배열부 슈가 `StringAttribute(name, value)`)로 닫혀
-> round16 열린 문항 0), **InstanceShorthand**(아래 체크박스 — 그
-> 항목이 스스로 "M11(Tween) 이후"를 권한다).
+> round16 열린 문항 0), ~~**InstanceShorthand**(아래 체크박스 — 그
+> 항목이 스스로 "M11(Tween) 이후"를 권한다)~~ **[2026-09-06 완료 — round20
+> `H-335`~`H-337`, Studio 6/6]** — **M10 잔여 없음**.
 > **[2026-09-03 아침 회신]** ① `AttributeGroupHandler` 부분 실패 롤백은
 > **닫혔다**(사용자 동의 — 문서화로 관리 안 함, `attribute-plan.md` 말미 확정
 > 절·`archive/question-resolved.md`; 한때 여기 잔여로 적혀 있었음). ② Tag/

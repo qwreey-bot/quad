@@ -48,3 +48,5 @@ M9 둘 `[x]`. Q2 회신이 오면 이름 치환(필요 시)만.
 round20 규약 준용. 발견 문서 `m9-implementation-round21.md`(`H-340`부터). Studio 생략(Q6).
 
 ## §6 단위 작업 계획 (착수 시 채운다)
+
+**[2026-09-06 완료 — `H-340`/`H-341`]** `spec.component`(5절: 단일 루트·생략·`Overridden`·Slot 반환·커스텀 클래스 상향)·`spec.componenttypes`(strict — `IntoTextButton`·`Ref<TextButton?>`·`TypedFactory<<T>>`), 정본 배너, ROADMAP M9 둘 `[x]`. Studio 생략(Q6 (a)). §4 문항 둘(Q2 이름·`H-340`).

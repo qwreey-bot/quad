@@ -648,7 +648,7 @@ M11 착수 시.
 쉬워진다든가)가 있다면 한 줄 추가하고, 없다면 "그냥 클로저 업밸류를
 쓰라"는 문서화 패턴으로 대체해 API 표면 자체를 줄이는 걸 검토.
 
-### 3-2. UICorner/UIPadding/UIScale 개별 Handler 대신 데이터 테이블 구동 단일 제네릭 Handler
+### 3-2. UICorner/UIPadding/UIScale 개별 Handler 대신 데이터 테이블 구동 단일 제네릭 Handler — [해소됨, 2026-09-06 round20 `H-336` — 그대로 채택·구현]
 
 **위치**: `base/ui-shorthand-plan.md` "메커니즘 — 새 아키텍처 개념
 불필요" 절.

@@ -85,9 +85,10 @@ UDim`(number → offset), `UIPadding: UDim`, `UIPaddingOffset: number`, `UIScale
 
 **⭐ [2026-08-27 확정, 9라운드 `H-138`] 매치 우선순위 — 숏핸드 핸들러가
 `PropertyHandler`보다 높다.** `Frame { UICorner = 8 }`에서
-`getHandler(inst, "UICorner", 8)`이 `UICornerHandler`를 고르는 근거는
+`getHandler(inst, "UICorner", 8)`이 숏핸드 핸들러(`InstanceShorthand` — 키 넷을 한
+핸들러가)를 고르는 근거는
 `PropertyHandler`가 리플렉션으로 그 키를 거부해서가 **아니라** `priority`다
-(구체 상수는 구현 시 — `PropertyHandler`보다 높은 밴드면 된다). 사용자 논거:
+(**[2026-09-06 확정]** `HANDLER_PRIORITY_NORMAL + 1` — round20 Q4 (a), HIGH 밴드 미침범). 사용자 논거:
 *"당연히 숏핸드 우선순위가 높음. 안 그러면 프로퍼티 핸들러가 숏핸드 계층을
 인지하고 준비한다는 말이 돼"* — 거부에 기대면 하위 계층(프로퍼티)이 상위
 계층(숏핸드)의 키 집합을 알아야 하는 역방향 의존이 생긴다. 이름 충돌 방지도
@@ -343,7 +344,10 @@ Tween 상태를 기억해두는 것과 정확히 같은 패턴. 새 메커니즘
 바꿀 이유는 없음, M10(Handlers/Attribute 등) 전후로 다른 세부 Handler와
 함께 구현하면 충분.
 
-## 남은 열린 질문 (단순화 후보, 사소함)
+## 남은 열린 질문 (단순화 후보, 사소함) — [해소됨, 2026-09-06 round20 Q2 (a)]
+
+**후자(룩업 테이블 단일 `Handlers/InstanceShorthand.luau`)로 확정·구현됐다** — 위 "메커니즘"
+절 배너. 아래는 당시 서술.
 
 - UICorner/UIPadding/UIScale 3개 거의 동일한 형태의 Handler를 각각 만들지,
   `{key -> {ChildClassName, ChildDefaultName, Properties, wrap=fn}}` 룩업
