@@ -2356,4 +2356,6 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   스파이크 `19`/`22` 폐기, 날짜 정정(M8 단위 ③은 2026-09-06 00시대), attribute-plan
   `H10-8` 미반영 등. M11 brief(round19) 신설, 단위 ① 완료 `H-323`~`H-327`(생성
   D 슬롯 `+ State<Tween<T>>`·별칭 `PVn`·`TweenConstructor` 8.6 조건부 예외·M7
-  setter `Field<T>` 하자 정정) — §4 확인 항목 2. **[7절]** fable 탐사(치명 0·중대 2·경미 2 — `H-329` 문항, `H-330`~`H-332` 반영), `audit/fable-exploration-2026-09-06.md`.
+  setter `Field<T>` 하자 정정) — §4 확인 항목 2. **[7절]** fable 탐사(치명 0·중대 2·경미 2 — `H-329` 문항, `H-330`~`H-332` 반영), `audit/fable-exploration-2026-09-06.md`. **[8절]** M11 단위 ② — Property 3-상태 슬롯·override 주체는
+  들어오는 값(`H-328`), `TweenInfo.new` nil 거부 → 기본값 명시(`H-333`), Studio 6/6(플러그인
+  미연결로 Source 패치), `audit/m11-unit2-studio-2026-09-06.md`.

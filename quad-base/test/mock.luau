@@ -704,13 +704,63 @@ local collectionServiceShim = {
 	end,
 }
 
+-- TweenService shim (M11 unit ②, round19) — no interpolation: `Create` records
+-- the call and hands back a tween whose Play/Cancel only flip PlaybackState
+-- (Cancel leaves the property untouched, like the engine). Specs read
+-- `tweenLog` and reset it per section. `TweenInfo` shim records the
+-- positional args as-is (the handler fills absent fields with the engine
+-- defaults — `H-333`, an explicit nil is rejected by the real TweenInfo.new;
+-- the spec asserts the filled values).
+local tweenLog: { any } = {}
+
+local function newMockTween(inst: any, info: any, props: { [string]: any }): any
+	local tween = {
+		Instance = inst,
+		TweenInfo = info,
+		PropertyTable = props,
+		PlaybackState = "Begin",
+		plays = 0,
+		cancels = 0,
+	}
+	function tween.Play(self: any)
+		self.plays += 1
+		self.PlaybackState = "Playing"
+	end
+	function tween.Cancel(self: any)
+		self.cancels += 1
+		self.PlaybackState = "Cancelled"
+	end
+	return tween
+end
+
+local tweenServiceShim = {
+	Create = function(_self: any, inst: any, info: any, props: { [string]: any }): any
+		local tween = newMockTween(inst, info, props)
+		table.insert(tweenLog, { inst = inst, info = info, props = props, tween = tween })
+		return tween
+	end,
+}
+
+local tweenInfoShim = {
+	new = function(...: any): any
+		return table.freeze({ __mockTweenInfo = true, args = table.pack(...) })
+	end,
+}
+
+local function resetTweenLog()
+	table.clear(tweenLog)
+end
+
 local function gameShim(reflected: { [string]: { any } })
 	return {
 		GetService = function(_self: any, name: string): any
 			if name == "CollectionService" then
 				return collectionServiceShim
 			end
-			assert(name == "ReflectionService", "only ReflectionService/CollectionService are shimmed")
+			if name == "TweenService" then
+				return tweenServiceShim
+			end
+			assert(name == "ReflectionService", "only ReflectionService/CollectionService/TweenService are shimmed")
 			return {
 				GetPropertiesOfClass = function(_s: any, className: string): { any }
 					return reflected[className] or {}
@@ -748,6 +798,9 @@ return {
 	isDestroyed = isDestroyed,
 	declareEvents = declareEvents,
 	gameShim = gameShim,
+	tweenLog = tweenLog, -- M11 unit ②
+	tweenInfoShim = tweenInfoShim,
+	resetTweenLog = resetTweenLog,
 	newSignal = newSignal,
 	isMockInstance = isMockInstance,
 	installLifetime = installLifetime,

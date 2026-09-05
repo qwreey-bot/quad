@@ -23,9 +23,27 @@
 	`inst[k] = nil` on a non-nillable engine property (Color3/number …) is a
 	raw engine error inside `process`, which would leave the `H-103` NOOP
 	marker stuck on that key. The last written value stays (a property
-	cannot be unset). Deferred by canon:
-	  - `isTween(realv)` branch + 3-state relation slot — M11
-	    (`tween-plan.md`); this file grows that branch then.
+	cannot be unset).
+
+	M11 unit ② (round19, `tween-plan.md` "3-상태 저장" / "override 정책" /
+	"옵션 값 모양"): `isTween(realv)` is a branch INSIDE process, not a
+	handler — the 3-state relation slot per (inst, propName):
+	  nil                            never processed here → first set SNAPS
+	                                 (even a Tween writes `Value` directly —
+	                                 no engine tween, no entry animation)
+	  true                           set before, no active engine tween
+	  { Tween = TweenBase, Value }   an engine tween is running toward Value
+	Order invariant: an active tween is cancelled BEFORE the new value is
+	written (the engine keeps writing the property asynchronously). The
+	override policy consulted is the INCOMING Tween's `Override` (`H-328`):
+	`Tween.Finish` snaps the previous target first; `Tween.Cancel` (default)
+	and a plain incoming value continue from the interpolated value as-is.
+	`TweenInfo`: `Info` wins; otherwise the convenience fields go to
+	`TweenInfo.new` positionally with the engine's own defaults filled in for
+	absent fields (`H-333` — an explicit nil is rejected by the engine). `TweenService`/`TweenInfo` are read lazily so the
+	CLI spec can shim both through `getfenv` (same seam as Reflection).
+	Engine-typed option misuse (`Style = 3`, wrong `Info`) raises the engine's
+	own error inside process — same class as `inst[k] = wrongValue` (Q5 (a)).
 
 	The `game` global is read lazily inside the cache miss path so the CLI
 	spec can substitute a Reflection shim via `getfenv` (same seam the D
@@ -37,6 +55,45 @@ local QuadTypes = require("../../luau_packages/quad_types")
 local function install(quad: any)
 	local dispatch = quad.Dispatch
 	local Void = quad.Void
+	local isTween = quad.isTween
+	local TweenNS = quad.Tween
+
+	-- 3-state slot (header) — weak-keyed by inst through Relate, so a dying
+	-- instance drops its slots (and the engine tween handle) with it
+	local tweenSlots = quad.Relate()
+
+	local tweenService: any = nil
+	local function getTweenService(): any
+		if tweenService == nil then
+			tweenService = game:GetService("TweenService")
+		end
+		return tweenService
+	end
+
+	-- `H-333` (Studio 2026-09-06): `TweenInfo.new` rejects an explicit nil in an
+	-- enum position ("third argument expects Enum.EasingDirection"), so the
+	-- convenience fields cannot be passed through as nil — the defaults are
+	-- spelled out here and equal `TweenInfo.new()`'s own (tween-plan "옵션 값
+	-- 모양" 절의 기본값 표 — 값의 소스는 여전히 엔진이고 여기는 그 사본).
+	local function buildInfo(v: any): any
+		if v.Info ~= nil then
+			return v.Info
+		end
+		return TweenInfo.new(
+			if v.Time ~= nil then v.Time else 1,
+			if v.Style ~= nil then v.Style else Enum.EasingStyle.Quad,
+			if v.Direction ~= nil then v.Direction else Enum.EasingDirection.Out,
+			if v.RepeatCount ~= nil then v.RepeatCount else 0,
+			if v.Reverses ~= nil then v.Reverses else false,
+			if v.DelayTime ~= nil then v.DelayTime else 0
+		)
+	end
+
+	local function startTween(inst: any, k: string, v: any)
+		local engineTween = getTweenService():Create(inst, buildInfo(v), { [k] = v.Value })
+		engineTween:Play()
+		tweenSlots:SetStrong(inst, k, { Tween = engineTween, Value = v.Value })
+	end
 
 	-- className -> { [propName]: true } (inherited included — one Reflection
 	-- call per class, cached for the module's lifetime)
@@ -71,7 +128,28 @@ local function install(quad: any)
 			if v == nil then
 				return Void -- skip-defense (header) — never write nil into an engine property
 			end
-			inst[k] = v
+			local prev = tweenSlots:GetStrong(inst, k)
+			local tweenIn = isTween(v)
+			if prev == nil then
+				-- branch 1: first set — snap, no animation even for a Tween value
+				inst[k] = if tweenIn then v.Value else v
+				tweenSlots:SetStrong(inst, k, true)
+				return Void
+			end
+			if type(prev) == "table" then
+				-- branch 3: an engine tween is active — clean it up FIRST
+				prev.Tween:Cancel()
+				if tweenIn and v.Override == TweenNS.Finish then
+					inst[k] = prev.Value -- Finish: snap to the previous target before continuing
+				end
+			end
+			-- branches 2/3 tail: plain → write + `true`; Tween → new engine tween
+			if tweenIn then
+				startTween(inst, k, v)
+			else
+				inst[k] = v
+				tweenSlots:SetStrong(inst, k, true)
+			end
 			return Void
 		end,
 	} :: QuadTypes.Handler)

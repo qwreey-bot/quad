@@ -107,3 +107,12 @@ too complex를 풀었다"고 한 번 판정했으나 그 편집이 assert 실패
 갈래 셋(`H-330` blame·`H-331` Tag holders·`H-332` Observer 재진입)은 그 자리에서
 반영·spec 추가, `H-329`(체인 리스트 잔존 — 해제 시점 메커니즘)는 §4 문항으로
 — M11 영역과 겹치지 않아 착수를 막지 않는다(사용자 규칙 3).
+
+## 8. M11 단위 ② — Property 핸들러 소비 (round19 `H-328`·`H-333`)
+
+`Property.luau` `process`에 3-상태 슬롯 분기(정본 1~3 그대로), override 주체는
+들어오는 값(`H-328`), mock `TweenService`/`TweenInfo` 심 + `spec.tweenproperty` 6절.
+Studio는 재시작돼 플러그인이 재연결되지 않아(콘솔 "Couldn't connect" → WS 400)
+런타임 모듈 다섯을 `.Source` 직접 패치로 올려 실측 — 첫 실행이 `TweenInfo.new`의
+명시적 nil 거부(`H-333`)를 잡았고 기본값을 명시해 채운 뒤 **6/6 PASS**
+(`audit/m11-unit2-studio-2026-09-06.md`). Studio Connect는 HUMAN_TODO 12에 추가.

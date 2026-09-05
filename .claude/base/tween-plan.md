@@ -104,6 +104,12 @@ StoreBind가 State/Source 레이어를 전부 풀어낸 뒤의 값(그리고 이
 
 ### 3-상태 저장 — `{Tween, Value} | true | nil` (릴레이션 슬롯 하나로 `hasBeenSet` 통합)
 
+**[2026-09-06 구현됨 — M11 단위 ②, round19]** `Handlers/Property.luau`의 `process`가
+아래 분기 1~3 그대로다(슬롯은 install 스코프의 `quad.Relate()`, 키는 프로퍼티 이름).
+override 정책의 **주체는 들어오는 값의 `Override`**(`H-328` — 슬롯엔 정책이 없다;
+plain 값이 오면 Cancel과 같다). Studio 6/6(`audit/m11-unit2-studio-2026-09-06.md`) —
+첫 세팅 스냅·Cancel 이어가기·Finish 스냅·Tween→plain·기본값/`Info` 우선·Destroy 무해.
+
 처음엔 "첫 세팅 여부(`hasBeenSet: boolean`)"와 "실행 중인 엔진 Tween
 객체"를 별도 필드로 저장하려 했으나, **하나의 릴레이션 슬롯으로 통합** —
 `relate:GetStrong(inst,k)`가 돌려주는 값의 3가지 상태:
@@ -396,6 +402,12 @@ quad-roblox 레벨 편의 함수라 base 계약에 영향 없음.
 ## 확정: `Tween{...}` 최종 모양 (2026-08-12 세션)
 
 ### 옵션 값 모양 — `Info` 우선, 없으면 편의 필드로 폴백 (확정)
+
+**[2026-09-06 Studio 실측 정정 — M11 단위 ② `H-333`]** 아래 *"별도 기본값 상수를
+새로 정의할 필요 없음"*은 그대로는 불가능하다 — `TweenInfo.new`는 enum 자리의
+**명시적 nil을 거부**한다(*"third argument expects Enum.EasingDirection input"*).
+구현(`Handlers/Property.luau`의 `buildInfo`)은 빠진 필드를 엔진 기본값(아래 표의
+값 그대로)으로 **명시해** 채운다 — 값의 소스는 여전히 엔진이고 코드는 그 사본이다.
 
 Roblox의 `TweenInfo.new(time, easingStyle, easingDirection, repeatCount,
 reverses, delayTime)`는 순수 포지셔널 생성자인데, Luau엔 named call
