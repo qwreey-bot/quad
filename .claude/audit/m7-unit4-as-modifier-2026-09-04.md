@@ -87,7 +87,7 @@ setter / Into 불만족·잘못된 반환 / 오타 키 회귀 / Mapper 자리). 
 | 2 | 태그 — 생성 생성자 `"Frame"`, 하강 뒤 `"TextLabel"`, base `Modifier()`는 `true`, setter는 태그 유지 | PASS |
 | 3 | 상위 클래스 Modifier를 캐스트 없이 `D.Frame{}` 자식에 — flatten은 태그를 안 봄 | PASS |
 | 4 | 캐스트 error 넷(미등록 / 형제 / 상향 / 오타 접두 `AsTextLabl`) — blame이 사용자 줄(`AssistantCommand:20`) | PASS |
-| 5 | `quad.Modifier.Define("MaterialButton", "TextButton")` 커스텀 클래스 — 생성자 태그, `Into` 형 헬퍼가 GuiObject Modifier를 받아 하강, `As("MaterialButton")` 무검사 재태그, 재-Define 동일 생성자 | PASS |
+| 5 | **[개명 전 표기 — 같은 날 `0b11a45`로 `TypedFactory(name)` + `DefineSubtype(parent, subtype)`로 분리, 4절]** `quad.Modifier.Define("MaterialButton", "TextButton")` 커스텀 클래스 — 생성자 태그, `Into` 형 헬퍼가 GuiObject Modifier를 받아 하강, `As("MaterialButton")` 무검사 재태그, 재-Define 동일 생성자 | PASS |
 | 6 | 커스텀 클래스 값이 `D.TextButton{}`를 구동 / 상향 `AsTextButton()` 거부 / `As("TextButton")`은 강제 | PASS |
 | 7 | `Overridden` 결과 무타입 + `As()` 무인자 항등 | PASS |
 | 8 | **[소멸된 규칙 — 그 시점 계약, 4절 분리 뒤엔 반대로 허용됨]** `Define` error — 다른 부모로 재등록 / 미등록 부모 | PASS(당시) |

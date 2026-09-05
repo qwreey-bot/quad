@@ -465,7 +465,7 @@ PA님 방식인 문자열 키 + 런타임 리플렉션으로 감, `base/event-pl
 
 **[2026-09-04 구현됨 — M7 단위 ③, round17 `H-313`]** 생성기(`scripts/gen-d.py`)가
 클래스별 `<Class>Modifier`(프로퍼티 setter `(self, value: Field<T | Tween<T>>) ->
-<Class>Modifier` + 예약 메소드 셋, **이벤트 필드는 제외** — 4절의 "함수 인자는
+<Class>Modifier` + 예약 메소드(단위 ③ 시점엔 `Apply`/`Peek`/`Overridden` — 단위 ④에서 `As`가 합류, 목록은 11절이 소스), **이벤트 필드는 제외** — 4절의 "함수 인자는
 변환 함수" 규칙과 콜백이 겹쳐서)와 타입드 생성자 `D.Modifier.<Class>()`(round17
 §0 Q3 (a) — 단위 ③ 시점엔 런타임이 base `Modifier()` 하나에 클래스별 캐스트
 별칭이었고, **[2026-09-04 단위 ④]**부터는 `Modifier.TypedFactory(name)`이

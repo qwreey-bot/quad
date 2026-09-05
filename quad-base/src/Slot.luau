@@ -3,7 +3,8 @@
 	Slot.Init(module) — the top-level Slot value type (`base/slot-plan.md`,
 	ROADMAP M6). A mutable child array whose bound children track its CRUD.
 
-	[M6 fork, H6] Built in slices; this file grows per slice. The subsystem
+	[M6 fork, H6] Built in slices across M6 — the fork gave the core, the
+	2026-09-03 remainder unit closed the rest (ROADMAP M6: no remainder). The subsystem
 	factory pattern (`H-174`): `module.bindLifetime`/`isState`/`Dispatch.*` are
 	read late off `module` (backends overwrite them after New()). elementOwner
 	and the Detach/KeyGone sentinels live here (re-exported at top level like

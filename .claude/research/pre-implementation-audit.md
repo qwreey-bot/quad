@@ -475,7 +475,7 @@ API"를 얹어야 할 때 Slot의 "own한 것만 CRUD 대상" 불변식 자체�
 문서에 병기해둘 것 — **2026-08-14 기각으로 대체됨**(캐비엇 대신 기각
 사유가 `archive/existing-instance-bind-rejected.md` 상단 배너에 있음).
 
-### 2-5. `Modifier.Overridden`(구 `Merge`) 시 서로 다른 클래스의 Modifier가 섞이는 게 허용되는지 — **런타임은 해소, 타입 레벨은 여전히 미정**
+### 2-5. `Modifier.Overridden`(구 `Merge`) 시 서로 다른 클래스의 Modifier가 섞이는 게 허용되는지 — **런타임은 해소, 타입 레벨도 [2026-09-04 M7 단위 ④ `H-314`] 해소**(`base/modifier-plan.md` 9-2절·11절 — 상위 클래스 Modifier 타입 생성; 아래는 당시 서술)
 
 **위치**: `base/modifier-plan.md` "2. Merge 우선순위" + 9번(`Overridden`) +
 `base/component-composition-plan.md` 3번.

@@ -1,6 +1,17 @@
 # 스파이크 상태판 — **폴더가 곧 상태**
 
-> 마지막 갱신: **2026-09-04** — 신규 `32`(children 자리 `Ref<T>` — 직접
+> 마지막 갱신: **2026-09-06(2건)** — ① `19`(소유권/참조카운트 Relate 패턴) **폐기
+> → `done/`**, 재작성 안 함: B 섹션 재작성 지침의 검증 대상(그룹 전용 키 +
+> 이름 claim, 음성 둘)은 M10의 `quad-base/test/spec.attribute.luau` 6·7절이
+> 실물에 대고 실측하고(그룹↔그룹 같은 이름 케이스는 2026-09-06에 6절에 추가),
+> A(Tag 참조 카운트)는 `spec.tag` 4·6절, C(Slot `claimOwner`/`claimOwnerAt`)는
+> `spec.slot` 16·22·23절이 덮는다 — 감사 2라운드 발견, 메인 판단(사용자 사후
+> 확인 대상). ② `22`(Ref/PreRef/PostRef 브랜드 런타임) **폐기 →
+> `done/`**, 재작성 안 함: 재작성 지침이 요구한 전부(`isPreRef`/`isPostRef`
+> 배타 + 둘 다 `isRef` + 다중 태깅 `:is`)를 M8 단위 ①의
+> `quad-base/test/spec.preref.luau` 1절이 실제 `Brand.luau`에 대고 상시
+> 회귀로 실측한다 — `01`/`04`/`05`/`15`와 같은 패턴(2026-09-06 감사 1라운드
+> 발견, 메인 세션 판단 — 사용자 사후 확인 대상). 직전 갱신 **2026-09-04** — 신규 `32`(children 자리 `Ref<T>` — 직접
 > 멤버는 실물 규모에서 새고 반공변 팬텀 마커 `__quadRefAccepts: (T) -> ()`가
 > 클래스 검사를 준다) `done/` 직행; 같은 날 `31`(새 솔버 유니언 서브타이핑 결함 +
 > 클래스 태그 마커/`As<Class>`/`Into` 최소형 + 교집합 Param 불성립) `done/`
@@ -176,8 +187,6 @@
 
 | 파일 | 상태 | 무엇을 고쳐야 하나 |
 |---|---|---|
-| `19-ownership-refcount-relate-patterns.luau` | A/C ✅ 유효, **B 섹션이 낡음** | B가 검증하던 "공개 `AttributeKey(name)` + 인덱스 1 점유 체크"가 폐기됨 — **그룹 전용 키 + `AttributeKeyHandler`의 이름 claim**으로 재작성하고, 음성 대조군도 "두 그룹이 같은 이름 → 즉시 error", "그룹↔직접 쓰기 → 즉시 error"로 바꿀 것(0-Z 확정 내용). A/C는 손댈 것 없음 |
-| `22-runtime-ref-preref-postref-brand.luau` | 옛 `Brand` API 기준으로는 ✅ 통과였음 | **[2026-08-21] `Brand`가 인스턴스 브랜드로 재작성됨** — 파일 안의 `Brand.set(x, tag)`/`Brand.get(x)`/`XxxTag` 변수를 `Brand()` + `SomeBrand:register(x)`/`SomeBrand:is(x)`로 바꿔 쓸 것(`base/brand-plan.md`). **검증 대상(`isPreRef`/`isPostRef` 배타 + 둘 다 `isRef`엔 `true`, Leaf 핸들러 흉내)은 그대로**라 assert는 손댈 게 없다. **새로 넣을 것**: 다중 태깅이 실제로 되는지 — 한 값을 두 브랜드에 등록하고 양쪽 `:is`가 다 `true`인지(`Source`가 `SourceBrand`+`EpochBrand`인 자리, `base/state-epoch-plan.md` §2) |
 | `16-type-store-key-typefunction.luau` | 옛 접근 기준으로는 ✅ 통과였음 | **[2026-08-25] 검증 대상이 폐기됨** — `WrapStore`/`ProcessStoreType` 합성 자체가 사라졌다. **재작성 지침**: 타입 함수 없는 평범한 레코드 모양(`base/store-plan.md`의 "`store.key` 레코드 필드 타이핑" 절)을 검증하고, 음성 대조군에 **예약 키 충돌**(`CheckReservedKeys<keyof<T>>`가 `types.never`로 무너뜨리는지 — **[2026-08-26 `H-112`]** 인자가 `T`가 아니라 `keyof<T>`다)과 **없는 키 접근**을 포함할 것 |
 | `11-modifier-illegal-value-error.luau` | 옛 형태 기준으로는 ✅ 통과였음(16개 케이스 전원) | **[2026-08-26, 8라운드 `H-122`/`H-123`] 검증 코드가 폐기된 모델을 박제하고 있다** — 그 파일의 Store 생성자가 **eager `Source(v)`** 모델이다. 명시적 초기화 확정(2026-08-25) 이후 **`defaults` 경로에선** Store가 `Source`를 만들지 않는다(동적 키 창구 `store:Of(name)`은 여전히 만든다 — 그래서 가드가 `Source` 생성자로 갔다). **재작성 지침**: `isModifier` 가드의 새 자리는 **`Source` 생성자**(+`Source:Set`, `:Compute` 결과 캐싱)이고, Store 생성자가 하는 건 `defaults`의 **`isSource` 화이트리스트 검증**(error level 2)이다 — 둘을 각각 양성/음성으로 볼 것. **검증 대상(핸들러 계층 값 즉시 error)은 그대로**라 결론이 바뀌는 건 아님 |
 | `21-type-store-undeclared-key-rejected.luau` | 옛 접근 기준으로는 ✅ 통과였음 | `16`의 `ProcessStoreType`을 재사용하므로 같이 낡음. **검증 대상(미선언 키가 타입 에러)은 그대로 유효**하다 — 새 `Store<T>` 선언으로 바꿔 쓰기만 하면 된다(`store:Of("nope")`이 거부되는 것도 같이 넣을 것) |
@@ -199,10 +208,10 @@
 
 (개수는 위 표와 폴더가 소스 — 여기서 다시 세지 않는다.)
 
-**[2026-09-01 기준] 지금 `done/`에 있는 런타임(비타입) 스파이크는
-`01`/`02`/`03`/`04`/`05`/`06`/`07`/`10`/`17`/`18`/`20`**(`10`은 Studio
-전용 — 같은 날 MCP 완주로 합류) — `11`은 2026-08-26에
-`rewrite-required/`로 나갔고(위 표), `01`/`03`/`04`/`05`는 "통과"가 아니라
+**[2026-09-06 기준] 지금 `done/`에 있는 런타임(비타입) 스파이크는
+`01`/`02`/`03`/`04`/`05`/`06`/`07`/`10`/`17`/`18`/`19`/`20`/`22`**(`10`은 Studio
+전용 — 2026-09-01 MCP 완주로 합류, `19`/`22`는 2026-09-06 폐기 합류) — `11`은 2026-08-26에
+`rewrite-required/`로 나갔고(위 표), `01`/`03`/`04`/`05`/`19`/`22`는 "통과"가 아니라
 spec 대체 폐기 상태다(각 행 참고 — `03`은 통과로 들어와 있다가 2026-09-01에
 폐기로 판정), 나머지는 전원 통과(crash 0 / FAIL 0). 나머지는 타입
 스파이크다.
@@ -241,6 +250,8 @@ spec 대체 폐기 상태다(각 행 참고 — `03`은 통과로 들어와 있�
 | `08-type-source-satisfies-state` | ✅ 핵심 질문(Source⊇State 구조적 서브타이핑) 통과. 잔여 케이스(자기 이름을 다른 인자로 재귀 참조)는 **[2026-08-13 13차 세션] Luau 현 한계로 확정** — quad가 풀 대상 아님, `base/typing-limits.md` 1번 |
 | `09-type-modifier-overridden-subtype` | ✅ 통과 — 문서가 우려한 `FrameModifier`↔`GuiObjectModifier` 서브타입 깨짐이 그대로 재현, fallback(`any`)은 정상 |
 | `12-type-attribute-generic-key-narrowing` | ❌지만 **설계 영향 없음** — 제네릭 키 narrowing이 안 되는 건 `attribute-plan.md`가 이미 fallback으로 예비해둔 결과(타입 패밀리가 유일하게 믿을 경로). **[2026-08-24 `H-54`] 단 스파이크 자신의 주석이 실제 결과와 어긋난다** — *"이건 당연히 통과해야 함"*이라 적어둔 동질 대조군(line 41-43)이 실제로는 에러를 낸다(`AttributeKey<T>(name)`이 문맥에서 `T`를 못 추론해 `unknown`으로 남음). 오히려 "왜 진짜 테스트 대상이 조용히 통과하는지(= narrowing이 아예 안 일어남)"를 설명해주는 정합적 결과라 **이 총론은 그대로 유효**하고, 근거 라인만 다르다 — 재작성 시 참고 |
+| `19-ownership-refcount-relate-patterns.luau` | **[2026-09-06 폐기 → `done/`로 이동, 재작성 안 함]** 세 섹션 전부 실물 spec이 상시 회귀로 대체한다 — A(Tag 참조 카운트) `spec.tag` 4·6절, B(Attribute 이름 소유권 — 그룹 전용 키 + `AttributeKeyHandler` 이름 claim, 음성 "그룹↔직접 쓰기"·"그룹↔그룹 같은 이름"·위치 이중 배치) `spec.attribute` 6·7절, C(Slot `claimOwner`/`claimOwnerAt`) `spec.slot` 16·22·23절. 파일은 역사로만 남김. 아래는 폐기 전 상태: A/C ✅ 유효, B 섹션이 낡음(공개 `AttributeKey(name)` + 인덱스 1 점유 체크가 폐기됨 — 0-Z 확정 내용으로 재작성 대기였음) |
+| `22-runtime-ref-preref-postref-brand.luau` | **[2026-09-06 폐기 → `done/`로 이동, 재작성 안 함]** M8 단위 ①의 `quad-base/test/spec.preref.luau` 1절이 재작성 지침의 검증 대상 전부 — `isPreRef`/`isPostRef` 배타, 둘 다 `isRef`엔 `true`, 다중 태깅(`isEpoch`까지) — 를 실제 `Brand.luau` 인스턴스 브랜드에 대고 상시 회귀로 실측한다(`spec.refhandlers`가 leaf 핸들러 흉내가 아니라 실물 `RefLeafHandler`의 삼분을 고정). 파일은 역사로만 남김. 아래는 폐기 전 상태: 옛 `Brand.set`/`Brand.get` API 기준 ✅ 통과였고 인스턴스 브랜드 재작성으로 재작성 대기였음 |
 | `13-type-ref-preref-subtype` | **[2026-08-19 재작성]** ✅ 통과 — `PreRef<T>`/`PostRef<T>` 둘 다 `Ref<T>`를 구조적으로 만족(음성 대조군도 정확히 에러). 런타임 B섹션은 `22`로 분리(A의 더미 스텁이 B 실행을 막던 문제 해결) |
 | `14-type-nilable-default-overload` | ⚠️ 부분 — 의도한 오용은 막지만 정상 nilable 사용례까지 막아 현 스케치로는 채택 불가. **설계 결정은 아직 필요 없음**(대안이 이미 UB 경고로 존재)이라 `review-required`가 아님 |
 | `28-type-class-param-shared-generic` (타입체크 전용) | ✅ **[2026-09-02 신설, M5 단위 ② 착수 전 — claim-plan §9 요구]** `<Class>Param<E>` 공유 제네릭 메커니즘 통과 — 같은 Param을 `D.Frame`(E=NewChild)/`D.Mapper.Frame`(E=NewChild\|MapperDescriptor)이 공유하고 리턴만 다름, 기대 음성 3건만 정확히 발생(`Parent` 부재가 H-142의 타입판임을 겸증). 필드 유니언 구성은 자리표시자(round14 `H-298`이 정본화 대기) |

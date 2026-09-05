@@ -4,7 +4,7 @@
 	3(immutable clone 체이닝, `Modifier()`)·4(setter 리터럴/함수, 내부 저장소,
 	핸들러 계층 값 error)·4-1(4분기)·8(`Apply`)·9(`Overridden`·`Peek`)·2-1(`None`
 	실재값 vs `nil` 부재)절 + M2가 심은 `isModifier` 가드(7절)의 실물 재확인.
-	flatten/`ProcessedModifier`는 단위 ②(`spec.flatten`). 9~12절은 단위 ④(11절 —
+	flatten/`ProcessedModifier`는 단위 ②(`spec.flatten`). 이 spec의 9~12번 블록은 단위 ④(modifier-plan 11절 —
 	클래스 태그·`TypedFactory`/`DefineSubtype`·검사형 `As<Class>()`·무검사 `As(name)`·예약 캐스트 접두).
 ]]
 

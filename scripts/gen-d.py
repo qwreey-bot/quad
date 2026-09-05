@@ -4,7 +4,8 @@
 두 단계(round14 Q5 (a) — 덤프를 재사용 가능한 형태로 남긴다):
   normalize <raw-API-Dump.json> <clientVersionUpload>
       → quad-roblox/dump/api-surface.json  (커밋되는 정규화 산출물 —
-        M7 FrameModifier 생성기가 같은 파일을 재사용, Parent 제외는 여기 덤프 층)
+        M7 단위 ③·④가 같은 emit()을 확장해 <Class>Modifier 타입도 여기서 생성,
+        Parent 제외는 여기 덤프 층)
   emit
       → quad-roblox/src/D/init.luau        (커밋되는 최종 산출물)
 

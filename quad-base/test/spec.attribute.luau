@@ -132,6 +132,14 @@ do
 	assert(not ok, "cross-owner claim must error")
 	assert(string.find(tostring(err), 'attribute "Hp" is already bound by another owner', 1, true) ~= nil, "domain message: " .. tostring(err))
 	mock.assertBlamesUser(err, "spec.attribute.luau", "claim blame")
+	-- [2026-09-06] 그룹↔그룹 같은 이름 — 스파이크 19 B 섹션의 재작성 지침이 요구한
+	-- 음성 대조군(0-Z 확정 내용): 다른 그룹 객체가 같은 이름을 노려도 즉시 error
+	local inst2 = Instance.new("Frame")
+	local ok2, err2 = pcall(function()
+		q.Dispatch.drive(inst2, { q.Attribute({ Hp = 5 }), q.Attribute({ Hp = 9 }) })
+	end)
+	assert(not ok2, "group-vs-group claim must error")
+	assert(string.find(tostring(err2), 'attribute "Hp" is already bound by another owner', 1, true) ~= nil, "group-vs-group message: " .. tostring(err2))
 	print("PASS")
 end
 

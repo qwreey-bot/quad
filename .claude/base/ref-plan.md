@@ -92,7 +92,13 @@ Instance를 직접 받으므로 — `base/dispatch-core-plan.md` "확정된 디�
   (coroutine 컨텍스트에서 사용 — 렌더 함수 바디 안에서 `return` 위에 바로
   못 씀, 그래서 콜백도 같이 필요) **세 메소드로 확정(2026-08-07 여섯 번째
   세션)**. `:Set`/`:Callback`/`:Wait` 전부 **mutation 패턴이라 자기 자신
-  (`Ref<T>`)을 반환** — `store.key:Set(value)`류 "값을 바꾸는 연산엔 `:`
+  (`Ref<T>`)을 반환** — **[2026-09-04 정정, M8 단위 ① 리뷰 `H-317`, 사용자
+  수용]** 타입 표기는 `Ref<T>` 고정이 아니라 **`<Self>(self: Self, …) -> Self`
+  제네릭**이다(quad-types `Ref<T>`의 다섯 메소드 전부): 반환을 `Ref<T>`로
+  고정하면 `PreRef(x):Callback(fn)` 체이닝 첫 호출에서 `PreRef<T>` 교집합
+  마커가 증발해 nominal 타입이 사라진다. 부작용은 실측 무해(무주석
+  체이닝 추론·콜백 인자 추론·`Effect` dep 자리·마커 보존 전부 성립 —
+  round18 `H-317`). 아래 시그니처 표기의 `-> Ref<T>`는 이 뜻으로 읽을 것 — `store.key:Set(value)`류 "값을 바꾸는 연산엔 `:`
   체이닝 허용" 원칙(`base/store-plan.md`의 "Store 값 설정 문법" 절)의 자연스러운 재적용.
   이 self-반환 덕에 Luau의 `if`-표현식과 결합해 흔한 관용구를 한 줄로
   쓸 수 있음(사용자 제시 예):
