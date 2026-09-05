@@ -282,11 +282,21 @@ def emit():
     # (Tarjan 640000·다른 한도 플래그로도 안 풀림, 실측). State 안은 전체형 Tween<T>:
     # State<X>는 불변이라 Animate/`:Compute`가 돌려주는 State<Tween<T>>와 X가 글자
     # 그대로 같아야 들어간다(데이터부·정밀판 별칭은 거부). 바깥은 데이터부(8.8절).
+    # [round20 H-336] UI 편의 숏핸드 키 넷(ui-shorthand-plan "메커니즘"·"결론" 절) — GuiObject
+    # 계열(자기 또는 조상에 GuiObject)의 Param과 Modifier setter에만 얹는다. 런타임은
+    # Handlers/InstanceShorthand.luau(우선순위 NORMAL+1). PropTypes/OnChange엔 넣지 않는다
+    # (실프로퍼티가 아니라 GetPropertyChangedSignal 대상이 아님).
+    SHORTHAND = [("UICorner", "number | UDim"), ("UIPadding", "UDim"), ("UIPaddingOffset", "number"), ("UIScale", "number")]
+    def is_gui_object(node):
+        return node == "GuiObject" or "GuiObject" in ((classes[node]["chain"] if node in classes else ancestors(node)))
     prop_types = []
     for name in names:
         for p in classes[name]["props"]:
             if p["type"] not in prop_types:
                 prop_types.append(p["type"])
+    for _, t in SHORTHAND:
+        if t not in prop_types:
+            prop_types.append(t)
     pv_name = {}
     for i, t in enumerate(prop_types):
         pv_name[t] = f"PV{i}"
@@ -303,6 +313,9 @@ def emit():
         for p in c["props"]:
             t = p["type"]
             L.append(f"\t{p['name']}: {pv_name[t]}?,")
+        if is_gui_object(name):
+            for sname, t in SHORTHAND:
+                L.append(f"\t{sname}: {pv_name[t]}?, -- 숏핸드(H-336)")
         for ev in c["events"]:
             sig = luau_event_sig(ev)
             L.append(f"\t{ev['name']}: (({sig}) | State<{sig}> | None)?,")
@@ -425,6 +438,9 @@ def emit():
         for p in props:
             t = p["type"]
             L.append(f"\t{p['name']}: (self: {node}Modifier, value: Field<{t}>) -> {node}Modifier,")
+        if is_gui_object(node):
+            for sname, t in SHORTHAND:
+                L.append(f"\t{sname}: (self: {node}Modifier, value: Field<{t}>) -> {node}Modifier, -- 숏핸드(H-336)")
         L.append("}")
         # Into<Class> — "이 클래스로 갈 수 있는 모든 것"(상위·자기·커스텀 구현체).
         # self는 any여야 한다: self를 인터페이스 타입으로 두면 반공변 때문에

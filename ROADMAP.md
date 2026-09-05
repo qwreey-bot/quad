@@ -1903,7 +1903,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       감싸 `HANDLER_PRIORITY_FALLBACK`으로 등록되는 별도 이름의 엔티티,
       등록 주체는 `AttributeKeyFallbackHandler`와 동일하게 **quad-base
       자신** — [재역전, 2026-08-18])
-- [ ] **[2026-08-14 세션에 누락 발견, 신규]** `quad-roblox/Handlers/
+- [x] **[2026-09-06 구현 — round20 `H-335`~`H-337`, CLI 47/47; Studio는 `audit/m10-shorthand-studio-2026-09-06.md`]** **[2026-08-14 세션에 누락 발견, 신규]** `quad-roblox/Handlers/
       InstanceShorthand.luau` — UI 편의 숏핸드 `UICorner`/`UIPadding`
       (+`UIPaddingOffset`)/`UIScale`(`base/ui-shorthand-plan.md`). 이
       마일스톤 전후로 구현하기로 그 문서가 이미 지정해뒀는데 체크리스트에

@@ -128,3 +128,12 @@ Studio는 재시작돼 플러그인이 재연결되지 않아(콘솔 "Couldn't c
 생략(엔진 대면 델타 없음). 단위 ② 감사 1라운드(확실 3·의심 2)도 같이 반영 —
 tween-plan 본문 문장·dispatch-core `None` 캐비엇 M11 줄·머리말 3층·override 절
 포인터·핸들러 체크리스트 0번(`errorBefore` 규칙, 세 번 반복된 실수).
+
+## 10. M10 잔여 InstanceShorthand (round20 `H-335`~`H-337`)
+
+문항지 `m10-shorthand-implementation-round20-brief.md`(Q1~Q6 권고 (a)로 착수) →
+단위 ① 핸들러(룩업 표 하나, `D.New` 경로 자식, Relate 조회, `retractFrom` 뒤 파괴,
+`:Mapped`, `NORMAL + 1`) + `spec.shorthand` 6절(첫 실행 통과) → 단위 ② 생성기
+(GuiObject 계열 10클래스 Param·Modifier에 키 넷, `H-336`) — "too complex"는 이번엔
+`LuauSolverConstraintLimit`이 푼다(`H-337`; Tarjan·TypeInfer 무효) → Studio 6/6
+(`audit/m10-shorthand-studio-2026-09-06.md`). §4 열린 문항 0. **M10 잔여 없음.**

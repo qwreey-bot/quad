@@ -637,6 +637,13 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
 
 ## 8.5. 대형 생성 타입은 체커의 `LuauTarjanChildLimit`(기본 10000)을 넘는다
 
+**[2026-09-06 보강 — round20 `H-337`]** 한도 플래그는 증상별로 다르다: GuiObject 계열
+10클래스의 Param/Modifier에 숏핸드 키 넷을 얹자 `export type D`가 "too complex"였고,
+Tarjan·TypeInfer 상향은 무효, **`LuauSolverConstraintLimit`**(기본값 작음)을 100만으로
+올리면 클린(1.9s, 음성 5/5 유지) — `scripts/test.sh` 넷째 플래그. 8.8절의 "올리면
+지점만 옮겨감"은 재귀 메소드 테이블을 유니언에 넣었을 때(M7 ③)의 관측이고, `State<T
+| Tween<T>>` 멤버(M11 `H-334`)는 이 플래그로도 안 풀렸다 — 증상마다 한 번씩 재봐야 한다.
+
 **[2026-09-02 실측, `H-305` (d′) 반영 중]** 생성된 `export type D`/
 `DMapper`(31클래스 × `<Class>Param<E>` 인스턴스화, 클래스당 필드 40~60개 ×
 4-유니언)는 **별칭 선언이 존재하는 것만으로**(참조 안 해도) luau-lsp/새

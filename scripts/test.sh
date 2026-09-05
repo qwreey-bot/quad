@@ -46,10 +46,15 @@ echo "=== luau-lsp analyze --definitions=scripts/roblox-defs/globalTypes.d.luau 
 # (`GuiObjectModifier`류, 하위 `As<Class>` 메소드 수십 개)의 캐스트 자리와 그
 # 타입의 팩토리를 `Apply`에 넘기는 자리가 기본 한도(20000)에서 "too complex" —
 # 실측상 50만이면 클린, 100만으로 핀(시간 무해, 3.2s대; typing-limits 8.9절).
+# LuauSolverConstraintLimit(round20 InstanceShorthand, 2026-09-06): GuiObject 계열 10클래스의
+# Param/Modifier에 숏핸드 키 넷을 얹자 `export type D`(UIStroke 자리)가 "too complex" —
+# 이번 증상은 이 한도(기본값 작음)가 듣는다(Tarjan·TypeInfer 상향은 무효). 100만이면 클린,
+# 시간 무해(1.9s대). 8.8절의 "올리면 지점만 옮겨감"은 재귀 메소드 테이블 유니언 때 얘기 — typing-limits 8.5절.
 lsp_out=$(mise exec -- luau-lsp analyze --flag:LuauSolverV2=true \
 	--flag:LuauTarjanChildLimit=160000 \
 	--flag:LuauSubtypingIterationLimit=100000 \
 	--flag:LuauTypeInferIterationLimit=1000000 \
+	--flag:LuauSolverConstraintLimit=1000000 \
 	--definitions=scripts/roblox-defs/globalTypes.d.luau \
 	--ignore "**/luau_packages/**" \
 	quad-roblox/src quad-roblox/test/spec.*.luau 2>&1) || fail=1

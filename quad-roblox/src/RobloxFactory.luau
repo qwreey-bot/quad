@@ -22,6 +22,7 @@ local InitD = require("./D")
 local installPropertyHandler = require("./Handlers/Property")
 local installInstanceChildHandler = require("./Handlers/InstanceChild")
 local installEventHandler = require("./Handlers/Event")
+local installInstanceShorthandHandler = require("./Handlers/InstanceShorthand") -- M10 잔여(round20)
 local OnChangeModule = require("./Handlers/OnChange")
 local installAnimate = require("./Animate") -- M11 단위 ③ — :Apply 콤비네이터(모듈 인스턴스의 Tween/isState 위)
 
@@ -33,6 +34,7 @@ local function RobloxFactory(module: any): any
 	installPropertyHandler(module)
 	installInstanceChildHandler(module)
 	installEventHandler(module)
+	installInstanceShorthandHandler(module) -- UICorner/UIPadding/UIPaddingOffset/UIScale — PropertyHandler보다 높은 우선순위(H-138)
 	OnChangeModule.install(module)
 	-- `H-299` → `H-305` (d′): `D`는 module.D 직접 대입이 아니라
 	-- `UseProvider`의 확장 병합으로 실린다 — 반환 테이블이 그 확장이고,

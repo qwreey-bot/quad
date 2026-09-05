@@ -55,6 +55,18 @@ Roblox Instance 이름과 맞춘 `UICorner`/`UIPadding`(+`UIPaddingOffset`)/
 
 ## 메커니즘 — 새 아키텍처 개념 불필요
 
+**[2026-09-06 구현됨 — M10 잔여, round20 `H-335`~`H-337`]** `quad-roblox/src/Handlers/
+InstanceShorthand.luau` — 아래 "남은 열린 질문"의 단순화 후보대로 **룩업 표 하나**
+(`{ key → { class, childName, props, wrap } }`)로 키 넷을 구동한다. 우선순위
+`HANDLER_PRIORITY_NORMAL + 1`, 자식은 `quad.D.New(class)({ Name = childName })`로
+(`UI-5` 자동 충족) 만들어 핸들러가 부착, 조회는 `Relate`. 값 모양: `UICorner: number |
+UDim`(number → offset), `UIPadding: UDim`, `UIPaddingOffset: number`, `UIScale: number`.
+**캐비엇 `H-335`**: `UIPadding`/`UIPaddingOffset`은 v1처럼 `_quad_padding` 하나를 공유한다
+— 한 인스턴스에 둘을 같이 쓰면 나중 것이 이기고, 한 키를 `nil`로 내리면 공유 자식이
+파괴된다(같은 뜻의 두 표기라 동시 사용은 의미 없음). 생성기는 GuiObject 계열의
+`<Class>Param`·`<Class>Modifier`에 키 넷을 얹는다(`H-336`, 위 "보강" 문단의 체크리스트
+항목 이행).
+
 이미 있는 pluggable Handler로 그대로 커버됨. `UICorner`/`UIPadding`/
 `UIScale` 같은 특수 키를 인식하는 Handler(`isHandlable`이 그 키를 매칭)가
 "이름 붙은 자식을 찾거나 만들고 그 자식의 프로퍼티를 세팅"을

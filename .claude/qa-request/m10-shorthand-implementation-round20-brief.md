@@ -81,3 +81,8 @@ M11 규약(`m11-implementation-round19-brief.md` §2~§5 = M8 = M7 = M5 = M4 = M
 않는다(사용자 2026-09-06). Studio 실측은 단위 ②에만(Q6).
 
 ## §6 단위 작업 계획 (Q2 (a) 기준 — 착수 시 채운다)
+
+**[2026-09-06 단위 ① 완료 — `H-335`]** `Handlers/InstanceShorthand.luau`(룩업 표 넷·`D.New` 경로 자식·Relate 조회·`retractFrom` 뒤 파괴·`:Mapped`·`errorBefore` 검증, 우선순위 `NORMAL + 1`), `RobloxFactory` 설치, `spec.shorthand` 6절(mock — `UDim` 전역은 테이블 심).
+
+**[같은 날 단위 ② — `H-336`/`H-337`]** 생성기(GuiObject 계열 Param·Modifier setter에 키 넷 — `PVn` 재사용), `spec.shorthandtypes`(양성), 음성 5/5 스크래치, test.sh `LuauSolverConstraintLimit=1000000`. Studio(Q6)는 아래 audit.
+

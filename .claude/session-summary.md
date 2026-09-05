@@ -2359,4 +2359,6 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   setter `Field<T>` 하자 정정) — §4 확인 항목 2. **[7절]** fable 탐사(치명 0·중대 2·경미 2 — `H-329` 문항, `H-330`~`H-332` 반영), `audit/fable-exploration-2026-09-06.md`. **[8절]** M11 단위 ② — Property 3-상태 슬롯·override 주체는
   들어오는 값(`H-328`), `TweenInfo.new` nil 거부 → 기본값 명시(`H-333`), Studio 6/6(플러그인
   미연결로 Source 패치), `audit/m11-unit2-studio-2026-09-06.md`. **[9절]** 단위 ③ `Animate` — 타입 네 변형 실측 끝에
-  `(self: any) -> State<Tween<any>>`(`H-334`, 확인 항목), 단위 ② 감사 반영. **M11 세 단위 완료.**
+  `(self: any) -> State<Tween<any>>`(`H-334`, 확인 항목), 단위 ② 감사 반영. **M11 세 단위 완료.** **[10절]** M10 잔여
+  InstanceShorthand(round20 `H-335`~`H-337`) — 룩업 표 핸들러·생성기 키 넷·`LuauSolverConstraintLimit`,
+  CLI 47/47·Studio 6/6. **M10 잔여 없음.**
