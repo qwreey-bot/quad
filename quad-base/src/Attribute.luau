@@ -42,6 +42,7 @@
 ]]
 
 local Brand = require("./Brand")
+local NoneModule = require("./Dispatch/None")
 local Relate = require("./Relate")
 local AttributeKeyModule = require("./AttributeKey")
 local QuadTypes = require("../luau_packages/quad_types")
@@ -182,7 +183,6 @@ local function Init(quad: any)
 	quad:RunInit(InitDispatch)
 	quad:RunInit(AttributeKeyModule.Init) -- delegation target must exist (idempotent)
 	local dispatch: QuadTypes.Dispatch = quad.Dispatch
-	local None = quad.None
 
 	-- group value object(weak) -> {[name] = private key} — memoized so a
 	-- reprocessed group delegates through the SAME key objects and the name
@@ -210,8 +210,7 @@ local function Init(quad: any)
 		priority = dispatch.HANDLER_PRIORITY_FALLBACK,
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
 			-- `H-39`: terminal bookkeeping — the group contributes no element
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0, inst)
+			NoneModule.registerEmptySlot(dispatch, inst, k, inst) -- `H-39` (리뷰 — 한 본문, `None.luau`)
 
 			-- `H-41`: position claim FIRST — the same group's second position
 			-- must be rejected before any name claim is half-recorded

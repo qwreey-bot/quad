@@ -552,8 +552,10 @@ RefLeafHandler.isHandlable(inst, k, v) =
     -- 안 갱신돼 있었음 — 아래 "타입/판별" 절의 최종 공식과 일치시킴
     -- [2026-08-18 구현 전 QA] type(k) == "number" 체크가 빠져 있었음 — leaf 바인딩은
     -- 배열 전용이고(사용자 확정: "배열 전용이 맞음"), 짝인 ObserverEffectLeafHandler엔
-    -- 이 체크가 필수라고 이미 명시돼 있었음. 빠지면 named 자리로 흘러온 Ref를 잡으려는
-    -- HANDLER_PRIORITY_FALLBACK 가드(아래 "동적 경로 가드")가 죽은 코드가 된다.
+    -- 이 체크가 필수라고 이미 명시돼 있었음. 빠지면 HIGH 우선순위 leaf가 named 자리로
+    -- 흘러온 Ref까지 삼킨다 — [2026-09-06 리뷰 정정] plain Ref엔 FALLBACK 가드가 없다
+    -- (등록된 가드는 PreRef/PostRef뿐 — named 자리의 plain Ref는 일반 no-match error,
+    -- spec.refhandlers 7절); 이 검사는 그 no-match가 살아 있게 하는 자리다.
 
 function RefLeafHandler.process(inst, k, v, index)
     -- [2026-08-24 6라운드 `H-39`] **말단 핸들러의 배열 자리 부기** — 빠져 있었다.

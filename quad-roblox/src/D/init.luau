@@ -46,7 +46,8 @@ type MapperRoot = QuadTypes.MapperRoot
 -- Modifier 필드 setter의 값 타입(modifier-plan 4·4-1·10절): 리터럴 T | Tween<T> |
 -- State<T> | State<Tween<T>> | None(unsetter) | 변환 함수(old는 '현재 저장된 그대로')
 -- — State 형 둘을 각각 나열하는 이유는 H-327(새 솔버 State 불변성, 2026-09-06)
-export type Field<T> = T | Tween<T> | State<T> | State<Tween<T>> | None | ((old: T | Tween<T> | State<T> | State<Tween<T>> | None | nil) -> T | Tween<T> | State<T> | State<Tween<T>> | None | nil)
+export type FieldV<T> = T | Tween<T> | State<T> | State<Tween<T>> | None
+export type Field<T> = FieldV<T> | ((old: FieldV<T>?) -> FieldV<T>?)
 
 type PV0 = boolean | State<boolean> | TweenData<boolean> | State<Tween<boolean>> | None -- boolean
 type PV1 = Instance | State<Instance> | TweenData<Instance> | State<Tween<Instance>> | None -- Instance

@@ -57,8 +57,11 @@ local module = { None = None, sentinel = sentinel }
 -- The terminal "empty slot" registration every nop handler does (NilHandler,
 -- ProcessedModifier/PreRef/PostRef): offsetSource FIRST, then length 0 —
 -- the release-order contract (`H-39`, setLength ends in gatedRecompute).
--- One body so the order cannot drift between the five sites (review, M8 ②·③ —
--- RefLeafHandler is the fifth).
+-- One body so the order cannot drift between the terminal sites (review, M8 ②·③,
+-- widened after the M11 review: NilHandler, Processed*, RefLeafHandler, and the
+-- Attribute/Tag/Effect/Observer/Slot leaf handlers route through here; the only
+-- inline copy left is quad-roblox `Handlers/OnChange.luau` — that package never
+-- requires quad-base).
 -- `anchor` is the `setLength` 4th argument the `Processed*` canon blocks pass
 -- (`inst`, `H-35`); NilHandler passes none.
 function module.registerEmptySlot(dispatch: QuadTypes.Dispatch, inst: any, k: any, anchor: any?)

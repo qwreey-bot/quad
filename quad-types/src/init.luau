@@ -154,8 +154,8 @@ export type TagConstructor = setmetatable<{ Merged: (...Tag) -> Tag }, { __call:
 
 -- `Tween<T>` — 값-레벨 트윈 래퍼(M11 단위 ①, `base/tween-plan.md` "확정: `Tween{...}`
 -- 최종 모양" 절). quad-types는 엔진 무관이라 Roblox 타입 자리(`Info`/`Style`/
--- `Direction`)는 `any` — 정밀판은 quad-roblox `types.luau`가 이 타입을 좁혀 쓴다
--- (round19 Q3 (a)). 센티널 둘은 `None`과 같은 frozen 마커(`sentinel(name)`, `H-300`).
+-- `Direction`)는 `any` — quad-roblox `types.luau`는 이 타입을 **그대로 별칭**한다
+-- (round19 Q3 (a)의 정밀판은 `State<X>` 불변성 때문에 포기, `H-326`). 센티널 둘은 `None`과 같은 frozen 마커(`sentinel(name)`, `H-300`).
 -- `Mapped`는 재귀 제네릭(`Tween<U>` 반환)이라 데이터부/메소드부 쪼개기(typing-limits
 -- §1②) — 파생 자리는 결과 타입을 명시 바인딩할 것(§1①).
 export type TweenCancel = { read __quadTweenCancel: true }

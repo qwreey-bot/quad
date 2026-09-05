@@ -271,7 +271,9 @@ def emit():
     # setter 쪽은 전체형 Tween<T>(Mapped 포함): 함수 멤버가 든 이 유니언에서 데이터부
     # TweenData<T>는 교집합 Tween 값을 받지 못했다(2026-09-06 실측 — Param 슬롯의 리터럴
     # 자리와 달리 호출 인자 자리). Modifier 타입은 클래스별이라 복잡도 문제도 없다.
-    L.append("export type Field<T> = T | Tween<T> | State<T> | State<Tween<T>> | None | ((old: T | Tween<T> | State<T> | State<Tween<T>> | None | nil) -> T | Tween<T> | State<T> | State<Tween<T>> | None | nil)")
+    # 값/함수 인자/함수 반환 셋이 같은 유니언 — 별칭 하나로(리뷰: 부분 수정 시 세 팔이 어긋남)
+    L.append("export type FieldV<T> = T | Tween<T> | State<T> | State<Tween<T>> | None")
+    L.append("export type Field<T> = FieldV<T> | ((old: FieldV<T>?) -> FieldV<T>?)")
     L.append("")
     names = sorted(classes.keys())
     # [2026-09-06 M11 단위 ① H-326] + State<Tween<T>> — tween-plan "타입 대수"의

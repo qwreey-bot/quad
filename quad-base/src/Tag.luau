@@ -25,6 +25,7 @@
 ]]
 
 local Brand = require("./Brand")
+local NoneModule = require("./Dispatch/None")
 local Relate = require("./Relate")
 local QuadTypes = require("../luau_packages/quad_types")
 local Err = require("./ErrorNamespace")
@@ -169,7 +170,6 @@ local function Init(module: any)
 
 	module:RunInit(InitDispatch) -- idempotent pull (`H-174` idiom)
 	local dispatch: QuadTypes.Dispatch = module.Dispatch
-	local None = module.None
 
 	-- {[inst(weak)] = {[tagName] = {[k]: true}}} — per-name POSITION sets
 	-- (tag-plan: holders keyed by position, not Tag identity — the same
@@ -187,8 +187,7 @@ local function Init(module: any)
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
 			-- `H-39`: terminal handlers register their array position — a Tag
 			-- contributes no physical element, so the pair is None/0
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0, inst)
+			NoneModule.registerEmptySlot(dispatch, inst, k, inst) -- `H-39` (리뷰 — 한 본문, `None.luau`)
 
 			local added: { string } = {}
 			for name in v:Names() do

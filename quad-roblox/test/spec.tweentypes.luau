@@ -20,7 +20,7 @@ local q = Quad.New():UseProvider(QuadRoblox)
 local function _types()
 	-- 생성자 제네릭 추론(리터럴·엔진 타입 필드 포함)
 	local t: QuadTypes.Tween<UDim2> = q.Tween({ Value = UDim2.new(0, 10, 0, 10), Time = 0.3, Style = Enum.EasingStyle.Bounce })
-	local refined: Types.Tween<UDim2> = t -- quad-types 값 → quad-roblox 정밀판(read 필드)
+	local refined: Types.Tween<UDim2> = t -- quad-roblox 별칭은 quad-types 그대로(정밀판 포기 — H-326) — 항등 대입
 	-- D 슬롯: Tween 직접 / Info 우선 + Override 센티널 / State<Tween<T>> / Mapped 결과
 	local f1 = q.D.Frame({
 		Position = t,

@@ -76,6 +76,7 @@ local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 -- module surface, extend this list too or the new brand silently falls back
 -- to typeof (the `type(predicate) == "function"` guard hides omissions).
 local BRAND_PROBES = {
+	"isTween", -- M11 (round19 리뷰 — 빠지면 Tween이 `value: table`로 보고된다)
 	"isPreRef",
 	"isPostRef",
 	"isRef",
