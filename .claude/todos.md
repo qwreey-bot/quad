@@ -81,7 +81,7 @@
    `RefLeafHandler`·가드 둘·`Processed*Ref` 둘·drive pre-pass `H-319`, 배치
    `H-320`), 발견 원장은 `m8-implementation-round18.md`, 진행 소스는 ROADMAP
    M8 체크박스, 단위 구성은 brief §1. 단위 ② Studio 8/8
-   (`audit/m8-unit2-studio-2026-09-04.md`). 단위 ③도 같은 날 완료(`H-321` 사용자 확정 (a) → `H-322` 반공변 팬텀 마커 `<Class>RefMarker`, `spec.reftypes`) — **M8 완료**, round18 §4 열린 문항 0(확인 항목 `H-317`만). 다음 마일스톤은 사용자와 정한다. **M10 잔여는
+   (`audit/m8-unit2-studio-2026-09-04.md`). 단위 ③도 같은 날 완료(`H-321` 사용자 확정 (a) → `H-322` 반공변 팬텀 마커 `<Class>RefMarker`, `spec.reftypes`) — **M8 완료**, round18 §4 열린 문항 0·확인 항목 0(`H-317` 사용자 수용 — 부작용 실측 무해). 다음 마일스톤은 사용자와 차근차근 정한다(ROADMAP이 소스). **M10 잔여는
    InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
    목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
    (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지
