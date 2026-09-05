@@ -155,7 +155,7 @@ nil-index 크래시 vs 조용한 no-op)가 안 정해져 있음.
 에러를 던지도록 지금 결정해두면, 구현 중 흔한 초기화 순서 실수를 훨씬 덜
 헷갈리게 만들 수 있음. 1-2번과 같은 타이밍(M3)에 같이 확정.
 
-### 1-5. `props.Modifier`/`props.Ref` forwarding 관례가 Lua 배열 리터럴의 nil-hole 함정에 그대로 노출됨
+### 1-5. `props.Modifier`/`props.Ref` forwarding 관례가 Lua 배열 리터럴의 nil-hole 함정에 그대로 노출됨 — [해소됨, 2026-08-07 열 번째 세션]
 
 **[2026-08-07 열 번째 세션 갱신 — 반영 완료.]** 아래 제안 (a)/(b) 대신
 더 단순한 (c)류 해법으로 확정: `props.Modifier or None`/`props.Ref or
@@ -186,7 +186,7 @@ None` 관용구를 필수로 강제 — `None`이 항상 non-nil이라 리터럴
 `props.Ref` named-parameter 컴포넌트 작성), 그 스파이크 코드에 caller가
 Modifier/Ref를 아예 안 넘기는 케이스를 반드시 포함시킬 것.**
 
-### 1-6. `canExecute`/`Connected`의 실제 구현 방식이 미확정인 채로 코어 전역에 이미 재사용 확정됨
+### 1-6. `canExecute`/`Connected`의 실제 구현 방식이 미확정인 채로 코어 전역에 이미 재사용 확정됨 — [해소됨, 2026-08-08 세션]
 
 **[해소됨, 2026-08-08 세션. 시그니처는 2026-08-14 다섯 번째 세션에 정정,
 `canBound`는 열한 번째 세션에 별도 진입점으로 재도입]**
@@ -228,7 +228,7 @@ eager cleanup을 택했다"는 구체적 위험을 지적하며 "quad는 rbvm �
 동시에 Destroy될 때 부모/자식 `Destroying` 발화 순서) 먼저 실측하고, 그
 결과로 `lifecycle-pattern.md`의 애매한 서술을 확정 문장으로 교체할 것.
 
-### 1-7. Slot의 `add`/`remove`/`clear` CRUD 의미론이 정의돼 있지 않음
+### 1-7. Slot의 `add`/`remove`/`clear` CRUD 의미론이 정의돼 있지 않음 — [해소됨, 2026-08-09 세 번째 세션]
 
 **[해소됨, 2026-08-09 세 번째 세션]** `base/slot-plan.md`의 "CRUD API
 확정" 절에 `Add`/`Remove`/`Extract`/`Clear` 시그니처·에러 조건·재진입성까지
@@ -248,7 +248,7 @@ eager cleanup을 택했다"는 구체적 위험을 지적하며 "quad는 rbvm �
 최소한 표로 확정해둘 것 — 이미 알려진 "여러 Slot 순서 보장" 논의와 같은
 타이밍에 같이 정리하면 됨.
 
-### 1-8. Slot "재마운트 시 throw"가 두 가지 다른 추적 대상을 혼용해서 서술됨
+### 1-8. Slot "재마운트 시 throw"가 두 가지 다른 추적 대상을 혼용해서 서술됨 — [해소됨, 2026-08-09 세 번째 세션]
 
 **[해소됨, 2026-08-09 세 번째 세션]** `base/slot-plan.md`의 "`isMounted`
 이중 추적 분리" 절에 Slot 컨테이너(`self._mounted`, dispatch-process 시점
@@ -274,7 +274,7 @@ eager cleanup을 택했다"는 구체적 위험을 지적하며 "quad는 rbvm �
 element별 weak-set) — throw 조건을 "Slot 핸들러의 `process`가 같은 Slot
 객체에 대해 두 번째로 불렸을 때"로 명문화. M6 착수 시.
 
-### 1-9. `LifetimeHandle` 인터페이스가 M8에 배치돼 있지만 M4/M6이 이미 그걸 필요로 함(로드맵 순서 역전)
+### 1-9. `LifetimeHandle` 인터페이스가 M8에 배치돼 있지만 M4/M6이 이미 그걸 필요로 함(로드맵 순서 역전) — [해소됨, 2026-08-07 세 번째 세션]
 
 **[2026-08-07 세 번째 세션 갱신 — 반영 완료.]** 아래 제안대로
 `LifetimeHandle.luau`/`PerInstanceState.luau` 인터페이스가 `ROADMAP.md`
@@ -499,7 +499,9 @@ Modifier를 합친다"는 시나리오가 `Overridden`의 가장 그럴듯한 �
 **제안**: Modifier의 클래스별 typed 생성자 계층(2-8번과 같은 지점) 설계
 시 `Overridden`의 제네릭 시그니처도 같이 확정할 것. M7 착수 시.
 
-### 2-6. Modifier 필드에 State/Source를 인자로 넘기는 케이스가 세터 표에서 빠짐
+### 2-6. Modifier 필드에 State/Source를 인자로 넘기는 케이스가 세터 표에서 빠짐 — [해소됨, 2026-09-04 M7 단위 ①]
+
+**[2026-09-06 감사 기록]** 구현이 답했다 — `quad-base/src/Modifier.luau`의 setter는 인자가 함수가 아니면(State든 리터럴이든) "리터럴" 분기로 필드를 통째로 교체한다(코드 주석 *"a State literal replaces the whole field"*, round17 `H-309`). 아래는 당시 지적 원문.
 
 **위치**: `base/modifier-plan.md` "4-1. 필드가 State일 수도 있음" 표.
 
@@ -532,7 +534,9 @@ Modifier를 합친다"는 시나리오가 `Overridden`의 가장 그럴듯한 �
 **제안**: 리프 디스패처가 중첩 배열을 flatten하는지 명시적으로 확정하고,
 다중 Ref를 넘기는 구체적 문법을 한 줄로 못박을 것. M8/M9 착수 시.
 
-### 2-8. Modifier 클래스별 typed 생성자(`FrameModifier` 등)가 M5/M7 로드맵 어디에도 없음
+### 2-8. Modifier 클래스별 typed 생성자(`FrameModifier` 등)가 M5/M7 로드맵 어디에도 없음 — [해소됨, 2026-09-04 M7 단위 ③·④ `H-313`/`H-314`]
+
+**[2026-09-06 감사 기록]** 로드맵에 넣는 정도가 아니라 구현됐다 — 생성기가 클래스별 `<Class>Modifier`와 `D.Modifier.<Class>()`를 내고, 공개 `Modifier.TypedFactory<<T>>(name)`/`DefineSubtype`이 커스텀 클래스 생성자를 준다(`base/modifier-plan.md` 11절). 아래는 당시 지적 원문.
 
 **위치**: `base/modifier-plan.md` "5. 타입 출처는 이미 확정된 dot-access
 관습 재사용" 절, `.claude/question.md` 1번.
@@ -713,10 +717,11 @@ Handler"라고만 서술해, 사실상 3개의 거의 동일한 형태(리터럴
 
 ### 아직 안 고침 (판단 필요해서 여기 남김)
 
-- **Destroying 훅 신뢰도에 대한 서술이 `lifecycle-pattern.md` 내부에서도,
-  `framework-comparison-findings.md`와의 사이에서도 어긋남** — 위 1-6
-  항목에 상세, 여기서는 "아직 아무도 하나의 확정 문장으로 정리 안 함"이라는
-  사실만 문서모순 항목으로 남겨둠.
+- **[해소됨, 2026-09-02 M5 단위 ① 실측 `H-291`]** ~~Destroying 훅 신뢰도에 대한 서술이 `lifecycle-pattern.md` 내부에서도,
+  `framework-comparison-findings.md`와의 사이에서도 어긋남~~ — `base/lifecycle-pattern.md`의
+  `H-291` 배너가 하나의 확정 문장으로 정리했다: Deferred 시그널 모드에서
+  `Destroying`/`GetPropertyChangedSignal` 콜백은 지연 배달될 수 있고 `gcconn.Connected`
+  전환만 동기다(Studio 실측). 2026-09-06 감사가 이 항목의 미갱신을 발견.
 
 ---
 
@@ -742,7 +747,9 @@ Handler"라고만 서술해, 사실상 3개의 거의 동일한 형태(리터럴
 **[2026-08-12 열일곱 번째 세션 갱신] 우선순위1 11개 전부 해소됨** — 1-3/
 1-4/1-10/1-11이 이 세션에서 마저 확정되어(위 각 항목 참고), 더 이상 M0
 착수 전에 열려있는 우선순위1 항목이 없음. 아래는 남은 실측/검증 항목만
-정리(전부 "설계는 확정, 실제 Luau/구현으로 부딪혀볼 것만 남음" 상태):
+정리(전부 "설계는 확정, 실제 Luau/구현으로 부딪혀볼 것만 남음" 상태) —
+**[2026-09-06 기준] 아래는 2026-08 시점 가이드다: M2·M3은 2026-08-28~09-01에
+완료됐고 각 실측 몫은 실물 spec이 맡았다(`ROADMAP.md`가 소스)**:
 
 - **M3(Dispatch) 착수 시**: 1-2/1-3/1-4는 설계 확정 완료 — M3 스파이크에서
   다단 체인 케이스, 동률 감지 디버그 print, 매치 실패 에러 경로가 실제로
