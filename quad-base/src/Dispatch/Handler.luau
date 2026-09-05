@@ -9,12 +9,15 @@
 	                                            -- HANDLER_PRIORITY_* band constants
 	                                            -- (`Dispatch/init.luau`) ± offsets
 	  process(inst, key, value, index) -> retractor
-	     -- does the work and returns the 1-arg closure that undoes exactly what
-	     -- this call did. Returning nil is a contract violation (Dispatch errors
-	     -- immediately); return `Void` when there is nothing to undo (`H-162`).
-	     -- The retractor's argument is either nil (plain retract) or a new value
-	     -- this same handler is about to process — nothing else can arrive
-	     -- (descending diff, "Dispatch 체인" section).
+	     -- does the work and returns the closure `(nextValue, retracting)` that
+	     -- undoes exactly what this call did. Returning nil is a contract
+	     -- violation (Dispatch errors immediately); return `Void` when there is
+	     -- nothing to undo (`H-162`).
+	     -- `nextValue` is either nil (plain retract) or a new value this same
+	     -- handler is about to process — nothing else can arrive (descending
+	     -- diff, "Dispatch 체인" section). `retracting` (`H-258`, 2026-09-01 —
+	     -- the closure was 1-arg before that) is true on a plain retract and
+	     -- false when the same handler reprocesses `nextValue` right after.
 
 	This file is a leaf on purpose: concrete handlers and `Dispatch/init.luau`
 	both depend on it, never the other way around ("Dispatch는 프리미티브가

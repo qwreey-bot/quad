@@ -121,4 +121,4 @@
 | `OnChange(name, fn)` | `GetPropertyChangedSignal(name)` | 디스크립터 값 — 콜백 타입 검증·추론(생성 `OnChangeFn`) | 배열부 | quad-roblox(`Handlers/OnChange.luau`) |
 
 `AttributeKey`만 해시부 키로 남는다(값 세팅이라 `key = value`가 자연스럽다) —
-그 키의 strict 타이핑 사각은 별도 문항(round16 `H10-12` 잔여).
+그 키의 strict 타이핑 사각은 **[2026-09-03 확정]** `H10-12`/`H10-15`로 닫혔다 — `AttributeKey(name)`는 무타입 프리미티브로 두고 타입은 배열부 슈가(`StringAttribute(name, value)`류)가 진다(`attribute-plan.md` 머리 배너).

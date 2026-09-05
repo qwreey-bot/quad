@@ -504,23 +504,36 @@ function AttributeGroupHandler.process(inst, k, v, index)
         -- `Err`/`SURFACE` 정의는 `base/architecture.md`의 error 계약 절
         Err.errorBefore("Attribute: the same group value is placed at two positions of this instance", SURFACE)
     end
+    -- [2026-09-03 `H10-8` 통합 리뷰 반영 — 2026-09-06 감사 4라운드가 정본 미반영 발견]
+    -- 아래 retractor가 같은 immutable 그룹의 재발행에서 철거를 건너뛰고 위치
+    -- claim도 그대로 두므로, 진입 시 "이미 이 자리가 claim"이면 정확히 그
+    -- 재발행이다 — 그때는 위임 루프도 생략(이름별 체인이 살아 있고, 다시
+    -- 위임하면 무조건 setAttribute K번이 또 나간다; Tag의 홀더 검사와 같은 발상).
+    local reemit = claimed == k
     groupClaimKeys:SetStrong(inst, v, k)
 
-    local keys = {}
-    for name, source in pairs(v:NameMap()) do  -- isHandlable이 이미 isAttribute(v)를 보장
-        -- 그룹 전용 키(비공개) — 공개 AttributeKey(name)이 아님.
-        -- 같은 그룹 값 객체 + 같은 이름이면 항상 같은 키 객체가 나와야 함.
-        local key = groupKey(v, name)
-        Dispatch.process(inst, key, source, 1)   -- 다른 키로 위임이므로 항상 인덱스 1
-        keys[key] = true
+    if not reemit then
+        for name, source in pairs(v:NameMap()) do  -- isHandlable이 이미 isAttribute(v)를 보장
+            -- 그룹 전용 키(비공개) — 공개 AttributeKey(name)이 아님.
+            -- 같은 그룹 값 객체 + 같은 이름이면 항상 같은 키 객체가 나와야 함
+            -- (memoize된 groupKey — 그래서 retractor는 캡처 테이블 없이 재계산한다).
+            Dispatch.process(inst, groupKey(v, name), source, 1)   -- 다른 키로 위임이므로 항상 인덱스 1
+        end
     end
-    return function()
-        -- 이 그룹이 등록했던 것 전부를 철거 — 생존/소멸 구분 없이 균일.
-        -- 인자(새 값)를 안 봄: 생존 이름도 일단 철거하고 다음 process가 다시
-        -- 등록하는 순서라(Dispatch가 retractor → process 순서를 보장),
-        -- "다음 값에 이 이름이 있나"를 미리 알 필요가 없음.
-        for key in pairs(keys) do
-            Dispatch.retractFrom(inst, key, 1)
+    return function(nextValue)
+        -- [2026-09-03 `H10-8` 통합 리뷰 반영 — 2026-09-06 감사가 정본 미반영 발견]
+        -- 같은 그룹 객체의 재발행(no-op emit)은 통째로 스킵: immutable이라
+        -- 같은 객체 = 같은 이름 맵(Tag의 `v == nextValue` 스킵과 동형). process
+        -- 쪽도 같은 위치의 같은 객체면 위임 루프를 생략한다(`reemit`).
+        if v == nextValue then return end
+        -- 그 외엔 이 그룹이 등록했던 것 전부를 철거 — 생존/소멸 구분 없이 균일.
+        -- 다른 객체의 이름 맵은 안 봄: 생존 이름도 일단 철거하고 다음 process가
+        -- 다시 등록하는 순서라(Dispatch가 retractor → process 순서를 보장),
+        -- "다음 값에 이 이름이 있나"를 미리 알 필요가 없음. 키는 캡처 테이블이
+        -- 아니라 memoize된 groupKey로 재계산(`H10-8` — 재발행 경로가 동등한
+        -- retractor를 돌려주게).
+        for name in pairs(v:NameMap()) do
+            Dispatch.retractFrom(inst, groupKey(v, name), 1)
         end
         -- [2026-08-24 `H-41`] 위치 claim도 반납 — **자기 `k`일 때만**
         -- (위 그 항목의 확정: "retract에서 자기 `k`일 때만 지운다").
@@ -551,7 +564,7 @@ end
   API로 노출하지 않음**(위 "이름 소유권" 절). 그룹 값 객체 자체가 바뀌면
   (`State<Attribute>`가 새 객체를 emit) 새 키가 나오는데, 그때는 옛
   클로저가 먼저 전부 철거하므로 claim 충돌이 없음.
-- **생존 이름도 매 사이클 철거→재등록됨(의도된 트레이드오프)** — 비용은
+- **생존 이름도 매 사이클 철거→재등록됨(의도된 트레이드오프)** — **[2026-09-03 `H10-8` 한정]** 단, **같은 그룹 객체의 재발행**(`State<Attribute>`가 같은 객체를 다시 emit)은 철거·재등록 없이 통째로 스킵된다(retractor `v == nextValue` / process `reemit`) — 이건 아래 `AT-20`이 논한 "다른 객체 사이의 생존 이름 diff"가 아니라 객체 identity 재사용이라 `Tag`와 같은 안전한 스킵이다(round16 `H10-8`, `Attribute.luau`). 다른 객체로 바뀔 때의 비용은
   그 이름의 `StoreBind` 구독 해제+재구독, 그리고 재구독의 "등록 즉시 1회
   실행"이 같은 값으로 `setAttribute`를 한 번 더 쏘는 것뿐. 이 문서가 이미
   "값 비교(`:Get()`으로 old/new 비교)는 안 함"을 확정해뒀으므로(아래 항목)

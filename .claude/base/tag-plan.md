@@ -258,6 +258,11 @@ end
 
 ## 패키지 배치 — 값도 알고리즘도 quad-base, 주입되는 건 `addTag`/`removeTag` (2026-08-13 열네 번째 세션 재배치)
 
+**[2026-09-03 구현 배치 — round15/16 `H10-1`, `H-278` 관용구]** 아래 의사코드의
+`TagHandler`/`TagFallbackHandler` 분리와 ROADMAP 옛 `Dispatch/Tag.luau`+`TagFallback.luau`
+분할은 구현에서 **`Tag.luau`의 `Init(module)` 안에 핸들러 리터럴 하나로 인라인**됐다
+(등록 소유는 값을 선언한 모듈 — `H-278`). 공개 API·계약은 이 절 그대로다.
+
 **Tag의 값 타입/clone 체이닝 API(`Tag(...)`/`:Added`/`:Removed`/
 `:Contains`/`:Apply`/`Merged`/`:Names`)가 quad-base인 건 처음부터 그대로**
 (`Modifier`와 같은 층위 — 엔진 무관, 순수 데이터+연산). **[재배치,

@@ -941,7 +941,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       무조건 찍지 않고 **모듈 표면의 `Quad.debug`(boolean, 기본 `false`)가
       참일 때만** — `Quad.debug` 자체가 이번에 신설된 새 공개 표면이다
       (`base/module-lifecycle-plan.md`의 "모듈 표면의 디버그 플래그" 절)
-- [ ] children-array leaf 매칭 Handler들 — `(i:number, v=Ref/Observer/
+- [x] **[2026-09-04 M8 단위 ②로 마지막 몫(Ref/PreRef/PostRef — `Ref.luau`의 `registerDispatchHandlers`, round18 `H-319`) 완료 — 2026-09-06 감사 3라운드가 체크박스 미갱신 발견]** children-array leaf 매칭 Handler들 — `(i:number, v=Ref/Observer/
       Effect/PreRef/PostRef)`, quad-base 소속(2026-08-08 두 번째 세션).
       **⚠️ [2026-09-01 `H-278` 사용자 확정 — 파일 배치 역전]** 옛 확정지
       `Dispatch/Leaf.luau`는 해체됐다 — 등록 소유는 **각 값의 선언 모듈**

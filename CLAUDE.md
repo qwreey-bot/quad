@@ -23,7 +23,7 @@ M6 잔여 전부 닫힘, `H6-9`~`H6-24`, §4 회신 반영 완료) + **M10 엔�
 `AttributeKey` 무타입화 + 타입드 스칼라 슈가 `StringAttribute(name, value)`
 `H10-15`로 round16 열린 문항 0) — **[2026-09-04] M7(Modifier) 자율 구현
 구간 — 같은 날 완료**: 규약 `.claude/qa-request/m7-implementation-round17-brief.md`
-§0 확정, 단위 ①~④ + §4 회신(`H-310`/`H-312`) 반영 완료 — **M7 완료**(단위 ④는 사용자 설계 — 클래스 태그·`TypedFactory`/`DefineSubtype`·`As`·`Into`·상위 클래스 Modifier, `H-314`; `H-313` 소멸), round17 §4 열린 문항 0; **[2026-09-04] M8(Ref) 자율 구현 구간 — 2026-09-06 새벽 완료(단위 ①·②는 2026-09-04, 단위 ③·`H-317`은 2026-09-06 00시대 KST 커밋)** — 규약 `qa-request/m8-implementation-round18-brief.md` §0 확정, 단위 ①~③ 완료(`H-315`/`H-319`/`H-322` — ③은 `H-321` 사용자 확정 반공변 팬텀 마커) — **M8 완료**, 원장 `-round18.md`, 진행 소스는 ROADMAP M8 체크박스; M7 진행 소스는 그 brief §1과
+§0 확정, 단위 ①~④ + §4 회신(`H-310`/`H-312`) 반영 완료 — **M7 완료**(단위 ④는 사용자 설계 — 클래스 태그·`TypedFactory`/`DefineSubtype`·`As`·`Into`·상위 클래스 Modifier, `H-314`; `H-313` 소멸), round17 §4 열린 문항 0; **[2026-09-04] M8(Ref) 자율 구현 구간 — 2026-09-06 새벽 완료(단위 ①·②는 2026-09-04, 단위 ③·`H-317`은 2026-09-06 00시대 KST 커밋)** — 규약 `qa-request/m8-implementation-round18-brief.md` §0 확정, 단위 ①~③ 완료(`H-315`/`H-319`/`H-322` — ③은 `H-321` 사용자 확정 반공변 팬텀 마커) — **M8 완료**, 원장 `-round18.md`, 진행 소스는 ROADMAP M8 체크박스; **[2026-09-06] 다음 순서 사용자 확정 M11 → InstanceShorthand → M9, M11 자율 구간 착수**(규약 `qa-request/m11-implementation-round19-brief.md`, 발견 `H-323`부터); M7 진행 소스는 그 brief §1과
 `ROADMAP.md` M7 체크박스, 발견 원장은 `-round17.md`** —
 **M4는 같은 날 자율 구간으로 착수·종결**(사용자 조건부 승인 — 규약
 `.claude/qa-request/m4-implementation-round13-brief.md` §0 전량 (a), 발견
