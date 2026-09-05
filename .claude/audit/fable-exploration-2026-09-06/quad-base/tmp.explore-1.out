@@ -1,0 +1,49 @@
+(recorded from the run at HEAD a716eb4; the .luau was removed from quad-base/test by someone else mid-session — content re-saved next to this file; copy into quad-base/test/ to rerun)
+
+=== E1 blame — Frame { destroyedSlot } (SlotHandler → materializeSlotTree guard) ===
+ok=	false	err=	./quad-base/src/Dispatch/init.luau:224: Slot: destroyed Slot cannot be mounted
+
+=== E5 Effect leaf survives Destroy → re-placed on a new inst: reinstalls once ===
+after first drive runs/cleans	1	0
+after Destroy runs/cleans	1	1	canExecute	false
+after Set while dead runs/cleans	1	1
+after re-place runs/cleans	2	1	canExecute	true
+after Set alive runs/cleans	3	2
+
+=== E6 Ref leaf survives Destroy → re-placed: Value follows, no double-placement error ===
+Value after destroy is dead inst:	true
+re-place ok=	true	nil	Value==b	true
+
+=== E-sparse drive — { [2] = 'x' } (no [1]) → what happens ===
+ok=	false	err=	./quad-base/src/Bookkeeping.luau:152: Dispatch.getOffsetAt: lengthList[1] is nil — bookkeeping is broken
+
+=== E22 Slot List reconcile churn — memory bounded ===
+KB before=618.0 after=664.0 delta=46.0
+children now:	3	Length	3
+
+=== E23 glitch — Observer on Compute(A,B) diamond reads fresh consistent value once per Set ===
+fires	3	seen	110,220,330
+
+=== E24 Effect deps {gate, S}: S:Set → 1 rerun; flush → 0 extra ===
+installed runs	1
+after Set (gate closed) runs	2
+after Off runs	2
+
+=== E25 Effect deps {gate} only: closed gate holds; flush fires once; Get inside fn fresh ===
+closed: runs	1	lastSeen	1
+open: runs	2	lastSeen	3
+
+=== E26 Ref:Wait waiter + callback re-entrant Set: waiter receives latest ===
+waiter got	1	final	2
+
+=== E27 Ref:Wait — dead waiter thread then Set → error surfaces (H-170)? ===
+ok=	false	err=	cannot resume dead coroutine
+
+=== E28 Store: Of on declared key returns same Source; Names ===
+same	true	names	a
+names2	a,b
+
+=== E29 Observer catch-up: change while unbound replays once on bind, with from=nil ===
+false:1 false:3
+
+=== DONE ===

@@ -1,0 +1,16 @@
+(recorded from the run at HEAD a716eb4; .luau removed from the repo mid-session by someone else. Script: AnyTableKey LOW handler returning Void; loops process(inst, {i}, "v", 1) + retractFrom(inst, {i}, 1))
+
+=== C1 process(inst, freshKey_i, 'v', 1) + retractFrom(inst, freshKey_i, 1) × 5000 — retained? ===
+KB before=437.0 after=2769.0 delta=2332.0 (per iter 478 B)
+after Destroy+drop KB=692.0 (vs before 437.0)
+
+=== C2 same, but STRING keys reused (bounded set) — control ===
+KB before=446.0 after=447.0 delta=1.0
+
+=== C3 Attribute group churn: State<Attribute> (fresh group objects) vs Attribute({k = State}) (stable) ===
+State<Attribute>: delta=1624.0 KB (per iter 554 B)   [3000 × aS:Set(q.Attribute({ k = i }))]
+Attribute({k=State}): delta=0.0 KB                    [3000 × kS:Set(i)]
+
+=== C4 Tag churn with fresh names vs same name set ===
+fresh names: delta=954.0 KB (per name 195 B)          [5000 × tS:Set(q.Tag("n"..i))]
+two names alternating: delta=0.0 KB

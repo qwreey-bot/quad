@@ -224,6 +224,10 @@ local function Init(module: any)
 					holders[k] = nil
 					if next(holders) == nil then
 						table.insert(removed, name)
+						-- `H-331` (fable 탐사 2026-09-06): drop the empty holder set —
+						-- dynamic names (`Tag("item-" .. id)`) otherwise accumulate one
+						-- table per name for the instance's lifetime
+						tagNameMap:SetStrong(inst, name, nil)
 					end
 				end
 				if #removed > 0 then

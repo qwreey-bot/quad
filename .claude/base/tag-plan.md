@@ -258,6 +258,8 @@ end
 
 ## 패키지 배치 — 값도 알고리즘도 quad-base, 주입되는 건 `addTag`/`removeTag` (2026-08-13 열네 번째 세션 재배치)
 
+**[2026-09-06 fable 탐사 `H-331`]** retractor는 이름의 마지막 홀더가 빠지면 `removeTag`뿐 아니라 **빈 holders 집합도 지운다** — 동적 이름(`Tag("item-" .. id)`)이 인스턴스 수명 동안 이름당 테이블 하나씩 누적되던 것을 닫음(아래 의사코드엔 없던 한 줄).
+
 **[2026-09-03 구현 배치 — round15/16 `H10-1`, `H-278` 관용구]** 아래 의사코드의
 `TagHandler`/`TagFallbackHandler` 분리와 ROADMAP 옛 `Dispatch/Tag.luau`+`TagFallback.luau`
 분할은 구현에서 **`Tag.luau`의 `Init(module)` 안에 핸들러 리터럴 하나로 인라인**됐다

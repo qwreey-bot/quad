@@ -59,7 +59,7 @@ local function Init(module: any)
 		local cur = elementOwner:GetWeak(element, OWNER)
 		if cur ~= nil then
 			if not (fromDetached and cur == ownerKey) then
-				Err.errorBeforeNearest("Slot: this element is already mounted — multiple mounts are not allowed", SURFACE)
+				Err.errorBefore("Slot: this element is already mounted — multiple mounts are not allowed", SURFACE)
 			end
 			return
 		end
@@ -72,7 +72,7 @@ local function Init(module: any)
 			return false -- exactly this position already holds it — re-confirm, no-op
 		end
 		if current ~= nil then
-			Err.errorBeforeNearest("Slot: this element is already mounted elsewhere — multiple mounts are not allowed", SURFACE)
+			Err.errorBefore("Slot: this element is already mounted elsewhere — multiple mounts are not allowed", SURFACE)
 		end
 		elementOwner:SetWeak(element, OWNER, inst)
 		elementOwner:SetWeak(element, OWNER_POS, k)
@@ -103,20 +103,20 @@ local function Init(module: any)
 			-- inside attachSlot after the array/ownership mutation — otherwise
 			-- Splice's batch gate is left On by the raise (통합 리뷰 재현).
 			if v._destroyed then
-				Err.errorBeforeNearest("Slot: destroyed Slot cannot be an element", SURFACE)
+				Err.errorBefore("Slot: destroyed Slot cannot be an element", SURFACE)
 			end
 			return v
 		end
 		if not isState(v) then
 			if module.isRef(v) or module.isPreRef(v) or module.isPostRef(v)
 				or module.isObserver(v) or module.isEffect(v) or module.isModifier(v) then
-				Err.errorBeforeNearest("Slot: handler-layer values (Ref/PreRef/PostRef/Observer/Effect/Modifier) cannot be elements", SURFACE)
+				Err.errorBefore("Slot: handler-layer values (Ref/PreRef/PostRef/Observer/Effect/Modifier) cannot be elements", SURFACE)
 			end
 			if v == nil or v == None then
-				Err.errorBeforeNearest("Slot: nil/None cannot be an element — only actually mountable values", SURFACE)
+				Err.errorBefore("Slot: nil/None cannot be an element — only actually mountable values", SURFACE)
 			end
 			if not isInst(v) then
-				Err.errorBeforeNearest("Slot: this backend cannot mount this value", SURFACE)
+				Err.errorBefore("Slot: this backend cannot mount this value", SURFACE)
 			end
 			return v
 		end
@@ -238,7 +238,7 @@ local function Init(module: any)
 	end
 
 	function materializeSlotTree(slot: any, physicalTarget: any, ownerKey: any, position: number)
-		if slot._destroyed then Err.errorBeforeNearest("Slot: destroyed Slot cannot be mounted", SURFACE) end
+		if slot._destroyed then Err.errorBefore("Slot: destroyed Slot cannot be mounted", SURFACE) end
 		slot._physicalTarget = physicalTarget
 
 		local blocker = BK.getBlocker(slot)
@@ -965,7 +965,7 @@ local function Init(module: any)
 					local detach = (result == Detach)
 					if detach then result = nil end
 					if result ~= nil then
-						Err.errorBeforeNearest("Slot:List — KeyGone accepts only nil/None (destroy) or Detach (hold)", SURFACE)
+						Err.errorBefore("Slot:List — KeyGone accepts only nil/None (destroy) or Detach (hold)", SURFACE)
 					end
 					settle(key, result, detach, 0)
 					userdata[key] = ud

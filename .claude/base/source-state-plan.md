@@ -78,6 +78,9 @@ RefSource라는 별도 타입은 폐기**하는 쪽으로 수렴.
   자리엔 Source를 넣을 수 있지만 역은 안 됨(Svelte의 `Writable<T> extends
   Readable<T>`와 같은 모양). Source는 State가 주는 모든 것(`:Get()`,
   `:With(...)`, `:Compute(fn)`) 위에 `:Set(value)`/`:Emit()`을
+  **[2026-09-06 `H-330`]** 구현에서 `:Set`은 태그된 `:Emit`을 부르지 않고 태그
+  없는 로컬 꼬리(`bumpAndEmit`)를 공유한다 — 파동 안의 Nearest raise가 사용자의
+  `:Set` 줄을 blame하게(`H-207`의 "꼬리 한 벌"은 그대로).
   추가로 가짐([정정, 2026-08-07] 프로퍼티 읽기 표기는 State/Source에서 제외되고
   `Get()`으로 통일됨, 그 표기는 Ref의 `.Value` 전용으로 좁혀짐 — 아래
   "`:With`/`:Compute` — self 인자도 lazy 핸들로 통일" 절 참고).

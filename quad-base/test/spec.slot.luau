@@ -140,6 +140,19 @@ do
 end
 
 print()
+print("=== 7b. 디스패치 깊이의 Slot 오류는 사용자 줄을 blame(H-330 — errorBefore) ===")
+do
+	local s = Slot({ mock.Instance.new("Frame") })
+	dispatch.drive(mock.Instance.new("Frame"), { s })
+	local ok, err = pcall(function()
+		dispatch.drive(mock.Instance.new("Frame"), { s }) -- second mount → SlotHandler raise inside drive
+	end)
+	assert(not ok and string.find(tostring(err), "already mounted", 1, true) ~= nil, "second mount rejected: " .. tostring(err))
+	mock.assertBlamesUser(err, "spec.slot.luau", "dispatch-depth Slot error blames the user's drive line")
+	print("PASS")
+end
+
+print()
 print("=== 8. Slot-in-Slot 중첩 — 재귀 마운트, Length = 기여도 합 ===")
 do
 	local outer, inner = Slot(), Slot()

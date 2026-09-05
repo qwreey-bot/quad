@@ -1,0 +1,3 @@
+fuzz-slot2 OK seed=1 iters=3000 ops=3000 lists=4 stateElems=5 mountedLeaves=86
+fuzz-slot2 OK seed=2 iters=3000 ops=3000 lists=4 stateElems=5 mountedLeaves=5
+fuzz-slot2 OK seed=3 iters=3000 ops=3000 lists=4 stateElems=5 mountedLeaves=11

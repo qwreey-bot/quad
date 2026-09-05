@@ -64,9 +64,14 @@ local function createImpl(module: any)
 	-- ── EmitReceive ──────────────────────────────────────────────────
 	function Impl._receive(self: any, from: any)
 		if module.canExecute(self) then -- read at fire time (`H-174`)
-			self._running = true -- `H-183`: fn may not change its own lifecycle (`H-147` symmetric);
-			self.fn(self._state, self, from) --   an fn that throws leaves it set — dead by contract
-			self._running = false
+			-- `H-183`: fn may not change its own lifecycle (`H-147` symmetric); an fn
+			-- that throws leaves the flag set — dead by contract. Save/restore, not
+			-- true/false: a reentrant wave (fn sets its own State) must not lower
+			-- the guard for the outer fn's tail (`H-332`, fable 탐사 2026-09-06)
+			local outer = self._running
+			self._running = true
+			self.fn(self._state, self, from)
+			self._running = outer
 		else
 			self._rerunRequired = true -- `H-159`: change before binding is held — replayed once when bound
 		end
@@ -77,9 +82,10 @@ local function createImpl(module: any)
 	function Impl._catchUp(self: any)
 		if self._rerunRequired then
 			self._rerunRequired = false
-			self._running = true -- `H-183`
+			local outer = self._running -- `H-183` (save/restore — `H-332`)
+			self._running = true
 			self.fn(self._state, self, nil)
-			self._running = false
+			self._running = outer
 		end
 	end
 
