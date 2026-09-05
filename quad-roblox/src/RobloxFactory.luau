@@ -23,6 +23,7 @@ local installPropertyHandler = require("./Handlers/Property")
 local installInstanceChildHandler = require("./Handlers/InstanceChild")
 local installEventHandler = require("./Handlers/Event")
 local OnChangeModule = require("./Handlers/OnChange")
+local installAnimate = require("./Animate") -- M11 단위 ③ — :Apply 콤비네이터(모듈 인스턴스의 Tween/isState 위)
 
 local function RobloxFactory(module: any): any
 	installLifetime(module)
@@ -39,7 +40,7 @@ local function RobloxFactory(module: any): any
 	-- `local D = quad.D`(병합 후) 또는 반환 교집합에서 바로 `q.D`.
 	-- `OnChange`(M10)도 같은 병합으로 실린다 — 디스크립터 팩토리는 모듈
 	-- 레벨, 타입은 생성 `OnChangeFn`(init.luau `RobloxExtension`)이 입힌다.
-	return { D = InitD(module), OnChange = OnChangeModule.OnChange }
+	return { D = InitD(module), OnChange = OnChangeModule.OnChange, Animate = installAnimate(module) }
 end
 
 return RobloxFactory

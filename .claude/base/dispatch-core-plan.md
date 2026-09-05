@@ -678,6 +678,10 @@ end
   함(None 자체의 문제가 아니라 PropertyHandler 구현 디테일, M9/M10로 미룸
   — **[2026-09-03 M10 구현됨]** `quad-roblox/src/Handlers/Property.luau`의
   `v == nil → Void` 얼리리턴, `spec.handlers` 9절; 마지막 쓴 값이 남는다).
+  **[2026-09-06 M11 단위 ②, brief Q5 (a)]** 같은 부류가 하나 더 — `Tween{...}`의
+  엔진 타입 옵션(`Info`/`Style`/`Direction`)은 quad가 검사할 수 없어, 틀린 값은
+  `Property.luau`의 `buildInfo`(`TweenInfo.new`)/`TweenService:Create` 자리에서
+  엔진 원시 에러가 나고 이 NOOP 마커 캐비엇이 그대로 적용된다.
 - **반환하는 retractor는 여기서 할 일이 없음** — `NoneHandler`는 `v==None`을
   매치했을 때 재귀 호출로 곧바로 `Dispatch.process(inst,k,nil,index+1)`을
   부르는 게 전부고 자기 자신이 들고 있는 별도 상태가 없어서(`Relate` 등
@@ -1352,6 +1356,8 @@ retractor 생략의 `2`는 **[2026-08-31 `H-222` (a) 사용자 확정]** —
 **같은 종류의 착각**에서 나왔음. 새 Handler를 짜거나 기존 걸 고칠 때
 이 목록을 먼저 훑을 것 — 전부 "그럴듯해 보이는데 틀린" 것들이라
 리뷰로 잡기 어렵다.
+
+**0. [2026-09-06 신설 — 세 번 반복: `H-272`·`H10-2`·`H-330`] 디스패치·발행 깊이에서 raise할 땐 `errorBefore`, 직접 호출 표면에서만 `errorBeforeNearest`.** `process`/retractor/reconcile 안(또는 `Source:Set`의 파동 안)에서 `errorBeforeNearest`를 쓰면 최근접 태그 프레임이 핸들러 자신이라 `Dispatch/init.luau`나 `Source.luau`가 blame된다. 판별: 그 raise가 사용자의 `drive`/`:Set` 줄에서 시작한 스택 안이면 `errorBefore`.
 
 **1. 클로저는 early-return해도 체인에서 *소비*된다.**
 `Dispatch.retractFrom`은 저장된 retractor를 호출하고 **항상**

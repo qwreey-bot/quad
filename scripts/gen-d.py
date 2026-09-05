@@ -290,6 +290,10 @@ def emit():
     pv_name = {}
     for i, t in enumerate(prop_types):
         pv_name[t] = f"PV{i}"
+        # [H-334] State<T | Tween<T>>(Animate의 CanAnimate=false 분기가 plain을 돌려줄 때의
+        # 정직한 타입)는 추가로 넣든 State<Tween<T>> 대신 넣든 D/DMapper가 "too complex"
+        # (2026-09-06 실측 — 유니언을 품은 State 멤버가 비싸다). 그래서 Animate는
+        # State<Tween<T>>로 선언한다(§4 확인 항목).
         L.append(f"type PV{i} = {t} | State<{t}> | TweenData<{t}> | State<Tween<{t}>> | None -- {t}")
     L.append("")
     for name in names:

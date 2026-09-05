@@ -116,3 +116,15 @@ Studio는 재시작돼 플러그인이 재연결되지 않아(콘솔 "Couldn't c
 런타임 모듈 다섯을 `.Source` 직접 패치로 올려 실측 — 첫 실행이 `TweenInfo.new`의
 명시적 nil 거부(`H-333`)를 잡았고 기본값을 명시해 채운 뒤 **6/6 PASS**
 (`audit/m11-unit2-studio-2026-09-06.md`). Studio Connect는 HUMAN_TODO 12에 추가.
+
+## 9. M11 단위 ③ — `Animate` (round19 `H-334`)
+
+정본 의사코드 그대로 `quad-roblox/src/Animate.luau`, `RobloxExtension`에 합류.
+타입은 네 변형을 실측(정직한 `State<T | Tween<T>>` 슬롯 멤버 → too complex /
+제네릭 factory → `:Apply` 인자 불일치 / `Animate`를 `<T>`로 → 호출 자리 T 불명 /
+`self: State<any>` → 불변성 거부)한 끝에 `(self: any) -> State<Tween<any>>`로 —
+교차-T 음성 하나만 잃는다(§4 확인 항목). spec 두 곳의 실패는 lazy Compute
+전제 오류(옵션 State 변경 전 한 번 `Get`, 검증 error는 `Get`에서). Studio는
+생략(엔진 대면 델타 없음). 단위 ② 감사 1라운드(확실 3·의심 2)도 같이 반영 —
+tween-plan 본문 문장·dispatch-core `None` 캐비엇 M11 줄·머리말 3층·override 절
+포인터·핸들러 체크리스트 0번(`errorBefore` 규칙, 세 번 반복된 실수).

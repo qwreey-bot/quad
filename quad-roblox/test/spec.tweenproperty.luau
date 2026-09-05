@@ -14,7 +14,7 @@ local QuadRoblox = require("../src").QuadRoblox
 local installProperty = require("../src/Handlers/Property")
 local installEvent = require("../src/Handlers/Event")
 local mock = require("../../quad-base/test/mock")
-local Instance = mock.Instance
+local _Instance = mock.Instance
 
 local W = { Write = "" }
 local REFLECTED: { [string]: { any } } = {

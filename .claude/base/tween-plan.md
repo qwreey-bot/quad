@@ -211,6 +211,12 @@ State<T | Tween<T>>`가 나옴~~ **[2026-09-06 정정]** 실물은 위 배너대
 
 ## `Animate` 콤비네이터 — 확정 (2026-08-12 세션)
 
+**[2026-09-06 구현됨 — M11 단위 ③, round19 `H-334`]** `quad-roblox/src/Animate.luau`가
+아래 의사코드 그대로(`RobloxExtension`으로 `q.Animate`). 타입만 정본과 다르다: factory는
+`(self: any) -> State<Tween<any>>` — 정직한 `State<T | Tween<T>>`는 슬롯 유니언에서
+"too complex"고, 제네릭 factory는 `:Apply`의 인자 자리에 못 들어간다(실측 넷은
+`types.luau` 주석·원장). `CanAnimate = false`의 plain 반환은 그대로다.
+
 **동기**: `Tween{Value=..., Style=..., ...}`을 매번 손으로 `:Compute` 안에서
 조립하는 건, 값(`Value`)만 바뀔 뿐 옵션(`Style`/`Time`/`Override`...)은
 거의 고정인 흔한 케이스에서 번거로움. `Animate`는 이 흔한 케이스만 감싸는
@@ -422,8 +428,10 @@ Enum.EasingDirection.Out)`처럼 각 인자가 뭘 뜻하는지 호출부만 보
   전부 무시.
 - **`Info`가 없으면** 아래 편의 필드로 `TweenInfo.new(...)`를 조립.
 
-편의 필드의 기본값은 **로블록스 `TweenInfo.new()` 자신의 기본값을 그대로
-물려받음** — 별도 기본값 상수를 새로 정의할 필요 없음:
+편의 필드의 기본값은 **로블록스 `TweenInfo.new()` 자신의 기본값과 같다** —
+~~별도 기본값 상수를 새로 정의할 필요 없음~~ **[2026-09-06 `H-333` 정정]** 명시적
+nil을 엔진이 거부하므로 구현(`buildInfo`)이 아래 값을 직접 채워 넣는다(값의
+소스는 엔진, 코드는 그 사본):
 
 ```lua
 Time: number?             -- default 1
@@ -435,6 +443,11 @@ DelayTime: number?        -- default 0
 ```
 
 ### override 정책 — `Tween.Cancel` / `Tween.Finish` 두 값으로 압축 (확정)
+
+**[2026-09-06 `H-328`]** 정책의 **주체는 활성 트윈 위에 새로 들어오는 값의
+`Override`**다 — 슬롯(`{ Tween, Value }`)엔 정책이 없다. plain 값이 들어오면
+정책이 없어 `Cancel`과 같다(아래 "Tween→plain 전환" 수렴). 구현 배너는 "3-상태
+저장" 절.
 
 기존엔 4가지 옵션(멈춤/오버라이드/삭제후재시작/끝점이동후재시작)을 열어뒀으나,
 다시 보니 로블록스 `TweenBase`가 애초에 진행 중인 트윈의 목표를 바꿔치기할

@@ -2358,4 +2358,5 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   D 슬롯 `+ State<Tween<T>>`·별칭 `PVn`·`TweenConstructor` 8.6 조건부 예외·M7
   setter `Field<T>` 하자 정정) — §4 확인 항목 2. **[7절]** fable 탐사(치명 0·중대 2·경미 2 — `H-329` 문항, `H-330`~`H-332` 반영), `audit/fable-exploration-2026-09-06.md`. **[8절]** M11 단위 ② — Property 3-상태 슬롯·override 주체는
   들어오는 값(`H-328`), `TweenInfo.new` nil 거부 → 기본값 명시(`H-333`), Studio 6/6(플러그인
-  미연결로 Source 패치), `audit/m11-unit2-studio-2026-09-06.md`.
+  미연결로 Source 패치), `audit/m11-unit2-studio-2026-09-06.md`. **[9절]** 단위 ③ `Animate` — 타입 네 변형 실측 끝에
+  `(self: any) -> State<Tween<any>>`(`H-334`, 확인 항목), 단위 ② 감사 반영. **M11 세 단위 완료.**

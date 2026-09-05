@@ -790,7 +790,11 @@ base는 `{ read __quadModifier: true }`(`QuadTypes.ModifierMarker`, `NewChild`),
 별칭 하나(`type PVn = …`)로 유니언을 한 번만 선언**하면 1.8s에 클린 — 한도 플래그가
 아니라 선언 횟수가 문제였다. (3) 미리 만든 옵션 테이블 변수를 `{ Time: number? }`
 파라미터에 넘기면 가변 필드 불변성으로 거부 — 읽기만 하는 옵션 타입은 필드를
-`read`로(`H-325`).
+`read`로(`H-325`). (4) **`:Apply`에 넘기는 콤비네이터 factory는 `self: any`여야
+한다**(`H-334`, M11 단위 ③) — `factory: (State<T>) -> U` 자리에 제네릭 함수 값
+`<T>(State<T>) -> …`은 못 들어가고, `self: State<any>`도 불변성으로 거부된다;
+`Animate`는 `(self: any) -> State<Tween<any>>`(교차-T 음성 하나만 잃음). `State<T |
+Tween<T>>`를 슬롯 유니언에 넣는 건 어디든 too complex.
 
 **[2026-09-04 실측, M7 단위 ④ — `luau-test/done/31`, `audit/m7-unit4-as-modifier-2026-09-04.md`]**
 새 솔버(luau-lsp 1.69.0)의 유니언 서브타이핑 결함. 규칙:

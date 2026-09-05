@@ -153,3 +153,15 @@ M8 규약(`m8-implementation-round18-brief.md` §2~§5 = M7 = M5 = M4 = M3
 | **Studio**(Q7 여섯) | `audit/m11-unit2-studio-2026-09-06.md` — rojo 싱크 후 `task.wait`로 보간 관측 | — |
 
 **[2026-09-06 단위 ② 완료 — `H-328`(구현)·`H-333`]** 위 표대로 + `spec.tweenproperty`(6절)·mock `TweenService`/`TweenInfo` 심, Studio 6/6(플러그인 미연결로 런타임 모듈 다섯을 Source 패치해 실측 — audit 경위).
+
+**단위 ③ 계획·결과(2026-09-06 — `H-334`)**
+
+| 파일 | 내용 | 옮겨 적는 절 |
+|---|---|---|
+| `quad-roblox/src/Animate.luau`(신설) | `install(quad) -> Animate` — 정본 의사코드 1:1(`resolve`는 if-then-else, `CanAnimate` 생략 = true, false면 plain 반환, 옵션 State는 deps 아님, `Tween{...}`엔 plain만), `H-238` 태깅 | "`Animate` 콤비네이터" 절 |
+| `RobloxFactory.luau` / `init.luau` | `RobloxExtension = { D, OnChange, Animate }` | "패키지 경계" 절 |
+| `types.luau` | `AnimateInfo`(필드 `T \| State<T>`), `AnimateFn = (info) -> (self: any) -> State<Tween<any>>` — 정직한 `State<T \| Tween<T>>`·제네릭 factory·`State<any>` 전부 실측 실패(`H-334`) | "타입 대수" 절 배너 |
+| `spec.animate`(런타임 4절)·`spec.tweentypes`(Animate 양성) | 옵션 resolve·CanAnimate 토글·옵션 State 비-deps·검증 blame / `:Apply` 경유 슬롯·setter·주석 | — |
+
+Studio: 생략(엔진 대면 델타 없음 — `Tween{...}` 생성뿐, 발견 문서에 기록).
+

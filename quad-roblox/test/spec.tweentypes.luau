@@ -34,11 +34,15 @@ local function _types()
 		return q.Tween({ Value = h:Get(), Time = 0.3 })
 	end)
 	local f2 = q.D.Frame({ Position = anim })
+	-- Animate(단위 ③, H-334): factory 결과는 State<Tween<T>>로 선언 — D 슬롯·setter에 들어간다
+	local animated: QuadTypes.State<QuadTypes.Tween<UDim2>> = src:Apply(q.Animate({ Time = 0.3, Style = Enum.EasingStyle.Bounce, CanAnimate = q.Source(true) }))
+	local f3 = q.D.Frame({ Position = animated })
+	local m3 = q.D.Modifier.Frame():Position(animated)
 	-- 센티널·옵션 타입
 	local o: QuadTypes.TweenOverride = q.Tween.Cancel
 	local opts: QuadTypes.TweenOptions<number> = { Value = 1, Reverses = true }
 	local t2: QuadTypes.Tween<number> = q.Tween(opts)
-	return refined, f1, f2, o, t2
+	return refined, f1, f2, f3, m3, o, t2
 end
 
 print("=== 1. 런타임 대응 — 타입이 약속한 값이 실제로 있다(H-300) ===")

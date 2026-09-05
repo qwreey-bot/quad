@@ -55,6 +55,31 @@ export type Tween<T> = QuadTypes.Tween<T>
 -- 넣지 않는다(typing-limits 8.8). 실 Tween 값은 구조적으로 만족한다.
 export type TweenData<T> = QuadTypes.TweenData<T>
 
+-- `Animate(info)` options (M11 단위 ③, tween-plan "`Animate` 콤비네이터" 절): `Tween`
+-- 옵션(`Value` 제외) + `CanAnimate`, 각 필드는 `T | State<T>`(factory 안에서 `:Get()`
+-- 한 번 풀어 plain으로 `Tween{...}`에 넘긴다). 반환 factory는 `:Apply` 전용이고
+-- 타입은 **`(self: any) -> State<Tween<any>>`**(`H-334`, §4 확인 항목 — 실측 넷):
+-- (1) 정직한 `State<T | Tween<T>>`(CanAnimate=false 분기가 plain)는 어느 슬롯
+-- 유니언에 넣어도 "too complex"; (2) `<T>(self: State<T>) -> …` 제네릭 factory는
+-- `:Apply`의 `factory: (State<T>) -> U` 자리에 못 들어간다(제네릭 함수 값 불일치);
+-- (3) `Animate` 자체를 `<T>`로 올리면 호출 자리에서 T를 못 잡는다; (4) `self:
+-- State<any>`도 State 불변성으로 거부 — `self: any`만 통과(8.9절 `Apply`가 `any`인
+-- 것과 같은 자리). 슬롯·setter 양성 전부 통과, 잃는 음성은 "Animate를 거친 교차-T
+-- (number Source의 Animate를 UDim2 슬롯에)" 하나. 런타임 소비자는 어차피 plain/Tween
+-- 둘 다 받고, `anim:Get()`을 직접 읽는 드문 자리만 `isTween`으로 갈라 볼 것.
+export type AnimateInfo = {
+	read Info: (TweenInfo | QuadTypes.State<TweenInfo>)?,
+	read Time: (number | QuadTypes.State<number>)?,
+	read Style: (Enum.EasingStyle | QuadTypes.State<Enum.EasingStyle>)?,
+	read Direction: (Enum.EasingDirection | QuadTypes.State<Enum.EasingDirection>)?,
+	read RepeatCount: (number | QuadTypes.State<number>)?,
+	read Reverses: (boolean | QuadTypes.State<boolean>)?,
+	read DelayTime: (number | QuadTypes.State<number>)?,
+	read Override: (QuadTypes.TweenOverride | QuadTypes.State<QuadTypes.TweenOverride>)?,
+	read CanAnimate: (boolean | QuadTypes.State<boolean>)?,
+}
+export type AnimateFn = (info: AnimateInfo) -> (self: any) -> QuadTypes.State<QuadTypes.Tween<any>>
+
 -- [2026-09-03 M10 widening] the quad-base array-part VALUES join here: `Tag(...)`
 -- and `Attribute(...)` (the typed scalar sugar `StringAttribute(name, v)` etc.
 -- returns an `Attribute`, so it rides the same member) + their State forms

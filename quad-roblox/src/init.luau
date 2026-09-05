@@ -44,7 +44,11 @@ export type OnChangeFn = DModule.OnChangeFn
 -- runtime (Handlers/OnChange.luau) is untyped, the GENERATED `OnChangeFn`
 -- (name → callback parameter type via `index<PropTypes, K>`, luau-test `30`)
 -- is what `q.OnChange` carries through `Self & P`
-export type RobloxExtension = { D: DModule.D, OnChange: OnChangeFn }
+export type AnimateInfo = Types.AnimateInfo
+export type AnimateFn = Types.AnimateFn
+-- M11 단위 ③: `Animate`(tween-plan "`Animate` 콤비네이터" 절)도 같은 병합 —
+-- `q.Source(v):Apply(q.Animate{ Time = 0.3 })` → `State<T | Tween<T>>`
+export type RobloxExtension = { D: DModule.D, OnChange: OnChangeFn, Animate: AnimateFn }
 
 local function QuadRoblox<T>(quad: T): RobloxExtension
 	local q = quad :: any

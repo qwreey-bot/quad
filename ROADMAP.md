@@ -1953,7 +1953,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       목표값을 알아야 해서; 옛 표기 `RobloxTween | true | nil`) + 첫 세팅은 무조건 애니메이션 없이
       스냅(hasBeenSet 억제) + 활성 트윈 정리는 override 정책 완료 후에만
       새 값 세팅(순서 뒤바뀌면 트윈 다음 프레임이 방금 세팅한 값을 덮어씀)
-- [ ] `quad-roblox/Animate.luau` — **시그니처도 이미 확정 완료**(2026-08-12
+- [x] **[2026-09-06 M11 단위 ③ 완료 — round19 `H-334`, Studio 생략(엔진 대면 델타 없음)]** `quad-roblox/Animate.luau` — **시그니처도 이미 확정 완료**(2026-08-12
       두 번째/세 번째 세션, `base/tween-plan.md`): `Tween` opts(`Value` 제외)를
       `T|State<T>`로 받아 각 필드를 resolve한 뒤 `Tween{...}`을 반환하는
       `function(self)...end` — `:Apply(Animate{...})`로 체이닝(`:Compute`가
