@@ -10,9 +10,12 @@
 	최종 모양" section pins down. M5 needed the TYPE first because the
 	generated `D` prop unions include it (round14 `H-298` (a)); M11 unit ①
 	(2026-09-06) moved the value type into quad-types (engine-free — Roblox
-	types as `any`) and this file now only REFINES the engine-typed fields.
-	The runtime (quad-base `Tween.luau`, sentinels) is M11 unit ①; the
-	PropertyHandler consumption is unit ②.
+	types as `any`) and this file re-exports it AS-IS — the planned `read`
+	refinement of the engine-typed fields was dropped (`H-326`: `State<X>` is
+	invariant, so the generated slot member `State<Tween<T>>` must name the
+	exact type `Animate`/`:Compute` return). The runtime (quad-base
+	`Tween.luau`, sentinels) is M11 unit ①; the PropertyHandler consumption
+	is unit ②.
 
 	`NewChild` — the backend-agnostic core of the children-array element
 	union. Since 2026-09-03 the generated `D.<Class>Param<E>` is instantiated
@@ -40,10 +43,6 @@
 
 local QuadTypes = require("../luau_packages/quad_types")
 
--- M11 단위 ①(2026-09-06, round19 Q3 (a)): 값 타입의 정본은 quad-types(엔진 무관
--- — Roblox 타입 자리는 `any`)이고, 여기서는 그 위에 `read` 정밀화만 얹는다.
--- `Override`는 quad-types의 센티널 타입(`TweenOverride`). 생성 `D`의 스칼라
--- 유니언 멤버는 이 별칭이다 — `read` 필드라 quad-types `Tween<T>` 값이 그대로 들어간다.
 -- M11 단위 ①(2026-09-06, round19 Q3): 값 타입의 정본은 quad-types(엔진 무관 —
 -- Roblox 타입 자리는 `any`)이고 여기서는 **그대로 별칭**한다. Q3 (a)가 예정한
 -- `read Info: TweenInfo?` 정밀화는 실측에서 포기했다(`H-326`): `State<X>`는 불변이라

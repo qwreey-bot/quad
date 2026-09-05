@@ -187,8 +187,10 @@ Modifier setter `Field<T>`)은 **`State<T>`와 `State<Tween<T>>`를 각각 나�
 
 지금 프로퍼티류 필드가 열려 있는 자리(Modifier setter, Ref, Store/Source
 필드)는 전부 `T | State<T>` 모양 하나로 통일돼 있음. 여기서 "이 필드의
-`T`" 자체를 `T' = T | Tween<T>`로 치환하면 자동으로 `T | Tween<T> |
-State<T | Tween<T>>`가 나옴 — Modifier/State/Source/StoreBind 코드엔
+`T`" 자체를 `T' = T | Tween<T>`로 치환하면 ~~자동으로 `T | Tween<T> |
+State<T | Tween<T>>`가 나옴~~ **[2026-09-06 정정]** 실물은 위 배너대로
+`T | State<T> | TweenData<T> | State<Tween<T>> | None`(State 멤버 둘을 각각 나열 —
+`State<X>` 불변성) — Modifier/State/Source/StoreBind 코드엔
 `Tween` 인지 로직을 전혀 안 넣어도 됨(StoreBind는 원래도 페이로드 타입에
 무관하게 `isState`만 보고 언랩하는 opaque한 구조였음). `Tween<T>`를 실제로
 해석하는 코드는 여전히 PropertyHandler 하나에만 존재.

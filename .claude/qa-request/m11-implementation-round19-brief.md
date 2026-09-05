@@ -129,7 +129,7 @@ M8 규약(`m8-implementation-round18-brief.md` §2~§5 = M7 = M5 = M4 = M3
 | `quad-base/src/Tween.luau`(신설) | callable `Tween`(`__call`: Q5 검증 → `table.clone(opts)` → `TweenBrand:register` → freeze), `Tween.Cancel`/`Tween.Finish`(Q4), `TweenImpl.Mapped(self, fn)`(clone·`Value = fn(Value)`·재구성), `Init(module)`(`module.Tween`, `module.isTween`) | "확정: `Tween{...}` 최종 모양" 절, "`Tween<T>:Mapped(fn)`" 절 |
 | `quad-base/src/Brand.luau` | `isTween` 술어 + export | "패키지 경계" 절 |
 | `quad-types/src/init.luau` | `Tween<T>`(Q3 (a)), `TweenOptions<T>`, `TweenOverride`, `Quad.Tween`/`Quad.isTween`(`H-80` 탑레벨 목록 규칙) | "최종 타입" 절 |
-| `quad-base/src/init.luau` | `Tween`/`isTween` 필드, `RunInit(TweenModule.Init)` | `architecture.md` 최상위 export |
+| `quad-base/src/init.luau` | `Tween`/`isTween` 필드 (~~`RunInit(TweenModule.Init)`~~ — 구현에서 제거: dispatch 참가자가 아니라 등록할 핸들러가 없고 `H-238` 태깅은 파일 스코프에서 끝난다, 2026-09-06) | `architecture.md` 최상위 export |
 | `quad-roblox/src/types.luau` | `Override: TweenOverride?`로 정밀화, 헤더의 "M11에 온다" 문구 정정 | — |
 | `quad-base/test/spec.tween.luau` | 생성·freeze·브랜드·검증 error 여섯·`Mapped`(원본 불변·옵션 보존·`Tween<U>`)·센티널 항등·strict 양성/음성(`Mapped` 누수 음성) | — |
 
@@ -141,3 +141,13 @@ M8 규약(`m8-implementation-round18-brief.md` §2~§5 = M7 = M5 = M4 = M3
 와 `quad-roblox/test/spec.tweentypes`·`luau-test/done/33`. Q3 (a)의 정밀판은
 실측으로 포기(`H-326`), Q4 (a)의 마커는 `sentinel(name)` 재사용(`H-323`),
 `TweenConstructor`는 8.6 예외(`H-324`) — §4 확인 항목 둘.
+
+**단위 ② 계획(착수 시 작성 — 2026-09-06)**
+
+| 파일 | 내용 | 옮겨 적는 절 |
+|---|---|---|
+| `quad-roblox/src/Handlers/Property.luau` | `process`에 3-상태 슬롯(install 스코프 `quad.Relate()`, 키 = 프로퍼티 이름): `prev == nil` → `Value`(또는 plain) 즉시 대입·슬롯 `true`(엔진 트윈 없음) / `prev == true` → plain이면 대입, Tween이면 `TweenService:Create(inst, info, { [k] = v.Value }):Play()`·슬롯 `{ Tween, Value }` / `prev`가 테이블 → **먼저** `prev.Tween:Cancel()`, 정책이 `Finish`면 `inst[k] = prev.Value` 스냅, **그 다음** 새 값(plain 대입·슬롯 `true` / 새 트윈·새 슬롯). `TweenInfo`는 `Info`가 있으면 그대로, 없으면 `TweenInfo.new(Time, Style, Direction, RepeatCount, Reverses, DelayTime)`에 **nil을 그대로 넘겨** 엔진 기본값을 물려받는다(정본 "별도 기본값 상수 없음"). `TweenService`는 `game:GetService`를 process 안에서 lazy(캐시 1회) — CLI 심 seam | "3-상태 저장" 절 분기 1~3, "옵션 값 모양" 절, "override 정책" 절 |
+| (해석) override 정책의 **주체** | 정본은 `Override`를 `Tween{...}` 옵션에 두고 슬롯엔 `{ Tween, Value }`만 저장한다(`H-155` — `Finish`가 목표값을 알아야 해서). 그러면 활성 트윈이 있을 때 참조되는 정책은 **들어오는 값의 `Override`**(= "이 트윈이 앞의 것을 어떻게 덮을지")이고, 들어오는 값이 plain이면 정책이 없어 `Cancel`과 같다(정본 "Tween→plain 전환은 두 옵션 모두 정리 후 즉시 덮어쓰기") — 슬롯에 정책을 안 넣는 정본 모양과 유일하게 맞는 해석. 발견 `H-328`로 기록, §4 확인 항목 | "override 정책" 절 |
+| `quad-base/test/mock.luau` | `gameShim`에 `TweenService` 심 — `Create(inst, info, props)`는 호출을 기록하고 `{ Play, Cancel, PlaybackState }`(보간 없음 — Cancel 시 프로퍼티 그대로)를 돌려준다. `TweenInfo` 전역은 Property env에 심(`getfenv`) — 인자 그대로 기록하는 테이블 | — |
+| `quad-roblox/test/spec.tweenproperty.luau` | 첫 세팅 스냅(Tween이어도 `Create` 0회) / plain→Tween(Create 1·Play 1·슬롯) / Tween→Tween Cancel(이전 Cancel 1, 스냅 없음, 새 Create) / Tween→Tween Finish(이전 Cancel 뒤 `prev.Value` 대입 → 새 Create) / Tween→plain(Cancel 뒤 대입, Create 없음) / `Info` 우선(편의 필드 무시)·편의 필드 nil 전달 / `State<Tween>` 재발행 경로(StoreBind 언랩 뒤 같은 분기) / `v == nil` skip 유지 / Mapped 값 | — |
+| **Studio**(Q7 여섯) | `audit/m11-unit2-studio-2026-09-06.md` — rojo 싱크 후 `task.wait`로 보간 관측 | — |
