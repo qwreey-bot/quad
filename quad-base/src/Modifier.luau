@@ -382,11 +382,7 @@ Err.setFuncLevel(methods.As, SURFACE)
 
 -- internal sentinel that fills a consumed array slot (never user-facing —
 -- `Processed*` idiom, same frozen+named shape as `None`)
-local ProcessedModifier = table.freeze(setmetatable({ __quadProcessedModifier = true :: true }, {
-	__tostring = function()
-		return "ProcessedModifier"
-	end,
-}))
+local ProcessedModifier = require("./Dispatch/None").sentinel("ProcessedModifier")
 
 -- flatten(input) -> input — canon pseudocode 1:1 (modifier-plan "flatten의
 -- 정확한 형태"). Mutates and returns the same table.

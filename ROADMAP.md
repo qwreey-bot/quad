@@ -1730,7 +1730,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `base/lifecycle-pattern.md`의 "`bindLifetime` / `canBound` /
       `canExecute` / `unbindLifetime`" 절
 
-- [ ] **[2026-09-04 M8 단위 ③ — round18 brief §1·§0 Q3]** children 자리의
+- [x] **[2026-09-04 같은 날 완료 — `H-321` 사용자 확정 (a) 반공변 팬텀 마커 `<Class>RefMarker`, `H-322`; `spec.reftypes`, luau-test `32`]** **[2026-09-04 M8 단위 ③ — round18 brief §1·§0 Q3]** children 자리의
       `Ref`/`PreRef`/`PostRef` **타입 표면** — 스파이크 `32` 선행(`Ref<T>`의
       불변성 + 8.9절 결함(`Callback` 이름 충돌)으로 `<Class>Elem`에 직접 넣을 수
       있는지), 결과대로 `quad-roblox/src/types.luau` `NewChild` 또는 생성기

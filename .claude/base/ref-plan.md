@@ -1204,6 +1204,20 @@ index item, but got {typeof(k)}`, SURFACE) }` Handler를 등록
 개념이 없다"도 동일 — 체인엔 올라가지만 그 자리 retract가 하드코딩된
 no-op이라 되돌릴 상태가 없음.
 
+**children 자리의 타입(M8 단위 ③, 2026-09-04 — round18 `H-321`, 사용자 확정
+*"non-lazy type 으로 T 비교자를 넣어 굽는구나. 권고대로 진행"*)**: 생성
+`<Class>Elem`은 `Ref<T>`를 직접 담지 않고 **반공변 팬텀 마커**
+`<Class>RefMarker = { read __quadRefAccepts: (<Class>) -> () }`(+ `State<…>`)만
+담는다. `Ref<T>`가 `read __quadRefAccepts: (T) -> ()`(런타임 값 `Void`)를 가지므로
+`Ref<Frame?>`·`Ref<Frame>`·상위 박스 `Ref<GuiObject?>`는 통과하고 형제
+`Ref<TextLabel?>`·무타입 `Ref<nil>`(`Ref()` — 호출자가 `Ref<<T?>>`로 넓히는
+기존 관용구 강제)은 거부된다. `Ref<T>`를 직접 넣으면 실물 규모에서 형제 클래스
+Ref가 조용히 통과했다(`typing-limits.md` 8.9절 — `Set`/`Callback` 이름 충돌 +
+제네릭 메소드 반공변 미검사; 실측 `luau-test/32`, round18 `H-321`). `State<Ref>`는
+`State<T>` 불변성 때문에 `q.Source(ref :: DModule.FrameRefMarker)`로 만든다(8.7
+캐비엇 5). `PreRef`/`PostRef`는 `Ref<T>`의 교집합이라 같은 마커로 통과하며,
+`State<PreRef>`는 타입이 못 가르고 런타임 가드가 잡는다.
+
 **타입/판별**: `isPostRef`는 `isPreRef`와 같은 층위의 가장 구체적인 항등
 체크이고, `isRef`가 그 위에 얹히는 상위 개념 — Ref leaf 핸들러(M8,
 `H-278`로 `Ref.luau` 소유)의 일반 Ref 매치는 이제 `isRef(v) and not isPreRef(v) and not isPostRef(v)`.

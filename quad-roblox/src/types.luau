@@ -24,10 +24,14 @@
 	`drive` by the end of this milestone — a static child Instance
 	(InstanceChildHandler, unit ③) or a reactive one (StoreBind → unwrap).
 	Later milestones WIDEN this union as their handlers land (M10 did on
-	2026-09-03 — Tag/Attribute, see the declaration comment; M6 Slot, M8
-	Ref/PreRef/PostRef — the round14 `H-298` (a) "Ref류" mention is that
-	planned widening, kept out now so the type never promises a runtime path
-	that does not exist yet; same false-surface logic as `H-297`).
+	2026-09-03 — Tag/Attribute, see the declaration comment; M6 Slot). M8
+	Ref/PreRef/PostRef landed on 2026-09-04 NOT here but on the per-class
+	alias — `<Class>RefMarker = { read __quadRefAccepts: (<Class>) -> () }`
+	(+ `State<…>`) joins `<Class>Elem`, so a Frame slot admits `Ref<Frame?>`
+	and ancestor boxes but rejects a sibling's Ref (`base/ref-plan.md`
+	"children 자리의 타입" 절, round18 `H-321`; the round14 `H-298` (a) "Ref류"
+	mention was that planned widening — kept out of NewChild for the same
+	false-surface logic as `H-297` until the runtime existed).
 	`None` joined every union once `H-300` (a) landed (2026-09-02 — the
 	sentinel now carries a marker field, `QuadTypes.None`).
 	Canonical prose: `bind-system-plan.md` 인스턴스 생성 절의 값 유니언 문단.

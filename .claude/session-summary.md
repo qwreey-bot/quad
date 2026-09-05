@@ -2346,4 +2346,5 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   + 브랜드 + 마커 + `_fired`), 타입, `spec.ref` 12~14절·`spec.preref`. `H-315`/
   `H-316`. **[같은 파일 4절]** 단위 ② — `Dispatch/Ref.luau`(pre-pass·
   `Processed*`)·`Ref.luau`(leaf+가드, `H-278`)·`spec.refhandlers` 7절, `H-319`/
-  `H-320`; Studio는 rojo serve 재기동 뒤 재접속 대기로 보류.
+  `H-320`(Studio 8/8). **[6절]** `H-321` 사용자 확정 → 단위 ③ 반공변 팬텀 마커
+  `<Class>RefMarker`(`H-322`) — **M8 완료**.

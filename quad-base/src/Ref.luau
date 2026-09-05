@@ -33,6 +33,7 @@ local Err = require("./ErrorNamespace")
 local Relate = require("./Relate")
 local Void = require("./Void")
 local InitDispatch = require("./Dispatch")
+local NoneModule = require("./Dispatch/None")
 local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 
 export type Ref<T> = QuadTypes.Ref<T>
@@ -45,6 +46,12 @@ local WEAK_KEY_MT = { __mode = "k" }
 
 local RefImpl = {}
 RefImpl.__index = RefImpl
+-- phantom type field (`H-321`): never called — the TYPE carries T in a
+-- contravariant slot so class-checked children admit ancestor boxes. Lives on
+-- the metatable (one slot, `__index`-resolved) rather than per instance: the
+-- value is identical for every Ref and H-300 only asks that `ref.__quadRefAccepts`
+-- reads as the type promises (review, M8 ③).
+RefImpl.__quadRefAccepts = Void
 
 function RefImpl.Set<T>(self: Ref<T>, value: T): Ref<T>
 	self.Value = value -- (1) settle the value first
@@ -172,7 +179,6 @@ end
 local function registerDispatchHandlers(module: any)
 	module:RunInit(InitDispatch) -- idempotent pull (the `H-174` idiom)
 	local dispatch: QuadTypes.Dispatch = module.Dispatch
-	local None = module.None
 	-- (inst, k) -> last bound Ref — spurious re-emit dedup only (closure
 	-- capture cannot see across process calls). Weak (`H-71`): `v:Set(inst)`
 	-- makes the value reference its own key; v is strongly held by gchold
@@ -190,9 +196,8 @@ local function registerDispatchHandlers(module: any)
 		priority = dispatch.HANDLER_PRIORITY_HIGH,
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
 			-- `H-39`: terminal handlers register their array position — no
-			-- physical element, so None/0 (offsetSource first: release order)
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0, inst)
+			-- physical element, so None/0 (shared body: offsetSource → length)
+			NoneModule.registerEmptySlot(dispatch, inst, k, inst)
 
 			local old = relate:GetWeak(inst, k) -- read Weak to match the SetWeak write (`H-71`)
 			if old ~= v then -- same Ref already here → spurious re-emit, skip both
@@ -248,8 +253,4 @@ local function tagged<T>(default: T, brand: any, markerKey: string): any
 	return self
 end
 
-local function Init(module: any)
-	registerDispatchHandlers(module)
-end
-
-return { Ref = Ref, Init = Init, _tagged = tagged }
+return { Ref = Ref, Init = registerDispatchHandlers, _tagged = tagged }

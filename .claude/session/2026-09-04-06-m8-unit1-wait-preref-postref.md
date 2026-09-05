@@ -73,3 +73,19 @@ documentation-content-map·README 두 행, `Modifier 필드` 잔여 2곳, round1
 멤버 케이스를 잡아버려 실물을 대표하지 못했다(헤더에 기록). 새 메커니즘이라
 Q3 회신대로 §4 문항으로 올리고 멈춤.
 
+## 6. `H-321` 회신 + 단위 ③ — M8 완료
+
+사용자 질문 *"이미 Set(Frame?) 이 들어있어서 … 오류 나지 않아? __quadRef.. 랑
+같은거 아냐?"* → 실측으로 답: `{ read Set: (self: any, v: Frame?) -> any }` 단일
+타입에도 `Ref<TextLabel?>`가 통과(제네릭 메소드 반공변 미검사) + 유니언에선
+`State.Set` 이름 충돌 — 팬텀 필드는 그 검사를 솔버가 실제로 하는 이름으로 옮긴
+것. 사용자: *"이해함. non-lazy type 으로 T 비교자를 넣어 굽는구나. 권고대로
+진행해도 될것 같아"* → 단위 ③: quad-types `__quadRefAccepts`, `Ref.luau` `Void`
+필드, 생성기 `<Class>RefMarker`(+ `State<…>`), `spec.reftypes`, 실물 음성 4/4.
+`H-322`. **M8 완료.**
+끝 절차: 감사 4건(types.luau의 "kept out now"·onchange-plan 정본 공식·8.9
+헤더·brief §1) + 리뷰 6건 중 5(빈 슬롯 등록·센티널 생성자 공용화, 팬텀 필드
+메타테이블 상주, `Init` 별칭, spec 헬퍼 + `{ r, r }` 케이스) 반영, one-shot 가드
+공용화는 보류. 리뷰가 되짚은 후보 다섯(`H-170` 죽은 스레드 resume·`H-103`·
+in-place 변형·`<Self>`·캐스트 관용구)은 전부 확정 계약이라 비조치.
+

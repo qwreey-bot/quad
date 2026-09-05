@@ -232,7 +232,9 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
   (`{ read __quadModifier: true }` — 무타입 base Modifier) 합류 — 클래스별
   `<Class>Modifier`가 아니라 마커만(`typing-limits.md` 8.8절); 클래스 태그
   마커(자기 + 조상 체인 문자열 유니언)는 `OnChange`처럼 `<Class>Elem` 쪽이다
-  (단위 ④, `modifier-plan.md` 11절)). `H-298` (a)
+  (단위 ④, `modifier-plan.md` 11절); **[2026-09-04 M8 확장 실행]** `Ref`/`PreRef`/
+  `PostRef`도 여기가 아니라 `<Class>Elem`의 반공변 팬텀 마커 `<Class>RefMarker`
+  (+ `State<…>`)로 — `ref-plan.md` "children 자리의 타입" 절, round18 `H-321`). `H-298` (a)
   회신문의 "Ref류"는 그 예고로 해석해 M5 유니언에서 뺐다 — `Ref` leaf
   핸들러가 M8이라 지금 실으면 런타임이 없는 거짓 표면이 된다(`H-297`과
   같은 논리; 이 해석이 틀렸다면 사용자가 뒤집을 것). 정의 실물은

@@ -28,6 +28,9 @@
 	Apply는 self·factory 둘 다 any(8.9절 — 재귀 필드 + 유니언 멤버 메소드 이름 충돌 시
 	유니언 검사가 조용히 통과하는 솔버 결함을 피해 클래스 소속 검사를 되찾음). 런타임은
 	quad.Modifier.TypedFactory(name)이 돌려주는 태그 생성자 + DefineSubtype(parent, name) 간선.
+	Ref/PreRef/PostRef(M8 단위 ③, round18 H-321 — 사용자 확정): children엔 클래스별 반공변
+	팬텀 마커 <Class>RefMarker = { read __quadRefAccepts: (<Class>) -> () }(+ State<…>)만 — Ref<T>를
+	직접 넣으면 8.9절 결함으로 형제 클래스 Ref가 샌다(실측). Ref<<Class>?>·상위 박스 통과, 형제·Ref<nil> 거부.
 ]]
 
 local QuadTypes = require("../luau_packages/quad_types")
@@ -1722,7 +1725,8 @@ export type BillboardGuiModifier = {
 	ZIndexBehavior: (self: BillboardGuiModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> BillboardGuiModifier,
 }
 export type IntoBillboardGui = { AsBillboardGui: (self: any) -> BillboardGuiModifier }
-export type BillboardGuiElem = NewChild | BillboardGuiOnChange | State<BillboardGuiOnChange> | { read __quadModifier: "BillboardGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type BillboardGuiRefMarker = { read __quadRefAccepts: (BillboardGui) -> () }
+export type BillboardGuiElem = NewChild | BillboardGuiOnChange | State<BillboardGuiOnChange> | { read __quadModifier: "BillboardGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" } | BillboardGuiRefMarker | State<BillboardGuiRefMarker>
 export type BillboardGuiMapperElem = BillboardGuiElem | MapperDescriptor
 
 export type CameraOnChange =
@@ -1765,7 +1769,8 @@ export type CameraModifier = {
 	VRTiltAndRollEnabled: (self: CameraModifier, value: Field<boolean | Tween<boolean>>) -> CameraModifier,
 }
 export type IntoCamera = { AsCamera: (self: any) -> CameraModifier }
-export type CameraElem = NewChild | CameraOnChange | State<CameraOnChange> | { read __quadModifier: "Camera" | "PVInstance" | "Instance" }
+export type CameraRefMarker = { read __quadRefAccepts: (Camera) -> () }
+export type CameraElem = NewChild | CameraOnChange | State<CameraOnChange> | { read __quadModifier: "Camera" | "PVInstance" | "Instance" } | CameraRefMarker | State<CameraRefMarker>
 export type CameraMapperElem = CameraElem | MapperDescriptor
 
 export type CanvasGroupOnChange =
@@ -1854,7 +1859,8 @@ export type CanvasGroupModifier = {
 	ZIndex: (self: CanvasGroupModifier, value: Field<number | Tween<number>>) -> CanvasGroupModifier,
 }
 export type IntoCanvasGroup = { AsCanvasGroup: (self: any) -> CanvasGroupModifier }
-export type CanvasGroupElem = NewChild | CanvasGroupOnChange | State<CanvasGroupOnChange> | { read __quadModifier: "CanvasGroup" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type CanvasGroupRefMarker = { read __quadRefAccepts: (CanvasGroup) -> () }
+export type CanvasGroupElem = NewChild | CanvasGroupOnChange | State<CanvasGroupOnChange> | { read __quadModifier: "CanvasGroup" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | CanvasGroupRefMarker | State<CanvasGroupRefMarker>
 export type CanvasGroupMapperElem = CanvasGroupElem | MapperDescriptor
 
 export type FolderOnChange =
@@ -1875,7 +1881,8 @@ export type FolderModifier = {
 	Sandboxed: (self: FolderModifier, value: Field<boolean | Tween<boolean>>) -> FolderModifier,
 }
 export type IntoFolder = { AsFolder: (self: any) -> FolderModifier }
-export type FolderElem = NewChild | FolderOnChange | State<FolderOnChange> | { read __quadModifier: "Folder" | "Instance" }
+export type FolderRefMarker = { read __quadRefAccepts: (Folder) -> () }
+export type FolderElem = NewChild | FolderOnChange | State<FolderOnChange> | { read __quadModifier: "Folder" | "Instance" } | FolderRefMarker | State<FolderRefMarker>
 export type FolderMapperElem = FolderElem | MapperDescriptor
 
 export type FrameOnChange =
@@ -1962,7 +1969,8 @@ export type FrameModifier = {
 	ZIndex: (self: FrameModifier, value: Field<number | Tween<number>>) -> FrameModifier,
 }
 export type IntoFrame = { AsFrame: (self: any) -> FrameModifier }
-export type FrameElem = NewChild | FrameOnChange | State<FrameOnChange> | { read __quadModifier: "Frame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type FrameRefMarker = { read __quadRefAccepts: (Frame) -> () }
+export type FrameElem = NewChild | FrameOnChange | State<FrameOnChange> | { read __quadModifier: "Frame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | FrameRefMarker | State<FrameRefMarker>
 export type FrameMapperElem = FrameElem | MapperDescriptor
 
 export type GuiBaseModifier = {
@@ -2321,7 +2329,8 @@ export type ImageButtonModifier = {
 	ZIndex: (self: ImageButtonModifier, value: Field<number | Tween<number>>) -> ImageButtonModifier,
 }
 export type IntoImageButton = { AsImageButton: (self: any) -> ImageButtonModifier }
-export type ImageButtonElem = NewChild | ImageButtonOnChange | State<ImageButtonOnChange> | { read __quadModifier: "ImageButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type ImageButtonRefMarker = { read __quadRefAccepts: (ImageButton) -> () }
+export type ImageButtonElem = NewChild | ImageButtonOnChange | State<ImageButtonOnChange> | { read __quadModifier: "ImageButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ImageButtonRefMarker | State<ImageButtonRefMarker>
 export type ImageButtonMapperElem = ImageButtonElem | MapperDescriptor
 
 export type ImageLabelOnChange =
@@ -2428,7 +2437,8 @@ export type ImageLabelModifier = {
 	ZIndex: (self: ImageLabelModifier, value: Field<number | Tween<number>>) -> ImageLabelModifier,
 }
 export type IntoImageLabel = { AsImageLabel: (self: any) -> ImageLabelModifier }
-export type ImageLabelElem = NewChild | ImageLabelOnChange | State<ImageLabelOnChange> | { read __quadModifier: "ImageLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type ImageLabelRefMarker = { read __quadRefAccepts: (ImageLabel) -> () }
+export type ImageLabelElem = NewChild | ImageLabelOnChange | State<ImageLabelOnChange> | { read __quadModifier: "ImageLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ImageLabelRefMarker | State<ImageLabelRefMarker>
 export type ImageLabelMapperElem = ImageLabelElem | MapperDescriptor
 
 export type InstanceModifier = {
@@ -2604,7 +2614,8 @@ export type ScreenGuiModifier = {
 	ZIndexBehavior: (self: ScreenGuiModifier, value: Field<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>>) -> ScreenGuiModifier,
 }
 export type IntoScreenGui = { AsScreenGui: (self: any) -> ScreenGuiModifier }
-export type ScreenGuiElem = NewChild | ScreenGuiOnChange | State<ScreenGuiOnChange> | { read __quadModifier: "ScreenGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type ScreenGuiRefMarker = { read __quadRefAccepts: (ScreenGui) -> () }
+export type ScreenGuiElem = NewChild | ScreenGuiOnChange | State<ScreenGuiOnChange> | { read __quadModifier: "ScreenGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" } | ScreenGuiRefMarker | State<ScreenGuiRefMarker>
 export type ScreenGuiMapperElem = ScreenGuiElem | MapperDescriptor
 
 export type ScrollingFrameOnChange =
@@ -2725,7 +2736,8 @@ export type ScrollingFrameModifier = {
 	ZIndex: (self: ScrollingFrameModifier, value: Field<number | Tween<number>>) -> ScrollingFrameModifier,
 }
 export type IntoScrollingFrame = { AsScrollingFrame: (self: any) -> ScrollingFrameModifier }
-export type ScrollingFrameElem = NewChild | ScrollingFrameOnChange | State<ScrollingFrameOnChange> | { read __quadModifier: "ScrollingFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type ScrollingFrameRefMarker = { read __quadRefAccepts: (ScrollingFrame) -> () }
+export type ScrollingFrameElem = NewChild | ScrollingFrameOnChange | State<ScrollingFrameOnChange> | { read __quadModifier: "ScrollingFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ScrollingFrameRefMarker | State<ScrollingFrameRefMarker>
 export type ScrollingFrameMapperElem = ScrollingFrameElem | MapperDescriptor
 
 export type SurfaceGuiOnChange =
@@ -2792,7 +2804,8 @@ export type SurfaceGuiModifier = {
 	ZOffset: (self: SurfaceGuiModifier, value: Field<number | Tween<number>>) -> SurfaceGuiModifier,
 }
 export type IntoSurfaceGui = { AsSurfaceGui: (self: any) -> SurfaceGuiModifier }
-export type SurfaceGuiElem = NewChild | SurfaceGuiOnChange | State<SurfaceGuiOnChange> | { read __quadModifier: "SurfaceGui" | "SurfaceGuiBase" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type SurfaceGuiRefMarker = { read __quadRefAccepts: (SurfaceGui) -> () }
+export type SurfaceGuiElem = NewChild | SurfaceGuiOnChange | State<SurfaceGuiOnChange> | { read __quadModifier: "SurfaceGui" | "SurfaceGuiBase" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" } | SurfaceGuiRefMarker | State<SurfaceGuiRefMarker>
 export type SurfaceGuiMapperElem = SurfaceGuiElem | MapperDescriptor
 
 export type SurfaceGuiBaseModifier = {
@@ -2955,7 +2968,8 @@ export type TextBoxModifier = {
 	ZIndex: (self: TextBoxModifier, value: Field<number | Tween<number>>) -> TextBoxModifier,
 }
 export type IntoTextBox = { AsTextBox: (self: any) -> TextBoxModifier }
-export type TextBoxElem = NewChild | TextBoxOnChange | State<TextBoxOnChange> | { read __quadModifier: "TextBox" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type TextBoxRefMarker = { read __quadRefAccepts: (TextBox) -> () }
+export type TextBoxElem = NewChild | TextBoxOnChange | State<TextBoxOnChange> | { read __quadModifier: "TextBox" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | TextBoxRefMarker | State<TextBoxRefMarker>
 export type TextBoxMapperElem = TextBoxElem | MapperDescriptor
 
 export type TextButtonOnChange =
@@ -3086,7 +3100,8 @@ export type TextButtonModifier = {
 	ZIndex: (self: TextButtonModifier, value: Field<number | Tween<number>>) -> TextButtonModifier,
 }
 export type IntoTextButton = { AsTextButton: (self: any) -> TextButtonModifier }
-export type TextButtonElem = NewChild | TextButtonOnChange | State<TextButtonOnChange> | { read __quadModifier: "TextButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type TextButtonRefMarker = { read __quadRefAccepts: (TextButton) -> () }
+export type TextButtonElem = NewChild | TextButtonOnChange | State<TextButtonOnChange> | { read __quadModifier: "TextButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | TextButtonRefMarker | State<TextButtonRefMarker>
 export type TextButtonMapperElem = TextButtonElem | MapperDescriptor
 
 export type TextLabelOnChange =
@@ -3205,7 +3220,8 @@ export type TextLabelModifier = {
 	ZIndex: (self: TextLabelModifier, value: Field<number | Tween<number>>) -> TextLabelModifier,
 }
 export type IntoTextLabel = { AsTextLabel: (self: any) -> TextLabelModifier }
-export type TextLabelElem = NewChild | TextLabelOnChange | State<TextLabelOnChange> | { read __quadModifier: "TextLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type TextLabelRefMarker = { read __quadRefAccepts: (TextLabel) -> () }
+export type TextLabelElem = NewChild | TextLabelOnChange | State<TextLabelOnChange> | { read __quadModifier: "TextLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | TextLabelRefMarker | State<TextLabelRefMarker>
 export type TextLabelMapperElem = TextLabelElem | MapperDescriptor
 
 export type UIAspectRatioConstraintOnChange =
@@ -3232,7 +3248,8 @@ export type UIAspectRatioConstraintModifier = {
 	Sandboxed: (self: UIAspectRatioConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UIAspectRatioConstraintModifier,
 }
 export type IntoUIAspectRatioConstraint = { AsUIAspectRatioConstraint: (self: any) -> UIAspectRatioConstraintModifier }
-export type UIAspectRatioConstraintElem = NewChild | UIAspectRatioConstraintOnChange | State<UIAspectRatioConstraintOnChange> | { read __quadModifier: "UIAspectRatioConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" }
+export type UIAspectRatioConstraintRefMarker = { read __quadRefAccepts: (UIAspectRatioConstraint) -> () }
+export type UIAspectRatioConstraintElem = NewChild | UIAspectRatioConstraintOnChange | State<UIAspectRatioConstraintOnChange> | { read __quadModifier: "UIAspectRatioConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" } | UIAspectRatioConstraintRefMarker | State<UIAspectRatioConstraintRefMarker>
 export type UIAspectRatioConstraintMapperElem = UIAspectRatioConstraintElem | MapperDescriptor
 
 export type UIBaseModifier = {
@@ -3345,7 +3362,8 @@ export type UICornerModifier = {
 	TopRightRadius: (self: UICornerModifier, value: Field<UDim | Tween<UDim>>) -> UICornerModifier,
 }
 export type IntoUICorner = { AsUICorner: (self: any) -> UICornerModifier }
-export type UICornerElem = NewChild | UICornerOnChange | State<UICornerOnChange> | { read __quadModifier: "UICorner" | "UIComponent" | "UIBase" | "Instance" }
+export type UICornerRefMarker = { read __quadRefAccepts: (UICorner) -> () }
+export type UICornerElem = NewChild | UICornerOnChange | State<UICornerOnChange> | { read __quadModifier: "UICorner" | "UIComponent" | "UIBase" | "Instance" } | UICornerRefMarker | State<UICornerRefMarker>
 export type UICornerMapperElem = UICornerElem | MapperDescriptor
 
 export type UIDragDetectorOnChange =
@@ -3410,7 +3428,8 @@ export type UIDragDetectorModifier = {
 	UIDragSpeedAxisMapping: (self: UIDragDetectorModifier, value: Field<Enum.UIDragSpeedAxisMapping | Tween<Enum.UIDragSpeedAxisMapping>>) -> UIDragDetectorModifier,
 }
 export type IntoUIDragDetector = { AsUIDragDetector: (self: any) -> UIDragDetectorModifier }
-export type UIDragDetectorElem = NewChild | UIDragDetectorOnChange | State<UIDragDetectorOnChange> | { read __quadModifier: "UIDragDetector" | "UIComponent" | "UIBase" | "Instance" }
+export type UIDragDetectorRefMarker = { read __quadRefAccepts: (UIDragDetector) -> () }
+export type UIDragDetectorElem = NewChild | UIDragDetectorOnChange | State<UIDragDetectorOnChange> | { read __quadModifier: "UIDragDetector" | "UIComponent" | "UIBase" | "Instance" } | UIDragDetectorRefMarker | State<UIDragDetectorRefMarker>
 export type UIDragDetectorMapperElem = UIDragDetectorElem | MapperDescriptor
 
 export type UIFlexItemOnChange =
@@ -3439,7 +3458,8 @@ export type UIFlexItemModifier = {
 	ShrinkRatio: (self: UIFlexItemModifier, value: Field<number | Tween<number>>) -> UIFlexItemModifier,
 }
 export type IntoUIFlexItem = { AsUIFlexItem: (self: any) -> UIFlexItemModifier }
-export type UIFlexItemElem = NewChild | UIFlexItemOnChange | State<UIFlexItemOnChange> | { read __quadModifier: "UIFlexItem" | "UIComponent" | "UIBase" | "Instance" }
+export type UIFlexItemRefMarker = { read __quadRefAccepts: (UIFlexItem) -> () }
+export type UIFlexItemElem = NewChild | UIFlexItemOnChange | State<UIFlexItemOnChange> | { read __quadModifier: "UIFlexItem" | "UIComponent" | "UIBase" | "Instance" } | UIFlexItemRefMarker | State<UIFlexItemRefMarker>
 export type UIFlexItemMapperElem = UIFlexItemElem | MapperDescriptor
 
 export type UIGradientOnChange =
@@ -3476,7 +3496,8 @@ export type UIGradientModifier = {
 	Type: (self: UIGradientModifier, value: Field<Enum.GradientType | Tween<Enum.GradientType>>) -> UIGradientModifier,
 }
 export type IntoUIGradient = { AsUIGradient: (self: any) -> UIGradientModifier }
-export type UIGradientElem = NewChild | UIGradientOnChange | State<UIGradientOnChange> | { read __quadModifier: "UIGradient" | "UIComponent" | "UIBase" | "Instance" }
+export type UIGradientRefMarker = { read __quadRefAccepts: (UIGradient) -> () }
+export type UIGradientElem = NewChild | UIGradientOnChange | State<UIGradientOnChange> | { read __quadModifier: "UIGradient" | "UIComponent" | "UIBase" | "Instance" } | UIGradientRefMarker | State<UIGradientRefMarker>
 export type UIGradientMapperElem = UIGradientElem | MapperDescriptor
 
 export type UIGridLayoutOnChange =
@@ -3513,7 +3534,8 @@ export type UIGridLayoutModifier = {
 	VerticalAlignment: (self: UIGridLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UIGridLayoutModifier,
 }
 export type IntoUIGridLayout = { AsUIGridLayout: (self: any) -> UIGridLayoutModifier }
-export type UIGridLayoutElem = NewChild | UIGridLayoutOnChange | State<UIGridLayoutOnChange> | { read __quadModifier: "UIGridLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" }
+export type UIGridLayoutRefMarker = { read __quadRefAccepts: (UIGridLayout) -> () }
+export type UIGridLayoutElem = NewChild | UIGridLayoutOnChange | State<UIGridLayoutOnChange> | { read __quadModifier: "UIGridLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UIGridLayoutRefMarker | State<UIGridLayoutRefMarker>
 export type UIGridLayoutMapperElem = UIGridLayoutElem | MapperDescriptor
 
 export type UIGridStyleLayoutModifier = {
@@ -3593,7 +3615,8 @@ export type UIListLayoutModifier = {
 	Wraps: (self: UIListLayoutModifier, value: Field<boolean | Tween<boolean>>) -> UIListLayoutModifier,
 }
 export type IntoUIListLayout = { AsUIListLayout: (self: any) -> UIListLayoutModifier }
-export type UIListLayoutElem = NewChild | UIListLayoutOnChange | State<UIListLayoutOnChange> | { read __quadModifier: "UIListLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" }
+export type UIListLayoutRefMarker = { read __quadRefAccepts: (UIListLayout) -> () }
+export type UIListLayoutElem = NewChild | UIListLayoutOnChange | State<UIListLayoutOnChange> | { read __quadModifier: "UIListLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UIListLayoutRefMarker | State<UIListLayoutRefMarker>
 export type UIListLayoutMapperElem = UIListLayoutElem | MapperDescriptor
 
 export type UIPaddingOnChange =
@@ -3622,7 +3645,8 @@ export type UIPaddingModifier = {
 	Sandboxed: (self: UIPaddingModifier, value: Field<boolean | Tween<boolean>>) -> UIPaddingModifier,
 }
 export type IntoUIPadding = { AsUIPadding: (self: any) -> UIPaddingModifier }
-export type UIPaddingElem = NewChild | UIPaddingOnChange | State<UIPaddingOnChange> | { read __quadModifier: "UIPadding" | "UIComponent" | "UIBase" | "Instance" }
+export type UIPaddingRefMarker = { read __quadRefAccepts: (UIPadding) -> () }
+export type UIPaddingElem = NewChild | UIPaddingOnChange | State<UIPaddingOnChange> | { read __quadModifier: "UIPadding" | "UIComponent" | "UIBase" | "Instance" } | UIPaddingRefMarker | State<UIPaddingRefMarker>
 export type UIPaddingMapperElem = UIPaddingElem | MapperDescriptor
 
 export type UIPageLayoutOnChange =
@@ -3669,7 +3693,8 @@ export type UIPageLayoutModifier = {
 	VerticalAlignment: (self: UIPageLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UIPageLayoutModifier,
 }
 export type IntoUIPageLayout = { AsUIPageLayout: (self: any) -> UIPageLayoutModifier }
-export type UIPageLayoutElem = NewChild | UIPageLayoutOnChange | State<UIPageLayoutOnChange> | { read __quadModifier: "UIPageLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" }
+export type UIPageLayoutRefMarker = { read __quadRefAccepts: (UIPageLayout) -> () }
+export type UIPageLayoutElem = NewChild | UIPageLayoutOnChange | State<UIPageLayoutOnChange> | { read __quadModifier: "UIPageLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UIPageLayoutRefMarker | State<UIPageLayoutRefMarker>
 export type UIPageLayoutMapperElem = UIPageLayoutElem | MapperDescriptor
 
 export type UIScaleOnChange =
@@ -3692,7 +3717,8 @@ export type UIScaleModifier = {
 	Scale: (self: UIScaleModifier, value: Field<number | Tween<number>>) -> UIScaleModifier,
 }
 export type IntoUIScale = { AsUIScale: (self: any) -> UIScaleModifier }
-export type UIScaleElem = NewChild | UIScaleOnChange | State<UIScaleOnChange> | { read __quadModifier: "UIScale" | "UIComponent" | "UIBase" | "Instance" }
+export type UIScaleRefMarker = { read __quadRefAccepts: (UIScale) -> () }
+export type UIScaleElem = NewChild | UIScaleOnChange | State<UIScaleOnChange> | { read __quadModifier: "UIScale" | "UIComponent" | "UIBase" | "Instance" } | UIScaleRefMarker | State<UIScaleRefMarker>
 export type UIScaleMapperElem = UIScaleElem | MapperDescriptor
 
 export type UIShadowOnChange =
@@ -3731,7 +3757,8 @@ export type UIShadowModifier = {
 	ZIndex: (self: UIShadowModifier, value: Field<number | Tween<number>>) -> UIShadowModifier,
 }
 export type IntoUIShadow = { AsUIShadow: (self: any) -> UIShadowModifier }
-export type UIShadowElem = NewChild | UIShadowOnChange | State<UIShadowOnChange> | { read __quadModifier: "UIShadow" | "UIComponent" | "UIBase" | "Instance" }
+export type UIShadowRefMarker = { read __quadRefAccepts: (UIShadow) -> () }
+export type UIShadowElem = NewChild | UIShadowOnChange | State<UIShadowOnChange> | { read __quadModifier: "UIShadow" | "UIComponent" | "UIBase" | "Instance" } | UIShadowRefMarker | State<UIShadowRefMarker>
 export type UIShadowMapperElem = UIShadowElem | MapperDescriptor
 
 export type UISizeConstraintOnChange =
@@ -3756,7 +3783,8 @@ export type UISizeConstraintModifier = {
 	Sandboxed: (self: UISizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UISizeConstraintModifier,
 }
 export type IntoUISizeConstraint = { AsUISizeConstraint: (self: any) -> UISizeConstraintModifier }
-export type UISizeConstraintElem = NewChild | UISizeConstraintOnChange | State<UISizeConstraintOnChange> | { read __quadModifier: "UISizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" }
+export type UISizeConstraintRefMarker = { read __quadRefAccepts: (UISizeConstraint) -> () }
+export type UISizeConstraintElem = NewChild | UISizeConstraintOnChange | State<UISizeConstraintOnChange> | { read __quadModifier: "UISizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" } | UISizeConstraintRefMarker | State<UISizeConstraintRefMarker>
 export type UISizeConstraintMapperElem = UISizeConstraintElem | MapperDescriptor
 
 export type UIStrokeOnChange =
@@ -3797,7 +3825,8 @@ export type UIStrokeModifier = {
 	ZIndex: (self: UIStrokeModifier, value: Field<number | Tween<number>>) -> UIStrokeModifier,
 }
 export type IntoUIStroke = { AsUIStroke: (self: any) -> UIStrokeModifier }
-export type UIStrokeElem = NewChild | UIStrokeOnChange | State<UIStrokeOnChange> | { read __quadModifier: "UIStroke" | "UIComponent" | "UIBase" | "Instance" }
+export type UIStrokeRefMarker = { read __quadRefAccepts: (UIStroke) -> () }
+export type UIStrokeElem = NewChild | UIStrokeOnChange | State<UIStrokeOnChange> | { read __quadModifier: "UIStroke" | "UIComponent" | "UIBase" | "Instance" } | UIStrokeRefMarker | State<UIStrokeRefMarker>
 export type UIStrokeMapperElem = UIStrokeElem | MapperDescriptor
 
 export type UITableLayoutOnChange =
@@ -3834,7 +3863,8 @@ export type UITableLayoutModifier = {
 	VerticalAlignment: (self: UITableLayoutModifier, value: Field<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>>) -> UITableLayoutModifier,
 }
 export type IntoUITableLayout = { AsUITableLayout: (self: any) -> UITableLayoutModifier }
-export type UITableLayoutElem = NewChild | UITableLayoutOnChange | State<UITableLayoutOnChange> | { read __quadModifier: "UITableLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" }
+export type UITableLayoutRefMarker = { read __quadRefAccepts: (UITableLayout) -> () }
+export type UITableLayoutElem = NewChild | UITableLayoutOnChange | State<UITableLayoutOnChange> | { read __quadModifier: "UITableLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UITableLayoutRefMarker | State<UITableLayoutRefMarker>
 export type UITableLayoutMapperElem = UITableLayoutElem | MapperDescriptor
 
 export type UITextSizeConstraintOnChange =
@@ -3859,7 +3889,8 @@ export type UITextSizeConstraintModifier = {
 	Sandboxed: (self: UITextSizeConstraintModifier, value: Field<boolean | Tween<boolean>>) -> UITextSizeConstraintModifier,
 }
 export type IntoUITextSizeConstraint = { AsUITextSizeConstraint: (self: any) -> UITextSizeConstraintModifier }
-export type UITextSizeConstraintElem = NewChild | UITextSizeConstraintOnChange | State<UITextSizeConstraintOnChange> | { read __quadModifier: "UITextSizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" }
+export type UITextSizeConstraintRefMarker = { read __quadRefAccepts: (UITextSizeConstraint) -> () }
+export type UITextSizeConstraintElem = NewChild | UITextSizeConstraintOnChange | State<UITextSizeConstraintOnChange> | { read __quadModifier: "UITextSizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" } | UITextSizeConstraintRefMarker | State<UITextSizeConstraintRefMarker>
 export type UITextSizeConstraintMapperElem = UITextSizeConstraintElem | MapperDescriptor
 
 export type VideoFrameOnChange =
@@ -3962,7 +3993,8 @@ export type VideoFrameModifier = {
 	ZIndex: (self: VideoFrameModifier, value: Field<number | Tween<number>>) -> VideoFrameModifier,
 }
 export type IntoVideoFrame = { AsVideoFrame: (self: any) -> VideoFrameModifier }
-export type VideoFrameElem = NewChild | VideoFrameOnChange | State<VideoFrameOnChange> | { read __quadModifier: "VideoFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type VideoFrameRefMarker = { read __quadRefAccepts: (VideoFrame) -> () }
+export type VideoFrameElem = NewChild | VideoFrameOnChange | State<VideoFrameOnChange> | { read __quadModifier: "VideoFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | VideoFrameRefMarker | State<VideoFrameRefMarker>
 export type VideoFrameMapperElem = VideoFrameElem | MapperDescriptor
 
 export type ViewportFrameOnChange =
@@ -4059,7 +4091,8 @@ export type ViewportFrameModifier = {
 	ZIndex: (self: ViewportFrameModifier, value: Field<number | Tween<number>>) -> ViewportFrameModifier,
 }
 export type IntoViewportFrame = { AsViewportFrame: (self: any) -> ViewportFrameModifier }
-export type ViewportFrameElem = NewChild | ViewportFrameOnChange | State<ViewportFrameOnChange> | { read __quadModifier: "ViewportFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" }
+export type ViewportFrameRefMarker = { read __quadRefAccepts: (ViewportFrame) -> () }
+export type ViewportFrameElem = NewChild | ViewportFrameOnChange | State<ViewportFrameOnChange> | { read __quadModifier: "ViewportFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ViewportFrameRefMarker | State<ViewportFrameRefMarker>
 export type ViewportFrameMapperElem = ViewportFrameElem | MapperDescriptor
 
 export type WorldModelOnChange =
@@ -4088,7 +4121,8 @@ export type WorldModelModifier = {
 	WorldPivot: (self: WorldModelModifier, value: Field<CFrame | Tween<CFrame>>) -> WorldModelModifier,
 }
 export type IntoWorldModel = { AsWorldModel: (self: any) -> WorldModelModifier }
-export type WorldModelElem = NewChild | WorldModelOnChange | State<WorldModelOnChange> | { read __quadModifier: "WorldModel" | "WorldRoot" | "Model" | "PVInstance" | "Instance" }
+export type WorldModelRefMarker = { read __quadRefAccepts: (WorldModel) -> () }
+export type WorldModelElem = NewChild | WorldModelOnChange | State<WorldModelOnChange> | { read __quadModifier: "WorldModel" | "WorldRoot" | "Model" | "PVInstance" | "Instance" } | WorldModelRefMarker | State<WorldModelRefMarker>
 export type WorldModelMapperElem = WorldModelElem | MapperDescriptor
 
 export type WorldRootModifier = {

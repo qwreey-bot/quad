@@ -74,14 +74,14 @@
    `audit/m7-unit4-as-modifier-2026-09-04.md`, 원문
    `session/2026-09-04-05-m7-unit4-class-tags-as-into.md`. round17 §4 열린 문항 0.
    **M7 완료.** **⭐⭐⭐ [2026-09-04] M8(Ref/PreRef/PostRef) 자율 구현 구간
-   진행 중** — 규약 `qa-request/m8-implementation-round18-brief.md` §0 Q1~Q6
+   — 같은 날 완료** — 규약 `qa-request/m8-implementation-round18-brief.md` §0 Q1~Q6
    확정(Q1~Q5 (a), Q6는 전제 정정 — `PostRef`는 부모 부착 여부를 보장하지
    않음; Q4로 정본 `RefLeafHandler` 의사코드의 `SetWeak` 순서 정정). **단위
    ①·② 완료**(① `:Wait` + `PreRef`/`PostRef` 런타임·타입 `H-315` / ②
    `RefLeafHandler`·가드 둘·`Processed*Ref` 둘·drive pre-pass `H-319`, 배치
    `H-320`), 발견 원장은 `m8-implementation-round18.md`, 진행 소스는 ROADMAP
    M8 체크박스, 단위 구성은 brief §1. 단위 ② Studio 8/8
-   (`audit/m8-unit2-studio-2026-09-04.md`). 단위 ③은 스파이크 `32` 완료 — **§4 `H-321`(반공변 팬텀 마커 — 새 메커니즘) 사용자 확인 대기**, 확인되면 착수. **M10 잔여는
+   (`audit/m8-unit2-studio-2026-09-04.md`). 단위 ③도 같은 날 완료(`H-321` 사용자 확정 (a) → `H-322` 반공변 팬텀 마커 `<Class>RefMarker`, `spec.reftypes`) — **M8 완료**, round18 §4 열린 문항 0(확인 항목 `H-317`만). 다음 마일스톤은 사용자와 정한다. **M10 잔여는
    InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
    목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
    (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지

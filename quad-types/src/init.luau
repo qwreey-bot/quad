@@ -45,6 +45,15 @@ export type Relate = {
 -- (`ref-plan.md` "제네릭 시그니처").
 export type RefCallback<T> = (value: T, ref: Ref<T>) -> ()
 export type Ref<T> = {
+	-- 반공변 팬텀 필드(M8 단위 ③, round18 `H-321` — 사용자 확정): children 자리의
+	-- 클래스 검사용. 생성 `<Class>Elem`이 `{ read __quadRefAccepts: (<Class>) -> () }`
+	-- 만 담으면 `Ref<Frame?>`·상위 박스 `Ref<GuiObject?>`는 들어가고 형제
+	-- `Ref<TextLabel?>`·무타입 `Ref<nil>`은 거부된다. `Set`의 파라미터가 같은 정보를
+	-- 갖지만 새 솔버가 제네릭 메소드의 반공변을 안 보고(8.9절) 유니언 멤버
+	-- `State.Set`과 이름이 충돌해 `Set`으론 검사가 안 선다 — 그래서 유니언 어디와도
+	-- 안 겹치는 비제네릭 이름에 T를 굽는다. 런타임 값은 `Void`(호출되지 않음, H-300
+	-- "타입이 약속하면 값에도"). 사용자 표현: "non-lazy type으로 T 비교자를 넣어 굽는다"
+	read __quadRefAccepts: (T) -> (),
 	Value: T,
 	Revision: number,
 	Callbacks: { [RefCallback<T> | thread]: true }, -- 강한 해시맵 셋(+ M8 `:Wait` 대기자)

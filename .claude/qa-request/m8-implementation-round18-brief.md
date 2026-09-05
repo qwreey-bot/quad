@@ -89,7 +89,8 @@ v'로의 재진입은 순서와 무관하게 기존 UB 그대로, 콜백 error �
 3. **단위 ③** — Q3의 결과대로 `quad-roblox/src/types.luau` `NewChild` 또는
    `<Class>Elem`(생성기) 확장 + `<Class>MapperElem`(Claim 자식 자리도 같은
    별칭) + `spec.reftypes`(strict 양성; 음성은 스파이크 `32`) — M7 단위 ③·④
-   선례.
+   선례. **[2026-09-04 결과]** `<Class>Elem` 쪽(`<Class>RefMarker`), `NewChild`는
+   그대로 — `H-321`/`H-322`.
 
 **미리 알려진 주의**: ① 세 Ref의 매치는 서로소 — `RefLeafHandler`는
 `isRef ∧ ¬isPreRef ∧ ¬isPostRef`, 가드 둘은 각자 `isPreRef`/`isPostRef`,
@@ -142,3 +143,7 @@ M10 하자는 동형 규칙. **[M8 변경]** Studio 실측은 단위 ②에만 �
 | `quad-base/src/Dispatch/init.luau` | `drive`: `flatten` 뒤·배치 판정 앞에 `prePass`, 본체 루프 뒤·배치 닫기(⓪') **앞** `firePostRefs`(게이트 켜진 채 — `H-17`); InitDispatch가 Processed 둘 등록 | bind-system 파이프라인 (a)/(c)/⓪', dispatch-core `H-17` 절 |
 | `quad-base/src/Ref.luau` | `registerDispatchHandlers`(`H-278`): `RefLeafHandler`(HIGH, `number k ∧ isRef ∧ ¬isPreRef ∧ ¬isPostRef`, `H-39` 부기, `Relate` dedup, `bindLifetime` → `SetWeak` → `Set`(Q4), retractor 언바인딩·`Set(nil)`·조건부 relate 정리), `PreRef`/`PostRef` 동적 경로 가드(FALLBACK, `typeof(k)` 실은 `errorBefore`). 모듈 반환이 `{ Ref, Init }`으로 바뀜 | "`Ref`의 retract" 절, "이중 배치 방지" 절, "동적 경로 가드 Handler도 거울상으로 하나 더" 절 |
 | `quad-base/test/spec.refhandlers.luau` | leaf 바인딩·이중 배치·`State<Ref>` 재바인드(spurious 포함)·Q4 재진입·PreRef 호이스팅/순서/부기/재사용·PostRef 순서/부모 무보장/재사용·가드 셋 | — |
+
+**단위 ③(같은 날, `H-321` 확정 뒤 — `H-322`)**: quad-types `Ref<T>`에
+`read __quadRefAccepts: (T) -> ()` + 런타임 `Void`, 생성기 `<Class>RefMarker`와
+`<Class>Elem` 합류(`+ State<…>`), `spec.reftypes`. **M8 완료.**

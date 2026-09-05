@@ -13,6 +13,20 @@ local newQuad = mock.newQuad
 local assertBlamesUser = mock.assertBlamesUser
 local SPEC = "spec.refhandlers.luau"
 
+-- spec 전용: 해시 키(프로퍼티 대역)를 잡아 순서를 기록하는 핸들러
+local function installPropRecorder(q, log)
+	q.Dispatch.addHandler({
+		isHandlable = function(_i, k, _v)
+			return type(k) == "string"
+		end,
+		priority = q.Dispatch.HANDLER_PRIORITY_NORMAL,
+		process = function(_i, k, _v, _index)
+			table.insert(log, "prop:" .. k)
+			return q.Void
+		end,
+	})
+end
+
 print("=== 1. Ref leaf — 배열 자리 바인딩: :Set(inst), H-39 부기(None/0), gchold로 묶임 ===")
 do
 	local q = newQuad()
@@ -43,6 +57,13 @@ do
 	assert(not ok, "double placement must error")
 	assertBlamesUser(err, SPEC, "double placement")
 	assert(r.Value == a, "first binding untouched")
+	-- 같은 인스턴스 안의 두 자리도 같은 가드(두 번째 슬롯에서 error)
+	local r2 = q.Ref(nil :: any)
+	local ok2, err2 = pcall(function()
+		q.Dispatch.drive(Instance.new("Frame"), { r2, r2 })
+	end)
+	assert(not ok2, "same Ref twice in one children array errors at the second slot")
+	assertBlamesUser(err2, SPEC, "same-instance double placement")
 	print("PASS")
 end
 
@@ -97,16 +118,7 @@ do
 	local q = newQuad()
 	local inst = Instance.new("Frame")
 	local log = {}
-	q.Dispatch.addHandler({ -- 해시 키를 잡는 spec 전용 핸들러(프로퍼티 대역)
-		isHandlable = function(_i, k, _v)
-			return type(k) == "string"
-		end,
-		priority = q.Dispatch.HANDLER_PRIORITY_NORMAL,
-		process = function(_i, k, _v, _index)
-			table.insert(log, "prop:" .. k)
-			return q.Void
-		end,
-	})
+	installPropRecorder(q, log)
 	local gateOnAtPre: any = "unset"
 	local p1 = q.PreRef(nil :: any):Callback(function(v)
 		if v then
@@ -146,16 +158,7 @@ do
 	local q = newQuad()
 	local inst = Instance.new("Frame")
 	local log = {}
-	q.Dispatch.addHandler({
-		isHandlable = function(_i, k, _v)
-			return type(k) == "string"
-		end,
-		priority = q.Dispatch.HANDLER_PRIORITY_NORMAL,
-		process = function(_i, k, _v, _index)
-			table.insert(log, "prop:" .. k)
-			return q.Void
-		end,
-	})
+	installPropRecorder(q, log)
 	local parentAtFire: any = "unset"
 	local gateOnAtFire: any = "unset"
 	local post1 = q.PostRef(nil :: any):Callback(function(v)

@@ -246,6 +246,9 @@ def emit():
     L.append("\tApply는 self·factory 둘 다 any(8.9절 — 재귀 필드 + 유니언 멤버 메소드 이름 충돌 시")
     L.append("\t유니언 검사가 조용히 통과하는 솔버 결함을 피해 클래스 소속 검사를 되찾음). 런타임은")
     L.append("\tquad.Modifier.TypedFactory(name)이 돌려주는 태그 생성자 + DefineSubtype(parent, name) 간선.")
+    L.append("\tRef/PreRef/PostRef(M8 단위 ③, round18 H-321 — 사용자 확정): children엔 클래스별 반공변")
+    L.append("\t팬텀 마커 <Class>RefMarker = { read __quadRefAccepts: (<Class>) -> () }(+ State<…>)만 — Ref<T>를")
+    L.append("\t직접 넣으면 8.9절 결함으로 형제 클래스 Ref가 샌다(실측). Ref<<Class>?>·상위 박스 통과, 형제·Ref<nil> 거부.")
     L.append("]]")
     L.append("")
     L.append('local QuadTypes = require("../luau_packages/quad_types")')
@@ -419,7 +422,13 @@ def emit():
         # 배열 원소 유니언은 클래스당 별칭 하나 — D/DMapper 타입과 런타임 캐스트
         # 네 자리가 같은 별칭을 참조한다(손 나열 드리프트 방지, 리뷰 반영)
         marker = " | ".join(f'"{n}"' for n in [name] + ancestors(name))
-        L.append(f"export type {name}Elem = NewChild | {name}OnChange | State<{name}OnChange> | {{ read __quadModifier: {marker} }}")
+        # M8 단위 ③(round18 H-321): Ref/PreRef/PostRef는 반공변 팬텀 마커로 —
+        # `Ref<T>`의 `__quadRefAccepts: (T) -> ()`에 (<Class>) -> ()를 대조하면 상위
+        # 박스(`Ref<GuiObject?>`)는 받고 형제·`Ref<nil>`은 거부. `State<Ref>`는 8.7
+        # 캐비엇 5대로 마커로 캐스트해 만든다(`q.Source(ref :: FrameRefMarker)`);
+        # `State<PreRef>`는 타입이 못 가르고 런타임 가드(Ref.luau)가 잡는다.
+        L.append(f"export type {name}RefMarker = {{ read __quadRefAccepts: ({name}) -> () }}")
+        L.append(f"export type {name}Elem = NewChild | {name}OnChange | State<{name}OnChange> | {{ read __quadModifier: {marker} }} | {name}RefMarker | State<{name}RefMarker>")
         L.append(f"export type {name}MapperElem = {name}Elem | MapperDescriptor")
         L.append("")
     L.append("-- D 네임스페이스 타입(H-305 (d′)) — `UseProvider` 확장 `RobloxExtension`이")

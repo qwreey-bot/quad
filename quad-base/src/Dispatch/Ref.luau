@@ -44,16 +44,8 @@ local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 local isPreRef = Brand.isPreRef
 local isPostRef = Brand.isPostRef
 
-local function sentinel(name: string)
-	return table.freeze(setmetatable({ ["__quad" .. name] = true :: true }, {
-		__tostring = function()
-			return name
-		end,
-	}))
-end
-
-local ProcessedPreRef = sentinel("ProcessedPreRef")
-local ProcessedPostRef = sentinel("ProcessedPostRef")
+local ProcessedPreRef = NoneModule.sentinel("ProcessedPreRef")
+local ProcessedPostRef = NoneModule.sentinel("ProcessedPostRef")
 
 local function fireOnce(v: any, kind: string)
 	if v._fired then
