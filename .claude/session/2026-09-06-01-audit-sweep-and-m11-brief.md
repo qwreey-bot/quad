@@ -64,3 +64,36 @@ Q3(quad-types `Tween<T>`의 자리)·Q4(센티널 형태)인데, 둘 다 정본�
 비용이 낮다(타입 별칭·센티널 값 교체).
 
 (이후 라운드·탐사·M11 진행은 이 파일 아래 절에 이어 쓴다.)
+
+## 5. 감사 스윕 2~6라운드 (병렬 2, 각도 교대) — 종결
+
+- R2 C(코드 주석·spec) 2건 + D(reference·research + R1 재검) 1건 — `Slot.luau`/`gen-d.py`/
+  `spec.modifier` 헤더, `pre-implementation-audit` 2-5, session-summary 날짜 주석.
+- R3 E(ROADMAP 전수) 3건 + F(M5/M6/M10 정본 vs 코드) 2건 — leaf 핸들러 체크박스,
+  인덱스 3층 M11 착수 미반영, `architecture.md` 옛 `RobloxTween|true|nil`,
+  attribute-plan `H10-8` 미반영(retractor/process 의사코드), onchange-plan `H10-12`
+  "잔여" 표현, tag-plan 배치 포인터.
+- R4 G(M2~M4 정본 vs 코드) 1건 + H(원장 체인·session) 2건 — `Handler.luau` 2-인자
+  retractor, attribute-plan process 쪽 reemit, README round19 색인.
+- R5 I(README 전수) 4건 + J(research/reference/archive 전수) 5건 — README 행
+  넷(dispatch-core `H-277`/typing-limits 8.5~8.9/lifecycle `H-291`/`review-required`),
+  `pre-implementation-audit` 헤더 태그·2-6·2-8·Destroying 모순·"다음 액션" 배너,
+  framework-comparison "구현 0줄" 배너.
+- R6 K(conventions·agents·audit) 1건 + L(루트·패키지 문서) 6건 — HUMAN_TODO 0번,
+  STATUS 개수 표, ROADMAP `05` 포인터, luau-test README 타입체커 행, todos 한도
+  리터럴, `.gitignore` 주석, project-setup-plan 52행.
+- **종결 판단**: 6라운드까지 새 발견이 0으로 수렴하지 않았지만(3/5/3/9/7) 성격이
+  전부 "오래된 부채의 미갱신"이고 각도(A~L)가 소진됐다 — conventions의 "유한
+  절차" 규약대로 닫는다. 남긴 것: R6-L 7번(`project-setup-plan.md` 447행
+  `roblox_sync_config_generator` WARN의 간접 해소 여부 — 사용자 판단), R3-E 4번
+  (스파이크 `11` 조기 폐기 여부 — `16`/`21`과 묶어 사용자 판단).
+
+## 6. M11 단위 ① — Tween 값 런타임·타입 (round19 `H-323`~`H-327`)
+
+`Tween.luau`(팩토리·검증·frozen·`Mapped`·센티널) + `Brand.isTween` + quad-types +
+`spec.tween`(5절) + `spec.tweentypes`(strict 양성) + `luau-test/33`. 실측으로
+결정된 것 다섯은 원장이 소스. 트레이싱 중 오판 하나 기록: "타입별 별칭 `PVn`이
+too complex를 풀었다"고 한 번 판정했으나 그 편집이 assert 실패로 적용되지
+않았고 실제로는 `State<Tween<T>>` 멤버를 뺀 상태가 통과한 것이었다 — 재적용
+뒤 별칭이 실제로 푸는 것을 다시 확인(1.8s, 음성 7/7). Q3 (a)의 정밀판 별칭은
+`State<X>` 불변성으로 포기(`H-326`) — §4 확인 항목.

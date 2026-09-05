@@ -2348,3 +2348,12 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   `Processed*`)·`Ref.luau`(leaf+가드, `H-278`)·`spec.refhandlers` 7절, `H-319`/
   `H-320`(Studio 8/8). **[6절 — 커밋은 2026-09-06 00시대 KST]** `H-321` 사용자 확정 → 단위 ③ 반공변 팬텀 마커
   `<Class>RefMarker`(`H-322`) — **M8 완료**.
+
+- `session/2026-09-06-01-audit-sweep-and-m11-brief.md` **[밤샘 자율 구간 착수 —
+  감사 스윕 6라운드 + M11 규약·단위 ①]** 사전 질문 셋 확정(순서 M11 →
+  InstanceShorthand → M9 / §0 권고 (a)로 착수·새 표면만 멈춤 / 탐사 발견은
+  영역 겹칠 때만 차단). sonnet 감사 2 병렬 × 6라운드(각도 A~L) 27건 반영 —
+  스파이크 `19`/`22` 폐기, 날짜 정정(M8 단위 ③은 2026-09-06 00시대), attribute-plan
+  `H10-8` 미반영 등. M11 brief(round19) 신설, 단위 ① 완료 `H-323`~`H-327`(생성
+  D 슬롯 `+ State<Tween<T>>`·별칭 `PVn`·`TweenConstructor` 8.6 조건부 예외·M7
+  setter `Field<T>` 하자 정정) — §4 확인 항목 2.

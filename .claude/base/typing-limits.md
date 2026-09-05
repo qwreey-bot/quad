@@ -697,6 +697,18 @@ A/B 실측). 실사용은 `quad-types`의 `TagConstructor`/`AttributeConstructor
 아니다(SyntaxError — 프린터 전용). 결정 경위·사용자 인용은
 `session/2026-09-02-03-h10-3-setmetatable-decision.md`.
 
+**⭐ [2026-09-06 조건부 예외 — M11 단위 ① `H-324`, `luau-test/done/33`, 사용자
+확인 대상] `__call`이 제네릭이면 `setmetatable<A, B>` 형은 쓸모가 없다** —
+`Tween{ Value = 1 }`의 `T`가 `*error-type* | number`로 추론돼 다른 `T`의 슬롯
+대입·옵션 필드·`Mapped` 결과 오타입을 전부 놓친다(위 "잔여 구멍"이 인자만이
+아니라 제네릭 결과까지 번진다). 함수∩테이블 교집합
+`(<T>(opts) -> Tween<T>) & { Cancel, Finish }`는 셋 다 잡고 UseProvider 교집합
+통과·필드 접근도 클린이었다. 대신 위 1번(값 캐스트 붕괴)은 그대로라 `init.luau`의
+`:: Quad` 리터럴이 raw 콜러블을 거부한다 — **모듈이 `(raw :: any) :: TweenConstructor`로
+타입을 실어 내보낸다**(생성 D의 `TypedFactory` 이중 캐스트 선례). 규칙: **비제네릭
+`__call`(Tag/Attribute)은 `setmetatable` 형, 제네릭 `__call`(Tween)은 교집합 + 모듈
+쪽 이중 캐스트.**
+
 ---
 
 ## 8.7. 이름을 인자로 받는 팩토리의 타이핑은 `K & keyof<Map>` + `index<Map, K>`로 — 큰 싱글톤 유니언·오버로드 교집합은 안 된다
@@ -766,6 +778,19 @@ base는 `{ read __quadModifier: true }`(`QuadTypes.ModifierMarker`, `NewChild`),
 현행과 같은 2.9s·too complex 0.
 
 ## 8.9. 재귀 함수 필드 + 유니언 멤버의 같은 이름 메소드 = 유니언 검사가 조용히 통과한다 — `Apply`는 `any`, setter 이름은 게이트
+
+**[2026-09-06 8.8·8.5 보강 — M11 단위 ① `H-326`/`H-327`]** (1) 새 솔버 `State<X>`는
+**불변**이다 — `State<T | Tween<T>>` 하나로 `State<T>`를 받을 수 없고, 슬롯의
+`State<X>` 멤버는 `:Compute`/`Animate`가 돌려주는 타입과 X가 글자 그대로 같아야
+한다(정밀판 별칭·데이터부 전부 거부). 그래서 생성 `D`와 `Field<T>`는 State 멤버
+둘을 각각 나열한다. (2) 같은 유니언을 수백 자리에 인라인하면(멤버 하나 추가만으로)
+`DMapper` 인스턴스화가 "too complex" — `LuauTarjanChildLimit` 640000·
+`TypeInferRecursionLimit`·`CheckRecursionLimit`·`SolverRecursionLimit`·
+`NormalizeCacheLimit`·`TypeInferTypePackLoopLimit` 전부 무효(실측). **프로퍼티 타입별
+별칭 하나(`type PVn = …`)로 유니언을 한 번만 선언**하면 1.8s에 클린 — 한도 플래그가
+아니라 선언 횟수가 문제였다. (3) 미리 만든 옵션 테이블 변수를 `{ Time: number? }`
+파라미터에 넘기면 가변 필드 불변성으로 거부 — 읽기만 하는 옵션 타입은 필드를
+`read`로(`H-325`).
 
 **[2026-09-04 실측, M7 단위 ④ — `luau-test/done/31`, `audit/m7-unit4-as-modifier-2026-09-04.md`]**
 새 솔버(luau-lsp 1.69.0)의 유니언 서브타이핑 결함. 규칙:

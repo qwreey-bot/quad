@@ -49,7 +49,7 @@ quad/
   필요(공식 workspace 가이드 예제가 루트에도 `[target]`을 요구함 — 이
   세션엔 `roblox` 하나만 있어 실제로 검증 안 됨, 필요 여부/의미는 M5 이후
   재확인 후보).
-- **서브패키지 `pesde.toml`**: `[target] environment = "roblox"` +
+- **서브패키지 `pesde.toml`**: `[target] environment`는 **`quad-roblox`만 `"roblox"`, 나머지 넷은 `"luau"`**(`H-234`, 아래 2026-08-31 문단이 소스 — 2026-09-06 감사가 이 줄의 일반 서술을 정정) +
   `build_files = ["src"]` + `lib = "src/init.luau"`.
   **⚠️ [2026-09-02 정정, M5 round14 Q3 (a) 사용자 확정]** 여기 한때
   *"`quad-roblox`는 `[dependencies] quad_base = …`"*라고 적혀 있었는데

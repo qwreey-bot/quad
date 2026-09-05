@@ -106,7 +106,9 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       재작성 완료]** 그 모델("emit은 항상 전파 + `:Get()` 시점 캐시로만
       dedup")로 재검증 통과 — **[2026-08-21] 그 모델이 다시 바뀌어
       `rewrite-required/`로 되돌아갔다**(`Epoch` 리비전 비교 채택으로 다이아몬드
-      Observer가 이제 변경당 **1회**만 울어야 함, `base/state-epoch-plan.md`))
+      Observer가 이제 변경당 **1회**만 울어야 함, `base/state-epoch-plan.md`) —
+      **[2026-08-29 닫힘, `done/`]** `spec.state`/`spec.effect`가 대체, 아래
+      "재검증 대기" 절 참고)
 - [x] Source가 State를 구조적으로 만족하는 제네릭 타입(`:Compute<U>(self:
       Source<T>, ...) -> State<U>`류, self 타이핑 + State 참조 혼합)이
       Luau 솔버에서 안전하게 추론되는지 확인(2026-08-06 세 번째 세션,
@@ -1941,7 +1943,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 
 ### 짜야 할 것
 
-- [ ] `quad-base/Tween.luau`(값 타입만 — `Tween(opts)` 팩토리가 `TweenBrand`에
+- [x] **[2026-09-06 M11 단위 ① 완료 — round19 `H-323`~`H-327`]** `quad-base/Tween.luau`(값 타입만 — `Tween(opts)` 팩토리가 `TweenBrand`에
       등록, **[2026-08-28]** 브랜드 인스턴스와 `isTween`은 `Brand.luau`에 추가,
       `Value: T` plain만 받고 State 재귀 없음)
 - [ ] `Handlers/Property.luau`에 `isTween(realv)` 분기 추가(기존

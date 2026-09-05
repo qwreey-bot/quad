@@ -94,16 +94,24 @@ function TweenImpl.Mapped(self: any, fn: any): any
 end
 
 -- Callable namespace: Tween{...} constructs; the two sentinels are fields.
-local Tween = setmetatable({ Cancel = Cancel, Finish = Finish }, {
+-- Typed through `any` to the function∩table `TweenConstructor` (round19
+-- `H-324`, typing-limits 8.6 exception): a generic `__call` declared as
+-- `setmetatable<A, B>` infers `T` as `*error-type* | …` and loses every
+-- negative, while the intersection checks T, options and fields precisely —
+-- but the literal `:: Quad` cast in init.luau rejects the raw callable
+-- value ("unrelated"), so the module hands out the typed value itself
+-- (the generated D does the same for `TypedFactory`).
+local rawTween = setmetatable({ Cancel = Cancel, Finish = Finish }, {
 	__call = function(_self, opts: any): any
 		return newTween(opts)
 	end,
 })
-table.freeze(Tween)
+table.freeze(rawTween)
+local Tween = (rawTween :: any) :: QuadTypes.TweenConstructor
 
 -- `H-238`: public constructor/method are surface-tagged so validation raises
 -- blame the user's line (`H-231` shared namespace).
-for _, fn in { getmetatable(Tween).__call, TweenImpl.Mapped } :: { any } do
+for _, fn in { getmetatable(rawTween).__call, TweenImpl.Mapped } :: { any } do
 	Err.setFuncLevel(fn, SURFACE)
 end
 

@@ -1,0 +1,137 @@
+--!strict
+--[[
+	Tween 값 계약 (M11 단위 ①, round19) — `base/tween-plan.md` "확정: `Tween{...}`
+	최종 모양"(옵션 모양·`Override` 두 값)·"`Tween<T>:Mapped(fn)`"(clone + Value
+	교체)·"패키지 경계"(quad-base는 값만 — 핸들러 없음). 검증 범위는 brief §0
+	Q5 (a): 테이블·`Value` 필수·엔진 무관 스칼라 타입·`Override` 센티널.
+	엔진 타입(`Info`/`Style`/`Direction`)은 무검사(단위 ② PropertyHandler가 엔진에
+	넘긴다). 소비(3-상태 슬롯·override 정책)는 단위 ② `quad-roblox/test/spec.tweenproperty`.
+]]
+
+local Quad = require("../src")
+local QuadTypes = require("../luau_packages/quad_types")
+local mock = require("./mock")
+local Tween = Quad.Tween
+
+-- 타입 양성(strict — 본문 실행 없음): 생성자 제네릭 추론, `Mapped`의 U 전환,
+-- 센티널 타입, `TweenData<T>` 자리(D 유니언 멤버)에 Tween 값이 들어간다
+local function _types()
+	local a: QuadTypes.Tween<number> = Tween({ Value = 1, Time = 0.3, Override = Tween.Finish })
+	local b: QuadTypes.Tween<string> = a:Mapped(function(v: number): string
+		return tostring(v)
+	end)
+	local c: QuadTypes.TweenData<string> = b
+	local d: QuadTypes.TweenOverride = Tween.Cancel
+	local e: number = a.Value
+	return c, d, e
+end
+
+print("=== 1. 생성 — 브랜드·마커·frozen·옵션 보존·호출자 테이블 비-aliasing ===")
+do
+	local opts = { Value = 5, Time = 0.3, Reverses = true }
+	local t = Tween(opts)
+	assert(Quad.isTween(t), "brand")
+	assert((t :: any).__quadTween == true, "H-300 marker readable")
+	assert(t.Value == 5 and t.Time == 0.3 and t.Reverses == true, "options preserved")
+	assert(t.Override == nil, "Override absent = default (Cancel is applied by the consumer)")
+	assert(not pcall(function()
+		(t :: any).Value = 9
+	end), "frozen")
+	opts.Value = 7
+	assert(t.Value == 5, "caller's table is cloned, not aliased")
+	assert(not Quad.isTween({ Value = 1 }), "a plain table is not a Tween")
+	assert(not Quad.isTag(t) and not Quad.isModifier(t) and not Quad.isState(t), "brand is exclusive")
+	print("PASS")
+end
+
+print()
+print("=== 2. 센티널 — Cancel/Finish 항등·서로 다름·frozen·tostring ===")
+do
+	assert(Tween.Cancel ~= Tween.Finish, "two distinct sentinels")
+	assert(tostring(Tween.Cancel) == "TweenCancel" and tostring(Tween.Finish) == "TweenFinish", "named for diagnostics")
+	assert(table.isfrozen(Tween.Cancel :: any) and table.isfrozen(Tween :: any), "sentinels and namespace frozen")
+	local t = Tween({ Value = 1, Override = Tween.Finish })
+	assert(t.Override == Tween.Finish, "Override stored by identity")
+	print("PASS")
+end
+
+print()
+print("=== 3. 검증 — 테이블·Value 필수·스칼라 타입·Override 멤버십, blame은 사용자 줄 ===")
+do
+	local cases: { { any } } = {
+		{ 5, "expected an options table" },
+		{ {}, "Value is required" },
+		{ { Value = 1, Time = "0.3" }, "Time must be a number" },
+		{ { Value = 1, RepeatCount = true }, "RepeatCount must be a number" },
+		{ { Value = 1, DelayTime = {} }, "DelayTime must be a number" },
+		{ { Value = 1, Reverses = 1 }, "Reverses must be a boolean" },
+		{ { Value = 1, Override = "Cancel" }, "Override must be Tween.Cancel or Tween.Finish" },
+	}
+	for _, case in cases do
+		local ok, err = pcall(function()
+			return Tween(case[1])
+		end)
+		assert(not ok, "must reject: " .. tostring(case[2]))
+		assert(string.find(tostring(err), case[2], 1, true) ~= nil, "message: " .. tostring(err))
+		mock.assertBlamesUser(err, "spec.tween.luau", "validation blame")
+	end
+	-- 엔진 타입 자리는 무검사(Q5 (a)) — 엔진이 없는 CLI에선 아무 값이나 통과
+	local t = Tween({ Value = 1, Info = "not a TweenInfo", Style = 3 })
+	assert(t.Info == "not a TweenInfo" and t.Style == 3, "engine-typed fields pass through unchecked")
+	print("PASS")
+end
+
+print()
+print("=== 4. Mapped — 원본 불변·옵션 보존·Value만 교체·재검증·재브랜드 ===")
+do
+	local base = Tween({ Value = 4, Time = 0.15, Override = Tween.Finish })
+	local mapped = base:Mapped(function(v: number): string
+		return "v" .. v
+	end)
+	assert(mapped ~= base and base.Value == 4, "original untouched")
+	assert(mapped.Value == "v4" and mapped.Time == 0.15 and mapped.Override == Tween.Finish, "only Value replaced")
+	assert(Quad.isTween(mapped) and table.isfrozen(mapped :: any), "result is a branded frozen Tween")
+	local ok, err = pcall(function()
+		return base:Mapped(function(_v: number): nil
+			return nil
+		end)
+	end)
+	assert(not ok and string.find(tostring(err), "Value is required", 1, true) ~= nil, "fn returning nil re-validates: " .. tostring(err))
+	local ok2, err2 = pcall(function()
+		return (base :: any):Mapped(5)
+	end)
+	assert(not ok2 and string.find(tostring(err2), "expects a function", 1, true) ~= nil, "non-function rejected")
+	mock.assertBlamesUser(err2, "spec.tween.luau", "Mapped blame")
+	-- 상수 Tween 재사용 패턴(정본 "부수 효과")
+	local FAST = Tween({ Value = 0, Time = 0.15 })
+	local a, b = FAST:Mapped(function() return 10 end), FAST:Mapped(function() return 20 end)
+	assert(a.Value == 10 and b.Value == 20 and a.Time == 0.15 and b.Time == 0.15, "reusable option preset")
+	print("PASS")
+end
+
+print()
+print("=== 5. 경계 — StoreBind는 Tween을 언랩하지 않는다(값 그대로 도착), Source 안의 Tween ===")
+do
+	local q = mock.newQuad()
+	local src = q.Source(Tween({ Value = 1 }))
+	assert(Quad.isTween(src:Get()), "a Tween inside a Source is a plain payload")
+	local got: any = nil
+	q.Dispatch.addHandler({
+		name = "TweenProbe",
+		isHandlable = function(_inst: any, k: any, v: any): boolean
+			return k == "Probe"
+		end,
+		priority = q.Dispatch.HANDLER_PRIORITY_NORMAL,
+		process = function(_inst: any, _k: any, v: any, _index: number): (any?, boolean) -> ()
+			got = v
+			return q.Void
+		end,
+	} :: QuadTypes.Handler)
+	local inst = mock.Instance.new("Frame")
+	q.Dispatch.drive(inst, { Probe = src })
+	assert(got ~= nil and Quad.isTween(got) and got.Value == 1, "StoreBind unwrapped the Source and delivered the Tween value intact")
+	print("PASS")
+end
+
+print()
+print("=== ALL PASS ===")

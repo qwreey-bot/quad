@@ -216,7 +216,7 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
 찍는 값 유니언의 정본.** 생성기(`scripts/gen-d.py`)가 이 정의로 찍고, 여기가
 소스다:
 
-- **스칼라 프로퍼티**: `(T | State<T> | Tween<T> | None)?` — `Tween<T>`은
+- **스칼라 프로퍼티**: `(T | State<T> | TweenData<T> | State<Tween<T>> | None)?` — **[2026-09-06 M11 단위 ① `H-326` 정정]** 옛 `(T | State<T> | Tween<T> | None)?`엔 `State<Tween<T>>`(`Animate`/`:Compute`의 반환)가 빠져 있었고, 새 솔버 `State` 불변성 때문에 State 멤버 둘을 각각 나열한다(생성기는 타입별 별칭 `PVn`, 바깥 Tween은 데이터부 — `tween-plan.md` "타입 대수" 절). `Tween<T>`은
   PropertyHandler가 소비하는 값-레벨 래퍼(`tween-plan.md`; 타입은
   `quad-roblox/src/types.luau`, 런타임은 M11 — 탐사자가 M9 오기를 잡음). 모든 프로퍼티에 균일하게
   허용한다(트윈 가능 여부는 엔진 몫 — 타입으로 안 가른다).

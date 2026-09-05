@@ -152,6 +152,54 @@ export type Tag = {
 -- A/B·잔여 구멍은 typing-limits 8.6절.
 export type TagConstructor = setmetatable<{ Merged: (...Tag) -> Tag }, { __call: (self: any, ...string) -> Tag }>
 
+-- `Tween<T>` — 값-레벨 트윈 래퍼(M11 단위 ①, `base/tween-plan.md` "확정: `Tween{...}`
+-- 최종 모양" 절). quad-types는 엔진 무관이라 Roblox 타입 자리(`Info`/`Style`/
+-- `Direction`)는 `any` — 정밀판은 quad-roblox `types.luau`가 이 타입을 좁혀 쓴다
+-- (round19 Q3 (a)). 센티널 둘은 `None`과 같은 frozen 마커(`sentinel(name)`, `H-300`).
+-- `Mapped`는 재귀 제네릭(`Tween<U>` 반환)이라 데이터부/메소드부 쪼개기(typing-limits
+-- §1②) — 파생 자리는 결과 타입을 명시 바인딩할 것(§1①).
+export type TweenCancel = { read __quadTweenCancel: true }
+export type TweenFinish = { read __quadTweenFinish: true }
+export type TweenOverride = TweenCancel | TweenFinish
+-- 옵션 필드는 전부 `read` — 생성자는 읽기만 하고, 미리 만든 테이블 변수를 넘길 때
+-- 가변 필드면 새 솔버가 `Time: number`를 `number?`에 불변으로 대조해 거부한다(실측).
+export type TweenOptions<T> = {
+	read Value: T,
+	read Info: any?, -- TweenInfo (엔진 타입 — 있으면 편의 필드 무시)
+	read Time: number?,
+	read Style: any?, -- Enum.EasingStyle
+	read Direction: any?, -- Enum.EasingDirection
+	read RepeatCount: number?,
+	read Reverses: boolean?,
+	read DelayTime: number?,
+	read Override: TweenOverride?, -- 기본 Tween.Cancel
+}
+export type TweenData<T> = {
+	read __quadTween: true,
+	read Value: T,
+	read Info: any?,
+	read Time: number?,
+	read Style: any?,
+	read Direction: any?,
+	read RepeatCount: number?,
+	read Reverses: boolean?,
+	read DelayTime: number?,
+	read Override: TweenOverride?,
+}
+-- `Mapped`는 typing-limits §1③(`typeof(named function)`) — 인라인 `<U>(…) -> Tween<U>`는
+-- 반환이 `*error-type*`으로 새고 생성자 추론까지 오염된다(2026-09-06 실측, round19).
+local function tweenMapped<T, U>(_self: TweenData<T>, _fn: (T) -> U): Tween<U>
+	return nil :: any
+end
+export type Tween<T> = TweenData<T> & {
+	Mapped: typeof(tweenMapped),
+}
+-- ⚠️ 8.6절의 예외(2026-09-06 실측, round19 `H-324` — 사용자 확인 대상): 제네릭
+-- `__call`을 `setmetatable<A, B>`로 두면 `T`가 `*error-type* | number`로 오염돼
+-- 다른 `T`의 슬롯 대입을 못 잡고 옵션도 무검사인데, 함수∩테이블 교집합은 추론·
+-- 음성 전부 정확하고 `:: Quad` 캐스트·UseProvider 통과도 클린(test.sh 전 스위트).
+export type TweenConstructor = (<T>(opts: TweenOptions<T>) -> Tween<T>) & { Cancel: TweenCancel, Finish: TweenFinish }
+
 export type Attribute = { NameMap: (self: Attribute) -> { [string]: any } }
 export type AttributeConstructor = setmetatable<{
 	Merged: (...Attribute) -> Attribute,
@@ -412,8 +460,8 @@ export type Quad = {
 	isSlot: (x: any) -> boolean,
 
 	-- 브랜드 술어(`.claude/base/brand-plan.md`). `isTag`/`isAttribute*`는
-	-- M10 편입(2026-09-03)으로 아래 합류, `isSlot`은 위 Slot 표면과 함께 —
-	-- 남은 것은 `isTween`(그 타입의 마일스톤에서).
+	-- M10 편입(2026-09-03)으로 아래 합류, `isSlot`은 위 Slot 표면과 함께,
+	-- `isTween`은 M11 단위 ①(2026-09-06)로 합류 — 술어 전원 등재.
 	isEpoch: (x: any) -> boolean,
 	isSource: (x: any) -> boolean,
 	isState: (x: any) -> boolean,
@@ -463,6 +511,7 @@ export type Quad = {
 
 	-- M10 (round16 spike) — Tag/Attribute 표면(`H-25`의 "마일스톤마다 갱신" 몫)
 	isTag: (x: any) -> boolean,
+	isTween: (x: any) -> boolean, -- M11 단위 ①
 	isAttribute: (x: any) -> boolean,
 	isAttributeKey: (x: any) -> boolean,
 	-- 콜러블 네임스페이스 둘은 `setmetatable<A,B>` 표기(`H10-3`/`H10-4`
@@ -470,6 +519,7 @@ export type Quad = {
 	-- 제네릭 추론을 오염시키던 시절의 것. 실측·잔여 구멍(__call 인자
 	-- 무검사)은 typing-limits 8.6절이 소스)
 	Tag: TagConstructor,
+	Tween: TweenConstructor, -- M11 단위 ① — 값 타입만(엔진 무관), 소비는 quad-roblox PropertyHandler
 	Modifier: ModifierConstructor, -- M7 단위 ①
 	Attribute: AttributeConstructor,
 	AttributeKey: AttributeKeyConstructor,

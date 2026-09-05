@@ -14,7 +14,7 @@
      `quad:UseProvider(QuadRoblox)`(1슬롯 fn identity 락, 옛
      `_initializedBy` 문자열 대체 — 사본·버전 묵인 해소) +
      `RobloxExtension = { D }` 교집합으로 `q.D` 캐스트 0 풀 타이핑(생성
-     `export type D`, test.sh `LuauTarjanChildLimit=40000` —
+     `export type D`, test.sh 한도 플래그(값은 typing-limits 8.5절이 소스 — 이후 상향됨) —
      typing-limits 8.5절). `AddPlugin`(다수 확장)과 이원화 — spring류
      확장 계획의 전제로 등재됨.
    - **`H-306` (a) 런타임 버전 게이트** — 컴파일 타임 `CheckedQuad`
@@ -70,7 +70,7 @@
    `As<<T>>()`/`As(name)`·`Into<Class>`·상위 클래스 Modifier 생성(조상 전부)·예약 접두
    `^As%u` — `H-313` 소멸(children 클래스 소속 검사 회복), Q5 후순위 닫힘,
    `Apply` self·factory `any`(typing-limits 8.9절 솔버 결함), test.sh
-   `LuauTypeInferIterationLimit=1000000`. 정본 `modifier-plan.md` 11절, 실측
+   `LuauTypeInferIterationLimit`(값은 typing-limits 8.9절이 소스). 정본 `modifier-plan.md` 11절, 실측
    `audit/m7-unit4-as-modifier-2026-09-04.md`, 원문
    `session/2026-09-04-05-m7-unit4-class-tags-as-into.md`. round17 §4 열린 문항 0.
    **M7 완료.** **⭐⭐⭐ [2026-09-04] M8(Ref/PreRef/PostRef) 자율 구현 구간
@@ -81,7 +81,7 @@
    `RefLeafHandler`·가드 둘·`Processed*Ref` 둘·drive pre-pass `H-319`, 배치
    `H-320`), 발견 원장은 `m8-implementation-round18.md`, 진행 소스는 ROADMAP
    M8 체크박스, 단위 구성은 brief §1. 단위 ② Studio 8/8
-   (`audit/m8-unit2-studio-2026-09-04.md`). 단위 ③도 완료(2026-09-06 새벽)(`H-321` 사용자 확정 (a) → `H-322` 반공변 팬텀 마커 `<Class>RefMarker`, `spec.reftypes`) — **M8 완료**, round18 §4 열린 문항 0·확인 항목 0(`H-317` 사용자 수용 — 부작용 실측 무해). **⭐⭐⭐ [2026-09-06] 다음 순서 사용자 확정 — M11(Tween) → M10 잔여 InstanceShorthand → M9**; 밤샘 자율 구간(감사 스윕 → fable 탐사 → M11 착수), 규약 `qa-request/m11-implementation-round19-brief.md`(§0 Q1~Q7 권고 (a)로 착수 — 새 표면 문항만 멈춤, 발견 `H-323`부터), 원문 `session/2026-09-06-01-audit-sweep-and-m11-brief.md`. **M10 잔여는
+   (`audit/m8-unit2-studio-2026-09-04.md`). 단위 ③도 완료(2026-09-06 새벽)(`H-321` 사용자 확정 (a) → `H-322` 반공변 팬텀 마커 `<Class>RefMarker`, `spec.reftypes`) — **M8 완료**, round18 §4 열린 문항 0·확인 항목 0(`H-317` 사용자 수용 — 부작용 실측 무해). **⭐⭐⭐ [2026-09-06] 다음 순서 사용자 확정 — M11(Tween) → M10 잔여 InstanceShorthand → M9**; 밤샘 자율 구간(감사 스윕 → fable 탐사 → M11 착수), 규약 `qa-request/m11-implementation-round19-brief.md`(§0 Q1~Q7 권고 (a)로 착수 — 새 표면 문항만 멈춤, 발견 `H-323`부터), 원문 `session/2026-09-06-01-audit-sweep-and-m11-brief.md`. **[같은 날 감사 스윕 6라운드 종결 + M11 단위 ① 완료]** 원장 `-round19.md` `H-323`~`H-327`(§4 열린 문항 0·**확인 항목 2** — `H-324` 8.6 예외 / `H-326` Q3 정밀판 포기), 진행 소스는 ROADMAP M11 체크박스. **M10 잔여는
    InstanceShorthand뿐이고 그 항목이 스스로 M11 이후를 권한다** — 잔여
    목록의 소스는 ROADMAP M10 배너, 다음 착수 마일스톤은 사용자와 정한다
    (열린 마일스톤이 무엇인지·순서는 ROADMAP이 소스 — 여기서 나열하지

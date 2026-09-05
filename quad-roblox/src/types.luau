@@ -7,11 +7,12 @@
 	`scripts/roblox-defs/globalTypes.d.luau` — quad-base stays defs-free.
 
 	`Tween<T>` — the value-level wrapper `tween-plan.md`'s "확정: `Tween{...}`
-	최종 모양" section pins down. M11 implements the runtime (constructor,
-	PropertyHandler consumption, `Tween.Cancel`/`Tween.Finish` sentinels);
-	M5 needs the TYPE first because the generated `D` prop unions include it
-	(round14 `H-298` (a)). `Override` stays `any` until M11 gives the sentinel
-	values a type.
+	최종 모양" section pins down. M5 needed the TYPE first because the
+	generated `D` prop unions include it (round14 `H-298` (a)); M11 unit ①
+	(2026-09-06) moved the value type into quad-types (engine-free — Roblox
+	types as `any`) and this file now only REFINES the engine-typed fields.
+	The runtime (quad-base `Tween.luau`, sentinels) is M11 unit ①; the
+	PropertyHandler consumption is unit ②.
 
 	`NewChild` — the backend-agnostic core of the children-array element
 	union. Since 2026-09-03 the generated `D.<Class>Param<E>` is instantiated
@@ -39,19 +40,21 @@
 
 local QuadTypes = require("../luau_packages/quad_types")
 
-export type Tween<T> = {
-	Value: T,
-	Info: TweenInfo?,
-	-- convenience fields, used only when Info is absent (defaults are
-	-- TweenInfo.new()'s own)
-	Time: number?,
-	Style: Enum.EasingStyle?,
-	Direction: Enum.EasingDirection?,
-	RepeatCount: number?,
-	Reverses: boolean?,
-	DelayTime: number?,
-	Override: any?, -- Tween.Cancel (default) | Tween.Finish — sentinels arrive in M11
-}
+-- M11 단위 ①(2026-09-06, round19 Q3 (a)): 값 타입의 정본은 quad-types(엔진 무관
+-- — Roblox 타입 자리는 `any`)이고, 여기서는 그 위에 `read` 정밀화만 얹는다.
+-- `Override`는 quad-types의 센티널 타입(`TweenOverride`). 생성 `D`의 스칼라
+-- 유니언 멤버는 이 별칭이다 — `read` 필드라 quad-types `Tween<T>` 값이 그대로 들어간다.
+-- M11 단위 ①(2026-09-06, round19 Q3): 값 타입의 정본은 quad-types(엔진 무관 —
+-- Roblox 타입 자리는 `any`)이고 여기서는 **그대로 별칭**한다. Q3 (a)가 예정한
+-- `read Info: TweenInfo?` 정밀화는 실측에서 포기했다(`H-326`): `State<X>`는 불변이라
+-- 생성 D 슬롯의 `State<Tween<T>>` 멤버는 `Animate`/`:Compute`가 돌려주는
+-- `State<QuadTypes.Tween<T>>`와 X가 글자 그대로 같아야 한다 — 정밀판 별칭이든
+-- 데이터부든 다른 타입이면 거부된다. 엔진 타입 오용(`Style = 3`)은 `Enum` 자체가
+-- 대부분 잡고, 나머지는 엔진 원시 에러(Q5 (a)).
+export type Tween<T> = QuadTypes.Tween<T>
+-- 유니언 멤버용 데이터부(`Mapped` 없음) — 재귀 메소드 테이블을 수백 유니언에 직접
+-- 넣지 않는다(typing-limits 8.8). 실 Tween 값은 구조적으로 만족한다.
+export type TweenData<T> = QuadTypes.TweenData<T>
 
 -- [2026-09-03 M10 widening] the quad-base array-part VALUES join here: `Tag(...)`
 -- and `Attribute(...)` (the typed scalar sugar `StringAttribute(name, v)` etc.

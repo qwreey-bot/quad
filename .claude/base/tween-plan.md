@@ -175,6 +175,16 @@ no-op이라 실질적 동작이 없음, 일반 프로퍼티는 애초에 "unset"
 
 ### 타입 대수: `T' = T | Tween<T>` — Modifier/State/Source에 새 타입 기계 불필요
 
+**[2026-09-06 실측 정정 — M11 단위 ① `H-326`/`H-327`]** 이 절의
+`State<T | Tween<T>>` 한 멤버 모양은 새 솔버에서 성립하지 않는다 — `State<X>`가
+불변이라 plain `State<T>`가 그 자리에 못 들어간다. 실물(생성 `D` 슬롯 유니언·
+Modifier setter `Field<T>`)은 **`State<T>`와 `State<Tween<T>>`를 각각 나열**한다
+(`T | State<T> | TweenData<T> | State<Tween<T>> | None` — 바깥 Tween은 데이터부
+8.8절, 안쪽은 `Animate`가 돌려주는 타입과 글자 그대로 같아야 하는 전체형). 이
+확장이 `DMapper` 인스턴스화를 "too complex"로 만들어 생성기는 프로퍼티
+타입별 별칭 `PVn`으로 유니언을 한 번만 선언한다. "새 타입 기계 불필요"는
+그대로다 — 멤버 나열이 늘었을 뿐.
+
 지금 프로퍼티류 필드가 열려 있는 자리(Modifier setter, Ref, Store/Source
 필드)는 전부 `T | State<T>` 모양 하나로 통일돼 있음. 여기서 "이 필드의
 `T`" 자체를 `T' = T | Tween<T>`로 치환하면 자동으로 `T | Tween<T> |
@@ -435,6 +445,15 @@ sentinel 상수(구현 세부는 M11 착수 시, 문자열이든 전용 테이�
 덮어쓰기"로 수렴하므로 별도 5번째 옵션 불필요로 확정.
 
 ### 최종 타입
+
+**[2026-09-06 구현됨 — M11 단위 ①, round19]** 아래 스케치의 실물: 값 타입의
+정본은 **quad-types**(`Tween<T>` = `TweenData<T>` & `{ Mapped }`, `TweenOptions<T>`
+— 엔진 무관이라 `Info`/`Style`/`Direction` 자리는 `any`, 옵션 필드는 전부 `read`
+`H-325`), `Override`는 frozen 마커 센티널 둘(`TweenCancel`/`TweenFinish`, `None`과
+같은 `sentinel(name)` — `H-323`), 생성자 타입은 함수∩테이블 교집합
+`TweenConstructor`(8.6절의 조건부 예외 — 제네릭 `__call`, `H-324`), `Mapped`는
+`typeof(named function)`(§1③). quad-roblox `Types.Tween<T>`는 quad-types 별칭
+그대로 — `read Info: TweenInfo?` 정밀화는 `State<X>` 불변성 때문에 포기(`H-326`).
 
 ```lua
 Tween(opts: {

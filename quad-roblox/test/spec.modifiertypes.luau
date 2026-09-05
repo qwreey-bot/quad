@@ -38,14 +38,18 @@ local function _neverCalled(custom: MaterialButtonModifier)
 	q.Modifier.DefineSubtype("TextButton", "MaterialButton")
 	local made = MaterialButton({ Text = "m" }):Elevation(1):AsMaterialButton()
 	-- 클래스별 setter: 리터럴 / State / None / 변환 함수(old는 저장된 그대로)
-	-- State 필드: `State<T>`는 `Set` 때문에 불변이라 필드 값 유니언(`UDim2 | Tween<UDim2>`)
-	-- 으로 캐스트해 만든다(typing-limits 8.7 캐비엇 5 — 반응형 자식·OnChange와 같은 규칙)
-	local size = q.Source(UDim2.new() :: UDim2 | Tween<UDim2>)
+	-- State 필드: [2026-09-06 M11 `H-327`] `Field<T>`가 `State<T>`와 `State<Tween<T>>`를
+	-- 각각 나열하므로 plain `Source(T)`가 그대로 들어간다 — 옛 `UDim2 | Tween<UDim2>`
+	-- 캐스트(8.7 캐비엇 5 우회)는 오히려 거부된다(State 불변성).
+	local size = q.Source(UDim2.new())
+	local sizeTween: State<Tween<UDim2>> = size:Compute(function(h: QuadTypes.StateData<UDim2>): Tween<UDim2>
+		return q.Tween({ Value = h:Get(), Time = 0.2 })
+	end)
 	local m = D.Modifier.Frame():Size(UDim2.new()):Visible(true):BackgroundColor3(q.None):ZIndex(function(old)
-		local _: number | Tween<number> | State<number | Tween<number>> | None | nil = old
+		local _: number | Tween<number> | State<number> | State<Tween<number>> | None | nil = old
 		return 3
 	end)
-	local m2 = m:Size(size) -- State 필드(4-1: 리터럴 State는 통째 교체)
+	local m2 = m:Size(size):Size(sizeTween) -- State 필드(4-1: 리터럴 State는 통째 교체) — 둘 다
 	-- Peek<<T>>: 호출부가 T를 명시(정본 9절), 반환은 raw 유니언 그대로
 	local peeked: UDim2 | State<UDim2> | None | nil = m2:Peek<<UDim2>>("Size")
 	-- Apply: 팩토리에 주석을 달면 그대로 타입드(any 인자 — 8.9절); 상위 클래스

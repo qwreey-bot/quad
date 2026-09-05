@@ -21,7 +21,7 @@ raw 덤프 취득(재생성 때만 네트워크 필요 — 테스트 경로 의�
   H-296 (a) 범위 = creatable ∧ (GuiObject∪UIComponent∪LayerCollector 하위)
             + 명시 화이트리스트 {Folder, Camera, WorldModel}
   H-297 (a) ReadOnly/Deprecated/NotScriptable/Hidden/보안≠None 프로퍼티 제외
-  H-298 (a) 스칼라 = T | State<T> | Tween<T> | None, 이벤트 = 콜백 |
+  H-298 (a)+H-326 스칼라 = T | State<T> | Tween<T> | State<Tween<T>> | None, 이벤트 = 콜백 |
             State<콜백> | None, children = NewChild(types.luau) — None 표현은
             H-300 (a)로 확정(센티널 마커 필드 → QuadTypes.None)
   H-142     Parent는 덤프 층에서 제외(Q5 (a) — M7 목록과 공유되는 자리)
@@ -223,7 +223,7 @@ def emit():
     L.append(f"\tdump: {data['dumpVersion']} (API {data['apiVersion']}); 재생성 방법은 생성기 헤더.")
     L.append("\t표면 계약: bind-system-plan.md 인스턴스 생성 절(New 커링·①~④ 파이프라인·")
     L.append("\tD는 캐스트 별칭·Parent 제외 H-142), claim-plan §7-12(<Class>Param<E> 공유),")
-    L.append("\tround14 H-295~H-298·H-300. 유니언: 스칼라 T | State<T> | Tween<T> | None,")
+    L.append("\tround14 H-295~H-298·H-300. 유니언: 스칼라 T | State<T> | Tween<T> | State<Tween<T>> | None (H-326),")
     L.append("\t이벤트 콜백 | State<콜백> | None (None 표현은 H-300 (a) — QuadTypes.None).")
     L.append("\t이벤트 필드의 런타임 핸들러는 Handlers/Event.luau(M10, 2026-09-03 구현됨 —")
     L.append("\t`base/event-plan.md`); M5엔 타입이 먼저 왔다(ROADMAP M5 체크박스의 계약).")
@@ -233,7 +233,7 @@ def emit():
     L.append("\t타입·무주석 추론까지, luau-test 30) + 클래스별 <Class>OnChange 유니언이 E에")
     L.append("\t합류(클래스 밖 이름은 생성자 자리에서 거부).")
     L.append("\tModifier(M7 단위 ③, round17): 클래스별 <Class>Modifier(필드 setter — 값은")
-    L.append("\tField<T | Tween<T>> = V | State<V> | None | 변환 함수, 자기 타입 반환; 예약 메소드")
+    L.append("\tField<T> = T | Tween<T> | State<T> | State<Tween<T>> | None | 변환 함수(H-327), 자기 타입 반환; 예약 메소드")
     L.append("\tApply/Peek/Overridden; 이벤트는 제외 — 함수 인자는 변환 함수라 콜백과 겹친다)")
     L.append("\t+ D.Modifier.<Class>() 타입드 생성자(round17 Q3 (a) — 단위 ③엔 quad.Modifier 캐스트 별칭,")
     L.append("\t단위 ④부터 아래 TypedFactory 태그 생성자)")
@@ -257,22 +257,48 @@ def emit():
     L.append("")
     L.append("type State<T> = QuadTypes.State<T>")
     L.append("type Tween<T> = Types.Tween<T>")
+    L.append("type TweenData<T> = Types.TweenData<T> -- 유니언 멤버용 데이터부(H-326, 8.8절)")
     L.append("type NewChild = Types.NewChild")
     L.append("type None = QuadTypes.None")
     L.append("type MapperDescriptor = QuadTypes.MapperDescriptor")
     L.append("type MapperRoot = QuadTypes.MapperRoot")
-    L.append("-- Modifier 필드 setter의 값 타입(modifier-plan 4·4-1·10절): 리터럴 V | State<V> |")
-    L.append("-- None(unsetter) | 변환 함수(old는 '현재 저장된 그대로' — V | State<V> | None | nil)")
-    L.append("export type Field<V> = V | State<V> | None | ((old: V | State<V> | None | nil) -> V | State<V> | None | nil)")
+    L.append("-- Modifier 필드 setter의 값 타입(modifier-plan 4·4-1·10절): 리터럴 T | Tween<T> |")
+    L.append("-- State<T> | State<Tween<T>> | None(unsetter) | 변환 함수(old는 '현재 저장된 그대로')")
+    L.append("-- — State 형 둘을 각각 나열하는 이유는 H-327(새 솔버 State 불변성, 2026-09-06)")
+    # [2026-09-06 M11 단위 ① H-327] 옛 Field<V>에 V = T | Tween<T>를 넣던 모양은 새 솔버의
+    # State 불변성 때문에 State<T>를 거부했다(M7 하자 — m:Position(state)가 strict에서
+    # 막힘, 실측). 프로퍼티 setter의 값 타입은 T와 Tween<T>의 State 형을 각각 나열한다.
+    # setter 쪽은 전체형 Tween<T>(Mapped 포함): 함수 멤버가 든 이 유니언에서 데이터부
+    # TweenData<T>는 교집합 Tween 값을 받지 못했다(2026-09-06 실측 — Param 슬롯의 리터럴
+    # 자리와 달리 호출 인자 자리). Modifier 타입은 클래스별이라 복잡도 문제도 없다.
+    L.append("export type Field<T> = T | Tween<T> | State<T> | State<Tween<T>> | None | ((old: T | Tween<T> | State<T> | State<Tween<T>> | None | nil) -> T | Tween<T> | State<T> | State<Tween<T>> | None | nil)")
     L.append("")
     names = sorted(classes.keys())
+    # [2026-09-06 M11 단위 ① H-326] + State<Tween<T>> — tween-plan "타입 대수"의
+    # T' = T | Tween<T> 확장(Animate가 State<Tween<T>>를 돌려준다). 새 솔버는
+    # State<T>가 불변이라 State<T | Tween<T>> 하나로는 State<T>를 못 받는다(실측).
+    # 프로퍼티 값 유니언은 타입별 별칭 하나로(PVn) — 같은 유니언을 수백 자리에
+    # 인라인하면 State<Tween<T>>가 더해진 뒤 DMapper 인스턴스화에서 "too complex"
+    # (Tarjan 640000·다른 한도 플래그로도 안 풀림, 실측). State 안은 전체형 Tween<T>:
+    # State<X>는 불변이라 Animate/`:Compute`가 돌려주는 State<Tween<T>>와 X가 글자
+    # 그대로 같아야 들어간다(데이터부·정밀판 별칭은 거부). 바깥은 데이터부(8.8절).
+    prop_types = []
+    for name in names:
+        for p in classes[name]["props"]:
+            if p["type"] not in prop_types:
+                prop_types.append(p["type"])
+    pv_name = {}
+    for i, t in enumerate(prop_types):
+        pv_name[t] = f"PV{i}"
+        L.append(f"type PV{i} = {t} | State<{t}> | TweenData<{t}> | State<Tween<{t}>> | None -- {t}")
+    L.append("")
     for name in names:
         c = classes[name]
         L.append(f"export type {name}Param<E> = {{")
         L.append("\t[number]: E,")
         for p in c["props"]:
             t = p["type"]
-            L.append(f"\t{p['name']}: ({t} | State<{t}> | Tween<{t}> | None)?,")
+            L.append(f"\t{p['name']}: {pv_name[t]}?,")
         for ev in c["events"]:
             sig = luau_event_sig(ev)
             L.append(f"\t{ev['name']}: (({sig}) | State<{sig}> | None)?,")
@@ -394,7 +420,7 @@ def emit():
             L.append(f"\tAs{d}: (self: {node}Modifier) -> {d}Modifier,")
         for p in props:
             t = p["type"]
-            L.append(f"\t{p['name']}: (self: {node}Modifier, value: Field<{t} | Tween<{t}>>) -> {node}Modifier,")
+            L.append(f"\t{p['name']}: (self: {node}Modifier, value: Field<{t}>) -> {node}Modifier,")
         L.append("}")
         # Into<Class> — "이 클래스로 갈 수 있는 모든 것"(상위·자기·커스텀 구현체).
         # self는 any여야 한다: self를 인터페이스 타입으로 두면 반공변 때문에

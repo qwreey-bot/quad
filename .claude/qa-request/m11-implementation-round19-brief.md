@@ -135,3 +135,9 @@ M8 규약(`m8-implementation-round18-brief.md` §2~§5 = M7 = M5 = M4 = M3
 
 **커밋 단위**: 단위당 커밋 하나 + 단위 끝 절차(M2~M8 관례). 단위 ②·③의
 상세 표는 각 단위 착수 시점에 §6에 이어 쓴다.
+
+**[2026-09-06 단위 ① 완료 — round19 `H-323`~`H-327`]** 위 표대로 + 생성기
+(`scripts/gen-d.py`: 슬롯 유니언 `+ State<Tween<T>>`·타입별 별칭 `PVn`·`Field<T>`)
+와 `quad-roblox/test/spec.tweentypes`·`luau-test/done/33`. Q3 (a)의 정밀판은
+실측으로 포기(`H-326`), Q4 (a)의 마커는 `sentinel(name)` 재사용(`H-323`),
+`TweenConstructor`는 8.6 예외(`H-324`) — §4 확인 항목 둘.
