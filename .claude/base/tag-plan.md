@@ -157,8 +157,9 @@ local tagNameMap = Relate()   -- {[inst(weak)] = {[tagName]: {[k]: true}}} — �
 -- process = TagHandler.process }`가 실제로 등록되는 얇은 래퍼(2026-08-14 열두 번째 세션 정정)
 -- [정정, 2026-08-24 6라운드 손 트레이싱 `H-52`] **`type(k) == "number"` 가드 추가.**
 -- 주석은 "array-part 전용"이라 말하면서 실제 판정은 값만 봤다. `RefLeafHandler`가
--- 2026-08-18에 정확히 같은 버그를 고친 전례가 있다 — 빠지면 named 자리로 흘러온
--- 값을 잡으려는 `HANDLER_PRIORITY_FALLBACK` 가드가 죽은 코드가 된다.
+-- 2026-08-18에 정확히 같은 버그를 고친 전례가 있다 — 빠지면 이 FALLBACK 핸들러
+-- 자신이 named 자리로 흘러온 Tag까지 오매치한다([2026-09-06 감사 정정] named
+-- 자리의 Tag를 잡는 별도 가드는 없다 — 일반 no-match error가 답, ref-plan과 동형).
 TagHandler.isHandlable(inst, k, v) = (type(k) == "number" and isTag(v))
 
 function TagHandler.process(inst, k, v, index)
