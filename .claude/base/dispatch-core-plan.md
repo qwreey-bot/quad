@@ -2058,7 +2058,8 @@ bk.offsetSetUpTo        = math.min(bk.offsetSetUpTo,        ?)
    해야 하는 일 목록도 같은 커밋에서 맞췄다).
 3. **`slot._baseObserver` 콜백** — 베이스가 바뀐 경우라 **두 필드 다 `0`**.
    `recompute`를 부르기 전에 당긴다.
-4. **⭐ [2026-08-26 신설, `/code-review high`] `rawMove`/`rawSwap`/`rawExtract`류**
+4. **⭐ [2026-08-26 신설, `/code-review high`] `rawMove`/`rawSwap`**(**[2026-09-07 `H-360`/`H-366`]**
+   한때 "`rawExtract`류"라 적혀 교체 형태까지 읽혔다 — 교체 `rawReplace`는 위 표 첫 행의 `setLength(i)`뿐)
    — 자리 수는 안 바뀌고 순서만 바뀌는 경로. 바뀐 최소 위치로
    **두 필드 다** `math.min(…, minPos - 1)`.
    **이 항목이 빠져 있었다** — 표에 행만 넣고 배치 자리를 안 적었는데, 이

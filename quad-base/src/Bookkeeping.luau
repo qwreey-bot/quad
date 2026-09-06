@@ -131,21 +131,23 @@ local function Init(module: any)
 	-- (`setLength(owner, i, …)` mid-read) — a lowering exactly TO the cursor
 	-- is indistinguishable from the no-op baseline, kin to the standing
 	-- "재진입/자기 재정의 무방어" family.
+	-- bootstrap: position 1's offset is this owner's base itself — a Slot's own
+	-- .Offset, or 0 for a physical inst (no base concept). Also re-run when a
+	-- restart lands on 0 (`H-350`): a base change lowers both cursors to 0 (Slot
+	-- `_baseObserver`), and restarting from the stale `offsetCache[1]` would
+	-- rebuild the whole cache on the old base. Init-scope like `contribution`
+	-- (0순회 `H-365`: a per-call closure was allocated N times per recompute).
+	local function ensureBase(bk: any, ownerKey: any)
+		if bk.offsetCacheValidUpTo == 0 then
+			bk.offsetCache[1] = if Brand.SlotBrand:is(ownerKey) then ownerKey.Offset:Get() else 0
+			bk.offsetCacheValidUpTo = 1
+		end
+	end
+
 	local function getOffsetAt(ownerKey: any, at: number): number
 		checkPosition("getOffsetAt", at) -- 공개 표면 셋 중 하나 (`H-256`/`H-280`)
 		local bk = getBookkeeping(ownerKey)
-		-- bootstrap: position 1's offset is this owner's base itself — a Slot's
-		-- own .Offset, or 0 for a physical inst (no base concept). Also re-run
-		-- when a restart lands on 0 (`H-350`): a base change lowers both
-		-- cursors to 0 (Slot `_baseObserver`), and restarting from the stale
-		-- `offsetCache[1]` would rebuild the whole cache on the old base.
-		local function ensureBase()
-			if bk.offsetCacheValidUpTo == 0 then
-				bk.offsetCache[1] = if Brand.SlotBrand:is(ownerKey) then ownerKey.Offset:Get() else 0
-				bk.offsetCacheValidUpTo = 1
-			end
-		end
-		ensureBase()
+		ensureBase(bk, ownerKey)
 		if at <= bk.offsetCacheValidUpTo then
 			return bk.offsetCache[at]
 		end
@@ -164,7 +166,7 @@ local function Init(module: any)
 				-- A lowering to 0 (M6: splice's j-1 = 0, or the owner's base
 				-- moved) re-reads the base first — `ensureBase` leaves the
 				-- cursor at 1 on a fresh `offsetCache[1]`.
-				ensureBase()
+				ensureBase(bk, ownerKey)
 				i = bk.offsetCacheValidUpTo
 				cur = bk.offsetCache[i]
 				continue

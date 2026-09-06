@@ -2955,7 +2955,7 @@ end
 --        남아, 다음 `recompute`가 `i <= bk.N`으로 끝을 넘어가 `sourceList[i]`가
 --        `nil` → **부기가 멀쩡한데 "부기가 깨졌음" error로 죽는다.** 그것들은
 --        `spliceArraysUp`/`Down`과 같은 취급(자리 수 갱신 + 무효화)을 받아야
---        한다. 아래 3·4번은 다섯 함수 전부에 적용된다.
+--        한다. 아래 3·4번은 순서·자리 수가 바뀌는 함수에 적용된다 — 교체 형태 `rawReplace`는 규약 3 밖(`H-360`: `setLength(i)`의 `i`뿐).
 --   3. **캐시는 당긴다** — 바뀐 최소 위치의 **하나 앞**으로
 --      `bk.offsetCacheValidUpTo`와 `bk.offsetSetUpTo`를 **둘 다** `math.min`
 --      (`H-3`; 두 필드 분리는 [2026-08-26] `dispatch-core-plan.md`의
@@ -2986,7 +2986,7 @@ end
 --     비용이 있어 순열엔 안 맞고, 결과는 동치(게이트가 같다). fork의 `rawMove`
 --     (`H6-6`)가 먼저 그렇게 갔고 리뷰가 승인했다.
 --   * `rawExtract`는 별도 함수가 아니다 — 제거 형태는 `rawUnmount` 그 자체이고,
---     교체 형태(`Extract(index, new)`)는 `rawReplace(…, destroyOld = false)`다.
+--     교체 형태(`Extract(index, new)`)는 `rawReplace(…, destroyOld = false)`다 — 규약 3(`minPos - 1`)은 적용되지 않는다(`H-360`).
 --     `rawClear`도 없다 — `Clear`는 `rawRemove` 역순 반복.
 --   * `rawSplice` — `rawUnmount(…, deferPhysical)` 역순 + `rawAdd(…, deferPhysical)`
 --     순차를 **이 Slot의 Blocker로 감싼** 합성이라 recompute는 1회이고,

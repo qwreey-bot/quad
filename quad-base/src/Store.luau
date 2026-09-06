@@ -45,6 +45,19 @@ local isSource = Brand.isSource
 -- because it is a phantom field.
 local RESERVED = { Of = true, Names = true, __reservedCheck = true }
 
+-- One predicate for both doors (`Of` `H-201`, constructor `H-347`) — 0순회 `H-367`:
+-- they had drifted apart once already (the constructor let `Store({ Source(1) })` in).
+local function checkKey(name: any, what: string)
+	if type(name) ~= "string" then
+		-- `H-201`: nil died at `self[name] =` with an internal frame after already
+		-- allocating a Source; a number silently broke `Names(): { string }`
+		Err.errorBeforeNearest(`Store: {what} must be a string (got {typeof(name)})`, SURFACE)
+	end
+	if RESERVED[name] then
+		Err.errorBeforeNearest(`Store: "{name}" is a reserved store key`, SURFACE)
+	end
+end
+
 local function Init(module: any)
 	module:RunInit(InitSource) -- `Of` needs `module.Source`; pull it in ourselves (idempotent)
 	local Impl = {}
@@ -52,15 +65,7 @@ local function Init(module: any)
 
 	-- Dynamic keys only: the type cannot stop a computed name, so the runtime does.
 	function Impl.Of(self: any, name: string): any
-		if type(name) ~= "string" then
-			-- `H-201`: `Of` exists precisely for computed names — a nil/number name
-			-- must not pass (nil died at `self[name] =` with an internal frame after
-			-- already allocating a Source; a number silently broke `Names(): { string }`).
-			Err.errorBeforeNearest(`Store: Of name must be a string (got {typeof(name)})`, SURFACE)
-		end
-		if RESERVED[name] then
-			Err.errorBeforeNearest(`Store: "{name}" is a reserved store key`, SURFACE)
-		end
+		checkKey(name, "Of name") -- `H-201`
 		local src = rawget(self, name) -- shadow = the store itself; never go through `__index`
 		if src == nil then
 			src = module.Source(nil) -- == Source() — read lazily, not captured
@@ -91,14 +96,7 @@ local function Init(module: any)
 		end
 		local self = table.clone(defaults or {}) -- `or {}`: `Store<<{}>>()` is valid (`H-83`)
 		for name, value in self do
-			if type(name) ~= "string" then
-				-- `H-347`: `Of` already rejects this (`H-201`) — the constructor
-				-- door let `Store({ Source(1) })` through and `Names()` returned `{ 1 }`
-				Err.errorBeforeNearest(`Store: keys must be strings (got {typeof(name)})`, SURFACE)
-			end
-			if RESERVED[name :: any] then
-				Err.errorBeforeNearest(`Store: "{tostring(name)}" is a reserved store key`, SURFACE)
-			end
+			checkKey(name, "key") -- `H-347`: same door as `Of` (`H-201`), one predicate (0순회 `H-367`)
 			if not isSource(value) then
 				Err.errorBeforeNearest(`Store: default for "{tostring(name)}" is not a Source (got {typeof(value)})`, SURFACE)
 			end

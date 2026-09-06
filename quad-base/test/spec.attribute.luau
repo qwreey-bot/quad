@@ -49,10 +49,10 @@ do
 	end)
 	assert(not okS and string.find(tostring(errS), "plain tables", 1, true) ~= nil, "a Source is not a plain table: " .. tostring(errS))
 	mock.assertBlamesUser(errS, "spec.attribute.luau", "constructor blame")
-	local okR = pcall(function()
+	local okR, errR = pcall(function()
 		q.Attribute(q.Ref(1))
 	end)
-	assert(not okR, "a Ref (metatable) is not flattened field by field")
+	assert(not okR and string.find(tostring(errR), "plain tables", 1, true) ~= nil, "a Ref (metatable) is not flattened field by field: " .. tostring(errR))
 end
 
 print("=== 2. 단일 키 왕복 — 무조건 set, store-bind, None → nil 삭제 ===")

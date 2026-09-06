@@ -47,7 +47,7 @@ do
 	local okN, errN = pcall(function()
 		Store({ Source(1) } :: any)
 	end)
-	assert(not okN and string.find(tostring(errN), "keys must be strings", 1, true) ~= nil, "array-shaped defaults rejected: " .. tostring(errN))
+	assert(not okN and string.find(tostring(errN), "key must be a string", 1, true) ~= nil, "array-shaped defaults rejected: " .. tostring(errN))
 	assert(string.find(tostring(errN), "spec.store.luau", 1, true) ~= nil, "key error blames the caller")
 	-- H-204: the bag itself is validated before clone — a non-table used to die
 	-- inside table.clone, a bare Source got an error naming a Source-internal field.

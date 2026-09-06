@@ -85,3 +85,26 @@
 | **Q4** (`H-361`) | 실프로퍼티 키에 Observer/Effect/Ref 핸들을 넣은 오용의 진단 | (a) 그대로 — 타입이 1차 방어, 엔진 에러는 시끄럽다(정본 배너만) / (b) `PropertyHandler.isHandlable`이 핸들 브랜드를 거부해 FALLBACK 가드가 발화(핫패스에 브랜드 검사 셋) / (c) 가드 우선순위를 NORMAL 위로(정본 "FALLBACK" 설계 역전) | **(a)** — "드문 오용 방어에 구조를 쓰지 않는다"; `Ref`에 가드가 없는 것도 같은 결 |
 | **Q5** (process 재진입) | 같은 `(inst, k)`의 간접 재디스패치(`h.process` 도중 그 키의 State `:Set`) | (a) UB family에 명시(문서) / (b) `process`에 재진입 게이트(새 메커니즘) | **(a)** |
 | **Q3 ⑨** | `Slot:Clear`/`ExtractAll` 게이트 묶음 + `ExtractAll` 역순 insert | (a) 반영 / (b) 보류 | **(b)**, 단 `ExtractAll`의 `out[i] = …` 정순 채움은 한 줄이라 ①급 — 사용자 판단 |
+
+## §6 0순회 — `/code-review high`, 반영분(`ba222e9..fb9435a`) diff 중심 (2026-09-07 01시대, 사용자 지시 "하나 더")
+
+사용자: *"지금은 딱 하나 더 코드리뷰를 굴려도 될것 같아. 저 타이머 그대로 두고 하나 더 돌릴래?"*
+(02:30 KST 타이머는 세션 한도 초기화 시점 — 그 뒤 순회는 §7부터). 8앵글 12건 → 생존 10, 기각 2, 미완 0.
+검증자가 `luau-lsp`로 실재현. **전부 ①** — 그중 둘은 이 원장 `H-353`(메인이 새벽에 넣은 생성기
+변경)의 **회귀**라 "수정분이 새 결함을 만든다" 규약의 실례.
+
+| ID | 자리 | 무엇 | 처리 |
+|---|---|---|---|
+| **`H-362`** | `gen-d.py` 숏핸드 setter | `Field<number> \| Field<UDim>`로 쪼개니 변환 람다가 number 팔로 문맥 타이핑돼 `modifier-plan.md` 4절 `old` 관용구(UDim 반환·`typeof(old) == "UDim"` 분기)가 strict 거부 — `ba222e9`에선 통과하던 것 | 별칭 `SHF0 = FieldV<number> \| FieldV<UDim> \| Field<number \| UDim>`(값 팔 멤버별 + 변환 팔 전체 유니언 하나), 13자리에 실음. `spec.shorthandtypes` 양성. `typing-limits.md` 8.9 (3) 정정 |
+| **`H-363`** | `gen-d.py` `PV73` | 멤버별 팔로 *대체*하며 전체 유니언 팔 `TweenData<number \| UDim>`이 빠져 `Tween({ Value = v })`, `v: number \| UDim` 거부(원장 `H-353`은 얻은 쪽만 기록) | 전체 팔 유지 + 멤버별 팔 *추가*(`PV73` 11팔). 팔 계산을 `pv_arms`/`union_members` 헬퍼 하나로(리뷰 8번 — 두 자리 복제 합침). `spec.shorthandtypes` 양성 |
+| **`H-364`** | `gen-d.py` setter 이름 충돌 게이트 | `H-351`로 `Slot<T>`가 `NewChild`에 합류했는데 8.9 처방 2의 게이트가 Slot 함수 필드를 안 수확(잠복 — 지금 충돌 0) | 정규식을 함수 필드(`name: (`/`name: <`)로 좁히고 `Slot<T>` 추가. 비교: 잃은 이름은 옛 정규식의 오탐(파라미터 이름 `name`/`setup`/`state` 등) 다섯뿐, Slot 메소드 12개 획득. 데이터 필드 `Offset`은 실제 setter(UIGradient)라 좁힌 정규식이 필수 |
+| **`H-365`** | `Bookkeeping.luau` `ensureBase` | `H-350`이 넣은 클로저가 `getOffsetAt` 호출마다 할당(recompute 자리마다 — 길이 변경당 N개) | Init 스코프 `ensureBase(bk, ownerKey)`로(`contribution` 관용구) |
+| **`H-366`** | `dispatch-core-plan.md` 배치 4항, `slot-plan.md` raw* 규약 3 범위 문장 둘 | `H-360` 정정이 표 행만 고치고 같은 파일의 "`rawExtract`류"·slot-plan의 "다섯 함수 전부"·"교체 형태 = rawReplace" 문장을 남겨 교체 형태가 여전히 `minPos - 1`로 읽힘 | 세 자리 정정(교체 형태는 규약 3 밖) |
+| **`H-367`** | `Store.luau` | `H-347`이 `Of`의 두 검사를 메시지만 바꿔 복제 — `H-347` 자체가 두 문이 갈라져 난 결함 | `checkKey(name, what)` 하나로 두 문 통일(순수 술어 공유 — "하나가 두 일" 규칙이 허용하는 종류) |
+| — | `Property.luau` 헤더 | `H-352` 인용 절 번호 5절 → 6절 | 정정 |
+| — | `spec.tag`·`spec.attribute` | `H-344` `Removed(nil)`·`H-345` `Attribute(Ref)` 단언이 `not pcall`뿐이라 회귀 커버리지 없음 | 메시지·blame 단언으로 강화 |
+
+기각 둘(리뷰어 자체): `Slot<Instance>` 팔이 `Slot<TextLabel>`을 막는다(실측 반박 — children 자리에선 `T`가
+강제되지 않아 통과; 정본 관용구 `Slot<Instance>` 단일), `State<number \| UDim>` 팔 소실(실측 반박 — 통과).
+확인: gen-d Enum 정확 형은 596 Enum·생성 D의 53 Enum 전부 통과, `Slot.luau` `require("./Dispatch")` 순환 없음,
+`Tag:Removed` 유효 입력 전부 옛 동작 동일, Attribute plain 가드는 브랜드 분기 뒤라 정당 입력 무영향.

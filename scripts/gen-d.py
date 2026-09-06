@@ -303,6 +303,24 @@ def emit():
     for _, t in SHORTHAND:
         if t not in prop_types:
             prop_types.append(t)
+    def union_members(t):
+        return [m.strip() for m in t.split("|")]
+    def pv_arms(t):
+        arms = [t, f"State<{t}>", f"TweenData<{t}>", f"State<Tween<{t}>>"]
+        for m in union_members(t):
+            if m != t:
+                arms += [f"State<{m}>", f"TweenData<{m}>", f"State<Tween<{m}>>"]
+        return arms + ["None"]
+    # [0순회 H-362] shorthand setter for a union type: value arms per member + ONE transform arm
+    # over the whole union — splitting `Field<number> | Field<UDim>` broke the modifier-plan 4절
+    # `old` idiom (a lambda returning UDim got context-typed to the number arm). One alias per
+    # union type (inlining the union 13× is the 8.5 budget pattern to avoid).
+    shf_name = {}
+    for sname, t in SHORTHAND:
+        ms = union_members(t)
+        if len(ms) > 1 and t not in shf_name:
+            shf_name[t] = f"SHF{len(shf_name)}"
+            L.append(f"type {shf_name[t]} = {' | '.join(f'FieldV<{m}>' for m in ms)} | Field<{t}> -- 숏핸드 setter(H-362): 값 팔 멤버별 + 변환 팔 하나")
     pv_name = {}
     for i, t in enumerate(prop_types):
         pv_name[t] = f"PV{i}"
@@ -313,9 +331,9 @@ def emit():
         # [2026-09-07 H-353] a union type (only the shorthand `UICorner: number | UDim` today)
         # must list the State/Tween arms PER MEMBER — State<X> is invariant (H-326/H-327), so
         # `State<number | UDim>` rejects a `Source(8)`; one alias, arms per member.
-        members = [m.strip() for m in t.split("|")]
-        arms = [t] + [f"State<{m}>" for m in members] + [f"TweenData<{m}>" for m in members] + [f"State<Tween<{m}>>" for m in members] + ["None"]
-        L.append(f"type PV{i} = {' | '.join(arms)} -- {t}")
+        # [0순회 H-363] the whole-union arms stay (TweenData<number | UDim> from `Tween({ Value = v })`,
+        # v: number | UDim, was lost) — per-member arms are ADDED, not substituted.
+        L.append(f"type PV{i} = {' | '.join(pv_arms(t))} -- {t}")
     L.append("")
     for name in names:
         c = classes[name]
@@ -420,8 +438,11 @@ def emit():
             j += 1
         raise SystemExit(f"gate: unbalanced braces in `export type {tname}`")
 
-    for tname in ("StateData<T>", "State<T>", "Tag", "Attribute"):
-        union_member_functions |= set(re.findall(r"(?:^|[{,])\s*(?:read )?([A-Za-z_]+):", type_body(tname)))
+    # [0순회 H-364] `Slot<T>` joined NewChild (H-351) — its function fields must be gated too. The
+    # regex is narrowed to FUNCTION fields (`name: (` / `name: <`): Slot's data fields (`Length`/
+    # `Offset: Source<number>`) are not the 8.9 hazard and `Offset` is a real setter (UIGradient).
+    for tname in ("StateData<T>", "State<T>", "Tag", "Attribute", "Slot<T>"):
+        union_member_functions |= set(re.findall(r"(?:^|[{,])\s*(?:read )?([A-Za-z_]+):\s*[(<]", type_body(tname)))
     reserved = {"Apply", "Peek", "Overridden", "As"}
     for node in mod_classes:
         for p in mod_props(node):
@@ -451,8 +472,7 @@ def emit():
             L.append(f"\t{p['name']}: (self: {node}Modifier, value: Field<{t}>) -> {node}Modifier,")
         if is_gui_object(node):
             for sname, t in SHORTHAND:
-                # H-353: per-member Field arms for a union type (same invariance reason as PVn)
-                field = " | ".join(f"Field<{m.strip()}>" for m in t.split("|"))
+                field = shf_name.get(t, f"Field<{t}>")  # H-353/H-362
                 L.append(f"\t{sname}: (self: {node}Modifier, value: {field}) -> {node}Modifier, -- 숏핸드(H-336)")
         L.append("}")
         # Into<Class> — "이 클래스로 갈 수 있는 모든 것"(상위·자기·커스텀 구현체).

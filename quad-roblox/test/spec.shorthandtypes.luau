@@ -31,7 +31,16 @@ local function _types()
 	local f5 = q.D.Frame({ UICorner = udim })
 	local m2 = q.D.Modifier.Frame():UICorner(radius):UICorner(udim)
 	local f6 = q.D.Frame({ UICorner = radius:Apply(q.Animate({ Time = 0.2 })) })
-	return f, f2, f3, m, mAbove, f4, f5, m2, f6
+	-- 0순회 `H-362`/`H-363`: 변환 함수는 전체 유니언 하나로(modifier-plan 4절 `old` 관용구 — UDim을
+	-- 돌려주거나 `old`를 UDim으로 좁힌다), 전체 유니언 값의 Tween도 그대로
+	local m3 = q.D.Modifier.Frame():UICorner(function(old)
+		if typeof(old) == "UDim" then return old end
+		return UDim.new(0, 8)
+	end)
+	local v: number | UDim = 8
+	local f7 = q.D.Frame({ UICorner = q.Tween({ Value = v }) })
+	local m4 = q.D.Modifier.Frame():UICorner(q.Tween({ Value = v }))
+	return f, f2, f3, m, mAbove, f4, f5, m2, f6, m3, f7, m4
 end
 
 print("=== 1. 런타임 대응 — 생성 D의 숏핸드 키가 실제 핸들러에 닿는다(mock 없이 타입만 — 본문은 실행하지 않음) ===")

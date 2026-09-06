@@ -25,7 +25,7 @@
 	marker stuck on that key. The last written value stays (a property
 	cannot be unset) — except while an engine tween is active on that key:
 	`nil` returns before the slot is read, so the tween keeps writing until
-	it finishes or the next real value cancels it (spec.tweenproperty 5절
+	it finishes or the next real value cancels it (spec.tweenproperty 6절
 	"None → nil: skip-defense, active tween untouched" — intended, `H-352`).
 
 	M11 unit ② (round19, `tween-plan.md` "3-상태 저장" / "override 정책" /

@@ -867,9 +867,14 @@ factory 인자의 재귀만으로 샌다).
 **[2026-09-07 8.9 보강 — 핸드오버 리뷰 `H-353`/`H-354`]** (3) 프로퍼티 값이 **유니언
 타입**이면(지금은 숏핸드 `UICorner: number | UDim` 하나) `State<number | UDim>` 한
 팔로는 `Source(8)`도 `Source(UDim)`도 못 받는다 — (1)의 불변성 그대로. 생성기는
-유니언 타입에 대해 **멤버마다** `State<m>`/`TweenData<m>`/`State<Tween<m>>` 팔을
-나열하고(`PV73` 9팔), Modifier setter는 `Field<number> | Field<UDim>`으로 찍는다.
-`LuauSolverConstraintLimit=1000000` 아래서 "too complex" 없음(실측). (4) strict에서
+유니언 타입에 대해 전체 유니언 팔(`State<t>`/`TweenData<t>`/`State<Tween<t>>`)을
+**유지한 채** 멤버마다 `State<m>`/`TweenData<m>`/`State<Tween<m>>` 팔을 **추가**하고
+(`PV73` 11팔 — **[0순회 `H-363`]** 전체 팔을 빼면 `Tween({ Value = v })`, `v: number | UDim`이
+거부된다), Modifier setter는 `FieldV<number> | FieldV<UDim> | Field<number | UDim>`
+— 값 팔은 멤버별, **변환 함수 팔은 전체 유니언 하나**(**[0순회 `H-362`]** `Field<number> |
+Field<UDim>`로 쪼개면 무주석 람다가 number 팔로 문맥 타이핑돼 `modifier-plan.md` 4절의
+`old` 관용구(UDim 반환·`typeof(old) == "UDim"` 분기)가 strict에서 깨진다). 별칭 `SHFn`
+하나로 13자리에 실린다. `LuauSolverConstraintLimit=1000000` 아래서 "too complex" 없음(실측). (4) strict에서
 타입드 `Slot`을 만드는 관용구는 **`q.Slot() :: QuadTypes.Slot<Instance>` 캐스트뿐**
 — 생성자 `<T>(initial: { SlotElement<T> }?)`는 `T`가 `T | State<T> | Slot<T>` 안쪽이라
 인자에서 추론되지 않고, `nil :: { SlotElement<Instance> }?`·`{} :: {…}`·`local s:
