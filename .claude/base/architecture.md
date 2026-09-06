@@ -304,6 +304,7 @@ quad/
 │       │   ├── Modifier.luau       # [2026-08-24 `H-35`] ProcessedModifierHandler — flatten이 소진한 자리를 캐치해 `setOffsetSource(None)`/`setLength(0)`만 등록하는 nop 핸들러(`base/modifier-plan.md`) — **[2026-09-04 M7 단위 ② 구현]** HIGH, None 쌍과 같이 InitDispatch가 등록; flatten 자체는 위 `Modifier.luau` export이고 `Dispatch/init.luau`의 `drive`가 첫 pre-pass로 부른다(round17 Q4 (a))
 │       │   └── Ref.luau            # **[2026-09-04 M8 단위 ②, round18 `H-319`]** PreRef/PostRef pre-pass(`drive`의 (a): 호이스팅 fire·수집·`Processed*Ref` 소진) + `firePostRefs`((c): 본체 루프·배치 종료 뒤) + `ProcessedPreRefHandler`/`ProcessedPostRefHandler`(위 Modifier.luau와 같은 nop 핸들러 모양). Dispatch 소유인 이유는 Modifier.luau와 같다(센티널은 Dispatch의 개념 + `Ref.luau`가 Dispatch를 require하므로 순환 회피). leaf 핸들러·가드 둘은 `Ref.luau`(`H-278`)
 │       ├── Bookkeeping.luau       # ⭐ [2026-09-01 `H-277` 사용자 확정 — Dispatch에서 분리] Length/Offset 부기 서브시스템 — `InitBookkeeping(module)`이 사적 `module._bookkeeping`(getBookkeeping/getBlocker/getOffsetAt/recompute/setLength/setOffsetSource + `H-256` checkPosition)을 설치. 의존 방향 {Slot, Dispatch} → Bookkeeping(부기는 둘 다 모름 — SlotBrand 프로브는 브랜드 잎 판별). 공개 호출 표면은 `quad.Dispatch.*` 그대로(같은 함수 객체 재노출, 래퍼 없음 — `H-39`/`H-25` 계약 유지), M6의 Slot은 `_bookkeeping`을 직접 씀
+│       ├── ErrorNamespace.luau    # **[2026-08-31 M3 `H-231`]** 공유 에러 네임스페이스 인스턴스(`quad-error` 위의 `QuadError.new()` 한 벌 — 태그 맵·`errorBefore`/`errorBeforeNearest`/`setFuncLevel`; 최상위 `init.luau`가 `errorNamespace`로 재export, 백엔드·플러그인은 이걸 받아 태깅)
 │       ├── Void.luau              # **[2026-08-28 `H-162`]** `return function() end` 한 줄 — 단일 no-op. 의존 없는 잎(`None`/`Brand`/`Relate`와 같은 급), `Dispatch/*`·핸들러·최상위 `init.luau`가 require
 │       ├── Brand.luau             # **[2026-08-28 M2 첫 단위]** `Brand()` 생성자 + **브랜드 인스턴스 전부**(`EpochBrand`를 `Source`/`Ref`/`GateNode`가 공유하므로 타입 모듈마다 두면 순환 require) + `is*` 술어(타입이 생길 때 그 술어를 여기 추가, 최상위 `init.luau`가 재export). 의존 없는 잎(`base/brand-plan.md`)
 │       ├── Relate.luau            # inst를 weak 키로 하는 범용 릴레이션(`SetWeak`/`GetWeak`/`SetStrong`/`GetStrong`), 비싱글톤 생성자(`base/relate-plan.md`) — 구 PerInstanceState/perInstanceState 대체
@@ -312,7 +313,7 @@ quad/
 │       ├── Ref.luau               # 범용 값 박스(.Value/.Revision 읽기 + :Set()/:WeakCallback()/:Callback()/:Uncallback()/:Wait(); `Epoch`를 만족 — `base/ref-plan.md`. **[2026-08-27 `H-128`]** `:Wait`·핸들러 뺀 최소형은 M2 공통 기반), `Ref(default)`를 children 배열 숫자 슬롯에 직접 놓으면 (v=Ref) 매치 핸들러가 바인드 — 별도 CreatedRef 래퍼 없음
 │       ├── PreRef.luau            # Ref 런타임 재사용 + children 배열 전용, Modifier/Store 타입 차단, 호이스팅되는 pre-pass 특수화(별도 파일, `ref-plan.md` "PreRef 신설" 절, 2026-08-07 여섯 번째 세션에서 분리)
 │       ├── PostRef.luau           # PreRef의 거울상 — 같은 Ref 런타임/제약, 같은 pre-pass가 수집만 하고 두 패스가 전부 끝난 뒤 fire(`ref-plan.md` "`PostRef`" 절, 2026-08-14 아홉 번째 세션 확정)
-│       ├── LifecycleHooks.luau    # OnCreated/OnRendered/OnDestroyed — PreRef/PostRef/Effect를 반환하는 순수 팩토리 슈가(`base/lifecycle-hooks-plan.md`), 새 타입/Dispatch 개념 없음
+│       ├── LifecycleHooks.luau    # **[미구현 — 백로그, `todos.md` 4번]** OnCreated/OnRendered/OnDestroyed — PreRef/PostRef/Effect를 반환하는 순수 팩토리 슈가(`base/lifecycle-hooks-plan.md`), 새 타입/Dispatch 개념 없음
 │       ├── Claim.luau             # **[2026-09-02 M5 단위 ④]** `Claim(inst, desc)` + `newMapperClass`/`MapperRoot`(본체는 quad-base — 순회·부기 전반, 프로바이더는 `nativeClaim`/`nativeFindChild` 핸들만; `base/claim-plan.md` §9의 "위치 반영은 M5 착수 때" 이행)
 │       └── init.luau          # 패키지 최상위 export — `Quad` 값 테이블(`New`/`Source`/…/`None`/**`Void`**(재export — 정의는 위 `Void.luau`, `H-162`))
 └── quad-roblox/
@@ -329,6 +330,7 @@ quad/
         │   │                      # **[2026-09-03 정정, round15 `H6-14`]** 여기 한때 `Slot.luau`("base Slot 재조정 로직의 실제 적용/해제")가 있었다 — 2026-08-21 `native*` 주입 op 확정으로 그 몫은 위 `EngineOps.luau`의 native* 여섯이 그 자체가 됐고(SlotHandler는 quad-base `Dispatch/Slot.luau`, 물리 조작은 주입 op), 별도 파일은 없다
         │   └── InstanceChild.luau # k:number, v:Instance — 중첩 인스턴스 자식(예: Frame { Frame {} })
         ├── Animate.luau           # `Animate(info)` 편의 콤비네이터 — `factory(self)->State`(**[2026-09-06 M11 ③]** 선언 타입 `(self: any) -> State<Tween<any>>`, `H-334`), `:Apply`로 붙임(내부는 `:Compute`/`Tween{...}` 조합), base 프리미티브 아님(`base/tween-plan.md`)
+        ├── types.luau             # **[2026-09-02 M5]** 공개 타입 단일 파일(ROADMAP M5 배너) — `Tween<T>`/`TweenData<T>`(quad-types 별칭, `H-326`)·`NewChild`·`OnChangeDescriptor`·`AnimateInfo`/`AnimateFn`(`H-334`); Roblox 전역을 쓰는 유일한 타입 파일이라 defs로 분석
         ├── D/
         │   └── init.luau          # **전량 코드 생성 산출물** — 제네릭 생성자 `New`(커링: `New "Frame" {...}`) + 클래스별 정적 별칭 필드(`D.Frame = New<<Frame>> "Frame" :: (({...}) -> Frame)`). **[2026-09-04 M7 단위 ③]** `D.Modifier.<Class>()`(런타임은 `quad.Modifier` 하나, 클래스별 캐스트 별칭)·`<Class>Modifier`·`Field<V>`·`DModifier`도 여기(마커 방식은 `typing-limits.md` 8.8절). 생성 범위는 "GUI에 쓰이는 모든 인스턴스", 이벤트 필드의 콜백 타입/`State<T>`/`None`까지 타입으로 찍음(**[2026-08-18 확정]** `base/bind-system-plan.md`의 "인스턴스 생성 / 이벤트 네이밍 인체공학" 절)
         └── init.luau

@@ -901,7 +901,7 @@ error" 규칙에 안 걸림(`Tween<T>`는 `process`/`retract`를 가진 dispatch
 **`Into<Class> = { As<Class>: (self: any) -> <Class>Modifier }`** — Rust `Into`처럼
 "그 클래스로 갈 수 있는 모든 것"의 인터페이스(사용자 제안). 상위 클래스
 Modifier(하강 메소드 보유)·자기 자신(항등 `As<Self>`)·D 밖의 커스텀 구현체(그
-메소드 하나만 구현)가 전부 만족한다(**[2026-09-06 round21 `H-340`]** 단, 커스텀 **서브타입 Modifier 값** 자신은 `^As%u`가 예약 접두라 자기 `As<Parent>` 메소드를 못 얹고 검사형 캐스트는 하강 전용이라 **런타임에선** 이 경로를 못 쓴다 — 무검사 `As(name)`뿐이고 커스텀 필드 제거 연산은 사용자 문항) — 텍스트 처리자류 헬퍼는 `function
+메소드 하나만 구현)가 전부 만족한다(**[2026-09-06 round21 `H-340`]** 단, 커스텀 **서브타입 Modifier 값** 자신은 `^As%u`가 예약 접두라 자기 `As<Parent>` 메소드를 못 얹고 검사형 캐스트는 하강 전용이라 **런타임에선** 이 경로를 못 쓴다 — 무검사 `As(name)`뿐이고 커스텀 필드 제거는 백로그 `research/component-flatten-sugar-plan.md` — 2026-09-06 사용자 결정) — 텍스트 처리자류 헬퍼는 `function
 Bold(m: IntoTextLabel) return m:AsTextLabel():FontFace(…) end` 하나로 셋을 다
 받고, 결과에서 다시 `As<목적지>`로 이어 갈 수 있다. `self`는 `any`여야 한다
 (인터페이스 타입을 self로 두면 반공변 때문에 실제 Modifier가 안 들어온다 —

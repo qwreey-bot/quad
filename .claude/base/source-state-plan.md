@@ -272,9 +272,15 @@ end
 --   `_running` 플래그로 둘러싼다(설치 발화 포함) — `fn`이 자기 생명주기를 못
 --   바꾼다는 `H-147`의 Observer 대칭. 근거·가드 목록은 `lifecycle-pattern.md`
 --   (2) 배너, 실제 코드는 `Observer.luau`.
+-- ⭐ [2026-09-06 fable 탐사 `H-332`] 플래그는 true/false가 아니라 **save/restore**다 —
+--   `fn` 안에서 자기 State를 `Set`하면 중첩 `_receive`가 `false`로 내려 바깥 `fn`의
+--   꼬리가 가드 없이 진행했다(spec.observer 9a). 아래 의사코드에 그대로 반영.
 function Observer:_receive(from)
     if canExecute(self) then
+        local outer = self._running        -- `H-332` save
+        self._running = true               -- `H-183`
         self.fn(self._state, self, from)   -- ⭐ (리시버 State, Observer 자신, 출처)
+        self._running = outer              -- `H-332` restore
     else
         self._rerunRequired = true         -- [2026-08-28 `H-159`] 묶이기 전의 변경은 홀드 — 묶일 때 1회
     end                                    --   (Effect의 내부 Observer도 이 경로 — `fire`가 `fn`이다)
@@ -287,7 +293,10 @@ end
 function Observer:_catchUp()
     if self._rerunRequired then
         self._rerunRequired = false
+        local outer = self._running        -- `H-183`/`H-332` — _receive와 같은 save/restore
+        self._running = true
         self.fn(self._state, self, nil)
+        self._running = outer
     end
 end
 

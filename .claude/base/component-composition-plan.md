@@ -224,7 +224,7 @@ Modifier/Ref/자식을 구분"이 이미 v1의 유일한 해법이었던 패턴 
 None`/`props.Ref or None`/자식 전달·`Modifier.Overridden`·Slot 반환 `ItemList`·커스텀 클래스
 Modifier의 `As("TextButton")` 상향)와 `spec.componenttypes.luau`(strict — props 타입에 생성
 `IntoTextButton`·`Ref<TextButton?>`). 새 배선 없이 전부 기존 핸들러 조합으로 동작한다.
-**남은 것 둘은 사용자 문항**(round21 §4): 경계 필드 이름(가칭 `Modifier`/`Ref` 유지 권고)과
+**남은 것 둘은 [2026-09-06 사용자 결정] 백로그 `research/component-flatten-sugar-plan.md`로 이관**(round21 §4는 닫힘 — 열린 문항 0): 경계 필드 이름(가칭 `Modifier`/`Ref` 유지 권고)과
 `H-340` — 커스텀 클래스 Modifier의 커스텀 필드를 벗겨 부모 클래스로 넘길 연산이 없다
 (`:Field(None)`은 키 제거가 아니라 `None` 디스패치). 아래는 2026-08-04 확정 원문.
 
