@@ -59,4 +59,29 @@
 | **Q2** (R3-3, **`H-355`**) | children 유니언에 `Observer`/`EffectHandle`도 없다 — `state:Observer(fn)`을 children에 놓는 관용구는 `source-state-plan.md`가 정본화했고 leaf 핸들러가 받는데 strict는 거부 | (a) 둘 다 넣는다 / (b) `Observer`만 / (c) 안 넣는다 | **(a)** — 정본화된 관용구가 strict에서 막히는 건 `H-351`과 같은 모양. 다만 M5 확장 목록에 이름이 없었으니 사용자 확인 |
 | **Q3** (구 앵글 Efficiency/Simplification/Reuse/Altitude, **`H-356`**) | 코드 품질 제안 묶음 — 결함이 아니라 판단 대상이라 반영 안 함: ① `Slot:List` 재정렬 O(N²)(N=1000에 19.6ms 실측)·reconcile마다 `table.clone(prevKeys)`·`prepareElements` 전체 재스캔 / ② `notInstalled` 스텁 팩토리가 `Tag.luau`·`AttributeKey.luau`에 바이트 동일 / ③ `registerEmptySlot` 관용구를 quad-roblox `OnChange`·`InstanceChild`가 패키지 경계 때문에 인라인 복제(`None.luau` 주석은 `OnChange`만 승인) / ④ `Property.luau`·`Event.luau`의 Reflection 캐시 손코딩 중복 / ⑤ `Dispatch/Modifier.luau`가 `Ref.luau`의 `addProcessed` 팩토리를 안 쓰고 세 번째 사본 / ⑥ Slot CRUD 9곳 `assertLive; assertManual` 복붙 / ⑦ `gen-d.py`의 `reserved`·`union_member_functions`·`SHORTHAND` 목록이 런타임 소스(`Modifier.luau`·`types.luau`·`InstanceShorthand.luau`)를 안 읽고 손 복제 / ⑧ `drive`의 배치 Blocker 검사(§2 마지막 행) | 항목별 (a) 반영 / (b) 보류 | ①은 **(b)**("관측된 병목에만" — 실측이 벤치지 실사용이 아님), ②③⑤⑥은 **(a)** 후보(본문 공유가 아니라 데이터·순수 헬퍼 공유라 "하나가 두 일" 위반 아님)지만 리뷰 제안이라 사용자 결정, ④는 `H-302`가 갈라 둔 자리라 **(b)**, ⑦은 **(a)**(조용히 어긋나는 손 복제 — `SHORTHAND`는 `InstanceShorthand.luau` `TABLE`에서 읽게), ⑧ **(b)** |
 
-`/code-review high`(재실행분) 결과는 도착하는 대로 이 파일에 이어 쓴다.
+## §5 `/code-review high` 재실행분 (2026-09-07 새벽 도착 — 앵글 10 + 검증자, 최종 10건)
+
+리뷰어가 스스로 뺀 것: 위 §1의 커밋이 이미 닫은 여섯(`H-344`/`H-347`/`H-348`/`H-350`/`H-351`/`H-352`)과
+정본 인용으로 반박한 일곱(Tween 자연 완료 슬롯 유지·비트윈 타입에 TweenData NOOP·Effect 루프
+사망 판정 `H-147`/`H-182`·`prePass` `#flattened`·detach 요소 `releaseOwner`·Modifier setter
+`error(msg, 2)` `H-309`·`bindLifetime`의 `isObserver`/`isEffect` 훅).
+
+| ID | 자리 | 무엇 | 판정·처리 |
+|---|---|---|---|
+| **`H-357`** | `Effect.luau` leaf retractor 경로 | `fn` 실행 중 자기 leaf가 철거되면(값 교체·Slot 요소 제거) `_consumeCleanup`이 빈 채 돌고, `fn`이 돌려준 cleanup은 영구 미소진 | **① 문서** — 이미 있는 UB(`fn` 안에서 자기 inst 파괴, `effect-plan.md` 2026-08-28 배너)의 두 번째 트리거. `H-147` (A) "`fn`은 자기 생명주기를 못 바꾼다"의 물리판이라 배너 확장. 가드 안 넣음(unbind에 `isRunning` 가드를 두면 철거가 실패한다) |
+| **`H-358`** | `Slot.luau` `Init` | `module.Dispatch`/`_bookkeeping`을 `RunInit(InitDispatch)` 없이 직접 읽는 유일한 Init — `init.luau`의 "순서 무관" 불변식 위반(지금은 순서가 맞아 잠복) | **①** `module:RunInit(InitDispatch)`(`H-174` 관용구) |
+| **`H-359`** | `scripts/gen-d.py` `defs_knows` | Enum 분기가 `"<Name>:" in defs` 부분문자열이라 핀 고정 defs보다 새 Enum이 필드 이름 우연 일치로 게이트를 통과 → 생성 D가 미선언 타입 참조로 통째로 실패("조용한 절단 금지" 계약의 반대 방향 위반) | **①** `declare extern type Enum<Name> extends EnumItem` 정확 형(defs의 596 Enum 전부 이 형) — 재생성 결과 diff 0 |
+| **`H-360`** | `dispatch-core-plan.md` 무효화 표 3행 vs `rawReplace` | 표는 `Extract(index, new)` 교체 형태도 `minPos - 1`로 규정하는데 코드·slot-plan 의사코드·`Bookkeeping.luau` UB 주석은 `setLength(i)`의 `i`뿐 — 정본 내부 불일치 | **① 문서** — 셋 대 하나. 교체는 옮겨오는 요소가 없어 `i` 자리 offset이 안 바뀐다(첫 행의 논리). 리뷰어 시나리오(recompute 커서 `i`에서 사용자 Observer가 `Replace(i)`)는 `Bookkeeping.luau`가 명시한 UB 경계("커서와 정확히 같은 자리로의 하강은 무변경과 구분 불가 — 재진입 family") |
+| **`H-361`** | `Handlers/Property.luau` `isHandlable` vs 동적 경로 가드 | NORMAL 키 전용 매치가 FALLBACK 가드(Observer/Effect)보다 먼저라 실프로퍼티 키에 핸들 값을 넣으면 정본의 가드 메시지 대신 엔진 에러 + `H-103` NOOP 잔존; `Ref`는 가드 자체가 없음 | **② §4 Q4** — 가드를 살리려면 `isHandlable`이 값 브랜드를 봐야(핫패스 비용) 하거나 가드 우선순위를 올려야(정본 설계 역전). `source-state-plan.md` 가드 근거 문장에 정정 배너 |
+| — | `Dispatch/init.luau` `process` (A)/(B) | 같은 `(inst, k, index)`로 `h.process` 도중 재진입(예: `Slot.Offset` Observer가 같은 키 State를 `:Set`) → 바깥 retractor 고아 | **② §4 Q5** — 체크리스트 5는 클로저 안 `Dispatch.process`·같은 키 `retractFrom`을 금지하고 `Bookkeeping.luau`는 "재진입 family"를 UB로 두는데, *간접* 재디스패치(`:Set` → StoreBind)가 그 문장에 없다. 권고: 게이트를 넣지 않고 UB family에 명시 |
+| — | `Handlers/Property.luau` retractor `Void` | 순수 철거(`retracting = true`)가 활성 엔진 트윈을 Cancel하지 않는다(숏핸드 자식 `retractFrom` → `Destroy`, Slot 요소 extract) | **기각** — `tween-plan.md` "왜 `retract`가 더 이상 필요 없는가" 절이 Property retractor `Void`를 확정, "Destroy 무해"는 Studio 실측 항목(같은 문서 111행). extract된 요소의 잔여 트윈은 재마운트 시 분기 3이 Cancel |
+| — | `Slot.luau` `Clear`/`ExtractAll` | 요소마다 recompute·native op(게이트 없음), `ExtractAll`의 `table.insert(out, 1, …)` O(n²) | **§4 Q3 ⑨**로 묶음(효율 — 관측된 병목 아님) |
+| — | `Slot.luau` `prepareElements`, `gen-d.py` `SHORTHAND`·`reserved` | 구 앵글과 동일 발견 | 이미 `H-356` ①·⑦ |
+
+**§4 추가 문항**
+
+| 문항 | 무엇 | 선택지 | 권고 |
+|---|---|---|---|
+| **Q4** (`H-361`) | 실프로퍼티 키에 Observer/Effect/Ref 핸들을 넣은 오용의 진단 | (a) 그대로 — 타입이 1차 방어, 엔진 에러는 시끄럽다(정본 배너만) / (b) `PropertyHandler.isHandlable`이 핸들 브랜드를 거부해 FALLBACK 가드가 발화(핫패스에 브랜드 검사 셋) / (c) 가드 우선순위를 NORMAL 위로(정본 "FALLBACK" 설계 역전) | **(a)** — "드문 오용 방어에 구조를 쓰지 않는다"; `Ref`에 가드가 없는 것도 같은 결 |
+| **Q5** (process 재진입) | 같은 `(inst, k)`의 간접 재디스패치(`h.process` 도중 그 키의 State `:Set`) | (a) UB family에 명시(문서) / (b) `process`에 재진입 게이트(새 메커니즘) | **(a)** |
+| **Q3 ⑨** | `Slot:Clear`/`ExtractAll` 게이트 묶음 + `ExtractAll` 역순 insert | (a) 반영 / (b) 보류 | **(b)**, 단 `ExtractAll`의 `out[i] = …` 정순 채움은 한 줄이라 ①급 — 사용자 판단 |

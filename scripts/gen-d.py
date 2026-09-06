@@ -101,7 +101,11 @@ def defs_knows(defs_text, luau_type):
     if luau_type in ("number", "boolean", "string", "{ any }"):
         return True
     if luau_type.startswith("Enum."):
-        return f"{luau_type.split('.', 1)[1]}:" in defs_text or luau_type in defs_text
+        # [2026-09-07 H-359] precise form only — the old `"<Name>:" in defs_text` substring
+        # matched any FIELD named like the enum (e.g. `Style: Enum.FrameStyle`) and let an
+        # enum newer than the pinned defs through the gate (silent-truncation contract broken
+        # the other way: an undeclared type in the emitted D fails the whole module)
+        return f"declare extern type Enum{luau_type.split('.', 1)[1]} extends EnumItem" in defs_text
     return f"declare extern type {luau_type} " in defs_text or f"declare extern type {luau_type}<" in defs_text
 
 

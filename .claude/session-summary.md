@@ -2368,4 +2368,5 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   재실행. 원장 `qa-request/handover-review-2026-09-07.md` `H-344`~`H-356`: 반영 10(Tag `Removed`
   검증·Attribute plain 가드·`BRAND_PROBES`·Store 키·에러 깊이 둘·`getOffsetAt` 베이스 재독·`NewChild`
   `Slot<Instance>`·유니언 PV 멤버별 팔), 기각(Effect 비함수 cleanup·Splice 물리 순서·Attribute "누수"는
-  Luau GC 페이싱), 사용자 문항 Q1~Q3. CLI 49/49.
+  Luau GC 페이싱), 사용자 문항 Q1~Q3; `/code-review high` 재실행분 `H-357`~`H-361`(Effect UB 확장·
+  `Slot.Init` `RunInit`·gen-d Enum 게이트·무효화 표 교체 행)과 문항 Q4·Q5. CLI 49/49 — **핸드오버 완료.**

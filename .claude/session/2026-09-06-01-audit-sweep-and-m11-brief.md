@@ -190,3 +190,11 @@ tween-plan 본문 문장·dispatch-core `None` 캐비엇 M11 줄·머리말 3층
 - 교훈(규약 후보는 아님 — 한 번 관측): 백그라운드 리뷰가 많이 떠 있을 때 `/compact`는 위험하다.
   결과가 필요한 리뷰는 끝난 뒤 compact하거나, 최소한 트랜스크립트가 남는다는 걸 알고 추출로
   복구한다(이번에 실제로 복구됐다 — 중단분에서 `H-344`/`H-352`/`H-356`이 나왔다).
+- **`/code-review high` 재실행분**(원장 §5): 10건 중 여섯은 첫 커밋(`27edd58`)이 이미 닫은 것을
+  리뷰어가 스스로 제외한 뒤의 목록. 반영 ① 넷 — `H-357`(Effect `fn` 안 자기 leaf 철거 = 기존 UB의
+  두 번째 트리거, 배너 확장) / `H-358`(`Slot.Init`이 `RunInit(InitDispatch)` 없이 순서에 기대던
+  유일한 Init) / `H-359`(gen-d Enum 게이트가 부분문자열 — 정확 형으로, 재생성 diff 0) /
+  `H-360`(무효화 표의 교체 행 — 코드·slot-plan·Bookkeeping 주석 셋 대 표 하나). 문항 둘 추가
+  — Q4 실프로퍼티 키의 핸들 오용이 FALLBACK 가드 대신 엔진 에러(`H-361`), Q5 같은 키 간접
+  재디스패치의 UB 명시. Property retractor `Void`의 트윈 미취소는 tween-plan 확정으로 기각.
+  두 번째 커밋으로 마감 — CLI 49/49, doc-check ERROR 0. **핸드오버 완료, PR은 사용자 몫.**

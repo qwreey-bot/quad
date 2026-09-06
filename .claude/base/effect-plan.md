@@ -368,6 +368,14 @@ end
 --   사라져 **영구 미소진**이다. `fn`이 자기 생명주기를 못 바꾼다(`H-147` (A))는
 --   계약의 물리판 — 사용자: *"bind/unbind 에 간접 영향을 주는건데, UB 인게 맞다는 생각"*.
 --   `SignalBehavior` 구분 자체는 `base/ref-plan.md`가 소스.
+--   **[2026-09-07 `H-357`, 핸드오버 `/code-review`] 같은 UB의 두 번째 트리거 — `fn` 안에서
+--   자기 leaf가 *철거*되는 것**(`effectState:Set(E2)`로 값 교체, 또는 `fn`이 자기를 담은
+--   Slot 요소를 제거). `EffectLeafHandler`의 retractor가 `fn` 실행 중 동기로
+--   `unbindLifetime` + `_consumeCleanup`(아직 비어 있음)을 돌리고, 그 뒤 `fn`이 돌려준
+--   cleanup은 다시 묶이지 않는 핸들에 저장돼 **영구 미소진** — 위와 같은 `H-147` (A)의
+--   물리판(Immediate 구분도 필요 없다 — 시그널이 아니라 동기 retract). 가드를 넣지 않는다
+--   (`_assertBindable`의 `isRunning` 가드는 bind 쪽 — unbind에 같은 가드를 두면 철거가
+--   실패하는 더 나쁜 상태가 된다).
 function EffectHandle:_unbindDestroying()
     if self._destroyConn then
         self._destroyConn:Disconnect()

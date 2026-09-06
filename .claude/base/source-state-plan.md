@@ -1332,7 +1332,11 @@ got typeof k 처럼 알려줄 필요는 있는듯"*. 근거는 **메시지에 `k
 평범한 우선순위로 등록된 다른 Handler가 있으면 그쪽이 이기는" 자리이기
 때문(`base/dispatch-core-plan.md`의 "base가 소유하는 핸들러와 주입되는
 엔진 op" 절) —
-지금은 아무도 그 자리를 안 가져가서 항상 이 가드가 에러를 내지만, 이
+**[2026-09-07 정정 — 핸드오버 리뷰 `H-361`, 문항]** quad-roblox의 `PropertyHandler`(NORMAL, 키만
+검사)가 **실프로퍼티 키**를 먼저 가져가므로 `Frame { BackgroundTransparency = state:Observer(fn) }`은
+이 가드가 아니라 엔진의 "number expected, got table"로 죽는다(`H-103` NOOP 마커 잔존) — 비프로퍼티
+키에서만 이 가드가 발화한다. 타입이 1차 방어(strict는 `PVn`이 거부). 처리는
+`qa-request/handover-review-2026-09-07.md` §4 Q4. 아래 원문은 M2 시점 서술: 지금은 아무도 그 자리를 안 가져가서 항상 이 가드가 에러를 내지만, 이
 Handler를 만드는 게 목적이 아니라 "지금은 확정된 기능이 없다"는 default를
 base가 값싸게 제공하는 것뿐. (**이 가드가 없던 이전엔** 확정된 "매치
 실패는 즉시 error" 규칙에 의해 결과적으로 똑같이 에러가 났었음 — 이

@@ -16,6 +16,7 @@
 
 local Brand = require("./Brand")
 local Err = require("./ErrorNamespace")
+local InitDispatch = require("./Dispatch")
 local QuadTypes = require("../luau_packages/quad_types")
 
 local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
@@ -34,6 +35,7 @@ local function Init(module: any)
 	local Slot_mt = {}
 	Slot_mt.__index = Slot_mt
 
+	module:RunInit(InitDispatch) -- idempotent pull (`H-174` idiom; `H-358` — was the only Init relying on init.luau's order)
 	local Dispatch = module.Dispatch
 	-- H6-2: the Bookkeeping header states Slot must reach the bookkeeping
 	-- subsystem directly (not through Dispatch) — and `recompute` is only on
@@ -1078,8 +1080,8 @@ local function Init(module: any)
 	}
 
 	-- Register the top-level SlotHandler here (H-278: the owning module
-	-- registers its own handler). Dispatch is already installed (Slot.Init
-	-- runs after InitDispatch), and _slotInternal above is ready.
+	-- registers its own handler). Dispatch is installed (pulled at the top of
+	-- Init, `H-358`), and _slotInternal above is ready.
 	require("./Dispatch/Slot").register(Dispatch, module)
 
 	-- `H-238`: public surface tagged so argument-validation raises (Nearest)
