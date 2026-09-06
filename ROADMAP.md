@@ -1973,6 +1973,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 
 ## 백로그 (스코프 밖 — 필요성이 실제로 드러나면 그때 설계)
 
+- [ ] **[2026-09-06 신설, 사용자 결정 백로그]** 컴포넌트 경계 flatten 슈거(`research/component-flatten-sugar-plan.md`) — round21 §4 Q2·`H-340`의 후속. 순수 슈거, 코어 변경 없음. 스캐폴딩 계획만 있고 사용자 답 대기.
 - [ ] 범용 렌더 디버깅 도구로서의 quad-mock(Tween mock 등 동적 동작 포함,
       M1의 quad-base 테스트용 mock과는 별개)
 - [ ] `quad-debug`/`quad-debug-roblox-plugin` — 실물 Instance→코드 위치
