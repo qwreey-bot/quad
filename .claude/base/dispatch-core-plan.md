@@ -978,6 +978,12 @@ Fallback Handler들도 존재하지 않아**, 위 "매치 실패는 즉시 `erro
 
 ### Dispatch 체인 — 인덱스 기반 추적, 재디스패치는 하강 diff (2026-08-08 세 번째 세션 신설, 2026-08-13 다섯 번째 세션 인덱스화, 같은 날 열네 번째 세션 하강 diff로 전면 교체)
 
+**[2026-09-06 `H-329` (a), 사용자 확정]** 공개 `retractFrom(inst, k, index)`가 체인을 **비우면**(순수
+철거) 그 리스트를 `chains`와 inst의 gchold(`H-229` 앵커, `unbindLifetime`)에서 놓는다 —
+안 그러면 새 키마다(`State<Attribute>`의 객체별 그룹 키) 빈 리스트+키가 인스턴스 수명
+동안 누적된다(fable 탐사 X-1). `process`의 (B) 분기는 같은 리스트에 곧바로 재설치하므로
+해제 없이 내부 `retractRange(…, false)`를 쓴다. spec.dispatch 15절.
+
 **[전면 교체, 2026-08-13 열네 번째 세션 — `question.md` 0-A/0-Z 확정]**
 이 절은 원래 **"래핑 핸들러가 재-dispatch 전에 자기 아래를 먼저
 `retractFrom`으로 철거한다"**는 모델이었으나, 그 모델은 철거 시점에

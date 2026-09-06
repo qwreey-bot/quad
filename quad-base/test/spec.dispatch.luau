@@ -421,4 +421,40 @@ do
 end
 
 print()
+print("=== 15. H-329 (a) — 순수 철거로 비워진 체인은 chains·gchold에서 놓인다(새 키마다 누적 없음); (B) 재설치 경로는 같은 리스트 유지 ===")
+do
+	local q = mock.newQuad()
+	q.Dispatch.addHandler({
+		name = "AnyTableKey",
+		isHandlable = function(_inst: any, k: any, v: any): boolean
+			return type(k) == "table" and type(v) == "string"
+		end,
+		priority = q.Dispatch.HANDLER_PRIORITY_LOW,
+		process = function(_inst: any, _k: any, _v: any, _index: number): (any?, boolean) -> ()
+			return q.Void
+		end,
+	} :: QuadTypes.Handler)
+	local inst = Instance.new("Frame")
+	q.Dispatch.drive(inst, {})
+	local gc: any = (_G :: any).collectgarbage
+	gc("collect"); gc("collect")
+	local before = gc("count")
+	for i = 1, 5000 do
+		local key = { i } -- fresh key per cycle — the State<Attribute> group-key shape (fable 탐사 X-1)
+		q.Dispatch.process(inst, key, "v", 1)
+		q.Dispatch.retractFrom(inst, key, 1)
+	end
+	gc("collect"); gc("collect"); gc("collect")
+	local delta = gc("count") - before
+	assert(delta < 200, "emptied chains must not accumulate per fresh key (was ~2300 KB before H-329): " .. tostring(delta) .. " KB")
+	-- (B) 경로: 같은 키에서 핸들러가 바뀌어도 리스트는 유지돼 재설치가 끊기지 않는다
+	local k2 = { "b" }
+	q.Dispatch.process(inst, k2, "v", 1)
+	q.Dispatch.process(inst, k2, "w", 1) -- same handler, (A)
+	q.Dispatch.retractFrom(inst, k2, 1) -- pure retract → released
+	q.Dispatch.process(inst, k2, "v", 1) -- fresh list again — must not error
+	print("PASS")
+end
+
+print()
 print("=== ALL PASS ===")

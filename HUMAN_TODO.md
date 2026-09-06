@@ -240,7 +240,7 @@ Debounce/Throttle 작업에 쓴 워크트리는 **사용자 확인 후 정리 �
 
 ## 12. **[2026-09-02 신설, 사용자 확정 — 재발 시 사람 몫]** Studio 프로세스 재기동 (rojo 라이브 싱크의 자율 운영 한계)
 
-**[2026-09-06 추가 관측]** Studio를 재시작하면 rojo 플러그인의 autoReconnect가 붙지 않았다(콘솔 *"Couldn't connect to the Rojo server"* → WebSocket 400; 이 쪽 `rojo serve`는 살아 있음). 다음 Studio 세션에서 **플러그인 Connect를 한 번 눌러 줄 것** — 그 전까지 에이전트는 바뀐 모듈의 `.Source`를 직접 패치해 실측했다(`audit/m11-unit2-studio-2026-09-06.md` 경위). rojo serve 자체는 `pesde install` 중 패키지 경로가 잠시 사라지면 죽는다(에이전트가 재기동).
+**[2026-09-06 추가 관측]** Studio를 재시작하면 rojo 플러그인의 autoReconnect가 붙지 않았다(콘솔 *"Couldn't connect to the Rojo server"* → WebSocket 400; 이 쪽 `rojo serve`는 살아 있음). 다음 Studio 세션에서 **플러그인 Connect를 한 번 눌러 줄 것** — 그 전까지 에이전트는 바뀐 모듈의 `.Source`를 직접 패치해 실측했다(`audit/m11-unit2-studio-2026-09-06.md` 경위). **[2026-09-06 아침 해소]** 사용자가 Connect → 전체 재싱크 확인(패치본은 정본 파일로 덮임). rojo serve 자체는 `pesde install` 중 패키지 경로가 잠시 사라지면 죽는다(에이전트가 재기동).
 
 M5 단위 ⑤에서 확립한 반입 경로(rojo serve + 공식 플러그인)는 **Studio
 프로세스가 살아 있는 동안은** 사람 손이 필요 없다 — `autoReconnect`가

@@ -155,7 +155,14 @@ local function Init(module: any)
 		return nil
 	end
 
-	local function retractFrom(inst: any, k: any, index: number)
+	-- `release` (`H-329`, 사용자 확정 (a) 2026-09-06): a PURE retract that empties
+	-- the chain also drops the list from `chains` and from the inst's gchold —
+	-- otherwise every fresh key (the per-object group keys `State<Attribute>`
+	-- emits) leaves an empty list + its key alive for the instance's lifetime
+	-- (fable 탐사 X-1: ~500 B per emit). The (B) branch of `process` passes
+	-- false: it reinstalls into the SAME list right after, so releasing there
+	-- would cut the chain it is about to fill.
+	local function retractRange(inst: any, k: any, index: number, release: boolean)
 		-- From index (inclusive) to the tail, retracted tail-first (deepest
 		-- index first — LIFO: the shallower slot created the deeper one).
 		-- Arguments are always (nil, true) here: plain retract with no
@@ -173,6 +180,14 @@ local function Init(module: any)
 			slot.retractor(nil, true)
 			list[i] = nil
 		end
+		if release and #list == 0 then
+			module.unbindLifetime(list) -- the `H-229` anchor — pure GC relation, symmetric release
+			chains:SetWeak(inst, k, nil)
+		end
+	end
+
+	local function retractFrom(inst: any, k: any, index: number)
+		retractRange(inst, k, index, true)
 	end
 
 	local function process(inst: any, k: any, v: any, index: number)
@@ -220,8 +235,8 @@ local function Init(module: any)
 			slot.retractor = retractor
 		else
 			-- (B) different handler (or empty slot) — retract this slot and below,
-			-- then install fresh.
-			retractFrom(inst, k, index)
+			-- then install fresh (no release — same list, `H-329`).
+			retractRange(inst, k, index, false)
 			-- Occupancy marker first: while h.process recurses, `list` must stay a
 			-- hole-free sequence for `#list` to be defined (`#` on holey tables is
 			-- unspecified).
