@@ -65,7 +65,8 @@ UDim`(number → offset), `UIPadding: UDim`, `UIPaddingOffset: number`, `UIScale
 — 한 인스턴스에 둘을 같이 쓰면 나중 것이 이기고, 한 키를 `nil`로 내리면 공유 자식이
 파괴된다(같은 뜻의 두 표기라 동시 사용은 의미 없음). 생성기는 GuiObject 계열의
 `<Class>Param`·`<Class>Modifier`에 키 넷을 얹는다(`H-336`, 위 "보강" 문단의 체크리스트
-항목 이행).
+항목 이행). **UB(2차 리뷰 `H-342`)**: 핸들러는 키만 보고 대상 클래스를 검사하지 않는다 —
+타입을 우회해 non-GuiObject에 넣으면 무해한 관리 자식이 조용히 생긴다.
 
 이미 있는 pluggable Handler로 그대로 커버됨. `UICorner`/`UIPadding`/
 `UIScale` 같은 특수 키를 인식하는 Handler(`isHandlable`이 그 키를 매칭)가

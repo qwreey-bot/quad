@@ -57,6 +57,9 @@ end
 local function prePass(inst: any, flattened: { [any]: any }): { any }?
 	local postRefList: { any }? = nil
 	for i = 1, #flattened do
+		-- consumed IN PLACE (`ProcessedPreRef`/`PostRef` replace the slot) — the same
+		-- contract as Modifier `flatten`: a props table belongs to one drive; driving
+		-- the same table again sees sentinels, not the one-shot values (1차 리뷰, `H-339`)
 		local v = flattened[i]
 		if isPreRef(v) then
 			fireOnce(v, "PreRef")

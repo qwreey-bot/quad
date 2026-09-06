@@ -119,7 +119,9 @@ local function install(quad: any)
 			end
 			local child = ensureManagedChild(inst, entry)
 			-- Tween stays a Tween — only `.Value` is wrapped (`UI-8`, `Tween:Mapped`)
-			local mapped = if tweenIn then v:Mapped(entry.wrap) else entry.wrap(v)
+			-- identity wrap (UIPadding/UIScale): pass the Tween through — `Mapped`
+			-- would clone+re-validate+re-freeze an identical value per emit (2차 리뷰)
+			local mapped = if entry.wrap == identity then v elseif tweenIn then v:Mapped(entry.wrap) else entry.wrap(v)
 			for _, prop in entry.props do
 				dispatch.process(child, prop, mapped, 1) -- new chain per (child, prop), index 1
 			end
