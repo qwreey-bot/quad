@@ -1945,9 +1945,13 @@ function Dispatch.getOffsetAt(ownerKey, at)
         if bk.offsetCacheValidUpTo < i then
             -- 그 사용자 코드가 아래를 무효화했다 — 하강점 너머에 이미 쓴
             -- 엔트리는 낡은 길이로 만든 것, 거기서부터 다시.
-            -- (max 1: M3의 하강은 1 밑으로 안 내려간다 — splice의 `j-1 = 0`
-            -- 케이스는 M6에서 오고, 그땐 베이스 재독까지 필요)
-            i = math.max(bk.offsetCacheValidUpTo, 1)
+            -- [2026-09-07 `H-350`] 0으로 내려갔으면(M6 splice의 `j-1 = 0`,
+            -- owner base 이동 — Slot `_baseObserver`) 베이스를 먼저 다시 읽는다:
+            -- 진입부와 같은 ensureBase — 옛 offsetCache[1] 위에 재구축하면 그
+            -- owner의 형제 offset이 base 차이만큼 영구히 어긋난다(옛 주석의
+            -- "max 1 — M6가 베이스 재독을 넣어야"가 미이행이었던 자리)
+            ensureBase()
+            i = bk.offsetCacheValidUpTo
             cur = bk.offsetCache[i]
             continue
         end

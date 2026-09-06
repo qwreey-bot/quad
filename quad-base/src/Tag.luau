@@ -67,13 +67,13 @@ function TagImpl.Added(self: any, nameOrList: any): any
 end
 
 function TagImpl.Removed(self: any, nameOrList: any): any
+	-- `H-344`: same validation as `Added` — a non-string used to be a silent
+	-- no-op and `nil` a VM "table index is nil" blaming this file
+	local toRemove: { [string]: true } = {}
+	flattenInto(toRemove, nameOrList)
 	local names = table.clone(self._names)
-	if type(nameOrList) == "table" then
-		for _, name in ipairs(nameOrList) do
-			names[name] = nil
-		end
-	else
-		names[nameOrList] = nil
+	for name in pairs(toRemove) do
+		names[name] = nil
 	end
 	return newTag(names)
 end

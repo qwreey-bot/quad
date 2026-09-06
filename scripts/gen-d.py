@@ -306,7 +306,12 @@ def emit():
         # 정직한 타입)는 추가로 넣든 State<Tween<T>> 대신 넣든 D/DMapper가 "too complex"
         # (2026-09-06 실측 — 유니언을 품은 State 멤버가 비싸다). 그래서 Animate는
         # State<Tween<T>>로 선언한다(§4 확인 항목).
-        L.append(f"type PV{i} = {t} | State<{t}> | TweenData<{t}> | State<Tween<{t}>> | None -- {t}")
+        # [2026-09-07 H-353] a union type (only the shorthand `UICorner: number | UDim` today)
+        # must list the State/Tween arms PER MEMBER — State<X> is invariant (H-326/H-327), so
+        # `State<number | UDim>` rejects a `Source(8)`; one alias, arms per member.
+        members = [m.strip() for m in t.split("|")]
+        arms = [t] + [f"State<{m}>" for m in members] + [f"TweenData<{m}>" for m in members] + [f"State<Tween<{m}>>" for m in members] + ["None"]
+        L.append(f"type PV{i} = {' | '.join(arms)} -- {t}")
     L.append("")
     for name in names:
         c = classes[name]
@@ -442,7 +447,9 @@ def emit():
             L.append(f"\t{p['name']}: (self: {node}Modifier, value: Field<{t}>) -> {node}Modifier,")
         if is_gui_object(node):
             for sname, t in SHORTHAND:
-                L.append(f"\t{sname}: (self: {node}Modifier, value: Field<{t}>) -> {node}Modifier, -- 숏핸드(H-336)")
+                # H-353: per-member Field arms for a union type (same invariance reason as PVn)
+                field = " | ".join(f"Field<{m.strip()}>" for m in t.split("|"))
+                L.append(f"\t{sname}: (self: {node}Modifier, value: {field}) -> {node}Modifier, -- 숏핸드(H-336)")
         L.append("}")
         # Into<Class> — "이 클래스로 갈 수 있는 모든 것"(상위·자기·커스텀 구현체).
         # self는 any여야 한다: self를 인터페이스 타입으로 두면 반공변 때문에

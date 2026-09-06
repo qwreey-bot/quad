@@ -33,7 +33,10 @@ local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 
 local function notInstalled(name: string): (...any) -> ...any
 	local stub = function(...: any)
-		Err.errorBeforeNearest(
+		-- `H-348`: the dominant raise site is dispatch depth (`process` →
+		-- `bindLifetime`), so outermost blame (checklist 0) — the real backend's
+		-- `quad-roblox/src/LifetimeHandle.luau` does the same
+		Err.errorBefore(
 			`quad: {name} is not available — no backend has installed the lifetime primitives `
 				.. "(quad-roblox does this when it wraps the module; tests use mock.installLifetime)",
 			SURFACE

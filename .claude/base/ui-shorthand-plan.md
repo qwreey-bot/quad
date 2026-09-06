@@ -314,6 +314,10 @@ PropertyHandler의 "첫 세팅은 애니메이션 없이 즉시"(`prev == nil`) 
 
 ## store-bind — 이 숏핸드도 지원
 
+**[2026-09-07 `H-353`]** `UICorner: number | UDim`은 생성 D에서 유일한 유니언 타입이라
+`State<number | UDim>` 한 팔로는 store-bind가 strict에서 거부됐다(`State<X>` 불변) —
+멤버별 팔로 정정, 근거는 `typing-limits.md` 8.9절 (3).
+
 v1에서도 `Corner`/`PaddingAll`/`Scale`은 store 값으로 바인드 가능했음
 (`myStore "key"` 체이닝으로 다른 프로퍼티와 동일하게 취급됨) — quad-v2도
 이 능력을 유지한다. **[정정, 2026-08-14 세션]** 이 절의 원 서술은 "트윈처럼

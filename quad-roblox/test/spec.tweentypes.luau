@@ -7,7 +7,7 @@
 	`Mapped`의 U 전환·`State<Tween<T>>`·센티널 필드가 UseProvider 교집합을
 	거쳐도 정확히 타이핑되는지. 음성(다른 T의 Tween·옵션 타입·문자열 Override·
 	Mapped 결과 오타입·State<Tween<number>>)은 `luau-test/done/33`이 실측 —
-	교집합 `TweenConstructor`(8.6절 예외, `H-324`)여야 잡힌다.
+	순수 제네릭 함수 `TweenConstructor`(`H-343` — 옛 교집합 형·8.6절 예외 `H-324`는 소멸)가 잡는다.
 ]]
 
 local Quad = require("../luau_packages/quad_base")

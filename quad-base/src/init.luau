@@ -140,7 +140,7 @@ local function New(): Quad
 			-- 점유자를 이름으로 못 짚는다(identity 락엔 문자열 이름이 없고,
 			-- 소스 경로를 메시지에 실으면 "내부 경로 blame 금지" spec 규약에
 			-- 걸린다) — 메시지는 계약만 말한다
-			Err.errorBefore(
+			Err.errorBeforeNearest( -- direct-call surface (checklist 0, `H-349`)
 				"Quad module already has a provider; a module cannot serve two backends",
 				QuadTypes.ERROR_LEVEL_SURFACE
 			)

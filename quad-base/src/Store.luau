@@ -91,6 +91,11 @@ local function Init(module: any)
 		end
 		local self = table.clone(defaults or {}) -- `or {}`: `Store<<{}>>()` is valid (`H-83`)
 		for name, value in self do
+			if type(name) ~= "string" then
+				-- `H-347`: `Of` already rejects this (`H-201`) — the constructor
+				-- door let `Store({ Source(1) })` through and `Names()` returned `{ 1 }`
+				Err.errorBeforeNearest(`Store: keys must be strings (got {typeof(name)})`, SURFACE)
+			end
 			if RESERVED[name :: any] then
 				Err.errorBeforeNearest(`Store: "{tostring(name)}" is a reserved store key`, SURFACE)
 			end

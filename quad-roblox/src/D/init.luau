@@ -122,7 +122,7 @@ type PV69 = Enum.RollOffMode | State<Enum.RollOffMode> | TweenData<Enum.RollOffM
 type PV70 = Camera | State<Camera> | TweenData<Camera> | State<Tween<Camera>> | None -- Camera
 type PV71 = Enum.ModelStreamingMode | State<Enum.ModelStreamingMode> | TweenData<Enum.ModelStreamingMode> | State<Tween<Enum.ModelStreamingMode>> | None -- Enum.ModelStreamingMode
 type PV72 = BasePart | State<BasePart> | TweenData<BasePart> | State<Tween<BasePart>> | None -- BasePart
-type PV73 = number | UDim | State<number | UDim> | TweenData<number | UDim> | State<Tween<number | UDim>> | None -- number | UDim
+type PV73 = number | UDim | State<number> | State<UDim> | TweenData<number> | TweenData<UDim> | State<Tween<number>> | State<Tween<UDim>> | None -- number | UDim
 
 export type BillboardGuiParam<E> = {
 	[number]: E,
@@ -1975,7 +1975,7 @@ export type CanvasGroupModifier = {
 	SizeConstraint: (self: CanvasGroupModifier, value: Field<Enum.SizeConstraint>) -> CanvasGroupModifier,
 	Visible: (self: CanvasGroupModifier, value: Field<boolean>) -> CanvasGroupModifier,
 	ZIndex: (self: CanvasGroupModifier, value: Field<number>) -> CanvasGroupModifier,
-	UICorner: (self: CanvasGroupModifier, value: Field<number | UDim>) -> CanvasGroupModifier, -- 숏핸드(H-336)
+	UICorner: (self: CanvasGroupModifier, value: Field<number> | Field<UDim>) -> CanvasGroupModifier, -- 숏핸드(H-336)
 	UIPadding: (self: CanvasGroupModifier, value: Field<UDim>) -> CanvasGroupModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: CanvasGroupModifier, value: Field<number>) -> CanvasGroupModifier, -- 숏핸드(H-336)
 	UIScale: (self: CanvasGroupModifier, value: Field<number>) -> CanvasGroupModifier, -- 숏핸드(H-336)
@@ -2089,7 +2089,7 @@ export type FrameModifier = {
 	Style: (self: FrameModifier, value: Field<Enum.FrameStyle>) -> FrameModifier,
 	Visible: (self: FrameModifier, value: Field<boolean>) -> FrameModifier,
 	ZIndex: (self: FrameModifier, value: Field<number>) -> FrameModifier,
-	UICorner: (self: FrameModifier, value: Field<number | UDim>) -> FrameModifier, -- 숏핸드(H-336)
+	UICorner: (self: FrameModifier, value: Field<number> | Field<UDim>) -> FrameModifier, -- 숏핸드(H-336)
 	UIPadding: (self: FrameModifier, value: Field<UDim>) -> FrameModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: FrameModifier, value: Field<number>) -> FrameModifier, -- 숏핸드(H-336)
 	UIScale: (self: FrameModifier, value: Field<number>) -> FrameModifier, -- 숏핸드(H-336)
@@ -2222,7 +2222,7 @@ export type GuiButtonModifier = {
 	Style: (self: GuiButtonModifier, value: Field<Enum.ButtonStyle>) -> GuiButtonModifier,
 	Visible: (self: GuiButtonModifier, value: Field<boolean>) -> GuiButtonModifier,
 	ZIndex: (self: GuiButtonModifier, value: Field<number>) -> GuiButtonModifier,
-	UICorner: (self: GuiButtonModifier, value: Field<number | UDim>) -> GuiButtonModifier, -- 숏핸드(H-336)
+	UICorner: (self: GuiButtonModifier, value: Field<number> | Field<UDim>) -> GuiButtonModifier, -- 숏핸드(H-336)
 	UIPadding: (self: GuiButtonModifier, value: Field<UDim>) -> GuiButtonModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: GuiButtonModifier, value: Field<number>) -> GuiButtonModifier, -- 숏핸드(H-336)
 	UIScale: (self: GuiButtonModifier, value: Field<number>) -> GuiButtonModifier, -- 숏핸드(H-336)
@@ -2274,7 +2274,7 @@ export type GuiLabelModifier = {
 	SizeConstraint: (self: GuiLabelModifier, value: Field<Enum.SizeConstraint>) -> GuiLabelModifier,
 	Visible: (self: GuiLabelModifier, value: Field<boolean>) -> GuiLabelModifier,
 	ZIndex: (self: GuiLabelModifier, value: Field<number>) -> GuiLabelModifier,
-	UICorner: (self: GuiLabelModifier, value: Field<number | UDim>) -> GuiLabelModifier, -- 숏핸드(H-336)
+	UICorner: (self: GuiLabelModifier, value: Field<number> | Field<UDim>) -> GuiLabelModifier, -- 숏핸드(H-336)
 	UIPadding: (self: GuiLabelModifier, value: Field<UDim>) -> GuiLabelModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: GuiLabelModifier, value: Field<number>) -> GuiLabelModifier, -- 숏핸드(H-336)
 	UIScale: (self: GuiLabelModifier, value: Field<number>) -> GuiLabelModifier, -- 숏핸드(H-336)
@@ -2336,7 +2336,7 @@ export type GuiObjectModifier = {
 	SizeConstraint: (self: GuiObjectModifier, value: Field<Enum.SizeConstraint>) -> GuiObjectModifier,
 	Visible: (self: GuiObjectModifier, value: Field<boolean>) -> GuiObjectModifier,
 	ZIndex: (self: GuiObjectModifier, value: Field<number>) -> GuiObjectModifier,
-	UICorner: (self: GuiObjectModifier, value: Field<number | UDim>) -> GuiObjectModifier, -- 숏핸드(H-336)
+	UICorner: (self: GuiObjectModifier, value: Field<number> | Field<UDim>) -> GuiObjectModifier, -- 숏핸드(H-336)
 	UIPadding: (self: GuiObjectModifier, value: Field<UDim>) -> GuiObjectModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: GuiObjectModifier, value: Field<number>) -> GuiObjectModifier, -- 숏핸드(H-336)
 	UIScale: (self: GuiObjectModifier, value: Field<number>) -> GuiObjectModifier, -- 숏핸드(H-336)
@@ -2465,7 +2465,7 @@ export type ImageButtonModifier = {
 	TileSize: (self: ImageButtonModifier, value: Field<UDim2>) -> ImageButtonModifier,
 	Visible: (self: ImageButtonModifier, value: Field<boolean>) -> ImageButtonModifier,
 	ZIndex: (self: ImageButtonModifier, value: Field<number>) -> ImageButtonModifier,
-	UICorner: (self: ImageButtonModifier, value: Field<number | UDim>) -> ImageButtonModifier, -- 숏핸드(H-336)
+	UICorner: (self: ImageButtonModifier, value: Field<number> | Field<UDim>) -> ImageButtonModifier, -- 숏핸드(H-336)
 	UIPadding: (self: ImageButtonModifier, value: Field<UDim>) -> ImageButtonModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: ImageButtonModifier, value: Field<number>) -> ImageButtonModifier, -- 숏핸드(H-336)
 	UIScale: (self: ImageButtonModifier, value: Field<number>) -> ImageButtonModifier, -- 숏핸드(H-336)
@@ -2577,7 +2577,7 @@ export type ImageLabelModifier = {
 	TileSize: (self: ImageLabelModifier, value: Field<UDim2>) -> ImageLabelModifier,
 	Visible: (self: ImageLabelModifier, value: Field<boolean>) -> ImageLabelModifier,
 	ZIndex: (self: ImageLabelModifier, value: Field<number>) -> ImageLabelModifier,
-	UICorner: (self: ImageLabelModifier, value: Field<number | UDim>) -> ImageLabelModifier, -- 숏핸드(H-336)
+	UICorner: (self: ImageLabelModifier, value: Field<number> | Field<UDim>) -> ImageLabelModifier, -- 숏핸드(H-336)
 	UIPadding: (self: ImageLabelModifier, value: Field<UDim>) -> ImageLabelModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: ImageLabelModifier, value: Field<number>) -> ImageLabelModifier, -- 숏핸드(H-336)
 	UIScale: (self: ImageLabelModifier, value: Field<number>) -> ImageLabelModifier, -- 숏핸드(H-336)
@@ -2880,7 +2880,7 @@ export type ScrollingFrameModifier = {
 	VerticalScrollBarPosition: (self: ScrollingFrameModifier, value: Field<Enum.VerticalScrollBarPosition>) -> ScrollingFrameModifier,
 	Visible: (self: ScrollingFrameModifier, value: Field<boolean>) -> ScrollingFrameModifier,
 	ZIndex: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier,
-	UICorner: (self: ScrollingFrameModifier, value: Field<number | UDim>) -> ScrollingFrameModifier, -- 숏핸드(H-336)
+	UICorner: (self: ScrollingFrameModifier, value: Field<number> | Field<UDim>) -> ScrollingFrameModifier, -- 숏핸드(H-336)
 	UIPadding: (self: ScrollingFrameModifier, value: Field<UDim>) -> ScrollingFrameModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier, -- 숏핸드(H-336)
 	UIScale: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier, -- 숏핸드(H-336)
@@ -3116,7 +3116,7 @@ export type TextBoxModifier = {
 	TextYAlignment: (self: TextBoxModifier, value: Field<Enum.TextYAlignment>) -> TextBoxModifier,
 	Visible: (self: TextBoxModifier, value: Field<boolean>) -> TextBoxModifier,
 	ZIndex: (self: TextBoxModifier, value: Field<number>) -> TextBoxModifier,
-	UICorner: (self: TextBoxModifier, value: Field<number | UDim>) -> TextBoxModifier, -- 숏핸드(H-336)
+	UICorner: (self: TextBoxModifier, value: Field<number> | Field<UDim>) -> TextBoxModifier, -- 숏핸드(H-336)
 	UIPadding: (self: TextBoxModifier, value: Field<UDim>) -> TextBoxModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: TextBoxModifier, value: Field<number>) -> TextBoxModifier, -- 숏핸드(H-336)
 	UIScale: (self: TextBoxModifier, value: Field<number>) -> TextBoxModifier, -- 숏핸드(H-336)
@@ -3252,7 +3252,7 @@ export type TextButtonModifier = {
 	TextYAlignment: (self: TextButtonModifier, value: Field<Enum.TextYAlignment>) -> TextButtonModifier,
 	Visible: (self: TextButtonModifier, value: Field<boolean>) -> TextButtonModifier,
 	ZIndex: (self: TextButtonModifier, value: Field<number>) -> TextButtonModifier,
-	UICorner: (self: TextButtonModifier, value: Field<number | UDim>) -> TextButtonModifier, -- 숏핸드(H-336)
+	UICorner: (self: TextButtonModifier, value: Field<number> | Field<UDim>) -> TextButtonModifier, -- 숏핸드(H-336)
 	UIPadding: (self: TextButtonModifier, value: Field<UDim>) -> TextButtonModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: TextButtonModifier, value: Field<number>) -> TextButtonModifier, -- 숏핸드(H-336)
 	UIScale: (self: TextButtonModifier, value: Field<number>) -> TextButtonModifier, -- 숏핸드(H-336)
@@ -3376,7 +3376,7 @@ export type TextLabelModifier = {
 	TextYAlignment: (self: TextLabelModifier, value: Field<Enum.TextYAlignment>) -> TextLabelModifier,
 	Visible: (self: TextLabelModifier, value: Field<boolean>) -> TextLabelModifier,
 	ZIndex: (self: TextLabelModifier, value: Field<number>) -> TextLabelModifier,
-	UICorner: (self: TextLabelModifier, value: Field<number | UDim>) -> TextLabelModifier, -- 숏핸드(H-336)
+	UICorner: (self: TextLabelModifier, value: Field<number> | Field<UDim>) -> TextLabelModifier, -- 숏핸드(H-336)
 	UIPadding: (self: TextLabelModifier, value: Field<UDim>) -> TextLabelModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: TextLabelModifier, value: Field<number>) -> TextLabelModifier, -- 숏핸드(H-336)
 	UIScale: (self: TextLabelModifier, value: Field<number>) -> TextLabelModifier, -- 숏핸드(H-336)
@@ -4153,7 +4153,7 @@ export type VideoFrameModifier = {
 	Visible: (self: VideoFrameModifier, value: Field<boolean>) -> VideoFrameModifier,
 	Volume: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier,
 	ZIndex: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier,
-	UICorner: (self: VideoFrameModifier, value: Field<number | UDim>) -> VideoFrameModifier, -- 숏핸드(H-336)
+	UICorner: (self: VideoFrameModifier, value: Field<number> | Field<UDim>) -> VideoFrameModifier, -- 숏핸드(H-336)
 	UIPadding: (self: VideoFrameModifier, value: Field<UDim>) -> VideoFrameModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier, -- 숏핸드(H-336)
 	UIScale: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier, -- 숏핸드(H-336)
@@ -4255,7 +4255,7 @@ export type ViewportFrameModifier = {
 	SizeConstraint: (self: ViewportFrameModifier, value: Field<Enum.SizeConstraint>) -> ViewportFrameModifier,
 	Visible: (self: ViewportFrameModifier, value: Field<boolean>) -> ViewportFrameModifier,
 	ZIndex: (self: ViewportFrameModifier, value: Field<number>) -> ViewportFrameModifier,
-	UICorner: (self: ViewportFrameModifier, value: Field<number | UDim>) -> ViewportFrameModifier, -- 숏핸드(H-336)
+	UICorner: (self: ViewportFrameModifier, value: Field<number> | Field<UDim>) -> ViewportFrameModifier, -- 숏핸드(H-336)
 	UIPadding: (self: ViewportFrameModifier, value: Field<UDim>) -> ViewportFrameModifier, -- 숏핸드(H-336)
 	UIPaddingOffset: (self: ViewportFrameModifier, value: Field<number>) -> ViewportFrameModifier, -- 숏핸드(H-336)
 	UIScale: (self: ViewportFrameModifier, value: Field<number>) -> ViewportFrameModifier, -- 숏핸드(H-336)

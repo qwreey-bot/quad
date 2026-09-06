@@ -24,7 +24,14 @@ local function _types()
 	local f3 = q.D.ImageButton({ UICorner = q.Tween({ Value = 12, Time = 0.3 }) })
 	local m = q.D.Modifier.Frame():UICorner(8):UIPadding(UDim.new(0, 2)):UIPaddingOffset(radius):UIScale(q.Tween({ Value = 1 }))
 	local mAbove = q.D.Modifier.GuiObject():UICorner(4) -- 상위 클래스 Modifier에도
-	return f, f2, f3, m, mAbove
+	-- `H-353`: 유니언 타입 숏핸드(`number | UDim`)에 State<number>·State<UDim>이 각각 들어간다
+	-- (State<X> 불변 — `State<number | UDim>` 하나로는 `Source(8)`이 거부됐다, 핸드오버 리뷰)
+	local udim = q.Source(UDim.new(0, 8))
+	local f4 = q.D.Frame({ UICorner = radius })
+	local f5 = q.D.Frame({ UICorner = udim })
+	local m2 = q.D.Modifier.Frame():UICorner(radius):UICorner(udim)
+	local f6 = q.D.Frame({ UICorner = radius:Apply(q.Animate({ Time = 0.2 })) })
+	return f, f2, f3, m, mAbove, f4, f5, m2, f6
 end
 
 print("=== 1. 런타임 대응 — 생성 D의 숏핸드 키가 실제 핸들러에 닿는다(mock 없이 타입만 — 본문은 실행하지 않음) ===")

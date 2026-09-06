@@ -43,6 +43,12 @@ do
 		Store({ ok = Source(1), bad = Quad.Ref(1) } :: any)
 	end)
 	assert(not ok2, "a Ref is not a Source")
+	-- 핸드오버 리뷰 `H-347`: 생성자도 `Of`(`H-201`)처럼 키 타입을 본다
+	local okN, errN = pcall(function()
+		Store({ Source(1) } :: any)
+	end)
+	assert(not okN and string.find(tostring(errN), "keys must be strings", 1, true) ~= nil, "array-shaped defaults rejected: " .. tostring(errN))
+	assert(string.find(tostring(errN), "spec.store.luau", 1, true) ~= nil, "key error blames the caller")
 	-- H-204: the bag itself is validated before clone — a non-table used to die
 	-- inside table.clone, a bare Source got an error naming a Source-internal field.
 	local ok3, err3 = pcall(function()

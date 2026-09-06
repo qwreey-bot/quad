@@ -23,7 +23,10 @@
 	`inst[k] = nil` on a non-nillable engine property (Color3/number …) is a
 	raw engine error inside `process`, which would leave the `H-103` NOOP
 	marker stuck on that key. The last written value stays (a property
-	cannot be unset).
+	cannot be unset) — except while an engine tween is active on that key:
+	`nil` returns before the slot is read, so the tween keeps writing until
+	it finishes or the next real value cancels it (spec.tweenproperty 5절
+	"None → nil: skip-defense, active tween untouched" — intended, `H-352`).
 
 	M11 unit ② (round19, `tween-plan.md` "3-상태 저장" / "override 정책" /
 	"옵션 값 모양"): `isTween(realv)` is a branch INSIDE process, not a

@@ -41,6 +41,20 @@ do
 end
 
 print()
+print("=== 1b. 생성자 — plain 테이블만 (핸드오버 리뷰 `H-345`, Modifier `H-310`의 거울) ===")
+do
+	local q = newAttrQuad()
+	local okS, errS = pcall(function()
+		q.Attribute(q.Source(1))
+	end)
+	assert(not okS and string.find(tostring(errS), "plain tables", 1, true) ~= nil, "a Source is not a plain table: " .. tostring(errS))
+	mock.assertBlamesUser(errS, "spec.attribute.luau", "constructor blame")
+	local okR = pcall(function()
+		q.Attribute(q.Ref(1))
+	end)
+	assert(not okR, "a Ref (metatable) is not flattened field by field")
+end
+
 print("=== 2. 단일 키 왕복 — 무조건 set, store-bind, None → nil 삭제 ===")
 do
 	local log: { string } = {}

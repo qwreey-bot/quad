@@ -32,7 +32,7 @@
 ```
 Tag(name1, name2, ...)                  -- 생성자, 가변인자. Tag() 빈 값도 유효
 tag:Added(name: string | {string}): Tag   -- clone 후 이름(들) 추가, 원본 안 건드림
-tag:Removed(name: string | {string}): Tag -- clone 후 이름(들) 제거
+tag:Removed(name: string | {string}): Tag -- clone 후 이름(들) 제거 — 검증은 Added와 동일(H-344)
 tag:Contains(name): boolean -- 멤버십 확인
 tag:Names(): iterator<string> -- 담고 있는 이름 순회(아래 "메커니즘" 절이 쓰는 것)
 tag:Apply(factory): U        -- factory(self) 체이닝 설탕(Modifier와 동일 패턴)

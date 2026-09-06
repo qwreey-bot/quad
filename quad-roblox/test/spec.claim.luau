@@ -155,6 +155,7 @@ do
 		q.D.Frame({ M.TextLabel("X")({}) })
 	end)
 	assert(not ok and string.find(tostring(err), "no handler matched", 1, true) ~= nil, "descriptor in New children must hit no-match: " .. tostring(err))
+	assert(string.find(tostring(err), "brand: MapperDescriptor", 1, true) ~= nil, "`H-346`: the no-match names the brand: " .. tostring(err))
 
 	-- Claim 표면 경유의 이중 claim(New-made inst)
 	local made = q.D.Frame({})

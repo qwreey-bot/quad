@@ -93,6 +93,11 @@ export type NewChild =
 	| QuadTypes.State<QuadTypes.Tag>
 	| QuadTypes.Attribute
 	| QuadTypes.State<QuadTypes.Attribute>
+	-- [2026-09-07 M6 widening, `H-351`] a Slot in the children array (SlotHandler,
+	-- `Dispatch/Slot.luau`) — the arm bind-system-plan predicted at M5 and the
+	-- fork slice never executed. `State<Slot<…>>` is NOT here (open §4 item —
+	-- `State<X>` is invariant, so the arm shape is a user decision).
+	| QuadTypes.Slot<Instance>
 	-- M7 단위 ③·④: Modifier는 MARKER로만 — 클래스별 `<Class>Modifier`를 유니언에
 	-- 직접 넣으면 큰 클래스의 캐스트 자리에서 "too complex"(2026-09-04 실측,
 	-- typing-limits 8.8절). 여기(`true`)는 무타입 base `Modifier()`의 명시 허용이고,

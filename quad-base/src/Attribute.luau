@@ -87,7 +87,10 @@ local function flattenArg(map: { [string]: any }, arg: any, overwrite: boolean, 
 			end
 			map[name] = v
 		end
-	elseif type(arg) == "table" then
+	elseif type(arg) == "table" and getmetatable(arg) == nil then
+		-- `H-345`: "plain" is enforced — a Source/Ref/Tag/... (any quad value
+		-- carrying a metatable) would otherwise be flattened field by field
+		-- (`_value`, `Revision`, ...), the `H-310` accident Modifier already closed
 		for rawName, v in pairs(arg :: { [any]: any }) do
 			if type(rawName) ~= "string" then
 				Err.errorBeforeNearest(`{ctx}: plain-table keys must be strings`, SURFACE)

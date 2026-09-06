@@ -134,12 +134,18 @@ local function Init(module: any)
 	local function getOffsetAt(ownerKey: any, at: number): number
 		checkPosition("getOffsetAt", at) -- 공개 표면 셋 중 하나 (`H-256`/`H-280`)
 		local bk = getBookkeeping(ownerKey)
-		if bk.offsetCacheValidUpTo == 0 then
-			-- bootstrap: position 1's offset is this owner's base itself —
-			-- a Slot's own .Offset, or 0 for a physical inst (no base concept).
-			bk.offsetCache[1] = if Brand.SlotBrand:is(ownerKey) then ownerKey.Offset:Get() else 0
-			bk.offsetCacheValidUpTo = 1
+		-- bootstrap: position 1's offset is this owner's base itself — a Slot's
+		-- own .Offset, or 0 for a physical inst (no base concept). Also re-run
+		-- when a restart lands on 0 (`H-350`): a base change lowers both
+		-- cursors to 0 (Slot `_baseObserver`), and restarting from the stale
+		-- `offsetCache[1]` would rebuild the whole cache on the old base.
+		local function ensureBase()
+			if bk.offsetCacheValidUpTo == 0 then
+				bk.offsetCache[1] = if Brand.SlotBrand:is(ownerKey) then ownerKey.Offset:Get() else 0
+				bk.offsetCacheValidUpTo = 1
+			end
 		end
+		ensureBase()
 		if at <= bk.offsetCacheValidUpTo then
 			return bk.offsetCache[at]
 		end
@@ -155,9 +161,11 @@ local function Init(module: any)
 			if bk.offsetCacheValidUpTo < i then
 				-- `H-240`: that user code invalidated below us — entries past
 				-- the lowered cursor were built on stale lengths; restart there.
-				-- (max 1: an M3 lowering never goes below 1 — splice's j-1 = 0
-				-- case arrives with M6 and must re-read the base then.)
-				i = math.max(bk.offsetCacheValidUpTo, 1)
+				-- A lowering to 0 (M6: splice's j-1 = 0, or the owner's base
+				-- moved) re-reads the base first — `ensureBase` leaves the
+				-- cursor at 1 on a fresh `offsetCache[1]`.
+				ensureBase()
+				i = bk.offsetCacheValidUpTo
 				cur = bk.offsetCache[i]
 				continue
 			end

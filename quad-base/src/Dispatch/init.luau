@@ -76,6 +76,7 @@ local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 -- module surface, extend this list too or the new brand silently falls back
 -- to typeof (the `type(predicate) == "function"` guard hides omissions).
 local BRAND_PROBES = {
+	"isMapperDescriptor", -- M5 Claim (핸드오버 리뷰 `H-346` — 체크리스트 0-b의 마지막 누락)
 	"isTween", -- M11 (round19 리뷰 — 빠지면 Tween이 `value: table`로 보고된다)
 	"isTag", -- M10 (2차 리뷰 `H-342` — 같은 결함 클래스 넷)
 	"isAttributeKey", -- most-specific-first: 키 객체가 그룹보다 먼저

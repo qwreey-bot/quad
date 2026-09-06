@@ -864,6 +864,18 @@ factory 인자의 재귀만으로 샌다).
 
 ---
 
+**[2026-09-07 8.9 보강 — 핸드오버 리뷰 `H-353`/`H-354`]** (3) 프로퍼티 값이 **유니언
+타입**이면(지금은 숏핸드 `UICorner: number | UDim` 하나) `State<number | UDim>` 한
+팔로는 `Source(8)`도 `Source(UDim)`도 못 받는다 — (1)의 불변성 그대로. 생성기는
+유니언 타입에 대해 **멤버마다** `State<m>`/`TweenData<m>`/`State<Tween<m>>` 팔을
+나열하고(`PV73` 9팔), Modifier setter는 `Field<number> | Field<UDim>`으로 찍는다.
+`LuauSolverConstraintLimit=1000000` 아래서 "too complex" 없음(실측). (4) strict에서
+타입드 `Slot`을 만드는 관용구는 **`q.Slot() :: QuadTypes.Slot<Instance>` 캐스트뿐**
+— 생성자 `<T>(initial: { SlotElement<T> }?)`는 `T`가 `T | State<T> | Slot<T>` 안쪽이라
+인자에서 추론되지 않고, `nil :: { SlotElement<Instance> }?`·`{} :: {…}`·`local s:
+Slot<Instance> = q.Slot()`는 전부 "too complex" 또는 불일치(배열 타입 불변). 근거·
+측정은 `qa-request/handover-review-2026-09-07.md`.
+
 ## 9. 미해결 / 추적 중
 
 - **[2026-08-19 설정 완료]** 에디터(`luau-lsp`)의 솔버 설정 — `luau-analyze`

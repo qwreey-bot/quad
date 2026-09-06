@@ -36,6 +36,12 @@ type MaterialModifier = {
 	AsMaterialButtonTyped: (self: MaterialModifier) -> MaterialModifier,
 }
 
+-- `H-351`: children 자리의 Slot(정본 bind-system-plan "children 원소" 확장 규칙의 M6 팔)
+local function _slotChild()
+	local slot = q.Slot() :: QuadTypes.Slot<Instance> -- 생성자 제네릭 추론은 캐스트로(`H-354`)
+	return q.D.Frame({ slot }), q.D.ScrollingFrame({ q.D.Frame({}), slot, q.None })
+end
+
 local function _neverCalled()
 	local ref = q.Ref(nil :: TextButton?)
 	local a: TextButton = MaterialButton({ Text = "a", Modifier = q.D.Modifier.TextButton():BackgroundTransparency(0.5), Ref = ref, Content = q.D.TextLabel({}) })

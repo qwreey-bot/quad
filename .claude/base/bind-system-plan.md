@@ -224,7 +224,10 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
   optional(`?`) — `nil` disconnect는 optional이 표현한다(`event-plan.md`).
 - **children 원소(`NewChild`)**: `Instance | State<Instance> | None` — **M5 시점
   유니언**이고, **이후 마일스톤이 자기 핸들러가 도착할 때 유니언을
-  확장한다**(확장 규칙 — M6 Slot, M8 `Ref`/`PreRef`/`PostRef`; **[2026-09-03
+  확장한다**(확장 규칙 — M6 Slot, M8 `Ref`/`PreRef`/`PostRef`; **[2026-09-07 M6 확장
+  실행 — `H-351`, 핸드오버 리뷰]** `Slot<Instance>` 합류(fork 슬라이스가 이 팔을
+  실행하지 않아 strict에서 children Slot이 막혀 있었다 — `qa-request/handover-review-2026-09-07.md`;
+  `State<Slot<…>>` 팔·`Observer`/`EffectHandle` 팔은 그 원장 §4 Q1·Q2); **[2026-09-03
   M10 확장 실행]** `Tag | State<Tag> | Attribute | State<Attribute>` 합류 —
   타입드 스칼라 슈가는 `Attribute`를 돌려주므로 같은 멤버, `H10-15`. `OnChange`
   디스크립터는 여기가 아니라 클래스별 생성 별칭 `<Class>Elem`에 들어간다 —

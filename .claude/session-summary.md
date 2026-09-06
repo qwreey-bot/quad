@@ -2363,4 +2363,9 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   InstanceShorthand(round20 `H-335`~`H-337`) — 룩업 표 핸들러·생성기 키 넷·`LuauSolverConstraintLimit`,
   CLI 47/47·Studio 6/6. **M10 잔여 없음.** **[11절]** M9 관례 검증(round21) — `spec.component`/`spec.componenttypes`, 새 배선 없음;
   §4 문항 둘(경계 필드 이름 Q2, `H-340` 커스텀 필드 제거 연산 `Without` 권고). **열린 마일스톤 없음.** **[12절]** 아침 회신 — `H-329` (a) 구현, Q2·`H-340` 보류(flatten 슈거), `H-343` `Override`
-  문자열 싱글톤(사용자 결정 — `Tween` 순수 함수, `H-323`/`H-324` 소멸), 스파이크 `11` 폐기, Studio 재연결.
+  문자열 싱글톤(사용자 결정 — `Tween` 순수 함수, `H-323`/`H-324` 소멸), 스파이크 `11` 폐기, Studio 재연결. **[13절, 2026-09-07]** 핸드오버 — 감사 A·B 반영(`ba222e9`), 전체 코드 리뷰
+  여섯 동시(R1~R3 opus + `/code-review high`) → `/compact` 중 전부 중단 → 트랜스크립트 추출(sonnet) +
+  재실행. 원장 `qa-request/handover-review-2026-09-07.md` `H-344`~`H-356`: 반영 10(Tag `Removed`
+  검증·Attribute plain 가드·`BRAND_PROBES`·Store 키·에러 깊이 둘·`getOffsetAt` 베이스 재독·`NewChild`
+  `Slot<Instance>`·유니언 PV 멤버별 팔), 기각(Effect 비함수 cleanup·Splice 물리 순서·Attribute "누수"는
+  Luau GC 페이싱), 사용자 문항 Q1~Q3. CLI 49/49.
