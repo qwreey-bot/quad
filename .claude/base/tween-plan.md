@@ -104,6 +104,12 @@ StoreBind가 State/Source 레이어를 전부 풀어낸 뒤의 값(그리고 이
 
 ### 3-상태 저장 — `{Tween, Value} | true | nil` (릴레이션 슬롯 하나로 `hasBeenSet` 통합)
 
+**[2026-09-06 구현됨 — M11 단위 ②, round19]** `Handlers/Property.luau`의 `process`가
+아래 분기 1~3 그대로다(슬롯은 install 스코프의 `quad.Relate()`, 키는 프로퍼티 이름).
+override 정책의 **주체는 들어오는 값의 `Override`**(`H-328` — 슬롯엔 정책이 없다;
+plain 값이 오면 Cancel과 같다). Studio 6/6(`audit/m11-unit2-studio-2026-09-06.md`) —
+첫 세팅 스냅·Cancel 이어가기·Finish 스냅·Tween→plain·기본값/`Info` 우선·Destroy 무해.
+
 처음엔 "첫 세팅 여부(`hasBeenSet: boolean`)"와 "실행 중인 엔진 Tween
 객체"를 별도 필드로 저장하려 했으나, **하나의 릴레이션 슬롯으로 통합** —
 `relate:GetStrong(inst,k)`가 돌려주는 값의 3가지 상태:
@@ -175,10 +181,22 @@ no-op이라 실질적 동작이 없음, 일반 프로퍼티는 애초에 "unset"
 
 ### 타입 대수: `T' = T | Tween<T>` — Modifier/State/Source에 새 타입 기계 불필요
 
+**[2026-09-06 실측 정정 — M11 단위 ① `H-326`/`H-327`]** 이 절의
+`State<T | Tween<T>>` 한 멤버 모양은 새 솔버에서 성립하지 않는다 — `State<X>`가
+불변이라 plain `State<T>`가 그 자리에 못 들어간다. 실물(생성 `D` 슬롯 유니언·
+Modifier setter `Field<T>`)은 **`State<T>`와 `State<Tween<T>>`를 각각 나열**한다
+(`T | State<T> | TweenData<T> | State<Tween<T>> | None` — 바깥 Tween은 데이터부
+8.8절, 안쪽은 `Animate`가 돌려주는 타입과 글자 그대로 같아야 하는 전체형). 이
+확장이 `DMapper` 인스턴스화를 "too complex"로 만들어 생성기는 프로퍼티
+타입별 별칭 `PVn`으로 유니언을 한 번만 선언한다. "새 타입 기계 불필요"는
+그대로다 — 멤버 나열이 늘었을 뿐.
+
 지금 프로퍼티류 필드가 열려 있는 자리(Modifier setter, Ref, Store/Source
 필드)는 전부 `T | State<T>` 모양 하나로 통일돼 있음. 여기서 "이 필드의
-`T`" 자체를 `T' = T | Tween<T>`로 치환하면 자동으로 `T | Tween<T> |
-State<T | Tween<T>>`가 나옴 — Modifier/State/Source/StoreBind 코드엔
+`T`" 자체를 `T' = T | Tween<T>`로 치환하면 ~~자동으로 `T | Tween<T> |
+State<T | Tween<T>>`가 나옴~~ **[2026-09-06 정정]** 실물은 위 배너대로
+`T | State<T> | TweenData<T> | State<Tween<T>> | None`(State 멤버 둘을 각각 나열 —
+`State<X>` 불변성) — Modifier/State/Source/StoreBind 코드엔
 `Tween` 인지 로직을 전혀 안 넣어도 됨(StoreBind는 원래도 페이로드 타입에
 무관하게 `isState`만 보고 언랩하는 opaque한 구조였음). `Tween<T>`를 실제로
 해석하는 코드는 여전히 PropertyHandler 하나에만 존재.
@@ -192,6 +210,12 @@ State<T | Tween<T>>`가 나옴 — Modifier/State/Source/StoreBind 코드엔
 "패키지 경계" 절 참고).
 
 ## `Animate` 콤비네이터 — 확정 (2026-08-12 세션)
+
+**[2026-09-06 구현됨 — M11 단위 ③, round19 `H-334`]** `quad-roblox/src/Animate.luau`가
+아래 의사코드 그대로(`RobloxExtension`으로 `q.Animate`). 타입만 정본과 다르다: factory는
+`(self: any) -> State<Tween<any>>` — 정직한 `State<T | Tween<T>>`는 슬롯 유니언에서
+"too complex"고, 제네릭 factory는 `:Apply`의 인자 자리에 못 들어간다(실측 넷은
+`types.luau` 주석·원장). `CanAnimate = false`의 plain 반환은 그대로다.
 
 **동기**: `Tween{Value=..., Style=..., ...}`을 매번 손으로 `:Compute` 안에서
 조립하는 건, 값(`Value`)만 바뀔 뿐 옵션(`Style`/`Time`/`Override`...)은
@@ -385,6 +409,12 @@ quad-roblox 레벨 편의 함수라 base 계약에 영향 없음.
 
 ### 옵션 값 모양 — `Info` 우선, 없으면 편의 필드로 폴백 (확정)
 
+**[2026-09-06 Studio 실측 정정 — M11 단위 ② `H-333`]** 아래 *"별도 기본값 상수를
+새로 정의할 필요 없음"*은 그대로는 불가능하다 — `TweenInfo.new`는 enum 자리의
+**명시적 nil을 거부**한다(*"third argument expects Enum.EasingDirection input"*).
+구현(`Handlers/Property.luau`의 `buildInfo`)은 빠진 필드를 엔진 기본값(아래 표의
+값 그대로)으로 **명시해** 채운다 — 값의 소스는 여전히 엔진이고 코드는 그 사본이다.
+
 Roblox의 `TweenInfo.new(time, easingStyle, easingDirection, repeatCount,
 reverses, delayTime)`는 순수 포지셔널 생성자인데, Luau엔 named call
 문법이 없어서 직접 쓰면 `TweenInfo.new(0.3, Enum.EasingStyle.Quad,
@@ -398,8 +428,10 @@ Enum.EasingDirection.Out)`처럼 각 인자가 뭘 뜻하는지 호출부만 보
   전부 무시.
 - **`Info`가 없으면** 아래 편의 필드로 `TweenInfo.new(...)`를 조립.
 
-편의 필드의 기본값은 **로블록스 `TweenInfo.new()` 자신의 기본값을 그대로
-물려받음** — 별도 기본값 상수를 새로 정의할 필요 없음:
+편의 필드의 기본값은 **로블록스 `TweenInfo.new()` 자신의 기본값과 같다** —
+~~별도 기본값 상수를 새로 정의할 필요 없음~~ **[2026-09-06 `H-333` 정정]** 명시적
+nil을 엔진이 거부하므로 구현(`buildInfo`)이 아래 값을 직접 채워 넣는다(값의
+소스는 엔진, 코드는 그 사본):
 
 ```lua
 Time: number?             -- default 1
@@ -411,6 +443,20 @@ DelayTime: number?        -- default 0
 ```
 
 ### override 정책 — `Tween.Cancel` / `Tween.Finish` 두 값으로 압축 (확정)
+
+**[2026-09-06 `H-343` — 사용자 결정, 표기 정정]** 두 값은 **문자열 싱글톤** `"Cancel"` /
+`"Finish"`다(`Override = "Finish"`) — 아래 `Tween.Cancel`/`Tween.Finish`는 옛 표기로 읽을 것.
+사용자 원문: *"Numeric enum 아니고서야 보통 루아우는 singleton string인지라, 타입에서도
+쉽게 처리되고 마커 필드도 필요 없이 `"..." | "..."` 하면 끝남. 어쩌면 언어 기능이 권유하는
+바를 우리가 너무 무시하고 있었을지도. 이건 Priority나 ErrorLevel 같은거랑은 완전히 다른
+거라서."* Fusion도 같은 관례(`timeliness: "lazy" | "eager"`). 부수 효과: `Tween`에 필드가
+없어져 **순수 제네릭 함수**가 되고 8.6절 예외(`H-324`)가 소멸. frozen 마커 센티널은 슬롯에서
+값을 사용자 데이터와 구분해야 하는 자리(`None`/`Detach`/`KeyGone`/`Processed*`)에만 남는다.
+
+**[2026-09-06 `H-328`]** 정책의 **주체는 활성 트윈 위에 새로 들어오는 값의
+`Override`**다 — 슬롯(`{ Tween, Value }`)엔 정책이 없다. plain 값이 들어오면
+정책이 없어 `Cancel`과 같다(아래 "Tween→plain 전환" 수렴). 구현 배너는 "3-상태
+저장" 절.
 
 기존엔 4가지 옵션(멈춤/오버라이드/삭제후재시작/끝점이동후재시작)을 열어뒀으나,
 다시 보니 로블록스 `TweenBase`가 애초에 진행 중인 트윈의 목표를 바꿔치기할
@@ -436,6 +482,15 @@ sentinel 상수(구현 세부는 M11 착수 시, 문자열이든 전용 테이�
 
 ### 최종 타입
 
+**[2026-09-06 구현됨 — M11 단위 ①, round19]** 아래 스케치의 실물: 값 타입의
+정본은 **quad-types**(`Tween<T>` = `TweenData<T>` & `{ Mapped }`, `TweenOptions<T>`
+— 엔진 무관이라 `Info`/`Style`/`Direction` 자리는 `any`, 옵션 필드는 전부 `read`
+`H-325`), `Override`는 문자열 싱글톤 `"Cancel" | "Finish"`(`H-343` — 처음의 frozen 마커
+센티널 `H-323`은 폐기), 생성자는 **순수 제네릭 함수** `<T>(opts) -> Tween<T>`(8.6절 예외
+`H-324`는 소멸), `Mapped`는
+`typeof(named function)`(§1③). quad-roblox `Types.Tween<T>`는 quad-types 별칭
+그대로 — `read Info: TweenInfo?` 정밀화는 `State<X>` 불변성 때문에 포기(`H-326`).
+
 ```lua
 Tween(opts: {
   Value: T,
@@ -446,7 +501,7 @@ Tween(opts: {
   RepeatCount: number?,
   Reverses: boolean?,
   DelayTime: number?,
-  Override: (typeof(Tween.Cancel) | typeof(Tween.Finish))?,  -- default Tween.Cancel
+  Override: ("Cancel" | "Finish")?,  -- default "Cancel" ([2026-09-06 H-343] 옛 표기 typeof(Tween.Cancel) | typeof(Tween.Finish))
 }) -> Tween<T>
 ```
 

@@ -16,7 +16,10 @@
 local Relate = require("@self/Relate")
 local Err = require("@self/ErrorNamespace")
 local Brand = require("@self/Brand")
-local Ref = require("@self/Ref")
+local RefModule = require("@self/Ref") -- M8 단위 ②부터 { Ref, Init } — Init이 leaf 핸들러·가드 등록(H-278)
+local Ref = RefModule.Ref
+local PreRef = require("@self/PreRef") -- M8 단위 ①
+local PostRef = require("@self/PostRef")
 local Void = require("@self/Void")
 local QuadTypes = require("./luau_packages/quad_types")
 local InitDebug = require("@self/Debug")
@@ -34,6 +37,8 @@ local None = require("@self/Dispatch/None").None
 local TagModule = require("@self/Tag")
 local AttributeKeyModule = require("@self/AttributeKey")
 local AttributeModule = require("@self/Attribute")
+local ModifierModule = require("@self/Modifier") -- M7 단위 ①(값 런타임 — 핸들러는 단위 ②)
+local TweenModule = require("@self/Tween") -- M11 단위 ①(값 타입만 — 소비는 quad-roblox Property 핸들러)
 
 type Quad = QuadTypes.Quad
 
@@ -59,6 +64,8 @@ local function New(): Quad
 		errorNamespace = Err,
 		None = None, -- M3 단위 2 — 센티널(`architecture.md` 최상위 export)
 		Ref = Ref,
+		PreRef = PreRef, -- M8 단위 ① — 런타임은 Ref, 브랜드·_fired만 다름
+		PostRef = PostRef,
 		Blocker = Blocker, -- 단위 4 — 게이트 정책 잎 모듈(인스턴스 간 공유)
 		isEpoch = Brand.isEpoch,
 		isSource = Brand.isSource,
@@ -73,6 +80,7 @@ local function New(): Quad
 		isPostRef = Brand.isPostRef,
 		isMapperDescriptor = Brand.isMapperDescriptor, -- M5 단위 ④(Claim)
 		isTag = Brand.isTag, -- M10 (round16)
+		isTween = Brand.isTween, -- M11 단위 ①
 		isAttribute = Brand.isAttribute,
 		isAttributeKey = Brand.isAttributeKey,
 		-- M10 값 네임스페이스 — 리터럴 모양이 곧 `Quad` 타입이라 여기 직접
@@ -81,11 +89,15 @@ local function New(): Quad
 		-- setmetatable<A,B> 타입 표기로 리터럴 `:: Quad`를 그대로 통과한다 —
 		-- fork의 잠정 `:: any` 캐스트는 통합에서 제거(typing-limits 8.6절)
 		Tag = TagModule.Tag,
+		Tween = TweenModule.Tween, -- M11 단위 ① — 핸들러 없음(dispatch 참가자 아님)
+		Modifier = ModifierModule.Modifier,
 		Attribute = AttributeModule.Attribute,
 		AttributeKey = AttributeKeyModule.AttributeKey,
-		StringAttribute = AttributeKeyModule.StringAttribute,
-		NumberAttribute = AttributeKeyModule.NumberAttribute,
-		BooleanAttribute = AttributeKeyModule.BooleanAttribute,
+		-- [2026-09-03 사용자 확정] 스칼라 패밀리는 그룹 위의 타입드 슈가
+		-- (`Attribute({ [name] = value })`) — AttributeKey는 무타입 프리미티브
+		StringAttribute = AttributeModule.StringAttribute,
+		NumberAttribute = AttributeModule.NumberAttribute,
+		BooleanAttribute = AttributeModule.BooleanAttribute,
 	} :: Quad
 
 	function module.RunInit(self, initFn)
@@ -128,7 +140,7 @@ local function New(): Quad
 			-- 점유자를 이름으로 못 짚는다(identity 락엔 문자열 이름이 없고,
 			-- 소스 경로를 메시지에 실으면 "내부 경로 blame 금지" spec 규약에
 			-- 걸린다) — 메시지는 계약만 말한다
-			Err.errorBefore(
+			Err.errorBeforeNearest( -- direct-call surface (checklist 0, `H-349`)
 				"Quad module already has a provider; a module cannot serve two backends",
 				QuadTypes.ERROR_LEVEL_SURFACE
 			)
@@ -154,6 +166,7 @@ local function New(): Quad
 	module:RunInit(Observer.Init) -- 단위 3 — 레지스트리 둘의 소유 모듈(`H-99`)
 	module:RunInit(Effect.Init)
 	module:RunInit(InitDispatch) -- M3 단위 1 — 인스턴스별 레지스트리 + chains
+	module:RunInit(RefModule.Init) -- M8 단위 ② — RefLeafHandler + PreRef/PostRef 가드(자기 등록)
 	module:RunInit(InitClaim) -- M5 단위 ④ — Claim + 매퍼 디스크립터(claim-plan)
 	module:RunInit(SlotInit) -- M6 — top-level Slot 값 타입 + SlotHandler(자기 등록)
 	-- M10 (round16 spike) — Tag/Attribute 값 + 핸들러(자기 등록, `H-278` 관례)

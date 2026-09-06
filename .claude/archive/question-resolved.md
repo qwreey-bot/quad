@@ -1312,3 +1312,17 @@ L2 디스패치    Handler · Dispatch 코어 · chains · None ·          ┐
 경로 전부(`New`도 호출) / 이중 claim은 셋업 유무로 error, 문항의 `elementOwner` 충돌은
 "claim은 slot과 무관"이라 틀린 전제 / `PlayerGui`는 *"공동 소유 가능 객체"*라 claim
 대상이 아니고 루트는 `ScreenGui`·`SurfaceGui` / `FrameParam<E>` 원소 타입 파라미터.
+
+
+## `AttributeGroupHandler.process`의 부분 실패 롤백 — 안 한다 (2026-09-03 사용자 확정)
+
+`question.md` 낮은 우선순위 절에 2026-08-14 리뷰로 올라왔던 항목: 그룹
+`process`가 이름을 순회하다 소유권 충돌 error가 나면 그 전에 위임된 이름들의
+체인은 이미 등록됐는데 그룹 retractor가 안 만들어져 이 사이클엔 회수되지 않는다
+(피해는 그 인스턴스 수명으로 한정, 재현은 시끄럽게 반복). 원자적 unwind를 넣을지가
+질문이었고, M10 quad-base 절반이 fork 편입(2026-09-03)될 때까지 fork도 롤백
+없이 문서화 노선을 유지했다. **사용자 확정**: *"터지더라도, 시끄러운 에러를
+내며 그 이후 동작이 깨지는건 괜찮으니, 문서화로 부분 실패를 따로 관리 안
+한다는걸 적어두는거라면, 동의"* — 별도 장치 없음, fail-fast 톤 그대로,
+`base/attribute-plan.md` 말미에 확정 서술. 원문은
+`session/2026-09-03-01-fork-integration.md`의 회신 절.

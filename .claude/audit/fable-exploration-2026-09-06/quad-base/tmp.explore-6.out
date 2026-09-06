@@ -1,0 +1,19 @@
+
+=== K1 proof: a fresh table key used once with process+retractFrom stays pinned while inst lives ===
+key alive after retractFrom + GC (inst alive):	true
+key alive after inst Destroy + drop + GC:	false
+
+=== K2 same via Attribute group: private group keys pinned after State<Attribute> swap ===
+old group object alive after swap + GC:	false	(group itself may be collectable; its private keys/lists are what stay)
+
+=== D1 unmounted State-wrapper holds a value; user Sets nil then destroys it; remount → nativeExtract on destroyed inst? ===
+mounted children	1
+after unmount: leaf.Parent	nil	wrapper _elements	1
+after Set(nil)+Destroy while unmounted: wrapper _elements	1	destroyed?	true
+remount ok=	true	nil	children	0	wrapper _elements	0
+(Roblox: Parent assignment on a Destroyed instance raises 'Parent property is locked' — Studio 실측 필요)
+
+=== D2 same but the value is inside a :List (non-detach) — remount reconcile destroys a destroyed inst (Destroy is idempotent) ===
+remount ok=	true	nil	children	0
+
+=== DONE ===

@@ -34,6 +34,7 @@
 ]]
 
 local Brand = require("./Brand")
+local NoneModule = require("./Dispatch/None")
 local ImplRegistry = require("./ImplRegistry")
 local Err = require("./ErrorNamespace")
 local Relate = require("./Relate")
@@ -64,9 +65,14 @@ local function createImpl(module: any)
 	-- ── EmitReceive ──────────────────────────────────────────────────
 	function Impl._receive(self: any, from: any)
 		if module.canExecute(self) then -- read at fire time (`H-174`)
-			self._running = true -- `H-183`: fn may not change its own lifecycle (`H-147` symmetric);
-			self.fn(self._state, self, from) --   an fn that throws leaves it set — dead by contract
-			self._running = false
+			-- `H-183`: fn may not change its own lifecycle (`H-147` symmetric); an fn
+			-- that throws leaves the flag set — dead by contract. Save/restore, not
+			-- true/false: a reentrant wave (fn sets its own State) must not lower
+			-- the guard for the outer fn's tail (`H-332`, fable 탐사 2026-09-06)
+			local outer = self._running
+			self._running = true
+			self.fn(self._state, self, from)
+			self._running = outer
 		else
 			self._rerunRequired = true -- `H-159`: change before binding is held — replayed once when bound
 		end
@@ -77,9 +83,10 @@ local function createImpl(module: any)
 	function Impl._catchUp(self: any)
 		if self._rerunRequired then
 			self._rerunRequired = false
-			self._running = true -- `H-183`
+			local outer = self._running -- `H-183` (save/restore — `H-332`)
+			self._running = true
 			self.fn(self._state, self, nil)
-			self._running = false
+			self._running = outer
 		end
 	end
 
@@ -203,7 +210,6 @@ end
 local function registerDispatchHandlers(module: any)
 	module:RunInit(InitDispatch) -- idempotent pull (the `H-174` idiom)
 	local dispatch: QuadTypes.Dispatch = module.Dispatch
-	local None = module.None
 	-- (inst, k) -> last bound observer. Weak value (`H-71`): the observer's fn
 	-- may capture inst; v is strongly held by gchold while bound, so the entry
 	-- cannot fall out early during the window dedup matters in.
@@ -220,8 +226,7 @@ local function registerDispatchHandlers(module: any)
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
 			-- `H-39`: terminal handlers register their array position — this
 			-- leaf contributes no physical element, so the pair is None/0.
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0)
+			NoneModule.registerEmptySlot(dispatch, inst, k) -- `H-39` (리뷰 — 한 본문, `None.luau`)
 
 			local old = relate:GetWeak(inst, k) -- read Weak to match the SetWeak write (`H-71`)
 			if old ~= v then
@@ -248,7 +253,7 @@ local function registerDispatchHandlers(module: any)
 		end,
 		priority = dispatch.HANDLER_PRIORITY_FALLBACK,
 		process = function(_inst: any, k: any, _v: any, _index: number): (any?, boolean) -> ()
-			Err.errorBefore(`Ref/Observer binding should be array index item, but got {typeof(k)}`, SURFACE)
+			Err.errorBefore(`Observer binding should be array index item, but got {typeof(k)}`, SURFACE)
 			return Void -- unreachable; keeps the contract type
 		end,
 	})

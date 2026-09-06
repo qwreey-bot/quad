@@ -2,9 +2,16 @@
  "apiVersion": 1,
  "classes": {
   "BillboardGui": {
+   "chain": [
+    "LayerCollector",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -18,6 +25,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -27,6 +35,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -36,6 +45,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -45,6 +55,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -54,6 +65,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -63,6 +75,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -72,10 +85,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -93,132 +108,167 @@
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Active",
+     "owner": "BillboardGui",
      "type": "boolean"
     },
     {
      "name": "Adornee",
+     "owner": "BillboardGui",
      "type": "Instance"
     },
     {
      "name": "AlwaysOnTop",
+     "owner": "BillboardGui",
      "type": "boolean"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "Brightness",
+     "owner": "BillboardGui",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "BillboardGui",
      "type": "boolean"
     },
     {
      "name": "DistanceStep",
+     "owner": "BillboardGui",
      "type": "number"
     },
     {
      "name": "Enabled",
+     "owner": "LayerCollector",
      "type": "boolean"
     },
     {
      "name": "ExtentsOffset",
+     "owner": "BillboardGui",
      "type": "Vector3"
     },
     {
      "name": "ExtentsOffsetWorldSpace",
+     "owner": "BillboardGui",
      "type": "Vector3"
     },
     {
      "name": "LightInfluence",
+     "owner": "BillboardGui",
      "type": "number"
     },
     {
      "name": "MaxDistance",
+     "owner": "BillboardGui",
      "type": "number"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "PlayerToHideFrom",
+     "owner": "BillboardGui",
      "type": "Instance"
     },
     {
      "name": "ResetOnSpawn",
+     "owner": "LayerCollector",
      "type": "boolean"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "Size",
+     "owner": "BillboardGui",
      "type": "UDim2"
     },
     {
      "name": "SizeOffset",
+     "owner": "BillboardGui",
      "type": "Vector2"
     },
     {
      "name": "StudsOffset",
+     "owner": "BillboardGui",
      "type": "Vector3"
     },
     {
      "name": "StudsOffsetWorldSpace",
+     "owner": "BillboardGui",
      "type": "Vector3"
     },
     {
      "name": "ZIndexBehavior",
+     "owner": "LayerCollector",
      "type": "Enum.ZIndexBehavior"
     }
    ]
   },
   "Camera": {
+   "chain": [
+    "PVInstance",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -232,6 +282,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -241,6 +292,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -250,6 +302,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -259,6 +312,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -268,6 +322,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -277,6 +332,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -286,84 +342,109 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "InterpolationFinished",
+     "owner": "Camera",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "CFrame",
+     "owner": "Camera",
      "type": "CFrame"
     },
     {
      "name": "CameraSubject",
+     "owner": "Camera",
      "type": "Instance"
     },
     {
      "name": "CameraType",
+     "owner": "Camera",
      "type": "Enum.CameraType"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "DiagonalFieldOfView",
+     "owner": "Camera",
      "type": "number"
     },
     {
      "name": "FieldOfView",
+     "owner": "Camera",
      "type": "number"
     },
     {
      "name": "FieldOfViewMode",
+     "owner": "Camera",
      "type": "Enum.FieldOfViewMode"
     },
     {
      "name": "Focus",
+     "owner": "Camera",
      "type": "CFrame"
     },
     {
      "name": "HeadLocked",
+     "owner": "Camera",
      "type": "boolean"
     },
     {
      "name": "HeadScale",
+     "owner": "Camera",
      "type": "number"
     },
     {
      "name": "MaxAxisFieldOfView",
+     "owner": "Camera",
      "type": "number"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "VRTiltAndRollEnabled",
+     "owner": "Camera",
      "type": "boolean"
     }
    ]
   },
   "CanvasGroup": {
+   "chain": [
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -377,6 +458,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -386,6 +468,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -395,6 +478,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -404,6 +488,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -413,6 +498,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -422,6 +508,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -431,10 +518,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -444,6 +533,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -453,6 +543,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -462,6 +553,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -475,6 +567,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -488,6 +581,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -501,6 +595,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -514,6 +609,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -527,6 +623,7 @@
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -544,18 +641,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -569,6 +670,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -590,6 +692,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -611,6 +714,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -632,6 +736,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -645,6 +750,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -656,162 +762,204 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "GroupColor3",
+     "owner": "CanvasGroup",
      "type": "Color3"
     },
     {
      "name": "GroupTransparency",
+     "owner": "CanvasGroup",
      "type": "number"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "Folder": {
+   "chain": [
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -825,6 +973,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -834,6 +983,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -843,6 +993,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -852,6 +1003,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -861,6 +1013,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -870,6 +1023,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -879,36 +1033,49 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     }
    ]
   },
   "Frame": {
+   "chain": [
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -922,6 +1089,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -931,6 +1099,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -940,6 +1109,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -949,6 +1119,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -958,6 +1129,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -967,6 +1139,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -976,10 +1149,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -989,6 +1164,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -998,6 +1174,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -1007,6 +1184,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1020,6 +1198,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1033,6 +1212,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1046,6 +1226,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1059,6 +1240,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1072,6 +1254,7 @@
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -1089,18 +1272,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1114,6 +1301,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1135,6 +1323,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1156,6 +1345,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1177,6 +1367,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -1190,6 +1381,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1201,158 +1393,203 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "Style",
+     "owner": "Frame",
      "type": "Enum.FrameStyle"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "ImageButton": {
+   "chain": [
+    "GuiButton",
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "Activated",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "inputObject",
@@ -1366,6 +1603,7 @@
     },
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -1379,6 +1617,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -1388,6 +1627,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -1397,6 +1637,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -1406,6 +1647,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -1415,6 +1657,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -1424,6 +1667,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -1433,10 +1677,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -1446,6 +1692,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -1455,6 +1702,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -1464,10 +1712,12 @@
     },
     {
      "name": "MouseButton1Click",
+     "owner": "GuiButton",
      "params": []
     },
     {
      "name": "MouseButton1Down",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "x",
@@ -1481,6 +1731,7 @@
     },
     {
      "name": "MouseButton1Up",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "x",
@@ -1494,10 +1745,12 @@
     },
     {
      "name": "MouseButton2Click",
+     "owner": "GuiButton",
      "params": []
     },
     {
      "name": "MouseButton2Down",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "x",
@@ -1511,6 +1764,7 @@
     },
     {
      "name": "MouseButton2Up",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "x",
@@ -1524,6 +1778,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1537,6 +1792,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1550,6 +1806,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1563,6 +1820,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1576,6 +1834,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -1589,6 +1848,7 @@
     },
     {
      "name": "SecondaryActivated",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "inputObject",
@@ -1598,6 +1858,7 @@
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -1615,18 +1876,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1640,6 +1905,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1661,6 +1927,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1682,6 +1949,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1703,6 +1971,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -1716,6 +1985,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -1727,238 +1997,303 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoButtonColor",
+     "owner": "GuiButton",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "HoverHapticEffect",
+     "owner": "GuiButton",
      "type": "HapticEffect"
     },
     {
      "name": "HoverImage",
+     "owner": "ImageButton",
      "type": "Content"
     },
     {
      "name": "HoverImageContent",
+     "owner": "ImageButton",
      "type": "Content"
     },
     {
      "name": "Image",
+     "owner": "ImageButton",
      "type": "Content"
     },
     {
      "name": "ImageColor3",
+     "owner": "ImageButton",
      "type": "Color3"
     },
     {
      "name": "ImageContent",
+     "owner": "ImageButton",
      "type": "Content"
     },
     {
      "name": "ImageRectOffset",
+     "owner": "ImageButton",
      "type": "Vector2"
     },
     {
      "name": "ImageRectSize",
+     "owner": "ImageButton",
      "type": "Vector2"
     },
     {
      "name": "ImageTransparency",
+     "owner": "ImageButton",
      "type": "number"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Modal",
+     "owner": "GuiButton",
      "type": "boolean"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "PressHapticEffect",
+     "owner": "GuiButton",
      "type": "HapticEffect"
     },
     {
      "name": "PressedImage",
+     "owner": "ImageButton",
      "type": "Content"
     },
     {
      "name": "PressedImageContent",
+     "owner": "ImageButton",
      "type": "Content"
     },
     {
      "name": "ResampleMode",
+     "owner": "ImageButton",
      "type": "Enum.ResamplerMode"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "ScaleType",
+     "owner": "ImageButton",
      "type": "Enum.ScaleType"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "Selected",
+     "owner": "GuiButton",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "SliceCenter",
+     "owner": "ImageButton",
      "type": "Rect"
     },
     {
      "name": "SliceScale",
+     "owner": "ImageButton",
      "type": "number"
     },
     {
      "name": "Style",
+     "owner": "GuiButton",
      "type": "Enum.ButtonStyle"
     },
     {
      "name": "TileSize",
+     "owner": "ImageButton",
      "type": "UDim2"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "ImageLabel": {
+   "chain": [
+    "GuiLabel",
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -1972,6 +2307,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -1981,6 +2317,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -1990,6 +2327,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -1999,6 +2337,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -2008,6 +2347,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -2017,6 +2357,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -2026,10 +2367,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -2039,6 +2382,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -2048,6 +2392,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -2057,6 +2402,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2070,6 +2416,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2083,6 +2430,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2096,6 +2444,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2109,6 +2458,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2122,6 +2472,7 @@
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -2139,18 +2490,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2164,6 +2519,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2185,6 +2541,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2206,6 +2563,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2227,6 +2585,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -2240,6 +2599,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2251,198 +2611,252 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "Image",
+     "owner": "ImageLabel",
      "type": "Content"
     },
     {
      "name": "ImageColor3",
+     "owner": "ImageLabel",
      "type": "Color3"
     },
     {
      "name": "ImageContent",
+     "owner": "ImageLabel",
      "type": "Content"
     },
     {
      "name": "ImageRectOffset",
+     "owner": "ImageLabel",
      "type": "Vector2"
     },
     {
      "name": "ImageRectSize",
+     "owner": "ImageLabel",
      "type": "Vector2"
     },
     {
      "name": "ImageTransparency",
+     "owner": "ImageLabel",
      "type": "number"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "ResampleMode",
+     "owner": "ImageLabel",
      "type": "Enum.ResamplerMode"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "ScaleType",
+     "owner": "ImageLabel",
      "type": "Enum.ScaleType"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "SliceCenter",
+     "owner": "ImageLabel",
      "type": "Rect"
     },
     {
      "name": "SliceScale",
+     "owner": "ImageLabel",
      "type": "number"
     },
     {
      "name": "TileSize",
+     "owner": "ImageLabel",
      "type": "UDim2"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "ScreenGui": {
+   "chain": [
+    "LayerCollector",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -2456,6 +2870,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -2465,6 +2880,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -2474,6 +2890,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -2483,6 +2900,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -2492,6 +2910,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -2501,6 +2920,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -2510,10 +2930,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -2531,92 +2953,119 @@
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipToDeviceSafeArea",
+     "owner": "ScreenGui",
      "type": "boolean"
     },
     {
      "name": "DisplayOrder",
+     "owner": "ScreenGui",
      "type": "number"
     },
     {
      "name": "Enabled",
+     "owner": "LayerCollector",
      "type": "boolean"
     },
     {
      "name": "IgnoreGuiInset",
+     "owner": "ScreenGui",
      "type": "boolean"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "ResetOnSpawn",
+     "owner": "LayerCollector",
      "type": "boolean"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "SafeAreaCompatibility",
+     "owner": "ScreenGui",
      "type": "Enum.SafeAreaCompatibility"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "ScreenInsets",
+     "owner": "ScreenGui",
      "type": "Enum.ScreenInsets"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "ZIndexBehavior",
+     "owner": "LayerCollector",
      "type": "Enum.ZIndexBehavior"
     }
    ]
   },
   "ScrollingFrame": {
+   "chain": [
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -2630,6 +3079,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -2639,6 +3089,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -2648,6 +3099,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -2657,6 +3109,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -2666,6 +3119,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -2675,6 +3129,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -2684,10 +3139,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -2697,6 +3154,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -2706,6 +3164,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -2715,6 +3174,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2728,6 +3188,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2741,6 +3202,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2754,6 +3216,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2767,6 +3230,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -2780,6 +3244,7 @@
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -2797,18 +3262,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2822,6 +3291,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2843,6 +3313,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2864,6 +3335,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2885,6 +3357,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -2898,6 +3371,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -2909,226 +3383,288 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticCanvasSize",
+     "owner": "ScrollingFrame",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BottomImage",
+     "owner": "ScrollingFrame",
      "type": "Content"
     },
     {
      "name": "BottomImageContent",
+     "owner": "ScrollingFrame",
      "type": "Content"
     },
     {
      "name": "CanvasPosition",
+     "owner": "ScrollingFrame",
      "type": "Vector2"
     },
     {
      "name": "CanvasSize",
+     "owner": "ScrollingFrame",
      "type": "UDim2"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ElasticBehavior",
+     "owner": "ScrollingFrame",
      "type": "Enum.ElasticBehavior"
     },
     {
      "name": "HorizontalScrollBarInset",
+     "owner": "ScrollingFrame",
      "type": "Enum.ScrollBarInset"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "MidImage",
+     "owner": "ScrollingFrame",
      "type": "Content"
     },
     {
      "name": "MidImageContent",
+     "owner": "ScrollingFrame",
      "type": "Content"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "ScrollBarImageColor3",
+     "owner": "ScrollingFrame",
      "type": "Color3"
     },
     {
      "name": "ScrollBarImageTransparency",
+     "owner": "ScrollingFrame",
      "type": "number"
     },
     {
      "name": "ScrollBarThickness",
+     "owner": "ScrollingFrame",
      "type": "number"
     },
     {
      "name": "ScrollingDirection",
+     "owner": "ScrollingFrame",
      "type": "Enum.ScrollingDirection"
     },
     {
      "name": "ScrollingEnabled",
+     "owner": "ScrollingFrame",
      "type": "boolean"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "TopImage",
+     "owner": "ScrollingFrame",
      "type": "Content"
     },
     {
      "name": "TopImageContent",
+     "owner": "ScrollingFrame",
      "type": "Content"
     },
     {
      "name": "VerticalScrollBarInset",
+     "owner": "ScrollingFrame",
      "type": "Enum.ScrollBarInset"
     },
     {
      "name": "VerticalScrollBarPosition",
+     "owner": "ScrollingFrame",
      "type": "Enum.VerticalScrollBarPosition"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "SurfaceGui": {
+   "chain": [
+    "SurfaceGuiBase",
+    "LayerCollector",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -3142,6 +3678,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -3151,6 +3688,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -3160,6 +3698,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -3169,6 +3708,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -3178,6 +3718,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -3187,6 +3728,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -3196,10 +3738,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -3217,124 +3761,159 @@
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Active",
+     "owner": "SurfaceGuiBase",
      "type": "boolean"
     },
     {
      "name": "Adornee",
+     "owner": "SurfaceGuiBase",
      "type": "Instance"
     },
     {
      "name": "AlwaysOnTop",
+     "owner": "SurfaceGui",
      "type": "boolean"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "Brightness",
+     "owner": "SurfaceGui",
      "type": "number"
     },
     {
      "name": "CanvasSize",
+     "owner": "SurfaceGui",
      "type": "Vector2"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "SurfaceGui",
      "type": "boolean"
     },
     {
      "name": "Enabled",
+     "owner": "LayerCollector",
      "type": "boolean"
     },
     {
      "name": "Face",
+     "owner": "SurfaceGuiBase",
      "type": "Enum.NormalId"
     },
     {
      "name": "LightInfluence",
+     "owner": "SurfaceGui",
      "type": "number"
     },
     {
      "name": "MaxDistance",
+     "owner": "SurfaceGui",
      "type": "number"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "PixelsPerStud",
+     "owner": "SurfaceGui",
      "type": "number"
     },
     {
      "name": "ResetOnSpawn",
+     "owner": "LayerCollector",
      "type": "boolean"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SizingMode",
+     "owner": "SurfaceGui",
      "type": "Enum.SurfaceGuiSizingMode"
     },
     {
      "name": "ToolPunchThroughDistance",
+     "owner": "SurfaceGui",
      "type": "number"
     },
     {
      "name": "ZIndexBehavior",
+     "owner": "LayerCollector",
      "type": "Enum.ZIndexBehavior"
     },
     {
      "name": "ZOffset",
+     "owner": "SurfaceGui",
      "type": "number"
     }
    ]
   },
   "TextBox": {
+   "chain": [
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -3348,6 +3927,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -3357,6 +3937,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -3366,6 +3947,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -3375,6 +3957,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -3384,6 +3967,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -3393,6 +3977,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -3402,10 +3987,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "FocusLost",
+     "owner": "TextBox",
      "params": [
       {
        "name": "enterPressed",
@@ -3419,10 +4006,12 @@
     },
     {
      "name": "Focused",
+     "owner": "TextBox",
      "params": []
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -3432,6 +4021,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -3441,6 +4031,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -3450,6 +4041,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -3463,6 +4055,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -3476,6 +4069,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -3489,6 +4083,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -3502,6 +4097,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -3515,10 +4111,12 @@
     },
     {
      "name": "ReturnPressedFromOnScreenKeyboard",
+     "owner": "TextBox",
      "params": []
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -3536,18 +4134,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -3561,6 +4163,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -3582,6 +4185,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -3603,6 +4207,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -3624,6 +4229,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -3637,6 +4243,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -3648,254 +4255,323 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClearTextOnFocus",
+     "owner": "TextBox",
      "type": "boolean"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "CursorPosition",
+     "owner": "TextBox",
      "type": "number"
     },
     {
      "name": "FontFace",
+     "owner": "TextBox",
      "type": "Font"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "LineHeight",
+     "owner": "TextBox",
      "type": "number"
     },
     {
      "name": "MaxVisibleGraphemes",
+     "owner": "TextBox",
      "type": "number"
     },
     {
      "name": "MultiLine",
+     "owner": "TextBox",
      "type": "boolean"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "OpenTypeFeatures",
+     "owner": "TextBox",
      "type": "string"
     },
     {
      "name": "PlaceholderColor3",
+     "owner": "TextBox",
      "type": "Color3"
     },
     {
      "name": "PlaceholderText",
+     "owner": "TextBox",
      "type": "string"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "RichText",
+     "owner": "TextBox",
      "type": "boolean"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "SelectionStart",
+     "owner": "TextBox",
      "type": "number"
     },
     {
      "name": "ShowNativeInput",
+     "owner": "TextBox",
      "type": "boolean"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "Text",
+     "owner": "TextBox",
      "type": "string"
     },
     {
      "name": "TextColor3",
+     "owner": "TextBox",
      "type": "Color3"
     },
     {
      "name": "TextDirection",
+     "owner": "TextBox",
      "type": "Enum.TextDirection"
     },
     {
      "name": "TextEditable",
+     "owner": "TextBox",
      "type": "boolean"
     },
     {
      "name": "TextScaled",
+     "owner": "TextBox",
      "type": "boolean"
     },
     {
      "name": "TextSize",
+     "owner": "TextBox",
      "type": "number"
     },
     {
      "name": "TextStrokeColor3",
+     "owner": "TextBox",
      "type": "Color3"
     },
     {
      "name": "TextStrokeTransparency",
+     "owner": "TextBox",
      "type": "number"
     },
     {
      "name": "TextTransparency",
+     "owner": "TextBox",
      "type": "number"
     },
     {
      "name": "TextTruncate",
+     "owner": "TextBox",
      "type": "Enum.TextTruncate"
     },
     {
      "name": "TextWrapped",
+     "owner": "TextBox",
      "type": "boolean"
     },
     {
      "name": "TextXAlignment",
+     "owner": "TextBox",
      "type": "Enum.TextXAlignment"
     },
     {
      "name": "TextYAlignment",
+     "owner": "TextBox",
      "type": "Enum.TextYAlignment"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "TextButton": {
+   "chain": [
+    "GuiButton",
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "Activated",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "inputObject",
@@ -3909,6 +4585,7 @@
     },
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -3922,6 +4599,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -3931,6 +4609,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -3940,6 +4619,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -3949,6 +4629,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -3958,6 +4639,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -3967,6 +4649,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -3976,10 +4659,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -3989,6 +4674,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -3998,6 +4684,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -4007,10 +4694,12 @@
     },
     {
      "name": "MouseButton1Click",
+     "owner": "GuiButton",
      "params": []
     },
     {
      "name": "MouseButton1Down",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "x",
@@ -4024,6 +4713,7 @@
     },
     {
      "name": "MouseButton1Up",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "x",
@@ -4037,10 +4727,12 @@
     },
     {
      "name": "MouseButton2Click",
+     "owner": "GuiButton",
      "params": []
     },
     {
      "name": "MouseButton2Down",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "x",
@@ -4054,6 +4746,7 @@
     },
     {
      "name": "MouseButton2Up",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "x",
@@ -4067,6 +4760,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4080,6 +4774,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4093,6 +4788,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4106,6 +4802,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4119,6 +4816,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4132,6 +4830,7 @@
     },
     {
      "name": "SecondaryActivated",
+     "owner": "GuiButton",
      "params": [
       {
        "name": "inputObject",
@@ -4141,6 +4840,7 @@
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -4158,18 +4858,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4183,6 +4887,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4204,6 +4909,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4225,6 +4931,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4246,6 +4953,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -4259,6 +4967,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4270,246 +4979,313 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoButtonColor",
+     "owner": "GuiButton",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "FontFace",
+     "owner": "TextButton",
      "type": "Font"
     },
     {
      "name": "HoverHapticEffect",
+     "owner": "GuiButton",
      "type": "HapticEffect"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "LineHeight",
+     "owner": "TextButton",
      "type": "number"
     },
     {
      "name": "MaxVisibleGraphemes",
+     "owner": "TextButton",
      "type": "number"
     },
     {
      "name": "Modal",
+     "owner": "GuiButton",
      "type": "boolean"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "OpenTypeFeatures",
+     "owner": "TextButton",
      "type": "string"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "PressHapticEffect",
+     "owner": "GuiButton",
      "type": "HapticEffect"
     },
     {
      "name": "RichText",
+     "owner": "TextButton",
      "type": "boolean"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "Selected",
+     "owner": "GuiButton",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "Style",
+     "owner": "GuiButton",
      "type": "Enum.ButtonStyle"
     },
     {
      "name": "Text",
+     "owner": "TextButton",
      "type": "string"
     },
     {
      "name": "TextColor3",
+     "owner": "TextButton",
      "type": "Color3"
     },
     {
      "name": "TextDirection",
+     "owner": "TextButton",
      "type": "Enum.TextDirection"
     },
     {
      "name": "TextScaled",
+     "owner": "TextButton",
      "type": "boolean"
     },
     {
      "name": "TextSize",
+     "owner": "TextButton",
      "type": "number"
     },
     {
      "name": "TextStrokeColor3",
+     "owner": "TextButton",
      "type": "Color3"
     },
     {
      "name": "TextStrokeTransparency",
+     "owner": "TextButton",
      "type": "number"
     },
     {
      "name": "TextTransparency",
+     "owner": "TextButton",
      "type": "number"
     },
     {
      "name": "TextTruncate",
+     "owner": "TextButton",
      "type": "Enum.TextTruncate"
     },
     {
      "name": "TextWrapped",
+     "owner": "TextButton",
      "type": "boolean"
     },
     {
      "name": "TextXAlignment",
+     "owner": "TextButton",
      "type": "Enum.TextXAlignment"
     },
     {
      "name": "TextYAlignment",
+     "owner": "TextButton",
      "type": "Enum.TextYAlignment"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "TextLabel": {
+   "chain": [
+    "GuiLabel",
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -4523,6 +5299,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -4532,6 +5309,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -4541,6 +5319,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -4550,6 +5329,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -4559,6 +5339,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -4568,6 +5349,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -4577,10 +5359,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -4590,6 +5374,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -4599,6 +5384,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -4608,6 +5394,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4621,6 +5408,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4634,6 +5422,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4647,6 +5436,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4660,6 +5450,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -4673,6 +5464,7 @@
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -4690,18 +5482,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4715,6 +5511,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4736,6 +5533,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4757,6 +5555,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4778,6 +5577,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -4791,6 +5591,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -4802,222 +5603,282 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "FontFace",
+     "owner": "TextLabel",
      "type": "Font"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "LineHeight",
+     "owner": "TextLabel",
      "type": "number"
     },
     {
      "name": "MaxVisibleGraphemes",
+     "owner": "TextLabel",
      "type": "number"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "OpenTypeFeatures",
+     "owner": "TextLabel",
      "type": "string"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "RichText",
+     "owner": "TextLabel",
      "type": "boolean"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "Text",
+     "owner": "TextLabel",
      "type": "string"
     },
     {
      "name": "TextColor3",
+     "owner": "TextLabel",
      "type": "Color3"
     },
     {
      "name": "TextDirection",
+     "owner": "TextLabel",
      "type": "Enum.TextDirection"
     },
     {
      "name": "TextScaled",
+     "owner": "TextLabel",
      "type": "boolean"
     },
     {
      "name": "TextSize",
+     "owner": "TextLabel",
      "type": "number"
     },
     {
      "name": "TextStrokeColor3",
+     "owner": "TextLabel",
      "type": "Color3"
     },
     {
      "name": "TextStrokeTransparency",
+     "owner": "TextLabel",
      "type": "number"
     },
     {
      "name": "TextTransparency",
+     "owner": "TextLabel",
      "type": "number"
     },
     {
      "name": "TextTruncate",
+     "owner": "TextLabel",
      "type": "Enum.TextTruncate"
     },
     {
      "name": "TextWrapped",
+     "owner": "TextLabel",
      "type": "boolean"
     },
     {
      "name": "TextXAlignment",
+     "owner": "TextLabel",
      "type": "Enum.TextXAlignment"
     },
     {
      "name": "TextYAlignment",
+     "owner": "TextLabel",
      "type": "Enum.TextYAlignment"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "UIAspectRatioConstraint": {
+   "chain": [
+    "UIConstraint",
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5031,6 +5892,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -5040,6 +5902,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -5049,6 +5912,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5058,6 +5922,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5067,6 +5932,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5076,6 +5942,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5085,48 +5952,63 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AspectRatio",
+     "owner": "UIAspectRatioConstraint",
      "type": "number"
     },
     {
      "name": "AspectType",
+     "owner": "UIAspectRatioConstraint",
      "type": "Enum.AspectType"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "DominantAxis",
+     "owner": "UIAspectRatioConstraint",
      "type": "Enum.DominantAxis"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     }
    ]
   },
   "UICorner": {
+   "chain": [
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5140,6 +6022,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -5149,6 +6032,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -5158,6 +6042,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5167,6 +6052,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5176,6 +6062,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5185,6 +6072,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5194,56 +6082,73 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "BottomLeftRadius",
+     "owner": "UICorner",
      "type": "UDim"
     },
     {
      "name": "BottomRightRadius",
+     "owner": "UICorner",
      "type": "UDim"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "CornerRadius",
+     "owner": "UICorner",
      "type": "UDim"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "TopLeftRadius",
+     "owner": "UICorner",
      "type": "UDim"
     },
     {
      "name": "TopRightRadius",
+     "owner": "UICorner",
      "type": "UDim"
     }
    ]
   },
   "UIDragDetector": {
+   "chain": [
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5257,6 +6162,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -5266,6 +6172,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -5275,6 +6182,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5284,6 +6192,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5293,6 +6202,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5302,6 +6212,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5311,10 +6222,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "DragContinue",
+     "owner": "UIDragDetector",
      "params": [
       {
        "name": "inputPosition",
@@ -5324,6 +6237,7 @@
     },
     {
      "name": "DragEnd",
+     "owner": "UIDragDetector",
      "params": [
       {
        "name": "inputPosition",
@@ -5333,6 +6247,7 @@
     },
     {
      "name": "DragStart",
+     "owner": "UIDragDetector",
      "params": [
       {
        "name": "inputPosition",
@@ -5342,120 +6257,153 @@
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "ActivatedCursorIcon",
+     "owner": "UIDragDetector",
      "type": "Content"
     },
     {
      "name": "ActivatedCursorIconContent",
+     "owner": "UIDragDetector",
      "type": "Content"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "BoundingBehavior",
+     "owner": "UIDragDetector",
      "type": "Enum.UIDragDetectorBoundingBehavior"
     },
     {
      "name": "BoundingUI",
+     "owner": "UIDragDetector",
      "type": "GuiBase2d"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "CursorIcon",
+     "owner": "UIDragDetector",
      "type": "Content"
     },
     {
      "name": "CursorIconContent",
+     "owner": "UIDragDetector",
      "type": "Content"
     },
     {
      "name": "DragAxis",
+     "owner": "UIDragDetector",
      "type": "Vector2"
     },
     {
      "name": "DragRelativity",
+     "owner": "UIDragDetector",
      "type": "Enum.UIDragDetectorDragRelativity"
     },
     {
      "name": "DragRotation",
+     "owner": "UIDragDetector",
      "type": "number"
     },
     {
      "name": "DragSpace",
+     "owner": "UIDragDetector",
      "type": "Enum.UIDragDetectorDragSpace"
     },
     {
      "name": "DragStyle",
+     "owner": "UIDragDetector",
      "type": "Enum.UIDragDetectorDragStyle"
     },
     {
      "name": "DragUDim2",
+     "owner": "UIDragDetector",
      "type": "UDim2"
     },
     {
      "name": "Enabled",
+     "owner": "UIDragDetector",
      "type": "boolean"
     },
     {
      "name": "MaxDragAngle",
+     "owner": "UIDragDetector",
      "type": "number"
     },
     {
      "name": "MaxDragTranslation",
+     "owner": "UIDragDetector",
      "type": "UDim2"
     },
     {
      "name": "MinDragAngle",
+     "owner": "UIDragDetector",
      "type": "number"
     },
     {
      "name": "MinDragTranslation",
+     "owner": "UIDragDetector",
      "type": "UDim2"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "ReferenceUIInstance",
+     "owner": "UIDragDetector",
      "type": "GuiObject"
     },
     {
      "name": "ResponseStyle",
+     "owner": "UIDragDetector",
      "type": "Enum.UIDragDetectorResponseStyle"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "SelectionModeDragSpeed",
+     "owner": "UIDragDetector",
      "type": "UDim2"
     },
     {
      "name": "SelectionModeRotateSpeed",
+     "owner": "UIDragDetector",
      "type": "number"
     },
     {
      "name": "UIDragSpeedAxisMapping",
+     "owner": "UIDragDetector",
      "type": "Enum.UIDragSpeedAxisMapping"
     }
    ]
   },
   "UIFlexItem": {
+   "chain": [
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5469,6 +6417,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -5478,6 +6427,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -5487,6 +6437,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5496,6 +6447,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5505,6 +6457,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5514,6 +6467,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5523,52 +6477,68 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "FlexMode",
+     "owner": "UIFlexItem",
      "type": "Enum.UIFlexMode"
     },
     {
      "name": "GrowRatio",
+     "owner": "UIFlexItem",
      "type": "number"
     },
     {
      "name": "ItemLineAlignment",
+     "owner": "UIFlexItem",
      "type": "Enum.ItemLineAlignment"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "ShrinkRatio",
+     "owner": "UIFlexItem",
      "type": "number"
     }
    ]
   },
   "UIGradient": {
+   "chain": [
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5582,6 +6552,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -5591,6 +6562,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -5600,6 +6572,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5609,6 +6582,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5618,6 +6592,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5627,6 +6602,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5636,68 +6612,90 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "Color",
+     "owner": "UIGradient",
      "type": "ColorSequence"
     },
     {
      "name": "Enabled",
+     "owner": "UIGradient",
      "type": "boolean"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Offset",
+     "owner": "UIGradient",
      "type": "Vector2"
     },
     {
      "name": "Rotation",
+     "owner": "UIGradient",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Scale",
+     "owner": "UIGradient",
      "type": "number"
     },
     {
      "name": "TileMode",
+     "owner": "UIGradient",
      "type": "Enum.GradientTileMode"
     },
     {
      "name": "Transparency",
+     "owner": "UIGradient",
      "type": "NumberSequence"
     },
     {
      "name": "Type",
+     "owner": "UIGradient",
      "type": "Enum.GradientType"
     }
    ]
   },
   "UIGridLayout": {
+   "chain": [
+    "UIGridStyleLayout",
+    "UILayout",
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5711,6 +6709,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -5720,6 +6719,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -5729,6 +6729,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5738,6 +6739,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5747,6 +6749,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5756,6 +6759,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5765,68 +6769,90 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "CellPadding",
+     "owner": "UIGridLayout",
      "type": "UDim2"
     },
     {
      "name": "CellSize",
+     "owner": "UIGridLayout",
      "type": "UDim2"
     },
     {
      "name": "FillDirection",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.FillDirection"
     },
     {
      "name": "FillDirectionMaxCells",
+     "owner": "UIGridLayout",
      "type": "number"
     },
     {
      "name": "HorizontalAlignment",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.HorizontalAlignment"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "SortOrder",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.SortOrder"
     },
     {
      "name": "StartCorner",
+     "owner": "UIGridLayout",
      "type": "Enum.StartCorner"
     },
     {
      "name": "VerticalAlignment",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.VerticalAlignment"
     }
    ]
   },
   "UIListLayout": {
+   "chain": [
+    "UIGridStyleLayout",
+    "UILayout",
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5840,6 +6866,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -5849,6 +6876,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -5858,6 +6886,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5867,6 +6896,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5876,6 +6906,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5885,6 +6916,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -5894,72 +6926,93 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "FillDirection",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.FillDirection"
     },
     {
      "name": "HorizontalAlignment",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.HorizontalAlignment"
     },
     {
      "name": "HorizontalFlex",
+     "owner": "UIListLayout",
      "type": "Enum.UIFlexAlignment"
     },
     {
      "name": "ItemLineAlignment",
+     "owner": "UIListLayout",
      "type": "Enum.ItemLineAlignment"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Padding",
+     "owner": "UIListLayout",
      "type": "UDim"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "SortOrder",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.SortOrder"
     },
     {
      "name": "VerticalAlignment",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.VerticalAlignment"
     },
     {
      "name": "VerticalFlex",
+     "owner": "UIListLayout",
      "type": "Enum.UIFlexAlignment"
     },
     {
      "name": "Wraps",
+     "owner": "UIListLayout",
      "type": "boolean"
     }
    ]
   },
   "UIPadding": {
+   "chain": [
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -5973,6 +7026,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -5982,6 +7036,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -5991,6 +7046,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6000,6 +7056,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6009,6 +7066,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6018,6 +7076,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6027,52 +7086,70 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "PaddingBottom",
+     "owner": "UIPadding",
      "type": "UDim"
     },
     {
      "name": "PaddingLeft",
+     "owner": "UIPadding",
      "type": "UDim"
     },
     {
      "name": "PaddingRight",
+     "owner": "UIPadding",
      "type": "UDim"
     },
     {
      "name": "PaddingTop",
+     "owner": "UIPadding",
      "type": "UDim"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     }
    ]
   },
   "UIPageLayout": {
+   "chain": [
+    "UIGridStyleLayout",
+    "UILayout",
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6086,6 +7163,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -6095,6 +7173,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -6104,6 +7183,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6113,6 +7193,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6122,6 +7203,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6131,6 +7213,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6140,10 +7223,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "PageEnter",
+     "owner": "UIPageLayout",
      "params": [
       {
        "name": "page",
@@ -6153,6 +7238,7 @@
     },
     {
      "name": "PageLeave",
+     "owner": "UIPageLayout",
      "params": [
       {
        "name": "page",
@@ -6162,6 +7248,7 @@
     },
     {
      "name": "Stopped",
+     "owner": "UIPageLayout",
      "params": [
       {
        "name": "currentPage",
@@ -6171,84 +7258,108 @@
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Animated",
+     "owner": "UIPageLayout",
      "type": "boolean"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "Circular",
+     "owner": "UIPageLayout",
      "type": "boolean"
     },
     {
      "name": "EasingDirection",
+     "owner": "UIPageLayout",
      "type": "Enum.EasingDirection"
     },
     {
      "name": "EasingStyle",
+     "owner": "UIPageLayout",
      "type": "Enum.EasingStyle"
     },
     {
      "name": "FillDirection",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.FillDirection"
     },
     {
      "name": "GamepadInputEnabled",
+     "owner": "UIPageLayout",
      "type": "boolean"
     },
     {
      "name": "HorizontalAlignment",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.HorizontalAlignment"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Padding",
+     "owner": "UIPageLayout",
      "type": "UDim"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "ScrollWheelInputEnabled",
+     "owner": "UIPageLayout",
      "type": "boolean"
     },
     {
      "name": "SortOrder",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.SortOrder"
     },
     {
      "name": "TouchInputEnabled",
+     "owner": "UIPageLayout",
      "type": "boolean"
     },
     {
      "name": "TweenTime",
+     "owner": "UIPageLayout",
      "type": "number"
     },
     {
      "name": "VerticalAlignment",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.VerticalAlignment"
     }
    ]
   },
   "UIScale": {
+   "chain": [
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6262,6 +7373,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -6271,6 +7383,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -6280,6 +7393,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6289,6 +7403,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6298,6 +7413,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6307,6 +7423,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6316,40 +7433,53 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Scale",
+     "owner": "UIScale",
      "type": "number"
     }
    ]
   },
   "UIShadow": {
+   "chain": [
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6363,6 +7493,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -6372,6 +7503,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -6381,6 +7513,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6390,6 +7523,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6399,6 +7533,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6408,6 +7543,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6417,72 +7553,94 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "BlurRadius",
+     "owner": "UIShadow",
      "type": "UDim"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "Color",
+     "owner": "UIShadow",
      "type": "Color3"
     },
     {
      "name": "Enabled",
+     "owner": "UIShadow",
      "type": "boolean"
     },
     {
      "name": "Inset",
+     "owner": "UIShadow",
      "type": "boolean"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Offset",
+     "owner": "UIShadow",
      "type": "UDim2"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "ShowBehindParent",
+     "owner": "UIShadow",
      "type": "boolean"
     },
     {
      "name": "Spread",
+     "owner": "UIShadow",
      "type": "UDim2"
     },
     {
      "name": "Transparency",
+     "owner": "UIShadow",
      "type": "number"
     },
     {
      "name": "ZIndex",
+     "owner": "UIShadow",
      "type": "number"
     }
    ]
   },
   "UISizeConstraint": {
+   "chain": [
+    "UIConstraint",
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6496,6 +7654,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -6505,6 +7664,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -6514,6 +7674,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6523,6 +7684,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6532,6 +7694,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6541,6 +7704,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6550,44 +7714,58 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "MaxSize",
+     "owner": "UISizeConstraint",
      "type": "Vector2"
     },
     {
      "name": "MinSize",
+     "owner": "UISizeConstraint",
      "type": "Vector2"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     }
    ]
   },
   "UIStroke": {
+   "chain": [
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6601,6 +7779,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -6610,6 +7789,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -6619,6 +7799,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6628,6 +7809,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6637,6 +7819,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6646,6 +7829,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6655,76 +7839,100 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "ApplyStrokeMode",
+     "owner": "UIStroke",
      "type": "Enum.ApplyStrokeMode"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "BorderOffset",
+     "owner": "UIStroke",
      "type": "UDim"
     },
     {
      "name": "BorderStrokePosition",
+     "owner": "UIStroke",
      "type": "Enum.BorderStrokePosition"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "Color",
+     "owner": "UIStroke",
      "type": "Color3"
     },
     {
      "name": "Enabled",
+     "owner": "UIStroke",
      "type": "boolean"
     },
     {
      "name": "LineJoinMode",
+     "owner": "UIStroke",
      "type": "Enum.LineJoinMode"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "StrokeSizingMode",
+     "owner": "UIStroke",
      "type": "Enum.StrokeSizingMode"
     },
     {
      "name": "Thickness",
+     "owner": "UIStroke",
      "type": "number"
     },
     {
      "name": "Transparency",
+     "owner": "UIStroke",
      "type": "number"
     },
     {
      "name": "ZIndex",
+     "owner": "UIStroke",
      "type": "number"
     }
    ]
   },
   "UITableLayout": {
+   "chain": [
+    "UIGridStyleLayout",
+    "UILayout",
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6738,6 +7946,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -6747,6 +7956,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -6756,6 +7966,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6765,6 +7976,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6774,6 +7986,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6783,6 +7996,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6792,68 +8006,89 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "FillDirection",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.FillDirection"
     },
     {
      "name": "FillEmptySpaceColumns",
+     "owner": "UITableLayout",
      "type": "boolean"
     },
     {
      "name": "FillEmptySpaceRows",
+     "owner": "UITableLayout",
      "type": "boolean"
     },
     {
      "name": "HorizontalAlignment",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.HorizontalAlignment"
     },
     {
      "name": "MajorAxis",
+     "owner": "UITableLayout",
      "type": "Enum.TableMajorAxis"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Padding",
+     "owner": "UITableLayout",
      "type": "UDim2"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "SortOrder",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.SortOrder"
     },
     {
      "name": "VerticalAlignment",
+     "owner": "UIGridStyleLayout",
      "type": "Enum.VerticalAlignment"
     }
    ]
   },
   "UITextSizeConstraint": {
+   "chain": [
+    "UIConstraint",
+    "UIComponent",
+    "UIBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6867,6 +8102,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -6876,6 +8112,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -6885,6 +8122,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6894,6 +8132,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6903,6 +8142,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6912,6 +8152,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -6921,44 +8162,59 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "MaxTextSize",
+     "owner": "UITextSizeConstraint",
      "type": "number"
     },
     {
      "name": "MinTextSize",
+     "owner": "UITextSizeConstraint",
      "type": "number"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     }
    ]
   },
   "VideoFrame": {
+   "chain": [
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6972,6 +8228,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -6981,6 +8238,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -6990,6 +8248,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -6999,6 +8258,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -7008,6 +8268,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -7017,6 +8278,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -7026,10 +8288,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "DidLoop",
+     "owner": "VideoFrame",
      "params": [
       {
        "name": "video",
@@ -7039,6 +8303,7 @@
     },
     {
      "name": "Ended",
+     "owner": "VideoFrame",
      "params": [
       {
        "name": "video",
@@ -7048,6 +8313,7 @@
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -7057,6 +8323,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -7066,6 +8333,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -7075,6 +8343,7 @@
     },
     {
      "name": "Loaded",
+     "owner": "VideoFrame",
      "params": [
       {
        "name": "video",
@@ -7084,6 +8353,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7097,6 +8367,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7110,6 +8381,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7123,6 +8395,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7136,6 +8409,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7149,6 +8423,7 @@
     },
     {
      "name": "Paused",
+     "owner": "VideoFrame",
      "params": [
       {
        "name": "video",
@@ -7158,6 +8433,7 @@
     },
     {
      "name": "Played",
+     "owner": "VideoFrame",
      "params": [
       {
        "name": "video",
@@ -7167,6 +8443,7 @@
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -7184,18 +8461,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7209,6 +8490,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7230,6 +8512,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7251,6 +8534,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7272,6 +8556,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -7285,6 +8570,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7296,190 +8582,242 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Looped",
+     "owner": "VideoFrame",
      "type": "boolean"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "Playing",
+     "owner": "VideoFrame",
      "type": "boolean"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "RollOffMaxDistance",
+     "owner": "VideoFrame",
      "type": "number"
     },
     {
      "name": "RollOffMinDistance",
+     "owner": "VideoFrame",
      "type": "number"
     },
     {
      "name": "RollOffMode",
+     "owner": "VideoFrame",
      "type": "Enum.RollOffMode"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "TimePosition",
+     "owner": "VideoFrame",
      "type": "number"
     },
     {
      "name": "Video",
+     "owner": "VideoFrame",
      "type": "Content"
     },
     {
      "name": "VideoContent",
+     "owner": "VideoFrame",
      "type": "Content"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "Volume",
+     "owner": "VideoFrame",
      "type": "number"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "ViewportFrame": {
+   "chain": [
+    "GuiObject",
+    "GuiBase2d",
+    "GuiBase",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -7493,6 +8831,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -7502,6 +8841,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -7511,6 +8851,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -7520,6 +8861,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -7529,6 +8871,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -7538,6 +8881,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -7547,10 +8891,12 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "InputBegan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -7560,6 +8906,7 @@
     },
     {
      "name": "InputChanged",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -7569,6 +8916,7 @@
     },
     {
      "name": "InputEnded",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "input",
@@ -7578,6 +8926,7 @@
     },
     {
      "name": "MouseEnter",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7591,6 +8940,7 @@
     },
     {
      "name": "MouseLeave",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7604,6 +8954,7 @@
     },
     {
      "name": "MouseMoved",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7617,6 +8968,7 @@
     },
     {
      "name": "MouseWheelBackward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7630,6 +8982,7 @@
     },
     {
      "name": "MouseWheelForward",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "x",
@@ -7643,6 +8996,7 @@
     },
     {
      "name": "SelectionChanged",
+     "owner": "GuiBase2d",
      "params": [
       {
        "name": "amISelected",
@@ -7660,18 +9014,22 @@
     },
     {
      "name": "SelectionGained",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "SelectionLost",
+     "owner": "GuiObject",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "TouchLongPress",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7685,6 +9043,7 @@
     },
     {
      "name": "TouchPan",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7706,6 +9065,7 @@
     },
     {
      "name": "TouchPinch",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7727,6 +9087,7 @@
     },
     {
      "name": "TouchRotate",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7748,6 +9109,7 @@
     },
     {
      "name": "TouchSwipe",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "swipeDirection",
@@ -7761,6 +9123,7 @@
     },
     {
      "name": "TouchTap",
+     "owner": "GuiObject",
      "params": [
       {
        "name": "touchPositions",
@@ -7772,178 +9135,227 @@
    "props": [
     {
      "name": "Active",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "Ambient",
+     "owner": "ViewportFrame",
      "type": "Color3"
     },
     {
      "name": "AnchorPoint",
+     "owner": "GuiObject",
      "type": "Vector2"
     },
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "AutoLocalize",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "AutomaticSize",
+     "owner": "GuiObject",
      "type": "Enum.AutomaticSize"
     },
     {
      "name": "BackgroundColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BackgroundTransparency",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "BorderColor3",
+     "owner": "GuiObject",
      "type": "Color3"
     },
     {
      "name": "BorderMode",
+     "owner": "GuiObject",
      "type": "Enum.BorderMode"
     },
     {
      "name": "BorderSizePixel",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ClipsDescendants",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "CurrentCamera",
+     "owner": "ViewportFrame",
      "type": "Camera"
     },
     {
      "name": "ImageColor3",
+     "owner": "ViewportFrame",
      "type": "Color3"
     },
     {
      "name": "ImageTransparency",
+     "owner": "ViewportFrame",
      "type": "number"
     },
     {
      "name": "InputSink",
+     "owner": "GuiObject",
      "type": "Enum.InputSink"
     },
     {
      "name": "Interactable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "LayoutOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "LightColor",
+     "owner": "ViewportFrame",
      "type": "Color3"
     },
     {
      "name": "LightDirection",
+     "owner": "ViewportFrame",
      "type": "Vector3"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "NextSelectionDown",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionLeft",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionRight",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "NextSelectionUp",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "Position",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "RootLocalizationTable",
+     "owner": "GuiBase2d",
      "type": "LocalizationTable"
     },
     {
      "name": "Rotation",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Selectable",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "SelectionBehaviorDown",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorLeft",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorRight",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionBehaviorUp",
+     "owner": "GuiBase2d",
      "type": "Enum.SelectionBehavior"
     },
     {
      "name": "SelectionGroup",
+     "owner": "GuiBase2d",
      "type": "boolean"
     },
     {
      "name": "SelectionImageObject",
+     "owner": "GuiObject",
      "type": "GuiObject"
     },
     {
      "name": "SelectionOrder",
+     "owner": "GuiObject",
      "type": "number"
     },
     {
      "name": "Size",
+     "owner": "GuiObject",
      "type": "UDim2"
     },
     {
      "name": "SizeConstraint",
+     "owner": "GuiObject",
      "type": "Enum.SizeConstraint"
     },
     {
      "name": "Visible",
+     "owner": "GuiObject",
      "type": "boolean"
     },
     {
      "name": "ZIndex",
+     "owner": "GuiObject",
      "type": "number"
     }
    ]
   },
   "WorldModel": {
+   "chain": [
+    "WorldRoot",
+    "Model",
+    "PVInstance",
+    "Instance"
+   ],
    "events": [
     {
      "name": "AncestryChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -7957,6 +9369,7 @@
     },
     {
      "name": "AttributeChanged",
+     "owner": "Instance",
      "params": [
       {
        "name": "attribute",
@@ -7966,6 +9379,7 @@
     },
     {
      "name": "Changed",
+     "owner": "Object",
      "params": [
       {
        "name": "property",
@@ -7975,6 +9389,7 @@
     },
     {
      "name": "ChildAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -7984,6 +9399,7 @@
     },
     {
      "name": "ChildRemoved",
+     "owner": "Instance",
      "params": [
       {
        "name": "child",
@@ -7993,6 +9409,7 @@
     },
     {
      "name": "DescendantAdded",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -8002,6 +9419,7 @@
     },
     {
      "name": "DescendantRemoving",
+     "owner": "Instance",
      "params": [
       {
        "name": "descendant",
@@ -8011,44 +9429,54 @@
     },
     {
      "name": "Destroying",
+     "owner": "Instance",
      "params": []
     },
     {
      "name": "StyledPropertiesChanged",
+     "owner": "Instance",
      "params": []
     }
    ],
    "props": [
     {
      "name": "Archivable",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "Capabilities",
+     "owner": "Instance",
      "type": "SecurityCapabilities"
     },
     {
      "name": "ModelStreamingMode",
+     "owner": "Model",
      "type": "Enum.ModelStreamingMode"
     },
     {
      "name": "Name",
+     "owner": "Instance",
      "type": "string"
     },
     {
      "name": "PrimaryPart",
+     "owner": "Model",
      "type": "BasePart"
     },
     {
      "name": "Sandboxed",
+     "owner": "Instance",
      "type": "boolean"
     },
     {
      "name": "UseWorkspaceCollisionGroups",
+     "owner": "WorldModel",
      "type": "boolean"
     },
     {
      "name": "WorldPivot",
+     "owner": "Model",
      "type": "CFrame"
     }
    ]

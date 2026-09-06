@@ -9,6 +9,7 @@
 local Quad = require("../luau_packages/quad_base")
 local QuadRoblox = require("../src").QuadRoblox
 local installProperty = require("../src/Handlers/Property")
+local installEvent = require("../src/Handlers/Event") -- M10: 문자열 키는 Event 리플렉션도 지난다
 local mock = require("../../quad-base/test/mock")
 local Instance = mock.Instance
 
@@ -21,6 +22,7 @@ local gameShim = mock.gameShim(REFLECTED)
 
 local q: any = Quad.New():UseProvider(QuadRoblox)
 ;(getfenv(installProperty) :: any).game = gameShim
+;(getfenv(installEvent) :: any).game = gameShim
 ;(getfenv(q.D.New) :: any).Instance = { new = mock.Instance.new }
 q.isInst = mock.isMockInstance
 
@@ -153,6 +155,7 @@ do
 		q.D.Frame({ M.TextLabel("X")({}) })
 	end)
 	assert(not ok and string.find(tostring(err), "no handler matched", 1, true) ~= nil, "descriptor in New children must hit no-match: " .. tostring(err))
+	assert(string.find(tostring(err), "brand: MapperDescriptor", 1, true) ~= nil, "`H-346`: the no-match names the brand: " .. tostring(err))
 
 	-- Claim 표면 경유의 이중 claim(New-made inst)
 	local made = q.D.Frame({})
@@ -176,6 +179,23 @@ do
 	src:Set("d2b")
 	assert(inner.Text == "d2b", "depth-2 re-emission reaches the claimed subtree")
 	assert(q.Dispatch.getOffsetAt(list, 3) == 2, "mapped(1) + made(1) bookkept at depth 2")
+	print("PASS")
+end
+
+print()
+print("=== 8. Modifier 혼입(M7 단위 ②) — 루트·매핑 자식 props의 Modifier가 drive 안 flatten으로 소진된다 ===")
+do
+	local root, title = makeTemplate()
+	local src = q.Source(0.75)
+	q.Claim(root, M.Frame(M.Root)({
+		q.Modifier():BackgroundTransparency(src),
+		M.TextLabel("Title")({ q.Modifier():Text("from mod"):Name("FromMod"), Name = "Inline" }),
+	}))
+	assert(root.BackgroundTransparency == 0.75, "root modifier field driven (State unwrapped)")
+	assert(title.Text == "from mod" and title.Name == "Inline", "child modifier fields driven; inline key wins")
+	src:Set(0.5)
+	assert(root.BackgroundTransparency == 0.5, "reactive field stays live through the Claim path")
+	assert(q.Dispatch.getOffsetAt(root, 2) == 0, "consumed modifier slot contributes 0 (mapped child sits at position 2 → offset counts slot 1 only)")
 	print("PASS")
 end
 

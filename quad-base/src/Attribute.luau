@@ -11,6 +11,14 @@
 	  Attribute.Merged(a, b, ...)     -- compose Attribute values; overlap = error
 	  Attribute.Overridden(a, b, ...) -- compose; overlap = last silently wins
 	  attr:NameMap() -> {[string]: any}  -- flattened name -> Source/State/raw
+	  StringAttribute(name, value) / NumberAttribute / BooleanAttribute
+	                                  -- [2026-09-03 사용자 확정] typed scalar
+	                                  -- SUGAR: a single-entry group
+	                                  -- (`Attribute({ [name] = value })`) —
+	                                  -- no handler of its own; raw values are
+	                                  -- type-checked here (the family knows
+	                                  -- its type — AttributeKey does not),
+	                                  -- State/None pass through untouched
 
 	plain-table values may be raw T or State<T>/Source<T> — they all flow down
 	the single-key path where StoreBind unwraps (4라운드 명시). Store args are
@@ -34,6 +42,7 @@
 ]]
 
 local Brand = require("./Brand")
+local NoneModule = require("./Dispatch/None")
 local Relate = require("./Relate")
 local AttributeKeyModule = require("./AttributeKey")
 local QuadTypes = require("../luau_packages/quad_types")
@@ -43,6 +52,8 @@ local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 local AttributeBrand = Brand.AttributeBrand
 local isAttribute = Brand.isAttribute
 local isStore = Brand.isStore
+local isState = Brand.isState
+local None = require("./Dispatch/None").None -- `isNone` is `v == None` (None.luau header)
 local newUncachedKey = AttributeKeyModule._newUncachedKey
 
 local AttrImpl = {}
@@ -76,7 +87,10 @@ local function flattenArg(map: { [string]: any }, arg: any, overwrite: boolean, 
 			end
 			map[name] = v
 		end
-	elseif type(arg) == "table" then
+	elseif type(arg) == "table" and getmetatable(arg) == nil then
+		-- `H-345`: "plain" is enforced — a Source/Ref/Tag/... (any quad value
+		-- carrying a metatable) would otherwise be flattened field by field
+		-- (`_value`, `Revision`, ...), the `H-310` accident Modifier already closed
 		for rawName, v in pairs(arg :: { [any]: any }) do
 			if type(rawName) ~= "string" then
 				Err.errorBeforeNearest(`{ctx}: plain-table keys must be strings`, SURFACE)
@@ -130,6 +144,31 @@ end
 
 table.freeze(Attribute)
 
+-- Typed scalar sugar family — one-entry groups. `luaType` is the raw-value
+-- check; a State/Source (StoreBind unwraps it downstream) or `None` (delete)
+-- passes through. `nil` is rejected here: a plain table cannot hold it, so
+-- the entry would silently vanish — the user must say `None`.
+local function scalarSugar(fnName: string, luaType: string): (string, any) -> any
+	local function sugar(name: string, value: any): any
+		if type(name) ~= "string" then
+			Err.errorBeforeNearest(`{fnName}: name must be a string`, SURFACE)
+		end
+		if value == nil then
+			Err.errorBeforeNearest(`{fnName}("{name}"): value must not be nil — use None to delete`, SURFACE)
+		end
+		if not isState(value) and value ~= None and type(value) ~= luaType then
+			Err.errorBeforeNearest(`{fnName}("{name}"): value must be a {luaType} (or State/None), got {typeof(value)}`, SURFACE)
+		end
+		return newAttribute({ [name] = value })
+	end
+	Err.setFuncLevel(sugar, SURFACE)
+	return sugar
+end
+
+local StringAttribute = scalarSugar("StringAttribute", "string")
+local NumberAttribute = scalarSugar("NumberAttribute", "number")
+local BooleanAttribute = scalarSugar("BooleanAttribute", "boolean")
+
 -- `H-238`: tag the public surface (see Tag.luau — same reasoning; the
 -- handler-process raises below stay errorBefore, dispatch depth `H10-2`)
 for _, fn in { getmetatable(Attribute).__call, Attribute.Merged, Attribute.Overridden } :: { any } do
@@ -140,11 +179,13 @@ local InitDispatch = require("./Dispatch")
 
 local function Init(quad: any)
 	quad.Attribute = Attribute
+	quad.StringAttribute = StringAttribute
+	quad.NumberAttribute = NumberAttribute
+	quad.BooleanAttribute = BooleanAttribute
 
 	quad:RunInit(InitDispatch)
 	quad:RunInit(AttributeKeyModule.Init) -- delegation target must exist (idempotent)
 	local dispatch: QuadTypes.Dispatch = quad.Dispatch
-	local None = quad.None
 
 	-- group value object(weak) -> {[name] = private key} — memoized so a
 	-- reprocessed group delegates through the SAME key objects and the name
@@ -172,8 +213,7 @@ local function Init(quad: any)
 		priority = dispatch.HANDLER_PRIORITY_FALLBACK,
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
 			-- `H-39`: terminal bookkeeping — the group contributes no element
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0, inst)
+			NoneModule.registerEmptySlot(dispatch, inst, k, inst) -- `H-39` (리뷰 — 한 본문, `None.luau`)
 
 			-- `H-41`: position claim FIRST — the same group's second position
 			-- must be rejected before any name claim is half-recorded
@@ -217,4 +257,10 @@ local function Init(quad: any)
 	} :: QuadTypes.Handler)
 end
 
-return { Attribute = Attribute, Init = Init }
+return {
+	Attribute = Attribute,
+	StringAttribute = StringAttribute,
+	NumberAttribute = NumberAttribute,
+	BooleanAttribute = BooleanAttribute,
+	Init = Init,
+}

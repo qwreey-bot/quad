@@ -15,8 +15,15 @@
 	  (`nativeClaim` also belongs to this inventory but is implemented in
 	   LifetimeHandle.luau — it shares InstData with isBoundAlive.)
 
-	NOT here (stubs/absent stay, owned by later milestones): addTag/removeTag/
-	setAttribute (M10), setTimeout/clearTimeout (Debounce/Throttle backlog).
+	  [M10 engine axis, 2026-09-03] base-owned handlers' injected ops
+	  (`dispatch-core-plan.md` "base가 소유하는 핸들러와 주입되는 엔진 op"):
+	    addTag(inst, {string}) / removeTag(inst, {string})  -- CollectionService
+	    setAttribute(inst, name, v)                           -- v == nil deletes
+	  `game` is read at CALL time (not install time) so CLI specs can shim it
+	  through this installer's environment (the Property-handler idiom).
+
+	NOT here (absent stays, owned by the backlog): setTimeout/clearTimeout
+	(Debounce/Throttle).
 
 	Roblox ignores `offset` — child order is not a physical property here, so
 	positional args exist only to satisfy the injected-op contract shared with
@@ -88,6 +95,27 @@ local function install(quad: any)
 		return inst:FindFirstChild(key)
 	end
 
+	-- Tag/Attribute ops (M10 engine axis). Batched `{string}` is the contract
+	-- (a web backend rewrites className once); Roblox has no batch API, so
+	-- the loop is here rather than in the base handler.
+	local function addTag(inst: any, names: { string })
+		local cs = game:GetService("CollectionService")
+		for _, name in names do
+			cs:AddTag(inst, name)
+		end
+	end
+
+	local function removeTag(inst: any, names: { string })
+		local cs = game:GetService("CollectionService")
+		for _, name in names do
+			cs:RemoveTag(inst, name)
+		end
+	end
+
+	local function setAttribute(inst: any, name: string, v: any)
+		inst:SetAttribute(name, v) -- nil deletes natively
+	end
+
 	quad.nativeInsert = nativeInsert
 	quad.nativeExtract = nativeExtract
 	quad.nativeRemove = nativeRemove
@@ -97,10 +125,16 @@ local function install(quad: any)
 	quad.isInst = isInst
 	quad.onDestroying = onDestroying
 	quad.nativeFindChild = nativeFindChild
+	quad.addTag = addTag
+	quad.removeTag = removeTag
+	quad.setAttribute = setAttribute
 
 	-- `H-238`: tag everything the backend installs (see LifetimeHandle.luau)
 	for _, fn in
-		{ nativeInsert, nativeExtract, nativeRemove, nativeMove, nativeSwap, nativeDispose, isInst, onDestroying, nativeFindChild } :: { any }
+		{
+			nativeInsert, nativeExtract, nativeRemove, nativeMove, nativeSwap, nativeDispose,
+			isInst, onDestroying, nativeFindChild, addTag, removeTag, setAttribute,
+		} :: { any }
 	do
 		Err.setFuncLevel(fn, SURFACE)
 	end

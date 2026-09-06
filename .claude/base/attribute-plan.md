@@ -37,7 +37,34 @@ Store 여러 개를 한 번에 attribute로 묶어 바인드하는 그룹 `Attri
 `bind-system-plan.md`의 Attribute 특수 키/타입 파라미터화 절(2026-08-06
 신설, 지금은 이 문서로 옮겨져 그쪽엔 색인만 남음) 내용을 그대로 옮기고, 논의한 `None`/`process`/`retract` 동작을 추가.
 
-## 단일 키 — `AttributeKey<<T>>` (구 `Attribute<<T>>`)
+## 단일 키 — `AttributeKey(name)` (구 `Attribute<<T>>`, 2026-09-03부터 무타입)
+
+> **⭐ [2026-09-03 사용자 확정 — 한 발 얹기] `AttributeKey`는 값 타입을 모르는
+> 프리미티브가 됐고, 타입은 배열부 슈가 `StringAttribute(name, value)`/
+> `NumberAttribute`/`BooleanAttribute`가 진다.** 사용자 원문: *"내부적으로
+> 클래임을 위해서 AttributeKey 를 여전히 두는데, StringAttribute 등은 핸들러 상
+> 싱글 attr group 마냥 작동하는거지. … AttributeKey 는 내부적 요소로 놓는거야.
+> 슈거로써 StringAttribute("name", value) 를 두고, 만일 없는 타입을 구현하기
+> 위해서는 AttributeKey 를 쓰고, 내부 타입체크나 그런건 구현 쪽에 부담시키는거지
+> … 구조를 개편시킨다기 보단, 한 발 더 얹는거야. … 결과적으로 AttributeKey 는
+> 타입이 몰라도 되는 존재가 된다."* 계기는 round16 `H10-12`(해시부 특수 키가
+> strict `<Class>Param<E>`에 타입으로 못 들어감 — `OnChange` 배열부 역전의
+> 짝). 이 절의 아래 서술 중 `AttributeKey<<T>>` 제네릭·"패밀리 = 같은 키 객체"는
+> **옛 모델**이다 — 현행은 이 배너와 "타입드 스칼라 슈가" 항목(아래)이 소스.
+>
+> **슈가의 정체**: `StringAttribute(name, value)` = `Attribute({ [name] = value })`
+> 한 줄(단일 항목 그룹 — 자기 핸들러 없음, 그룹의 개인 키·위치 claim·`H-154`
+> dedup·StoreBind 위임을 그대로 상속). raw 값의 Lua 타입은 슈가가 검사하고
+> (`NumberAttribute("X", "s")` → surface error), `State`/`None`은 통과, `nil`은
+> 거부(plain 테이블에 실을 수 없어 조용히 사라지므로 — 삭제는 `None`).
+> 타입은 quad-types `AttributeSugar<T> = (name, T | State<T> | None) -> Attribute`.
+> 값이 `Attribute`라 `NewChild`(quad-roblox `types.luau`)에 `Tag`/`Attribute`와
+> 함께 합류해 strict `D` children에서 타입이 선다. `AttributeKey`는 패밀리가
+> 못 덮는 엔진 고유 타입(Color3/UDim2/Instance…)용으로 공개 유지 — 값 검증은
+> 백엔드 `setAttribute` 몫. `Color3Attribute`류 백엔드 패밀리는 같은 슈가 모양으로
+> quad-roblox가 얹으면 된다(아직 없음, 백로그). 같은 이름을 두 슈가 값이 노리면
+> 그룹과 같은 "already bound by another owner". 구현 `quad-base/src/Attribute.luau`,
+> spec.attribute 10절, Studio 실측 `audit/m10-engine-axis-studio-2026-09-03.md`.
 
 ### 문제 — 타입 있는 값이라 Luau가 좁혀줄 방법이 필요
 
@@ -66,7 +93,7 @@ Instance 참조 타입도 지원해서 `ObjectValue` 없이도 Ref 용도로 Att
 > 이 사실 위에서 설계돼야 한다. 실측 전문과 사용자 설명(devforum 4753441)은
 > `audit/spike10-full-run-2026-09-01.md`가 소스.
 
-**확정(2026-08-09 열한 번째 세션) — 둘 다 채택**:
+**확정(2026-08-09 열한 번째 세션) — 둘 다 채택 [⚠️ 2026-09-03 옛 모델 — 위 배너]**:
 - `[AttributeKey<<boolean>> "name"] = true` (리터럴 또는 store-bind 값) —
   제네릭 파라미터로 타입을 명시하는 제네릭 생성자 스타일. 기본/범용 경로.
 - `[BooleanAttribute "name"] = true` — 타입별로 이름이 다른 정적 생성자
@@ -87,7 +114,7 @@ Instance 참조 타입도 지원해서 `ObjectValue` 없이도 Ref 용도로 Att
 호출부가 타입을 어떻게 명시하느냐(제네릭 파라미터 vs 이름)뿐이라 어느
 쪽을 쓰든 런타임 동작에 차이 없음.
 
-**[실측 필요, M0/M10]** `[AttributeKey<<boolean>> "name"] = value`처럼 특수
+**[실측 필요, M0/M10]** **[2026-09-03 닫힘 — 제네릭 자체를 뺐다(위 배너), 정적 체크는 슈가가 진다]** `[AttributeKey<<boolean>> "name"] = value`처럼 특수
 키 제네릭 파라미터로 `=` 뒤 `value`의 타입까지 실제로 좁혀지는지는
 미검증 — Luau 솔버가 이 조합을 못 풀면 `value`가 `any`로 남을 수 있음.
 단, **타입 추론이 안 되더라도 런타임 동작에는 영향 없음**(순수 정적
@@ -97,8 +124,7 @@ Instance 참조 타입도 지원해서 `ObjectValue` 없이도 Ref 용도로 Att
 
 ### 동등성 — 이름별 weak 캐시로 `AttributeKey(name) == AttributeKey(name)` 보장 (2026-08-11 아홉 번째 세션 후속)
 
-**확정**: `AttributeKey<<T>>(name)`(및 `BooleanAttribute(name)` 등 정적
-패밀리 전부 — 아래 참고)는 내부적으로 이름별 weak 캐시를 거침:
+**확정**: `AttributeKey(name)`는 내부적으로 이름별 weak 캐시를 거침(**[2026-09-03]** 옛 서술의 "정적 패밀리도 같은 캐시"는 옛 모델 — 패밀리는 이제 캐시와 무관한 배열부 슈가, 위 배너):
 
 ```lua
 local cache = setmetatable({}, { __mode = "v" })  -- 값만 weak
@@ -111,14 +137,12 @@ local function AttributeKey(name)
 end
 ```
 
-- **캐시 키는 순수 문자열 `name`뿐, 제네릭 파라미터 `T`는 안 씀** —
-  `T`는 런타임에 아무 영향 없는 순수 정적 타입 트릭(위 "근거" 절의
-  "내부 구현은 완전히 동일" 그대로)이라, `AttributeKey<<boolean>>("Enabled")`와
-  `AttributeKey<<number>>("Enabled")`는 실제로 **완전히 같은 런타임
-  객체**를 돌려받음(호출부에서 다른 정적 타입으로 캐스팅될 뿐). 같은
-  이유로 `BooleanAttribute("Enabled")`도 같은 캐시를 공유해 동일 객체를
-  반환해야 함 — "내부 구현이 완전히 동일하다"는 기존 확정이 객체
-  identity 수준까지 이제 실제로 보장됨.
+- **캐시 키는 순수 문자열 `name`뿐.** **[2026-09-03 정정]** 예전엔 여기
+  "제네릭 `T`는 정적 트릭이라 `AttributeKey<<boolean>>("Enabled")`와
+  `AttributeKey<<number>>("Enabled")`가 같은 객체, `BooleanAttribute("Enabled")`도
+  같은 캐시"라고 적혀 있었다 — 제네릭은 폐기됐고 패밀리는 캐시와 무관한
+  배열부 슈가라(머리 배너) 그 요구는 소멸. 남는 사실은 하나: 같은
+  `name`이면 같은 키 객체.
 - **값만 weak라서 "쓰는 도중엔 항상 같은 게 리턴, 다 쓰고 나면 자연히
   풀림"**: 어딘가(Dispatch의 `(inst,k)`별 핸들러 체인 등)가 이 키
   객체를 강한 참조로 붙들고 있는 동안은 캐시 엔트리도 계속 살아있어
@@ -133,11 +157,13 @@ end
   달라지는 게 핵심(`:Added`/`:Removed`로 계속 다른 집합을 표현)이라
   "캐시할 안정적인 키"가 애초에 없음 — 동등성 비교/캐싱이 의미가 없는
   이유가 이거.
-- **[반영 완료] `OnChange(name)`도 같은 모양**(이름 → 키, 다른 가변
-  정보 없음)이라 같은 기법 그대로 적용 — `State<function>`이 되더라도
-  캐시는 키 객체 identity만 다루므로 문제 없고, `OnChange "a" == OnChange
-  "a"`가 외부에 관찰되는 것도 의도적으로 허용 가능한 동작(사용자 확인).
-  `base/onchange-plan.md` "확정" 절 참고.
+- **[⚠️ 2026-09-03 역전 — 이 항목은 옛 모델] `OnChange(name)`도 같은
+  모양이라 같은 기법 그대로 적용**했었다(2026-08-11, 사용자 확인 —
+  `OnChange "a" == OnChange "a"` 동등성). 그날의 `OnChange`는 해시부 키였고,
+  **2026-09-03에 배열부 값 `OnChange(name, fn)`으로 역전되며 캐시·동등성
+  계약이 폐기됐다**(매 호출이 새 값 — 같은 이름 둘 다 바인딩되는 게 이제
+  요점). 옛 원문·사유는 `archive/onchange-hash-key-reversed.md`, 현행은
+  `base/onchange-plan.md`. 이 캐시 기법은 이제 `AttributeKey`에만 쓰인다.
 
 ### 메커니즘, `None`, 반환 클로저 — 전부 확정 (2026-08-07 여덟 번째 세션, 2026-08-13 열네 번째 세션에 이름 claim 추가)
 
@@ -374,6 +400,8 @@ Store 필드 여러 개를 각각 `[AttributeKey<<T>> "name"] = store.name`으�
 
 ```
 Attribute(store1, store2, ..., {plain = "table도 됨"})  -- 생성자, 여러 개 받음
+-- [2026-09-07 H-345] "plain"은 메타테이블 없는 테이블 — Source/Ref/Tag 등 quad 값은
+-- 거부(Modifier의 isPlainFieldTable·H-310과 같은 가드). 안 그러면 내부 필드가 펼쳐진다
 -- [명시 추가, 2026-08-20 구현 전 QA 4라운드] plain 테이블의 값은 raw T뿐 아니라
 -- State<T>/Source<T>도 그대로 됨 — {count = 3, label = someSource, live = state}
 -- 새 배선이 아니라, 이 값들이 결국 단일 키 경로로 위임돼 StoreBind가 언랩하기 때문
@@ -478,23 +506,36 @@ function AttributeGroupHandler.process(inst, k, v, index)
         -- `Err`/`SURFACE` 정의는 `base/architecture.md`의 error 계약 절
         Err.errorBefore("Attribute: the same group value is placed at two positions of this instance", SURFACE)
     end
+    -- [2026-09-03 `H10-8` 통합 리뷰 반영 — 2026-09-06 감사 4라운드가 정본 미반영 발견]
+    -- 아래 retractor가 같은 immutable 그룹의 재발행에서 철거를 건너뛰고 위치
+    -- claim도 그대로 두므로, 진입 시 "이미 이 자리가 claim"이면 정확히 그
+    -- 재발행이다 — 그때는 위임 루프도 생략(이름별 체인이 살아 있고, 다시
+    -- 위임하면 무조건 setAttribute K번이 또 나간다; Tag의 홀더 검사와 같은 발상).
+    local reemit = claimed == k
     groupClaimKeys:SetStrong(inst, v, k)
 
-    local keys = {}
-    for name, source in pairs(v:NameMap()) do  -- isHandlable이 이미 isAttribute(v)를 보장
-        -- 그룹 전용 키(비공개) — 공개 AttributeKey(name)이 아님.
-        -- 같은 그룹 값 객체 + 같은 이름이면 항상 같은 키 객체가 나와야 함.
-        local key = groupKey(v, name)
-        Dispatch.process(inst, key, source, 1)   -- 다른 키로 위임이므로 항상 인덱스 1
-        keys[key] = true
+    if not reemit then
+        for name, source in pairs(v:NameMap()) do  -- isHandlable이 이미 isAttribute(v)를 보장
+            -- 그룹 전용 키(비공개) — 공개 AttributeKey(name)이 아님.
+            -- 같은 그룹 값 객체 + 같은 이름이면 항상 같은 키 객체가 나와야 함
+            -- (memoize된 groupKey — 그래서 retractor는 캡처 테이블 없이 재계산한다).
+            Dispatch.process(inst, groupKey(v, name), source, 1)   -- 다른 키로 위임이므로 항상 인덱스 1
+        end
     end
-    return function()
-        -- 이 그룹이 등록했던 것 전부를 철거 — 생존/소멸 구분 없이 균일.
-        -- 인자(새 값)를 안 봄: 생존 이름도 일단 철거하고 다음 process가 다시
-        -- 등록하는 순서라(Dispatch가 retractor → process 순서를 보장),
-        -- "다음 값에 이 이름이 있나"를 미리 알 필요가 없음.
-        for key in pairs(keys) do
-            Dispatch.retractFrom(inst, key, 1)
+    return function(nextValue)
+        -- [2026-09-03 `H10-8` 통합 리뷰 반영 — 2026-09-06 감사가 정본 미반영 발견]
+        -- 같은 그룹 객체의 재발행(no-op emit)은 통째로 스킵: immutable이라
+        -- 같은 객체 = 같은 이름 맵(Tag의 `v == nextValue` 스킵과 동형). process
+        -- 쪽도 같은 위치의 같은 객체면 위임 루프를 생략한다(`reemit`).
+        if v == nextValue then return end
+        -- 그 외엔 이 그룹이 등록했던 것 전부를 철거 — 생존/소멸 구분 없이 균일.
+        -- 다른 객체의 이름 맵은 안 봄: 생존 이름도 일단 철거하고 다음 process가
+        -- 다시 등록하는 순서라(Dispatch가 retractor → process 순서를 보장),
+        -- "다음 값에 이 이름이 있나"를 미리 알 필요가 없음. 키는 캡처 테이블이
+        -- 아니라 memoize된 groupKey로 재계산(`H10-8` — 재발행 경로가 동등한
+        -- retractor를 돌려주게).
+        for name in pairs(v:NameMap()) do
+            Dispatch.retractFrom(inst, groupKey(v, name), 1)
         end
         -- [2026-08-24 `H-41`] 위치 claim도 반납 — **자기 `k`일 때만**
         -- (위 그 항목의 확정: "retract에서 자기 `k`일 때만 지운다").
@@ -525,7 +566,7 @@ end
   API로 노출하지 않음**(위 "이름 소유권" 절). 그룹 값 객체 자체가 바뀌면
   (`State<Attribute>`가 새 객체를 emit) 새 키가 나오는데, 그때는 옛
   클로저가 먼저 전부 철거하므로 claim 충돌이 없음.
-- **생존 이름도 매 사이클 철거→재등록됨(의도된 트레이드오프)** — 비용은
+- **생존 이름도 매 사이클 철거→재등록됨(의도된 트레이드오프)** — **[2026-09-03 `H10-8` 한정]** 단, **같은 그룹 객체의 재발행**(`State<Attribute>`가 같은 객체를 다시 emit)은 철거·재등록 없이 통째로 스킵된다(retractor `v == nextValue` / process `reemit`) — 이건 아래 `AT-20`이 논한 "다른 객체 사이의 생존 이름 diff"가 아니라 객체 identity 재사용이라 `Tag`와 같은 안전한 스킵이다(round16 `H10-8`, `Attribute.luau`). 다른 객체로 바뀔 때의 비용은
   그 이름의 `StoreBind` 구독 해제+재구독, 그리고 재구독의 "등록 즉시 1회
   실행"이 같은 값으로 `setAttribute`를 한 번 더 쏘는 것뿐. 이 문서가 이미
   "값 비교(`:Get()`으로 old/new 비교)는 안 함"을 확정해뒀으므로(아래 항목)
@@ -631,8 +672,8 @@ quad-roblox** 소속이었음 — 그런데 실제로 엔진에 종속된 건 �
 | 무엇 | 어디 |
 |---|---|
 | 그룹 값 타입+API(`Attribute(...)`/`Merged`/`:NameMap`) | quad-base |
-| 단일 키 `AttributeKey<<T>>(name)` + 이름별 weak 캐시 | quad-base |
-| 스칼라 편의 패밀리(`StringAttribute`/`NumberAttribute`/`BooleanAttribute`) | quad-base |
+| 단일 키 `AttributeKey(name)`(무타입, 2026-09-03) + 이름별 weak 캐시 | quad-base |
+| 타입드 스칼라 슈가(`StringAttribute(name, value)`/`NumberAttribute`/`BooleanAttribute` — 단일 항목 그룹, 2026-09-03) | quad-base(`Attribute.luau`) |
 | `AttributeKeyHandler`(이름 claim 포함) / `AttributeGroupHandler`(전용 키 위임) | quad-base, `HANDLER_PRIORITY_FALLBACK`으로는 이걸 감싸는 `AttributeKeyFallbackHandler`/`AttributeGroupFallbackHandler`가 등록됨 — **[재역전, 2026-08-18] 등록 주체는 백엔드 팩토리가 아니라 quad-base 자신**(`base/dispatch-core-plan.md`의 "base가 소유하는 핸들러와 주입되는 엔진 op" 절) |
 | 엔진 고유 타입 패밀리(`Color3Attribute`/`UDim2Attribute`/`InstanceAttribute`류) | 백엔드(quad-roblox의 `D` 층) |
 | **`setAttribute(inst, name, v)`** — `v == nil`이면 그 이름을 지움 | 백엔드가 주입 |
@@ -685,3 +726,14 @@ quad-roblox** 소속이었음 — 그런데 실제로 엔진에 종속된 건 �
   `None`으로 채워주는 콤비네이터)을 나중에 추가할 수 있음, 착수 안 함 —
   `research/operator-sugar-plan.md` "Attribute 그룹 명시적 unset 유틸"
   절 참고.
+
+
+## 부분 실패는 따로 관리하지 않는다 (2026-09-03 사용자 확정)
+
+그룹 `process`가 이름 순회 도중 소유권 충돌로 error나면, 그 전에 위임된
+이름들의 체인은 등록된 채 남고 이 사이클엔 회수되지 않는다(그룹 retractor가
+안 만들어짐 — 피해는 그 인스턴스 수명으로 한정). **원자적 롤백을 넣지 않는다**
+— 사용자 확정: *"터지더라도, 시끄러운 에러를 내며 그 이후 동작이 깨지는건
+괜찮으니, 문서화로 부분 실패를 따로 관리 안 한다는걸 적어두는거라면, 동의"*.
+fail-fast 톤(이 문서 "에러 메시지는 도메인 언어로" 절)과 같은 결이고,
+`archive/question-resolved.md`에 이관 기록.

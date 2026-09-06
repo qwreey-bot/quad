@@ -68,7 +68,9 @@ Signal 미채택, Ref 역할)과 소스 트리 상 패키지 경계(디스패치
   전부 그쪽에 확정 반영돼 있음. **[2026-08-11 아홉 번째 세션]**
   `attribute-plan.md`에 여러 Store를 한 번에 attribute로 묶는 그룹
   `Attribute(...)` 프리미티브(`Tag`와 동형)가 추가되며, 단일 키 생성자는
-  이름 충돌 방지로 `AttributeKey<<T>>`로 리네임됨.
+  이름 충돌 방지로 `AttributeKey<<T>>`로 리네임됨(**[2026-09-03]** 그 뒤
+  제네릭을 벗고 무타입 `AttributeKey(name)`가 됐고, 타입은 배열부 슈가
+  `BooleanAttribute(name, value)`류가 진다 — `attribute-plan.md` 머리 배너).
 
 ## 확정된 것 (더 이상 열린 질문 아님)
 
@@ -140,7 +142,8 @@ DeclarativeInstance.luau`(PA님 작성, UI 포함 전반적 설계 패턴을 시
 Injection과 완전히 겹쳐 실제로 오해가 있었던 전례가 있고, `D`는 (1)
 "Instance" 전용 개념이 아니라 quad-* 전반의 declare 요소로 확장 가능하며,
 (2) 엔진 종속 없이 다른 백엔드에서도 재사용 가능하고, (3) `D.FrameModifier`류
-타입 프리픽스가 짧아야 한다는 실용적 제약을 만족한다. 한 글자 식별자라
+타입 프리픽스가 짧아야 한다는 실용적 제약을 만족한다(**[2026-09-04 M7 단위 ③]**
+실물은 타입 `<Class>Modifier`(생성 `D` 모듈 export) + 값 `D.Modifier.<Class>()`). 한 글자 식별자라
 grep이 어렵고 이름만으로 뜻이 안 드러나는 게 유일한 단점이었으므로,
 **문서에서 `D`가 처음 나오는 자리에서는 항상 `D`(Declarative)로 풀어쓴다**
 (표기 규약은 `base/architecture.md`의 "코드 스타일 — 네이밍 케이싱" 절).
@@ -181,8 +184,10 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
 
 **[2026-08-28 `Claim`]** 그 `{ ...타입명시 }`는 생성기가 `type <Class>Param<E>`로
 이름 붙여 찍고 `D.Mapper.<Class>`와 공유한다 — 필드 파트는 같고 children 배열의
-원소 타입 `E`만 파라미터(`D.Frame`은 기존 유니언, 매퍼는 `| MapperDescriptor`).
-사용자 확정, `base/claim-plan.md` §2·§7-12.
+원소 타입 `E`만 파라미터(`D.Frame`은 children 원소 유니언, 매퍼는
+`| MapperDescriptor` — **[2026-09-03]** 생성 별칭 `<Class>Elem`/
+`<Class>MapperElem`으로 찍히고 배열부 `OnChange` 디스크립터가 거기 합류,
+`base/onchange-plan.md`). 사용자 확정, `base/claim-plan.md` §2·§7-12.
 
 - **이름은 대문자 `New`로 통일**(사용자 확정: *"2. New입니다."*) — PA님 코드
   인용의 소문자 `new`와 섞여 있던 것을 정리.
@@ -211,7 +216,7 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
 찍는 값 유니언의 정본.** 생성기(`scripts/gen-d.py`)가 이 정의로 찍고, 여기가
 소스다:
 
-- **스칼라 프로퍼티**: `(T | State<T> | Tween<T> | None)?` — `Tween<T>`은
+- **스칼라 프로퍼티**: `(T | State<T> | TweenData<T> | State<Tween<T>> | None)?` — **[2026-09-06 M11 단위 ① `H-326` 정정]** 옛 `(T | State<T> | Tween<T> | None)?`엔 `State<Tween<T>>`(`Animate`/`:Compute`의 반환)가 빠져 있었고, 새 솔버 `State` 불변성 때문에 State 멤버 둘을 각각 나열한다(생성기는 타입별 별칭 `PVn`, 바깥 Tween은 데이터부 — `tween-plan.md` "타입 대수" 절). `Tween<T>`은
   PropertyHandler가 소비하는 값-레벨 래퍼(`tween-plan.md`; 타입은
   `quad-roblox/src/types.luau`, 런타임은 M11 — 탐사자가 M9 오기를 잡음). 모든 프로퍼티에 균일하게
   허용한다(트윈 가능 여부는 엔진 몫 — 타입으로 안 가른다).
@@ -219,7 +224,20 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
   optional(`?`) — `nil` disconnect는 optional이 표현한다(`event-plan.md`).
 - **children 원소(`NewChild`)**: `Instance | State<Instance> | None` — **M5 시점
   유니언**이고, **이후 마일스톤이 자기 핸들러가 도착할 때 유니언을
-  확장한다**(확장 규칙 — M6 Slot, M8 `Ref`/`PreRef`/`PostRef`). `H-298` (a)
+  확장한다**(확장 규칙 — M6 Slot, M8 `Ref`/`PreRef`/`PostRef`; **[2026-09-07 M6 확장
+  실행 — `H-351`, 핸드오버 리뷰]** `Slot<Instance>` 합류(fork 슬라이스가 이 팔을
+  실행하지 않아 strict에서 children Slot이 막혀 있었다 — `qa-request/handover-review-2026-09-07.md`;
+  `State<Slot<…>>` 팔·`Observer`/`EffectHandle` 팔은 그 원장 §4 Q1·Q2); **[2026-09-03
+  M10 확장 실행]** `Tag | State<Tag> | Attribute | State<Attribute>` 합류 —
+  타입드 스칼라 슈가는 `Attribute`를 돌려주므로 같은 멤버, `H10-15`. `OnChange`
+  디스크립터는 여기가 아니라 클래스별 생성 별칭 `<Class>Elem`에 들어간다 —
+  `onchange-plan.md`; **[2026-09-04 M7 확장 실행]** `ModifierMarker`
+  (`{ read __quadModifier: true }` — 무타입 base Modifier) 합류 — 클래스별
+  `<Class>Modifier`가 아니라 마커만(`typing-limits.md` 8.8절); 클래스 태그
+  마커(자기 + 조상 체인 문자열 유니언)는 `OnChange`처럼 `<Class>Elem` 쪽이다
+  (단위 ④, `modifier-plan.md` 11절); **[2026-09-04 M8 확장 실행]** `Ref`/`PreRef`/
+  `PostRef`도 여기가 아니라 `<Class>Elem`의 반공변 팬텀 마커 `<Class>RefMarker`
+  (+ `State<…>`)로 — `ref-plan.md` "children 자리의 타입" 절, round18 `H-321`). `H-298` (a)
   회신문의 "Ref류"는 그 예고로 해석해 M5 유니언에서 뺐다 — `Ref` leaf
   핸들러가 M8이라 지금 실으면 런타임이 없는 거짓 표면이 된다(`H-297`과
   같은 논리; 이 해석이 틀렸다면 사용자가 뒤집을 것). 정의 실물은
@@ -268,14 +286,15 @@ local function New(className: string)
         --    [2026-08-28 `Claim` §7-9] 인라인이 아니라 주입 op `nativeClaim(inst)` 호출 —
         --    (0)의 코드는 그 op 안에만 산다(`Claim`도 같은 op를 부른다, `base/claim-plan.md`).
 
-        -- ③ flatten — Modifier 항목을 제자리에서 `ProcessedModifier`로 소진하고
-        --    필드를 해시 파트로 merge. 새 테이블 없음, `inst`를 안 받는 순수 변환
-        --    (`modifier-plan.md`의 "flatten의 정확한 형태"). `PreRef`/`PostRef`가
-        --    Modifier 필드에 오는 건 타입으로 차단돼 있어 여기선 안 다룬다.
-        local flattened = flatten(props)
-
-        -- ④ 디스패치 — pre-pass → 본체 → `postRefList`. 전부 `Dispatch.drive`가 소유.
-        Dispatch.drive(inst, flattened)
+        -- ③④ [2026-09-04 M7 단위 ② — round17 §0 Q4 (a), 사용자 확정] flatten은
+        --    `New`의 단계가 아니라 **`Dispatch.drive`의 첫 pre-pass**다 — Modifier
+        --    항목을 제자리에서 `ProcessedModifier`로 소진하고 필드를 해시 파트로
+        --    merge(새 테이블 없음, `inst`를 안 받는 순수 변환 — `modifier-plan.md`의
+        --    "flatten의 정확한 형태"). 호출 자리가 하나라 `Claim`도 같은 경로로
+        --    봉합된다(옛 모양: `New` ③이 `flatten(props)`를 따로 부르고 ④에 넘겼다).
+        --    `PreRef`/`PostRef`가 Modifier 필드에 오는 건 타입으로 차단돼 있어
+        --    flatten은 안 다룬다.
+        Dispatch.drive(inst, props)   -- ④ 디스패치 — flatten → pre-pass → 본체 → `postRefList`
 
         return inst   -- `D.Frame`은 이 함수에 캐스트만 얹은 별칭(위 확정)
     end
@@ -284,7 +303,7 @@ end
 
 ```lua
 -- quad-base: Dispatch/init.luau
-function Dispatch.drive(inst, flattened)
+function Dispatch.drive(inst, flattened)   -- [2026-09-04] 첫 줄이 `flatten(flattened)` — 위 ③④ 주석(단위 ②)
     -- ⓪ 배치 Blocker — **진입 직후** 켜고 `drive`가 할 일을 전부 마친 뒤(post-pass
     --    포함) 끈다: `dispatch-core-plan.md`의 `H-17` 계약(*"`drive` 전체를 `inst`
     --    전용 `Blocker`로 감싼다"* / *"`PostRef` 콜백은 게이트가 켜진 채로 실행된다"*).
@@ -462,11 +481,13 @@ Service` 기반으로 구현)로 두면 됨 — 별도 `On` 모듈/필드 접근
 **이름 지정 방식만 문자열 키인 예외**다(타입은 위 정정대로 생성기가 준다).
 
 **`GetPropertyChangedSignal`은 이 문자열 키 패턴이 안 통함 — 별도 `OnChange`
-특수 키로 확정(2026-08-10 세션).** 이벤트는 `inst[key]`가 이미 Signal이라
-그대로 `Connect`하면 되지만, `GetPropertyChangedSignal(name)`은 프로퍼티
-이름을 인자로 받아야 하고 그 이름이 "값 세팅" 키 네임스페이스와 겹쳐서
-평범한 문자열 키로는 세팅과 리스닝을 구분할 수 없음 — 상세는
-`base/onchange-plan.md`.
+표면으로 확정(2026-08-10 세션; **[2026-09-03 역전]** 해시부 특수 키가 아니라
+배열부 값 `OnChange(name, fn)` — `Tag(...)`와 같은 자리).** 이벤트는
+`inst[key]`가 이미 Signal이라 그대로 `Connect`하면 되지만,
+`GetPropertyChangedSignal(name)`은 프로퍼티 이름을 인자로 받아야 하고 그
+이름이 "값 세팅" 키 네임스페이스와 겹쳐서 평범한 문자열 키로는 세팅과
+리스닝을 구분할 수 없음 — 상세는 `base/onchange-plan.md`(초기값 발화 계약·
+생성기 타이핑 포함).
 
 **PA님 코드와 대조해서 재확인한 것(변경 없음)**:
 - **OOP 회피 결정은 오히려 보강됨** — PA님의 `ObjectOrientedProgramming/

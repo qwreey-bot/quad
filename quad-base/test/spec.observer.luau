@@ -209,6 +209,29 @@ do
 end
 
 print()
+print("=== 9a. H-332 — 재진입 파동(fn 안에서 자기 Source를 Set)이 바깥 fn 꼬리의 _running 가드를 풀지 않는다 ===")
+do
+	local s = Source(1)
+	local n = 0
+	local tailErr: any = nil
+	local o = s:Observer(function(_, self)
+		n += 1
+		if n == 2 then -- inside a real wave (the install fire is n = 1, before subscription)
+			s:Set(3) -- reentrant wave: the nested _receive runs fn (n = 3) and returns
+			local ok, err = pcall(function()
+				(self :: any):Subscribe() -- outer fn's tail — the guard must still be up
+			end)
+			tailErr = if ok then "no error" else tostring(err)
+		end
+	end)
+	o:Subscribe()
+	s:Set(2)
+	assert(n == 3, "reentrant wave ran the fn once more: " .. n)
+	assert(string.find(tailErr, "inside its own fn", 1, true) ~= nil, "guard still up in the outer tail: " .. tostring(tailErr))
+	print("PASS")
+end
+
+print()
 print("=== 9. H-183 — fn은 자기 생명주기를 못 바꾼다(_running 가드, H-147 대칭); H-184 — 거부돼도 반쯤 묶이지 않음 ===")
 do
 	local s = Source(1)

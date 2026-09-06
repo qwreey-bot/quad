@@ -92,6 +92,9 @@ end
 local function isMapperDescriptor(x: any): boolean
 	return MapperBrand:is(x)
 end
+local function isTween(x: any): boolean -- M11 단위 ① (round19)
+	return TweenBrand:is(x)
+end
 local function isTag(x: any): boolean
 	return TagBrand:is(x)
 end
@@ -155,6 +158,7 @@ return {
 	isPreRef = isPreRef,
 	isPostRef = isPostRef,
 	isTag = isTag,
+	isTween = isTween,
 	isAttribute = isAttribute,
 	isAttributeKey = isAttributeKey,
 }

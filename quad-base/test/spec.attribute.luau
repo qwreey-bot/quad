@@ -17,12 +17,11 @@ local function newAttrQuad(log: { string }?)
 	return q
 end
 
-print("=== 1. AttributeKey — 이름별 캐시 동일성, 패밀리 = 같은 객체, 브랜드 ===")
+print("=== 1. AttributeKey — 이름별 캐시 동일성, 브랜드 (패밀리는 이제 키가 아니다 — 10절) ===")
 do
 	local q = newAttrQuad()
 	local a = q.AttributeKey("Enabled")
 	assert(a == q.AttributeKey("Enabled"), "same name = same object (weak cache)")
-	assert(a == q.BooleanAttribute("Enabled") and a == q.StringAttribute("Enabled"), "families share the cache")
 	assert(q.isAttributeKey(a) and a.Name == "Enabled", "brand + Name")
 	assert(not pcall(function()
 		(a :: any).x = 1
@@ -42,6 +41,20 @@ do
 end
 
 print()
+print("=== 1b. 생성자 — plain 테이블만 (핸드오버 리뷰 `H-345`, Modifier `H-310`의 거울) ===")
+do
+	local q = newAttrQuad()
+	local okS, errS = pcall(function()
+		q.Attribute(q.Source(1))
+	end)
+	assert(not okS and string.find(tostring(errS), "plain tables", 1, true) ~= nil, "a Source is not a plain table: " .. tostring(errS))
+	mock.assertBlamesUser(errS, "spec.attribute.luau", "constructor blame")
+	local okR, errR = pcall(function()
+		q.Attribute(q.Ref(1))
+	end)
+	assert(not okR and string.find(tostring(errR), "plain tables", 1, true) ~= nil, "a Ref (metatable) is not flattened field by field: " .. tostring(errR))
+end
+
 print("=== 2. 단일 키 왕복 — 무조건 set, store-bind, None → nil 삭제 ===")
 do
 	local log: { string } = {}
@@ -133,6 +146,14 @@ do
 	assert(not ok, "cross-owner claim must error")
 	assert(string.find(tostring(err), 'attribute "Hp" is already bound by another owner', 1, true) ~= nil, "domain message: " .. tostring(err))
 	mock.assertBlamesUser(err, "spec.attribute.luau", "claim blame")
+	-- [2026-09-06] 그룹↔그룹 같은 이름 — 스파이크 19 B 섹션의 재작성 지침이 요구한
+	-- 음성 대조군(0-Z 확정 내용): 다른 그룹 객체가 같은 이름을 노려도 즉시 error
+	local inst2 = Instance.new("Frame")
+	local ok2, err2 = pcall(function()
+		q.Dispatch.drive(inst2, { q.Attribute({ Hp = 5 }), q.Attribute({ Hp = 9 }) })
+	end)
+	assert(not ok2, "group-vs-group claim must error")
+	assert(string.find(tostring(err2), 'attribute "Hp" is already bound by another owner', 1, true) ~= nil, "group-vs-group message: " .. tostring(err2))
 	print("PASS")
 end
 
@@ -161,7 +182,12 @@ do
 	assert(q.Dispatch.getOffsetAt(inst, 2) == 0, "group contributes 0 to the offset math")
 
 	local bare = Quad.New()
-	mock.installLifetime(bare) -- setAttribute는 스텁 그대로
+	-- [M10 엔진 축] mockProvider가 attribute op까지 심으므로 모듈 자신의 스텁을
+	-- 붙잡아 뒀다가 설치 뒤 되돌린다(spec.tag 2와 같은 이유 — 디스패치 경유
+	-- blame 경로 유지)
+	local stub = bare.setAttribute
+	mock.installLifetime(bare)
+	bare.setAttribute = stub
 	local inst2 = Instance.new("Frame")
 	local ok, err = pcall(function()
 		bare.Dispatch.drive(inst2, { [bare.AttributeKey("Hp")] = 5 })
@@ -195,6 +221,63 @@ do
 	local before2 = #log
 	src:Set(group)
 	assert(#log == before2, "StoreBind path: same-object re-emission is silent too")
+	print("PASS")
+end
+
+print()
+print("=== 10. 타입드 스칼라 슈가(2026-09-03 사용자 확정) — 단일 항목 그룹, 값 검증, 이름 claim·위치 claim은 그룹 그대로 ===")
+do
+	local q = newAttrQuad()
+	local inst = Instance.new("Frame")
+	-- 슈가 = Attribute 그룹 값(자기 핸들러 없음)
+	local s = q.StringAttribute("Title", "quad")
+	assert(q.isAttribute(s) and s:NameMap().Title == "quad", "sugar is a one-entry group")
+	local hp = q.Source(3)
+	q.Dispatch.drive(inst, { s, q.NumberAttribute("Hp", hp), q.BooleanAttribute("Alive", true) })
+	local attrs = mock.getAttributes(inst)
+	assert(attrs.Title == "quad" and attrs.Hp == 3 and attrs.Alive == true, "all three landed through the group → single-key path")
+	hp:Set(4)
+	assert(mock.getAttributes(inst).Hp == 4, "State value stays reactive (StoreBind downstream)")
+	-- None = 삭제는 바인딩된 State 경유(새 슈가 값을 다른 자리에 두면 그룹과 같은
+	-- 이름 claim 충돌 — 아래 inst3에서 단언)
+	local inst2 = Instance.new("Frame")
+	local src = q.Source("a")
+	q.Dispatch.drive(inst2, { q.StringAttribute("Label", src) })
+	assert(mock.getAttributes(inst2).Label == "a", "reactive sugar")
+	src:Set(q.None)
+	assert(mock.getAttributes(inst2).Label == nil, "None deletes")
+	-- 검증: 이름·nil·raw 타입 불일치(State/None은 통과)
+	local cases: { [string]: () -> () } = {
+		["name"] = function() q.StringAttribute(1, "x") end,
+		["nil value"] = function() q.StringAttribute("X", nil) end,
+		["type"] = function() q.NumberAttribute("X", "not a number") end,
+		["type2"] = function() q.BooleanAttribute("X", 1) end,
+	}
+	for label, fn in cases do
+		local ok, err = pcall(fn)
+		assert(not ok, "sugar validates: " .. label)
+		mock.assertBlamesUser(err, "spec.attribute.luau", "sugar blame " .. label)
+	end
+	assert(q.isAttribute(q.StringAttribute("X", q.Source("s"))) and q.isAttribute(q.StringAttribute("X", q.None)), "State/None pass the check")
+	-- 이름 claim: 슈가가 잡은 이름을 직접 키가 노리면 error(그룹과 동일), 같은 이름 슈가 둘도 error
+	local inst3 = Instance.new("Frame")
+	q.Dispatch.drive(inst3, { q.StringAttribute("Owned", "x") })
+	local okC = pcall(function()
+		q.Dispatch.process(inst3, q.AttributeKey("Owned"), "y", 1)
+	end)
+	assert(not okC, "direct key cannot steal a sugar-claimed name")
+	-- (같은 자리 교체는 하강 diff가 옛 그룹을 먼저 물리므로 충돌이 아니다 —
+	-- 충돌은 서로 다른 자리에 같은 이름을 둘 때)
+	local okD = pcall(function()
+		q.Dispatch.drive(Instance.new("Frame") :: any, { q.StringAttribute("Owned", "x"), q.StringAttribute("Owned", "z") })
+	end)
+	assert(not okD, "two sugar values for the same name at two positions collide (distinct private keys)")
+	-- 위치 claim: 같은 슈가 객체를 두 자리에
+	local okP = pcall(function()
+		local same = q.StringAttribute("Twice", "t")
+		q.Dispatch.drive(Instance.new("Frame") :: any, { same, same })
+	end)
+	assert(not okP, "same sugar object at two positions is the group's H-41 error")
 	print("PASS")
 end
 

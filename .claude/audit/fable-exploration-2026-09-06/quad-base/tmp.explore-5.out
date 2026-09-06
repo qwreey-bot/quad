@@ -1,0 +1,30 @@
+
+=== B1 mount-time reconcile: updateFn returns a non-mountable → blame? ===
+../src/Dispatch/init.luau:224  ||  ../src/Dispatch/init.luau:224: Slot: this backend cannot mount this value
+
+=== B2 same Slot literal in two Frames (double mount) → blame? ===
+../src/Dispatch/init.luau:224  ||  ../src/Dispatch/init.luau:224: Slot: this element is already mounted elsewhere — multiple mounts are not allowed
+
+=== B3 reconcile at data:Set depth returns non-mountable → blame? (user Set line expected) ===
+../src/Source.luau:73  ||  ../src/Source.luau:73: Slot: this backend cannot mount this value
+
+=== B4 mount-time reconcile: same Instance twice via two list items → blame? ===
+../src/Dispatch/init.luau:224  ||  ../src/Dispatch/init.luau:224: Slot: this element is already mounted — multiple mounts are not allowed
+
+=== B5 Observer leaf at a hash key → blame (control: expected user line) ===
+./tmp.explore-5.luau:62  ||  ./tmp.explore-5.luau:62: Ref/Observer binding should be array index item, but got string
+
+=== B6 Slot(initial) with a destroyed slot element → blame (control: constructor line) ===
+./tmp.explore-5.luau:70  ||  ./tmp.explore-5.luau:70: Slot: destroyed Slot cannot be an element
+
+=== B7 PreRef callback throws inside drive → inst blocker stuck On → later length change never recomputes (UB confirm) ===
+drive ok=	false	blocker on?	true
+
+=== B8 blame at emission depth: KeyGone returning a value (errorBeforeNearest at reconcile) → Source.luau:73? ===
+../src/Source.luau:73  ||  ../src/Source.luau:73: Slot:List — KeyGone accepts only nil/None (destroy) or Detach (hold)
+
+=== B9 control: errorBefore at emission depth (Tag name non-string via State) → user Set line? ===
+(tag→observer swap) ok=	true	(no prefix)  ||  nil
+(attribute name clash at Set depth)	./tmp.explore-5.luau:111  ||  ./tmp.explore-5.luau:111: attribute "y" is already bound by another owner
+
+=== DONE ===

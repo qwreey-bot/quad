@@ -14,6 +14,7 @@
 local Quad = require("../luau_packages/quad_base")
 local QuadRoblox = require("../src").QuadRoblox
 local installProperty = require("../src/Handlers/Property")
+local installEvent = require("../src/Handlers/Event") -- M10: 문자열 키는 Event 리플렉션도 지난다
 local mock = require("../../quad-base/test/mock")
 local Instance = mock.Instance
 
@@ -53,6 +54,7 @@ local gameShim = mock.gameShim(counted)
 
 local q: any = Quad.New():UseProvider(QuadRoblox)
 ;(getfenv(installProperty) :: any).game = gameShim -- Property 모듈 env에 주입
+;(getfenv(installEvent) :: any).game = gameShim -- Event 모듈도 같은 심(이벤트 미선언 → 매치 없음)
 ;(getfenv(q.D.New) :: any).Instance = { new = mock.Instance.new }
 q.isInst = mock.isMockInstance -- 주입 술어 교체(파일 헤더)
 q.errorNamespace.setFuncLevel(q.isInst, (require("../luau_packages/quad_types") :: any).ERROR_LEVEL_SURFACE)
@@ -203,6 +205,39 @@ do
 
 	src:Set(nil :: any) -- 진짜 nil — NilHandler 직행
 	assert(c2.Parent == nil and q.Dispatch.getOffsetAt(f, 2) == 0, "reactive nil unmounts and zeroes the length")
+	print("PASS")
+end
+
+print()
+print("=== 9. Property nil 방어(M10 — dispatch-core None 캐비엇) — None/nil 재발행은 쓰기를 건너뛰고 마지막 값이 남는다 ===")
+do
+	local src = q.Source(true)
+	local f = q.D.Frame({ Visible = src }) :: any
+	assert(f.Visible == true, "initial reactive write")
+	-- mock의 프로퍼티 백은 nil 대입을 받아주므로 회귀는 "값이 nil이 됐는가"로 핀한다
+	src:Set(q.None) -- NoneHandler → nil 재귀 → Property(키 매치, v == nil)
+	assert(f.Visible == true, "None re-dispatch skipped the write — last value stays (no `inst[k] = nil`)")
+	src:Set(nil :: any)
+	assert(f.Visible == true, "plain nil skipped too")
+	src:Set(false)
+	assert(f.Visible == false, "a real value writes again")
+	print("PASS")
+end
+
+print()
+print("=== 10. Modifier(M7 단위 ②) — D.Frame { mod, … }: flatten이 drive 안에서 돌아 필드가 프로퍼티로 앉는다 ===")
+do
+	local src = q.Source(3)
+	local mod = q.Modifier():Name("FromMod"):ZIndex(src):Visible(false)
+	local f = q.D.Frame({ mod, Visible = true }) :: any
+	assert(f.Name == "FromMod" and f.ZIndex == 3, "modifier fields landed as properties (State unwrapped)")
+	assert(f.Visible == true, "inline key beats the modifier")
+	src:Set(4)
+	assert(f.ZIndex == 4, "reactive field stays live")
+	-- 자식과 섞여도 오프셋 무영향
+	local c = Instance.new("TextLabel")
+	local f2 = q.D.Frame({ q.Modifier():Name("M"), c }) :: any
+	assert(c.Parent == f2 and q.Dispatch.getOffsetAt(f2, 2) == 0 and f2.Name == "M", "sentinel slot contributes 0; child mounts")
 	print("PASS")
 end
 

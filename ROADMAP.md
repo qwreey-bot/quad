@@ -7,6 +7,11 @@ quad-v2 구현 단계 실행 계획. 설계 근거/아키텍처 자체는 여기
 **2026-08-04 세션에 준비만 해둔 상태로 신설, 이후 여러 세션에 걸쳐 설계가
 확정될 때마다 각 마일스톤 체크박스가 계속 갱신돼왔음.**
 
+> **⭐⭐⭐ [2026-09-06 기준] M0~M11 전부 완료 — 열린 마일스톤 없음.** 남은 것은
+> 아래 "특정 마일스톤에 안 묶이고 병행 가능"·"백로그" 절뿐(착수 순서는 사용자와).
+> 마일스톤 절 머리 배너의 유무(M6/M10은 배너, M7/M8/M9는 체크박스 날짜 태그만)는
+> 스타일 차이일 뿐 완료 여부는 각 절의 `[x]`가 소스. 아래 blockquote들은 히스토리.
+
 > **✅ [2026-08-24 기준] M0/M1의 *원래* 체크박스는 전부 닫혔고 다음은
 > M2(반응형 코어)** — 단 M0에는 **[2026-08-22] "재검증 대기" 미체크
 > 항목들이 새로 붙었습니다**(설계가 바뀌어 무효화된 스파이크들, 아래 그
@@ -106,7 +111,9 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       재작성 완료]** 그 모델("emit은 항상 전파 + `:Get()` 시점 캐시로만
       dedup")로 재검증 통과 — **[2026-08-21] 그 모델이 다시 바뀌어
       `rewrite-required/`로 되돌아갔다**(`Epoch` 리비전 비교 채택으로 다이아몬드
-      Observer가 이제 변경당 **1회**만 울어야 함, `base/state-epoch-plan.md`))
+      Observer가 이제 변경당 **1회**만 울어야 함, `base/state-epoch-plan.md`) —
+      **[2026-08-29 닫힘, `done/`]** `spec.state`/`spec.effect`가 대체, 아래
+      "재검증 대기" 절 참고)
 - [x] Source가 State를 구조적으로 만족하는 제네릭 타입(`:Compute<U>(self:
       Source<T>, ...) -> State<U>`류, self 타이핑 + State 참조 혼합)이
       Luau 솔버에서 안전하게 추론되는지 확인(2026-08-06 세 번째 세션,
@@ -183,13 +190,19 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       이동. 잔여 몫(실제 `StoreBind` 경유 재귀 재발행 경로 — spec은 로컬
       핸들러 근사)은 **M4 mock 테스트 항목이 명시적으로 진다**(그 체크박스에
       적어둠)
-- [ ] **`19`(소유권/참조카운트 Relate 패턴)** — **B 섹션만** 낡음
+- [x] **`19`(소유권/참조카운트 Relate 패턴)** — **[2026-09-06 닫힘, 재작성
+      안 함]** 세 섹션 전부 실물 spec이 대체(A `spec.tag` / B `spec.attribute`
+      6·7절 — 그룹↔그룹 케이스 같은 날 추가 / C `spec.slot`) → 폐기,
+      `done/`으로 이동(`luau-test/STATUS.md`가 소스). 아래는 닫기 전 서술: **B 섹션만** 낡음
       (공개 `AttributeKey(name)` + 인덱스 1 점유 체크가 폐기되고 그룹 전용
       키 + `AttributeKeyHandler`의 이름 claim으로 바뀜, `0-Z` 확정).
       A/C 섹션은 손댈 것 없음 — **Attribute 소관이므로 M10 착수 시 같이
       처리**(**[2026-08-22 정정]** 여기 "M6"라고 적었으나 B 섹션이 검증하는
       건 Slot이 아니라 Attribute 이름 소유권이다)
-- [ ] **`22`(Ref/PreRef/PostRef 브랜드)** — `Brand`가 인스턴스 브랜드로
+- [x] **`22`(Ref/PreRef/PostRef 브랜드)** — **[2026-09-06 닫힘, 재작성
+      안 함]** M8 단위 ①의 `spec.preref` 1절이 검증 대상(배타·포함·다중
+      태깅)을 실물 `Brand.luau`에 대고 상시 회귀로 실측 → 폐기, `done/`으로
+      이동(`luau-test/STATUS.md`가 소스). 아래는 닫기 전 서술: `Brand`가 인스턴스 브랜드로
       전면 재작성되며 옛 `Brand.set`/`Brand.get` 구현에 의존하던 부분이
       깨짐(검증 대상인 `isRef`/`isPreRef` 포함 관계 자체는 그대로).
       **M8 착수 시 같이 처리**
@@ -202,7 +215,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `unbindLifetime` 재정정으로 무효화됐던 것. **[2026-09-01 닫힘]** A
       섹션을 현행 모델로 재작성해 Studio MCP로 완주(전 항목 PASS,
       `done/` 이동) — 결과 전문은 `audit/spike10-full-run-2026-09-01.md`
-- [ ] **`11`(modifier 불법 값 error) / `16`·`21`(Store 타입)** —
+- [ ] **`11`(modifier 불법 값 error — **[2026-09-06 닫힘, 사용자 확정]** M7 `spec.modifier`가 대체, 폐기 → `done/`) / `16`·`21`(Store 타입 — 타입 전용이라 남음)** —
       **[2026-08-31 소급 등재]** 셋 다 이 절 신설(08-22) **이후** 합류
       (`11`은 8라운드 `H-122`/`H-123`으로 08-26에, `16`/`21`은 Store 재설계로
       08-25에)했는데 이 목록에 안 올라 있었다 — `11`은 ROADMAP 어디에도
@@ -775,7 +788,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       파이프라인 (b) 본체 루프만이다 — ⓪/⓪' 배치 Blocker 게이팅은 M3 단위
       2(`getBlocker`/부기가 생기는 자리)에서, (a) pre-pass와 (c) `postRefList`는
       M8(`PreRef`/`PostRef` 본체)에서 배선된다
-- [ ] **⭐ [2026-08-24 신설, 6라운드 손 트레이싱 `H-39`] 말단 핸들러는 예외
+- [x] **[2026-09-04 넷 전부 완료 — 마지막이 M8 `RefLeafHandler`(`H-319`), 2026-09-06 감사가 부모 체크박스 미갱신을 발견]** **⭐ [2026-08-24 신설, 6라운드 손 트레이싱 `H-39`] 말단 핸들러는 예외
       없이 자기 배열 자리의 `setOffsetSource(inst,k,None)` → `setLength(inst,k,0)`을
       등록한다** — 이 계약을 핸들러 작성 체크리스트에 넣고, 실제로 넷이
       빠져 있었으니 각 마일스톤에서 확인할 것: `TagHandler`(M10) /
@@ -866,9 +879,9 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       "변경 없음"과 구분이 안 돼 되감기가 안 걸린다),
       `slot._baseObserver` 콜백
       (베이스가 바뀐 경우라 `0`), 그리고 **⭐ [2026-08-26 신설,
-      `/code-review high`] `rawMove`/`rawSwap`/`rawExtract`류**(자리 수는
+      `/code-review high`] `rawMove`/`rawSwap`/교체형 `Extract`(= `rawReplace`)류**(자리 수는
       그대로, 순서만 바뀜 — 두 필드 다 `math.min(…, minPos - 1)`, `H-29` 규약
-      3번). **전부 `recompute`보다 먼저.**
+      3번; **[2026-09-03]** 옛 표기 `rawExtract`는 별도 함수가 아니다). **전부 `recompute`보다 먼저.**
       (c) **`recompute` 호출은 `setLength`의 단독 책임**이다 — `rawAdd`/
       `rawReplace`의 명시 호출은 삭제됐고, 자리가 없어지는 경로
       (`rawRemove`/`rawUnmount`/`rawDetach`)만 예외로 직접 부른다.
@@ -935,7 +948,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       무조건 찍지 않고 **모듈 표면의 `Quad.debug`(boolean, 기본 `false`)가
       참일 때만** — `Quad.debug` 자체가 이번에 신설된 새 공개 표면이다
       (`base/module-lifecycle-plan.md`의 "모듈 표면의 디버그 플래그" 절)
-- [ ] children-array leaf 매칭 Handler들 — `(i:number, v=Ref/Observer/
+- [x] **[2026-09-04 M8 단위 ②로 마지막 몫(Ref/PreRef/PostRef — `Ref.luau`의 `registerDispatchHandlers`, round18 `H-319`) 완료 — 2026-09-06 감사 3라운드가 체크박스 미갱신 발견]** children-array leaf 매칭 Handler들 — `(i:number, v=Ref/Observer/
       Effect/PreRef/PostRef)`, quad-base 소속(2026-08-08 두 번째 세션).
       **⚠️ [2026-09-01 `H-278` 사용자 확정 — 파일 배치 역전]** 옛 확정지
       `Dispatch/Leaf.luau`는 해체됐다 — 등록 소유는 **각 값의 선언 모듈**
@@ -1171,6 +1184,12 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > 소스는 그 원장의 "이 fork 슬라이스 밖" 절이다** — 여기 재나열하지 않는다
 > (감사 2라운드가 이중 소스를 잡음). 그 절에 없는 것 하나만 여기 적는다:
 > quad-types `Quad`의 `Slot` 필드(`H-25` — fork 미반영, 아래 체크박스).
+>
+> **⭐ [2026-09-03 M6 잔여 마감 — 메인 자율 구간]** 그 절의 항목이 **전부
+> 닫혔다**(상태·목록은 그 절이 소스 — 여기 재나열하지 않는다) + `H-25`
+> quad-types `Slot<T>`(아래 체크박스). 발견 `H6-9`~`H6-24`, §4 문항 넷은 같은 날
+> 사용자 회신으로 전량 반영(열린 문항 0 — 그 원장이 소스). 실기기 실측은
+> `audit/m6-remainder-studio-2026-09-03.md`. **M6 잔여 없음.**
 
 ### 확정된 것 — 코드 아님, 구현 전 필독
 
@@ -1335,7 +1354,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       다른 값 타입(`Modifier`/`Tag`/`Tween`/`Ref`/`Effect`)이 전부 top-level
       파일을 갖는 것과 같은 대칭이고, `base/slot-plan.md`의 `attachSlot`
       블록이 이미 머리에 이 파일명을 적어뒀다
-- [ ] **[2026-09-03 편입 — 7개 중 6개 구현됨, `collectLeaves`만 잔여**(공개 CRUD와 같이 온다 — `Slot.luau` 주석)**]** **⭐ [2026-08-24, 6라운드] 이 마일스톤에서 새로 생긴 필드·헬퍼**
+- [x] **[2026-09-03 편입 — 7개 중 6개 fork 구현, `collectLeaves`는 같은 날 M6 잔여 마감(공개 CRUD와 함께)으로 완료. 같은 날 사용자 승인으로 헬퍼 셋이 더 생겼다 — `vacate`(raw 3형제 공용 꼬리)/`maybeRecompute`(단일 recompute 게이트)/`unbindObserverAt`, `base/slot-plan.md`의 raw 3형제 의사코드 주석이 소스]** **⭐ [2026-08-24, 6라운드] 이 마일스톤에서 새로 생긴 필드·헬퍼**
       (구현 항목으로 드러나야 놓치지 않는다):
       **`bk.indexOfElement`**(물리 요소→`_elements` 인덱스 역방향 맵,
       `indexOfRaw`가 이걸 O(1)로 조회하는 **기본 경로**. **[2026-08-27, 9라운드
@@ -1358,9 +1377,9 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       만드는 데 필요, 없어서 그 넷이 미작성이었다) ·
       `:List`의 **`prevKeys`**(옛 `keyIndex`의 강등판, 단순 키 집합).
       전부 `base/slot-plan.md`가 소스
-- [ ] **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Slot` 필드 추가
+- [x] **[2026-09-03 완료 — `Slot<T>`/`SlotElement<T>`/`SlotListOpts`/`Detach`/`KeyGone` 타입 + `Quad`의 `Slot`/`Detach`/`KeyGone`/`dispose`/`isSlot` 필드; 재귀 alias 제약은 typing-limits §1 각주(`H6-18`)]** **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Slot` 필드 추가
       (위 M3 항목의 "마일스톤마다" 규칙)
-- [ ] **[2026-08-13 여섯 번째 세션 — 이 세션의 Slot 결정 전부, 구현 전 필독]**
+- [x] **[2026-09-03 확인 — 아래 결정 전부 fork 편입 코드에 구현돼 있음(`unmountSlotTree`/해제 순서/`claimOwner`·`claimOwnerAt` 분리/`rawRemove`의 `releaseOwner`/파괴적 클로저), 남은 서술 몫 없음]** **[2026-08-13 여섯 번째 세션 — 이 세션의 Slot 결정 전부, 구현 전 필독]**
       - **`State<Slot>` 교체 = 파괴가 아니라 언마운트**(`state<Frame>`와 동일).
         비파괴 경로 `unmountSlotTree`를 `destroySlotTree`와 별도로 구현 —
         차이는 딱 둘: 실제 `Destroy()`를 안 하고, 자식 `releaseOwner`도 안 함
@@ -1414,7 +1433,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       세션에 `question.md` 0-B 해소, 정본은 `base/slot-plan.md`
       "`dispose(value)`" 절
 
-- [x] **[2026-09-03 편입 — `KeyGone` 파괴 분기 spec만 잔여]** `Slot:List(data, updateFn, keyFn?)` — 키 기반 동적 컬렉션 재조정,
+- [x] **[2026-09-03 편입 — `KeyGone` 파괴 분기 spec은 같은 날 잔여 마감으로 완료(`spec.slot` 20)]** `Slot:List(data, updateFn, keyFn?)` — 키 기반 동적 컬렉션 재조정,
       `keyFn(item, index) -> key` 생략 시 원본 `data` 배열 위치(raw index)를
       그대로 key로 사용(중간 삽입/삭제 시 identity 보존 안 됨, 캐스케이드
       갱신 — 흔한 업계 관행과 같은 트레이드오프).
@@ -1500,42 +1519,42 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       별개" 절. **[2026-08-27 정정, 9라운드 `H-125`/Q2]** 여기 한때 *"마운트
       시점에 `setOffsetSource`가 등록하는 바로 그 Source를 `self.Offset`으로도
       저장"*이었다 — 그러면 첫 마운트와 재마운트가 갈려 재마운트 캐시가 낡는다)
-- [x] **[2026-09-03 base 절반만 편입 — quad-roblox `Handlers/Slot.luau`는 잔여]** base `Dispatch/Slot.luau`(추상 재조정, mount/unmount/reposition 3훅) +
-      quad-roblox `Handlers/Slot.luau`(실제 Parent 조작 + reposition —
-      `SetSiblingIndex` 또는 `LayoutOrder` 기반이면 no-op, 구현 선택)
+- [x] **[2026-09-03 base 절반 편입 → 같은 날 잔여 마감 `H6-14`: 백엔드 절반은 M5 단위 ①의 `EngineOps.luau` native* 여섯이 그 자체(`nativeMove`/`nativeSwap`은 LayoutOrder 기반이라 no-op 덮어쓰기) — 별도 `Handlers/Slot.luau` 파일은 없다]** base `Dispatch/Slot.luau`(추상 재조정, mount/unmount/reposition 3훅) +
+      quad-roblox 백엔드 절반(실제 Parent 조작 + reposition — 옛 표기는
+      `Handlers/Slot.luau`, 지금은 `EngineOps.luau`)
 ## M7 — Modifier
 
-- [ ] **[2026-08-27 9라운드 `H-142` 후속, `/code-review`]** 생성기가 찍는
+- [x] **[2026-09-04 M7 단위 ③ — 덤프 층이 이미 `Parent`를 빼므로(M5 Q5 (a)) 생성 `<Class>Modifier`에도 없음, `spec.modifiertypes`]** **[2026-08-27 9라운드 `H-142` 후속, `/code-review`]** 생성기가 찍는
       `FrameModifier`류 메소드 목록에서도 **`Parent`를 제외**할 것 — props
       타입에서만 빼면 `Modifier():Parent(x)`가 타입을 통과하고 `flatten`이
       `Parent`를 해시 파트로 merge해 런타임에서야 죽는다. `PreRef`/`PostRef`가
       Modifier 타입으로 차단되는 것과 같은 자리(`base/bind-system-plan.md`의
       `H-142` 항목).
 
-- [ ] `Modifier()`(빈 인스턴스 바닥 생성자, 2026-08-07 열 번째 세션
+- [x] **[2026-09-04 M7 단위 ① — `quad-base/src/Modifier.luau`, `spec.modifier` 7절, round17; 같은 날 `H-310` 회신으로 `Modifier(a, b, …)` 가변 인자(Modifier·필드 테이블, 뒤가 덮어씀)]** `Modifier()`(빈 인스턴스 바닥 생성자, 2026-08-07 열 번째 세션
       명시 — `Source(default)`/`Ref(default)`/`Store({defaults})`와 같은
       `Type(args)` 팩토리 관습, `modifier-plan.md` 3번)
-- [ ] flatten-before-dispatch(`isModifier(v)`로 배열 항목 중 Modifier만
+- [x] **[2026-09-04 단위 ①(체이닝 — spec.modifier 2절) + 단위 ②(flatten — `Modifier.luau` export, `Dispatch.drive`의 첫 pre-pass로 호출(round17 Q4 (a)), spec.flatten 1~2절)]** flatten-before-dispatch(`isModifier(v)`로 배열 항목 중 Modifier만
       판별해 필드 merge, 나머지는 안 건드리고 통과 — 2026-08-07 열 번째
       세션 명시, `modifier-plan.md` 1번), immutable `table.clone` 체이닝 —
       `table.clone`이 메타테이블을 복사 아닌 참조로 공유해 제네릭 `__index`
       기반 체이닝이 안 끊긴다는 메커니즘은 확인됨(2026-08-12 열일곱 번째
       세션, `modifier-plan.md` "`table.clone`의 정확한 동작" 절) — 실제
       Luau 실행 확인은 `luau-test`의 `17-modifier-index-tableclone-chaining.luau`
-- [ ] `Modifier.Overridden(mod1, mod2, ...)`(이름 확정, 구 `Merge`→`Override`,
+- [x] **[2026-09-04 단위 ①]** `Modifier.Overridden(mod1, mod2, ...)`(이름 확정, 구 `Merge`→`Override`,
       2026-08-08 세션) — 필드별 raw 덮어쓰기, 특별한 State/함수 분기
       불필요(`modifier-plan.md` 9번)
-- [ ] `Overridden`가 서브타입 관계인 서로 다른 Modifier 타입(예: `FrameModifier`/
+- [x] **[2026-09-04 단위 ③ — quad-types·생성 타입 모두 `Overridden: (...any) -> any`]** `Overridden`가 서브타입 관계인 서로 다른 Modifier 타입(예: `FrameModifier`/
       `GuiObjectModifier`)을 섞을 때의 타입 시그니처 — **[해소됨,
       2026-08-13 첫 실측 라운드]** `luau-test/09`로 실측 완료, 우려대로
       깨짐 확인됨 → `Overridden(...: any): any`로 느슨하게 열어두는 게
       실제 구현 방향(`modifier-plan.md` 9-2번)
-- [ ] `State<Modifier>` 조합에 `isModifier` 기반 명시적 error 적용
+- [x] **[2026-09-04 단위 ① — M2가 심은 가드(Source 생성자·Set·Compute 캐시)를 실물 Modifier로 재확인, spec 7절; 타입 차단은 시도 안 함]** `State<Modifier>` 조합에 `isModifier` 기반 명시적 error 적용
       (`modifier-plan.md` 7번, 2026-08-09 세션 확정) — 타입 차단은
       되면 좋은 보너스로 선택 검증(필수 아님)
-- [ ] `:Apply(factory)` 팩토리 함수 체이닝(`modifier-plan.md` 8번, 예약 키
+- [x] **[2026-09-04 단위 ① — 예약 메소드 셋(`Apply`/`Peek`/`Overridden`)이 제네릭 setter보다 먼저 잡힘, spec 1·4절]** `:Apply(factory)` 팩토리 함수 체이닝(`modifier-plan.md` 8번, 예약 키
       `Apply`가 제네릭 `__index` 필드 setter와 안 겹치는지 확인)
-- [ ] `:Peek<<T>>(key): T|State<T>|nil` 필드 읽기 접근자 +
+- [x] **[2026-09-04 단위 ① — `Peek`은 raw 그대로(State 핸들·`None`·`nil` 구별), `isState`/`isSource`는 M2 Brand]** `:Peek<<T>>(key): T|State<T>|nil` 필드 읽기 접근자 +
       `isState(x)`/`isSource(x): boolean`(**[2026-08-21 갱신]** 인스턴스
       브랜드 멤버십 기반 — `isSource(x)`는 `SourceBrand:is(x)`, `isState`는
       그 위에 `StateBrand:is(x)`를 OR로 얹은 상위 개념. 옛 "공유 레지스트리 +
@@ -1551,11 +1570,11 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > M7에서는 **Modifier 쪽 표면만** 다룹니다 — 인라인 키/setter로 필드를
 > 지우는 용법과 `Peek` 반환 타입에 `None`을 추가하는 것(`modifier-plan.md`
 > 2-1번).
-- [ ] 프로퍼티류 필드 타입에 `T' = T | Tween<T>` 치환 반영(타입 생성
+- [x] **[2026-09-04 단위 ③ — 생성 `Field<T | Tween<T>>` 별칭, 런타임 변경 0]** 프로퍼티류 필드 타입에 `T' = T | Tween<T>` 치환 반영(타입 생성
       스크립트가 `Position: UDim2` 자리를 `UDim2 | Tween<UDim2>`로 만들면
       끝, Modifier 런타임/`__index` 자체엔 변경 없음 — `modifier-plan.md`
       10번, 2026-08-10 세션, `base/tween-plan.md`)
-- [ ] **⭐ [2026-08-24 신설, 6라운드 손 트레이싱 `H-35`]
+- [x] **[2026-09-04 단위 ② — HIGH 우선순위, InitDispatch가 None 쌍과 같이 등록, spec.flatten 3절]** **⭐ [2026-08-24 신설, 6라운드 손 트레이싱 `H-35`]
       `quad-base/Dispatch/Modifier.luau` — `ProcessedModifierHandler`.**
       `flatten`이 배열 자리를 `ProcessedModifier` 센티널로 소진하고, 이 전담
       nop 핸들러가 정상 `Dispatch.process` 경로에서 캐치해
@@ -1564,15 +1583,26 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `Frame{...}` 호출은 전부 이 핸들러를 거치는데** 색인 두 곳에서 통째로
       빠져 있어 구현자가 존재 자체를 놓칠 수 있던 자리다. 의사코드는
       `base/modifier-plan.md`의 flatten 절이 소스
-- [ ] **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Modifier` 관련
+- [x] **[2026-09-04 단위 ①·③ — `Quad.Modifier: ModifierConstructor`, `Modifier`(마커 `__quadModifier` 포함)·`ModifierMarker`; 클래스별 타입은 quad-roblox 생성 파일이 소유]** **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Modifier` 관련
       표면이 노출돼야 하면 같이 갱신(위 M3 항목의 "마일스톤마다" 규칙)
+- [x] **[2026-09-04 같은 날 단위 ④(`H-314`)로 닫힘 — 조상 클래스 전부(`GuiObjectModifier`류 — 개수는 `modifier-plan.md` 11절이 소스) 생성 + 검사형 `As<Desc>()`/무검사 `As<<T>>()`/`Into<Class>`, `modifier-plan.md` 11절; 아래는 신설 당시 서술]** **[2026-09-04 신설 — 후순위, M7 밖] 상위 클래스 Modifier 타입 생성**
+      (`GuiObjectModifier`/`GuiButtonModifier`류 — D 스코프의 creatable
+      클래스만 찍는 M7 생성기 밖). **사용자 판정**(round17 §0 Q5 회신):
+      *"textbutton/textlabel 전부 Boldify 같은걸 쓸 수 있어야 할텐데, 안 해두면
+      둘 다 따로 만들어야 하는 부분이라서. 상위 클래스에 대해서 생성하는건
+      있을 필요가 있긴한 부분 … 다만 지금 당장 할 필요가 있냐 하면 그건 아닐
+      수 있어"* — 최종 설계엔 필요하지만 다음 개발을 막지 않으므로 M7 뒤.
+      착수 시 같이 정할 것: 스파이크 `09`(setter가 자기 타입을 반환해 구조적
+      서브타이핑이 안 섬)를 넘어 상위 타입 팩토리 `(GuiObjectModifier) ->
+      GuiObjectModifier`가 `FrameModifier`를 받는 메커니즘(`modifier-plan.md`
+      9-2, `typing-limits.md` §2).
 
 ## M8 — Ref
 
 - [x] ~~**[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Ref` 필드 추가~~
       — **[2026-08-27 `H-128` 후속]** `Ref` 최소형과 함께 M2 공통 기반으로
       이동(그 체크박스). `PreRef`/`PostRef` 필드는 아래 항목이 얹는다
-- [ ] `Ref.luau`의 **나머지** — `:Wait(thread?)`(self 반환). **[2026-08-27
+- [x] **[2026-09-04 M8 단위 ① — `Ref.luau` `:Wait`(항상 다음 `:Set`까지, brief Q5 (a)) + `PreRef.luau`/`PostRef.luau`(Ref 런타임 + 브랜드 + 마커 + `_fired`), quad-types `PreRef<T>`/`PostRef<T>`·`Quad` 필드, `spec.ref` 12~14절·`spec.preref`; pre-pass 자체는 아래 단위 ② 체크박스 몫, round18 `H-315`]** `Ref.luau`의 **나머지** — `:Wait(thread?)`(self 반환). **[2026-08-27
       9라운드 `H-128`] 최소형은 M2 "공통 기반" 절로 앞당겨졌다**(표면 목록은
       그 체크박스가 소스 — 여기 반복하지 않는다) — `Ref`가 `Epoch`를 만족한다는 2026-08-25 확정
       (7라운드 `H-58`/`H-64`/`H-70`: `.Revision`은 `:Set()`이 `Source`와 같은
@@ -1583,17 +1613,17 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       런타임 재사용 + children 배열 전용, Modifier/Store 타입 차단,
       위치 무관 호이스팅 pre-pass — `base/ref-plan.md` "`phase`
       옵션 폐기 → 위치로 표현, `PreRef` 신설" 절 + "API 모양" 절)
-- [ ] `(v=Ref)` 매치 핸들러 — children 배열의 숫자 슬롯에 놓인
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** `(v=Ref)` 매치 핸들러 — children 배열의 숫자 슬롯에 놓인
       `Ref(default)` 인스턴스를 인식해 바인드(별도 `CreatedRef` 래퍼
       없음 — 이름 자체가 폐기됨, 아래 참고)
-- [ ] **이중 배치 방지**(`question.md` 0-W, 2026-08-14 열한 번째 세션
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** **이중 배치 방지**(`question.md` 0-W, 2026-08-14 열한 번째 세션
       해소) — `RefLeafHandler.process`가 실제 바인딩 분기에서
       `bindLifetime(inst, v)`를, 실제 언바인딩 분기에서 `unbindLifetime(v)`를
       호출. 새 `Relate` 불필요 — `bindLifetime`이 이미 내장한 `canBound`
       이중 바인딩 가드를 재사용하는 것뿐(같은 `Ref`가 이미 다른 자리에
       살아있으면 그 자리에서 즉시 error) — `base/ref-plan.md` "이중 배치
       방지" 절
-- [ ] `PreRef`/`PostRef` pre-pass — 새 `Dispatch.*` 함수 없이
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** `PreRef`/`PostRef` pre-pass — 새 `Dispatch.*` 함수 없이
       `Dispatch.drive(inst, flattened)` 자신이 **본체 루프 전에** 배열
       파트를 **한 번** 훑어(**[2026-08-22 정정]** 여기 "두 패스(배열→해시)
       루프 전에"라고 적혀 있었으나 본체는 단일 일반화 `for`다 — `F-4-1`), `PreRef`는 그 자리에서 fire하고
@@ -1609,18 +1639,20 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `ProcessedPostRef` 처리** — 아래 `Processed*Handler` 항목이 그 자리를
       정상 본체 루프로 마저 처리)
       — `base/ref-plan.md` "PreRef" 절 / "`PostRef`" 절
-- [ ] **[2026-08-14 아홉 번째 세션 신설]** `PostRef.luau` + 본체 루프 뒤
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** **[2026-08-14 아홉 번째 세션 신설]** `PostRef.luau` + 본체 루프 뒤
       `postRefList` 소비 루프 — `PreRef.luau`와 같은 방식(`Ref` 런타임
       재사용 + 브랜드 태그만 다름, children 배열 리터럴 전용, Modifier/Store
       타입 차단, `_fired` 1회용 가드). `Dispatch.drive`가 해시 파트까지
       끝낸 뒤 `postRefList`를 순회하며 각 `PostRef`를 fire — 배열 재순회가
       아니라 실제 개수만큼의 짧은 루프. **보장 범위 주의**: 자기 서브트리
-      완성은 보장하되 **이 인스턴스가 부모에 붙는 것보다는 먼저**임
-      — `base/ref-plan.md` "`PostRef`" 절
-- [ ] `PostRef` 동적 경로 가드 Handler — `PreRef`의 것과 완전한 거울상
+      완성만 보장하고 **부모 부착 여부는 어느 쪽도 보장하지 않는다**
+      (**[2026-09-04 M8 brief Q6 정정]** 리터럴 중첩에선 아직 안 붙어 있고,
+      `Claim`/기존 `.Parent`면 붙어 있는 채로 fire) — `base/ref-plan.md`
+      "`PostRef`" 절
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** `PostRef` 동적 경로 가드 Handler — `PreRef`의 것과 완전한 거울상
       (`{priority = HANDLER_PRIORITY_FALLBACK, isHandlable = v is PostRef,
       process = error(...)}`), 같은 절 참고
-- [ ] `PreRef` 동적 경로 가드 Handler — `{priority =
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** `PreRef` 동적 경로 가드 Handler — `{priority =
       HANDLER_PRIORITY_FALLBACK, isHandlable = v is PreRef, process =
       error(...)}` 형태로 정상 우선순위 레지스트리에 등록(`k` 타입 안
       가림), `NoneHandler`와 같은 "한 값 종류 전담" 패턴. 리터럴 배열
@@ -1631,7 +1663,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `Tag`/`Attribute`와 같은 이유)와 `Observer`/`EffectHandle`에도 같은
       패턴의 가드가 추가됨은 `base/source-state-plan.md`/`base/effect-plan.md`의
       "동적 경로 가드" 절 참고
-- [ ] **[2026-08-14 두 번째 세션 신설]** `ProcessedPreRefHandler` +
+- [x] **[2026-09-04 M8 단위 ② — round18 `H-319`, `Ref.luau` `registerDispatchHandlers`(leaf+가드, `H-278`) / `Dispatch/Ref.luau`(pre-pass·`postRefList`·`Processed*` 핸들러 — Dispatch 소유, 순환 회피), `spec.refhandlers` 7절]** **[2026-08-14 두 번째 세션 신설]** `ProcessedPreRefHandler` +
       **[아홉 번째 세션] `ProcessedPostRefHandler`**(완전한 거울상, 코드
       한 글자 차이) — `{isHandlable = v == Processed*Ref, process =
       setLength(0)+setOffsetSource(None)+no-op retract}` 형태로 정상
@@ -1639,7 +1671,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       패턴. pre-pass가 소진시킨 자리가 Length/Offset에 "0 기여"를 등록할
       책임을 지는 자리 — `base/ref-plan.md` "PreRef" 절 / "`PostRef`" 절,
       `base/dispatch-core-plan.md` "Length/Offset" 절
-- [ ] Ref 콜백/대기자 실행 루프 — **[2026-08-24 6라운드 `H-7`로 재작성]**
+- [x] **[M2 공통 기반이 이미 구현(`Ref.luau` `:Set` — 2026-08-28), `:Wait`는 M8 단위 ①(`H-315`)]** Ref 콜백/대기자 실행 루프 — **[2026-08-24 6라운드 `H-7`로 재작성]**
       `.Callbacks`는 **`{[callback|thread] = true}` 해시맵 셋**이다(배열 아님).
       `:Set(value)`는 **`.Value`를 먼저 쓰고**, **순회 전 스냅샷을 뜬 뒤**
       (`pairs` 순회 중 새 키 추가가 Lua에서 미정의라 — `H-23`과 같은 처방)
@@ -1664,7 +1696,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `:Wait(thread?)`는 그대로 — `thread`가 `nil`이면
       `coroutine.running()` 캡처+yield, 있으면 등록만 하고 즉시 `self`
       반환(남의 thread를 여기서 대신 정지시킬 수 없어서)
-- [ ] **[2026-08-24 신설, 6라운드 `H-7` / 2026-08-25 범위 축소, 7라운드 `H-58`]**
+- [x] **[M2 공통 기반이 이미 구현(`Ref.luau`, `spec.ref` 6절)]** **[2026-08-24 신설, 6라운드 `H-7` / 2026-08-25 범위 축소, 7라운드 `H-58`]**
       `Ref:Uncallback(fn)` — 해제 경로(강·약 두 테이블을 다 본다).
       **⚠️ `Effect`는 더 이상 이걸 안 부른다** — 여기 한때 *"`Effect`가 자기
       `Ref` dep 콜백을 뗄 때 쓰고(`_refCallbacks`에 보관해둔 바로 그 클로저를
@@ -1711,11 +1743,18 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `base/lifecycle-pattern.md`의 "`bindLifetime` / `canBound` /
       `canExecute` / `unbindLifetime`" 절
 
+- [x] **[2026-09-04 같은 날 완료 — `H-321` 사용자 확정 (a) 반공변 팬텀 마커 `<Class>RefMarker`, `H-322`; `spec.reftypes`, luau-test `32`]** **[2026-09-04 M8 단위 ③ — round18 brief §1·§0 Q3]** children 자리의
+      `Ref`/`PreRef`/`PostRef` **타입 표면** — 스파이크 `32` 선행(`Ref<T>`의
+      불변성 + 8.9절 결함(`Callback` 이름 충돌)으로 `<Class>Elem`에 직접 넣을 수
+      있는지), 결과대로 `quad-roblox/src/types.luau` `NewChild` 또는 생성기
+      `<Class>Elem`/`<Class>MapperElem` 확장 + `spec.reftypes`. 런타임 핸들러
+      (위 체크박스들)는 단위 ②로 끝났고 이 항목이 M8의 마지막이다
+
 ## M9 — 컴포넌트 합성 레이어
 
-- [ ] 플레인 함수 컴포넌트 관례 문서화/예제
-- [ ] `props.Modifier`/`props.Ref` 전달 관례를 정식 컴포넌트로 검증(M0
-      스파이크를 정식화)
+- [x] **[2026-09-06 M9 — round21]** 플레인 함수 컴포넌트 관례 문서화/예제(정본 "최종 결론" 절 배너 + `spec.component` 예제 셋 — 사이트 문서는 백로그)
+- [x] **[2026-09-06 M9 — round21, §4 문항 둘: 필드 이름 Q2·`H-340` 커스텀 필드 제거 연산]** `props.Modifier`/`props.Ref` 전달 관례를 정식 컴포넌트로 검증(M0
+      스파이크를 정식화 — `quad-roblox/test/spec.component.luau`·`spec.componenttypes.luau`, CLI 49/49, Studio 생략)
 
 ## M10 — Event / OnChange / Attribute / Tag
 
@@ -1740,7 +1779,8 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > **⭐ [2026-09-03 병렬 fork 편입 — quad-base 절반 완료]** M10의
 > quad-base 몫(Tag/AttributeKey/Attribute 값·핸들러·안내 스텁·spec 2벌)이
 > `spike/m10-tag-attribute` fork로 구현돼 메인에 머지됐다(발견 원장
-> `qa-request/m10-implementation-round16.md` — `H10-1`~`H10-6`).
+> `qa-request/m10-implementation-round16.md` — `H10-1`부터, 통합 리뷰
+> 발견(`H10-7`~)까지 이어 씀; 상태는 그 파일이 소스).
 > **⚠️ 파일 분할이 `H10-1`로 재편됐다**: 아래 체크박스의 6파일 구성
 > (`Dispatch/Tag.luau`+`TagFallback.luau`류의 알고리즘/등록 분리 파일)은
 > `H-278`(각 값 선언 모듈이 자기 Init에서 등록 — M3 회신 라운드 확정)
@@ -1749,10 +1789,31 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 > "FallbackHandler"는 별도 파일이 아니라 **등록 엔티티 이름**으로
 > 산다(`TagFallbackHandler` 등 — 문서의 별도-엔티티 요구의 실질은
 > 이름·priority 분리). 아래 `[x]` 항목의 파일 경로 서술은 이 재편 기준으로
-> 읽을 것. **잔여는 quad-roblox 엔진 축**(EngineOps 실구현 —
-> addTag/removeTag/setAttribute, Event/OnChange, InstanceShorthand)과
-> `AttributeGroupHandler` 부분 실패 롤백 판단(`question.md`) — **M10
-> 잔여 목록의 유일한 소스는 이 배너다**(다른 문서는 여기를 가리킬 것).
+> 읽을 것. **잔여는 quad-roblox 엔진 축** — **M10 잔여 목록의 유일한 소스는
+> 이 배너다**(다른 문서는 여기를 가리킬 것): ~~EngineOps 실구현
+> addTag/removeTag/setAttribute~~(**[2026-09-03 완료 — 엔진 축 첫 단위]**
+> `EngineOps.luau` 셋 + mockProvider 편입 + `spec.tagattribute` + Studio 7/7
+> `audit/m10-engine-axis-studio-2026-09-03.md`, round16 `H10-10`), ~~**Event/
+> OnChange 핸들러**(`H-27` 포함)~~(**[2026-09-03 완료 — 엔진 축 둘째 단위]**
+> `Handlers/Event.luau`·`Handlers/OnChange.luau` + `spec.events` + Studio 8/8
+> `audit/m10-events-studio-2026-09-03.md`, round16 `H10-13`; **같은 날
+> `OnChange`는 사용자 제안으로 배열부 값 `OnChange(name, fn)`으로 역전·재구현
+> — `H10-14`, `base/onchange-plan.md` 재작성, 옛 키 형태는
+> `archive/onchange-hash-key-reversed.md`. 그 역전이 `H10-11`(순서 → 초기값
+> 발화 계약)과 `H10-12`의 OnChange 몫(생성 `E` 확장)을 닫았고, `H10-12`의
+> `AttributeKey` 몫도 같은 날 사용자 확정 "한 발 얹기"(`H10-15` — `AttributeKey`
+> 무타입 프리미티브 + 배열부 슈가 `StringAttribute(name, value)`)로 닫혀
+> round16 열린 문항 0), ~~**InstanceShorthand**(아래 체크박스 — 그
+> 항목이 스스로 "M11(Tween) 이후"를 권한다)~~ **[2026-09-06 완료 — round20
+> `H-335`~`H-337`, Studio 6/6]** — **M10 잔여 없음**.
+> **[2026-09-03 아침 회신]** ① `AttributeGroupHandler` 부분 실패 롤백은
+> **닫혔다**(사용자 동의 — 문서화로 관리 안 함, `attribute-plan.md` 말미 확정
+> 절·`archive/question-resolved.md`; 한때 여기 잔여로 적혀 있었음). ② Tag/
+> Attribute 엔진 op의 **설치 형태는 에이전트 선택**(사용자: *"어떤 방식으로든
+> 채운다면 괜찮 … 코드 스타일 문제"*) — 방향은 (d′) "모든 프로바이더가 같은
+> 형태"대로 mock의 `installTagAttributeOps` opt-in을 `mockProvider`에,
+> 실물은 `EngineOps`에 편입(`session/2026-09-03-01-fork-integration.md`
+> "아침 회신" 4번). 엔진 축 착수 때 이 배너의 체크박스로 진행을 적는다.
 
 
 - [x] **[2026-09-03 편입]** **[2026-08-24 `H-39`]** `TagHandler`/`AttributeGroupHandler`가 자기 배열
@@ -1763,18 +1824,18 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       위치 claim 배선 — 5라운드 `AT-1`에서 `(inst, groupValue) → k`로 확정해놓고
       의사코드에 안 들어가 있었다. **`nameClaims`보다 먼저** 해야 절반만 기록되는
       중간 상태가 안 생긴다
-- [ ] **[2026-08-24 `H-27`]** `OnChangeHandler.process`에 `v == nil` 얼리리턴 —
+- [x] **[2026-09-03 완료 → 같은 날 배열부 역전으로 소멸: 배열 원소의 `None`/`nil`은 NoneHandler/NilHandler 몫이라 이 핸들러에 안 닿는다(`archive/onchange-hash-key-reversed.md`)]** **[2026-08-24 `H-27`]** `OnChangeHandler.process`에 `v == nil` 얼리리턴 —
       없으면 `None`으로 콜백을 끄는 게 실제로는 **나중에 터질 Connection을 새로
       심는** 동작이 된다
 - [x] **[2026-09-03 편입 — 타입은 `H10-3` (d) `setmetatable<A,B>` 표기]** **[2026-08-24 `H-25` 파생]** `quad-types`의 `Quad`에 `Tag`/`Attribute`
       필드 추가(위 M3 항목의 "마일스톤마다" 규칙)
-- [ ] `Handlers/Event.luau`(`ReflectionService` 기반 자동 판별)
-- [ ] `Handlers/OnChange.luau`(`OnChange(name)` 특수 키 팩토리+Handler,
+- [x] **[2026-09-03 완료 — `GetEventsOfClass` 디스크립터 `.Name`, 상속 포함, 프로퍼티 집합과 분리 실측]** `Handlers/Event.luau`(`ReflectionService` 기반 자동 판별)
+- [x] **[2026-09-03 완료, 같은 날 배열부 값으로 역전·재구현 — 아래 서술은 옛 키 형태라 `archive/onchange-hash-key-reversed.md`로 읽을 것; 현행은 `OnChange(name, fn)` 디스크립터 + 초기값 발화 계약 + 생성 `OnChangeFn` 타이핑(`base/onchange-plan.md`, round16 `H10-14`)]** `Handlers/OnChange.luau`(`OnChange(name)` 특수 키 팩토리+Handler,
       `GetPropertyChangedSignal` 바인딩 — 제네릭 없이 콜백 타입은 인라인
       명시, 이름별 weak 캐시로 `OnChange(a) == OnChange(a)` 동등성 보장
       (`AttributeKey`와 동일 기법), `base/onchange-plan.md`, 2026-08-10
       세션 확정·2026-08-11 아홉 번째 세션 후속(캐시))
-- [ ] **[2026-09-03 Q6 (a) 각주 — M5 round14 브리프 확정 이행]** Attribute
+- [x] **[2026-09-03 M10 엔진 축 — 아래 EngineOps 몫(쓰기 op 셋) 완료; Q6 각주(읽기 소비자 설계 주의)는 읽기 API가 생길 때의 지침으로 남는다]** **[2026-09-03 Q6 (a) 각주 — M5 round14 브리프 확정 이행]** Attribute
       op의 **읽기 소비자**(`InstanceAttribute` 읽기 타입, quad-debug)는
       Instance 참조 Attribute가 `InstanceHandle`(미문서화 Studio Beta)로
       돌아오므로 **`:Get()` 언랩·nil·죽은 참조 위에서 설계할 것** —
@@ -1792,11 +1853,12 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       `clearTimeout`도 예정돼 있다. **주입 op 전체 목록의 소스는
       `base/architecture.md`의 소스 트리 안 `EngineOps.luau` 줄** — 여기서
       세지 않는다.
-- [x] **[2026-09-03 편입]** `quad-base/AttributeKey.luau`(단일 키 `AttributeKey<<T>>(name)` +
-      이름별 weak 캐시로 동등성 보장 + 스칼라 편의 패밀리
-      `String`/`Number`/`BooleanAttribute` — 엔진 고유 타입 패밀리
-      (`Color3Attribute`류)만 quad-roblox의 `D`(Declarative) 층에서 각자 추가.
-      타입 파라미터화 이름만 착수 전 확인, `base/attribute-plan.md`)
+- [x] **[2026-09-03 편입; 같은 날 후속 — 사용자 확정으로 `AttributeKey`는 무타입 프리미티브(제네릭 폐기), 스칼라 패밀리는 `Attribute.luau`의 배열부 슈가 `StringAttribute(name, value)`(단일 항목 그룹)로 이동 — `attribute-plan.md` 머리 배너, round16 `H10-15`]** `quad-base/AttributeKey.luau`(단일 키 `AttributeKey(name)` — 무타입,
+      이름별 weak 캐시로 동등성 보장) + `quad-base/Attribute.luau`의 타입드
+      스칼라 슈가 `StringAttribute(name, value)`/`Number…`/`Boolean…`(단일
+      항목 그룹, raw 값 타입 검사) — 엔진 고유 타입 패밀리(`Color3Attribute`류)는
+      같은 슈가 모양으로 quad-roblox가 얹는다(백로그, 아직 없음).
+      `base/attribute-plan.md` 머리 배너)
 - [x] **[2026-09-03 편입 — `H10-1`: `AttributeKey.luau`에 흡수]** `quad-base/Dispatch/AttributeKey.luau`(`AttributeKeyHandler` —
       `setAttribute(inst,name,v)`를 `v`가 뭐든 무조건 호출 + **이름
       claim**(`nameClaims` Relate, 다른 키 객체가 같은 이름에 들어오면
@@ -1847,7 +1909,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
       감싸 `HANDLER_PRIORITY_FALLBACK`으로 등록되는 별도 이름의 엔티티,
       등록 주체는 `AttributeKeyFallbackHandler`와 동일하게 **quad-base
       자신** — [재역전, 2026-08-18])
-- [ ] **[2026-08-14 세션에 누락 발견, 신규]** `quad-roblox/Handlers/
+- [x] **[2026-09-06 구현 — round20 `H-335`~`H-337`, CLI 47/47; Studio는 `audit/m10-shorthand-studio-2026-09-06.md`]** **[2026-08-14 세션에 누락 발견, 신규]** `quad-roblox/Handlers/
       InstanceShorthand.luau` — UI 편의 숏핸드 `UICorner`/`UIPadding`
       (+`UIPaddingOffset`)/`UIScale`(`base/ui-shorthand-plan.md`). 이
       마일스톤 전후로 구현하기로 그 문서가 이미 지정해뒀는데 체크리스트에
@@ -1874,7 +1936,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 
 - **override 정책 확정 완료**(2026-08-12 세션, `base/tween-plan.md`
   "확정: `Tween{...}` 최종 모양" 절) — 검토했던 4가지가 **`Tween.Cancel`
-  (기본)/`Tween.Finish` 2값으로 압축**됨(로블록스 `TweenBase` API 현실상
+  (기본)/`Tween.Finish` 2값으로 압축**됨(**[2026-09-06 `H-343`]** 표기는 문자열 싱글톤 `"Cancel"`/`"Finish"`)(로블록스 `TweenBase` API 현실상
   나머지가 관찰상 Cancel과 동일). Tween→plain 전환도 두 옵션 모두
   "정리 후 즉시 덮어쓰기"로 수렴해 5번째 옵션 불필요로 확정.
   **구현 시 순서 주의**: 이전 트윈 정리 → 그 다음 새 값 세팅
@@ -1887,17 +1949,17 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 
 ### 짜야 할 것
 
-- [ ] `quad-base/Tween.luau`(값 타입만 — `Tween(opts)` 팩토리가 `TweenBrand`에
+- [x] **[2026-09-06 M11 단위 ① 완료 — round19 `H-323`~`H-327`]** `quad-base/Tween.luau`(값 타입만 — `Tween(opts)` 팩토리가 `TweenBrand`에
       등록, **[2026-08-28]** 브랜드 인스턴스와 `isTween`은 `Brand.luau`에 추가,
       `Value: T` plain만 받고 State 재귀 없음)
-- [ ] `Handlers/Property.luau`에 `isTween(realv)` 분기 추가(기존
+- [x] **[2026-09-06 M11 단위 ② 완료 — round19 `H-328`/`H-333`, Studio 6/6 `audit/m11-unit2-studio-2026-09-06.md`]** `Handlers/Property.luau`에 `isTween(realv)` 분기 추가(기존
       `Handlers/Tween.luau` 독립 핸들러는 폐기) + 3-상태 릴레이션 슬롯
       (**[2026-08-28 `H-155`]** `base/tween-plan.md`의 "3-상태 저장" 절이 소스 —
       활성 트윈은 엔진 객체가 아니라 `{Tween, Value}` **테이블**, `Tween.Finish`가
       목표값을 알아야 해서; 옛 표기 `RobloxTween | true | nil`) + 첫 세팅은 무조건 애니메이션 없이
       스냅(hasBeenSet 억제) + 활성 트윈 정리는 override 정책 완료 후에만
       새 값 세팅(순서 뒤바뀌면 트윈 다음 프레임이 방금 세팅한 값을 덮어씀)
-- [ ] `quad-roblox/Animate.luau` — **시그니처도 이미 확정 완료**(2026-08-12
+- [x] **[2026-09-06 M11 단위 ③ 완료 — round19 `H-334`, Studio 생략(엔진 대면 델타 없음)]** `quad-roblox/Animate.luau` — **시그니처도 이미 확정 완료**(2026-08-12
       두 번째/세 번째 세션, `base/tween-plan.md`): `Tween` opts(`Value` 제외)를
       `T|State<T>`로 받아 각 필드를 resolve한 뒤 `Tween{...}`을 반환하는
       `function(self)...end` — `:Apply(Animate{...})`로 체이닝(`:Compute`가
@@ -1916,6 +1978,7 @@ Luau 코드로 부딪혀본 적 없는 세 가지**를 던지는 코드로 검�
 
 ## 백로그 (스코프 밖 — 필요성이 실제로 드러나면 그때 설계)
 
+- [ ] **[2026-09-06 신설, 사용자 결정 백로그]** 컴포넌트 경계 flatten 슈거(`research/component-flatten-sugar-plan.md`) — round21 §4 Q2·`H-340`의 후속. 순수 슈거, 코어 변경 없음. 스캐폴딩 계획만 있고 사용자 답 대기.
 - [ ] 범용 렌더 디버깅 도구로서의 quad-mock(Tween mock 등 동적 동작 포함,
       M1의 quad-base 테스트용 mock과는 별개)
 - [ ] `quad-debug`/`quad-debug-roblox-plugin` — 실물 Instance→코드 위치

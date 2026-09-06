@@ -1,0 +1,56 @@
+
+=== R1 StoreBind churn on array child — memory bounded, exactly one child ===
+KB before=801.0 after=4930.0 delta=4129.0
+children now:	1
+
+=== R2 Property churn on hash key via State — memory bounded ===
+KB before=4972.0 after=4988.0 delta=16.0 Text=v5000
+
+=== R3 Event via State<fn|None> — reconnect/disconnect; None disconnects ===
+fires	11	(expect 11)
+
+=== R4 Modifier field None + inline absent → property skipped; inline None wins over modifier value ===
+Text	nil	Size	7
+
+=== R5 Modifier with State field then flatten + StoreBind; re-Set propagates ===
+Text	y
+
+=== R6 PostRef ordering vs nested child PostRef + PreRef + Modifier mixed ===
+pre:Frame | post:Outer:children=1
+
+=== R7 Claim — descriptor tree with a child; nativeClaim double error path ===
+root.Text	r	child.Text	k	child parent ok	true
+double claim ok=	false	./tmp.explore-2.luau:113: nativeClaim: Instance is already claimed by quad
+
+=== R8 Tag through State swapping; Attribute group through State ===
+tags	a,b	attrs.x	1
+tags	b,c	attrs.x	1	attrs.y	2
+
+=== R9 Slot in D.Frame with reactive State element, swap to nil and back ===
+children	1	Length	1
+children	0	Length	0
+children	1	Length	1	B
+
+=== R10 Effect fn calling D.Frame (drive inside Effect fn) — cleanup destroys ===
+children	1	c2
+
+=== R1b StoreBind churn WITH dispose(old) — memory bounded? ===
+KB before=5467.0 after=5659.0 delta=192.0
+children now:	1
+
+=== R1c unreferenced D.Frame({}) never parented — collected? (claim pin) ===
+KB before=5697.0 after=10921.0 delta=5224.0
+
+=== R11 Tag name churn — tagNameMap holders accumulate per unique name? ===
+KB before=9673.0 after=10739.0 delta=1066.0 tags=n5000
+
+=== R12 State<Slot|nil> toggle churn — memory bounded ===
+KB before=10791.0 after=10982.0 delta=191.0 children=1
+
+=== R13 Slot Add/Remove churn on mounted slot — memory bounded ===
+KB before=11093.0 after=11477.0 delta=384.0 children=0
+
+=== R14 Attribute group churn with fresh group objects — memory bounded ===
+KB before=11522.0 after=13274.0 delta=1752.0 k=3000
+
+=== DONE ===

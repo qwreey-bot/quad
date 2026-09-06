@@ -24,7 +24,24 @@ op+생명주기 / `D` 생성기 / Property·InstanceChild 핸들러 /
 12번)는 `.claude/todos.md` 00번이 소스. **같은 날 사용자 승인으로 병렬 탐사, 2026-09-03 통합 완료** —
 fork 둘이 worktree에서 M6/M10을 mock 축으로 선행 구현했고 **메인에
 머지됨**(발견 접두 `H6-`/`H10-`, 원장 `round15`/`round16`; 통합 판정(H10-3
-(d)·H10-5·H10-1)과 잔여 목록은 `ROADMAP.md` M6/M10 배너가 소스)** —
+(d)·H10-5·H10-1)과 잔여 목록은 `ROADMAP.md` M6/M10 배너가 소스). **[2026-09-03
+후속] M6 잔여 마감 단위 완료** — 공개 CRUD 다섯·`collectLeaves`·raw 꼬리
+공용화·quad-types `Slot<T>`(`H-25`)·`KeyGone` spec·실기기 Deferred 축 실측
+(`audit/m6-remainder-studio-2026-09-03.md`), 정정 `H6-14`/`H6-15`; M6 잔여
+목록 전부 닫힘(소스는 round15 "이 fork 슬라이스 밖" 절). **같은 날 M10 엔진
+축 첫 단위**(Tag/Attribute 엔진 op — quad-roblox `EngineOps` + mockProvider,
+`H10-10`)와 **둘째 단위**(Event/OnChange 핸들러 — `Handlers/Event.luau`·
+`Handlers/OnChange.luau`, 확장 `{ D, OnChange }`, `H10-13`; **같은 날
+`OnChange`는 사용자 제안으로 배열부 값 `OnChange(name, fn)`으로 역전·재구현
+`H10-14`** — 초기값 발화 계약, 생성 `OnChangeFn` 타이핑, 옛 키 형태는
+`archive/onchange-hash-key-reversed.md`; 이어서 **`AttributeKey` 무타입화 +
+타입드 스칼라 슈가 `StringAttribute(name, value)`**(= 단일 항목 그룹,
+`H10-15`, `attribute-plan.md` 머리 배너)로 round16 열린 문항 0)까지 — M10
+잔여 목록은 ROADMAP M10 배너가 소스(남은 건 InstanceShorthand, M11 이후
+권고); **[2026-09-04] M7(Modifier) 자율 구현 구간 — 같은 날 완료** — 규약
+`qa-request/m7-implementation-round17-brief.md` §0 확정(Q5는 후순위), 단위
+①~④ + §4 회신(`H-310`/`H-312`) 반영 완료 — **M7 완료**(단위 ④ `H-314`: 사용자 설계로 클래스 태그·`TypedFactory`/`DefineSubtype` 공개 레지스트리·검사형 `As<Desc>()`·무검사 `As<<T>>()`·`Into<Class>`·상위 클래스 Modifier(조상 전부) — `H-313` 소멸, Q5 닫힘, `modifier-plan.md` 11절), round17 §4 열린 문항 0; **[2026-09-04] M8(Ref/PreRef/PostRef) 자율 구현 구간 — 2026-09-06 새벽 완료(단위 ①·②는 2026-09-04, 단위 ③·`H-317`은 2026-09-06 00시대 KST 커밋)** — 규약 `qa-request/m8-implementation-round18-brief.md` §0 확정(Q6는 전제 정정), 단위 ①·② 완료(`H-315` `:Wait`·`PreRef`/`PostRef` 런타임 / `H-319` 핸들러 넷+drive pre-pass, Studio 8/8), 단위 ③도 완료(`H-321` 사용자 확정 (a) → `H-322` 반공변 팬텀 마커 `<Class>RefMarker`) — **M8 완료**, round18 열린 문항 0, 원장 `-round18.md`, 진행 소스는 ROADMAP M8 체크박스; **[2026-09-06] 다음 순서 사용자 확정 M11(Tween) → M10 잔여 InstanceShorthand → M9, M11 자율 구간 착수 — 같은 날 단위 ①(Tween 값·타입 `H-323`~`H-327`)·②(Property 소비 `H-328`/`H-333`, Studio 6/6)·③(`Animate` `H-334`) 완료**(규약 `qa-request/m11-implementation-round19-brief.md` §0 권고 (a)로 착수·새 표면 문항만 멈춤, 원장 `-round19.md`(§4 상태는 그 원장이 소스 — 2026-09-06 아침 회신으로 전부 닫힘, `H-343` 문자열 싱글톤 `Override` 포함), fable 탐사 `audit/fable-exploration-2026-09-06.md`, 원문 `session/2026-09-06-01-audit-sweep-and-m11-brief.md`); **[같은 날 M10 잔여 InstanceShorthand 완료 — round20 `H-335`~`H-337`(룩업 표 핸들러·생성기 GuiObject 계열 키 넷·`LuauSolverConstraintLimit`), Studio 6/6 `audit/m10-shorthand-studio-2026-09-06.md` — M10 잔여 없음]**; **[같은 날 M9 관례 검증 완료 — round21 `H-340`/`H-341`, `spec.component`·`spec.componenttypes`(플레인 함수·`or None`·`Overridden`·Slot 반환·커스텀 클래스 `As(name)`), 정본 "최종 결론" 절 배너; Q2·`H-340`은 백로그 `research/component-flatten-sugar-plan.md`(사용자 결정) — 열린 마일스톤 없음, 다음은 사용자와]**; 단위 구성은 brief §1, 진행 소스는 ROADMAP M7 체크박스, 발견
+원장은 `-round17.md`(`H-309`~) —
 **M4도 같은 방식의 자율 구간으로 2026-09-01 착수·종결**(사용자 조건부
 승인으로 규약 `qa-request/m4-implementation-round13-brief.md` §0 전량 (a)
 확정, 발견 `-round13.md`(`H-287`~; §4 열린 문항 0) — 단위 하나:

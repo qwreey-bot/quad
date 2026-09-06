@@ -54,10 +54,19 @@ local function Init(module: any)
 
 	-- In-place mutation was done by the caller; only the signal is sent.
 	-- Root Sources only — derived States have no such concept ("하드 경계").
-	function Impl.Emit(self: any): any
+	-- `H-207`: one copy of the bump-and-emit tail, as an UNTAGGED local —
+	-- `Set` calls it directly. If `Set` called the tagged `Impl.Emit`, every
+	-- Nearest raise inside the wave (Slot reconcile, KeyGone …) would blame
+	-- this file's `Emit` line instead of the user's `:Set` line (`H-330`,
+	-- fable 탐사 2026-09-06; `H-250`: local direct calls need no tag).
+	local function bumpAndEmit(self: any): any
 		self.Revision = bit32.bnot(-self.Revision)
 		emitDown(self, self) -- payload = the source epoch itself
 		return self
+	end
+
+	function Impl.Emit(self: any): any
+		return bumpAndEmit(self)
 	end
 
 	-- `H-68`: same value still bumps the revision and emits — dedup is the
@@ -68,9 +77,7 @@ local function Init(module: any)
 			Err.errorBeforeNearest("Source: cannot Set a Modifier as a Source value", SURFACE)
 		end
 		self._value = value
-		-- `H-207`: one copy of the bump-and-emit tail. Direct call, not colon
-		-- delegation — same type, same impl table, no subtype override to hit.
-		return Impl.Emit(self)
+		return bumpAndEmit(self) -- direct local call (`H-207`/`H-330`), not colon delegation
 	end
 
 	function Impl._track(self: any, map: any)

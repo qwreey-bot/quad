@@ -38,13 +38,36 @@ local QuadTypes = require("../../luau_packages/quad_types")
 -- table; "marker" on purpose — NOT a `Brand.luau` Brand, which this value
 -- deliberately has none of). Runtime judgement is STILL identity (`v == None`) — the field is
 -- advisory typing only, and freezing keeps it untouchable.
-local None = table.freeze(setmetatable({ __quadNone = true :: true }, {
-	__tostring = function()
-		return "None"
-	end,
-}))
+-- One constructor for every frozen marker sentinel (`None`, `ProcessedModifier`,
+-- `ProcessedPreRef`/`PostRef`): the H-300 marker field `__quad<Name> = true`
+-- plus a `__tostring` — kept in one place so the sentinel convention cannot
+-- drift between copies (review, M8 ③).
+local function sentinel(name: string): any
+	return table.freeze(setmetatable({ ["__quad" .. name] = true :: true }, {
+		__tostring = function()
+			return name
+		end,
+	}))
+end
 
-local module = { None = None }
+local None = sentinel("None")
+
+local module = { None = None, sentinel = sentinel }
+
+-- The terminal "empty slot" registration every nop handler does (NilHandler,
+-- ProcessedModifier/PreRef/PostRef): offsetSource FIRST, then length 0 —
+-- the release-order contract (`H-39`, setLength ends in gatedRecompute).
+-- One body so the order cannot drift between the terminal sites (review, M8 ②·③,
+-- widened after the M11 review: NilHandler, Processed*, RefLeafHandler, and the
+-- Attribute/Tag/Effect/Observer/Slot leaf handlers route through here; the only
+-- inline copy left is quad-roblox `Handlers/OnChange.luau` — that package never
+-- requires quad-base).
+-- `anchor` is the `setLength` 4th argument the `Processed*` canon blocks pass
+-- (`inst`, `H-35`); NilHandler passes none.
+function module.registerEmptySlot(dispatch: QuadTypes.Dispatch, inst: any, k: any, anchor: any?)
+	dispatch.setOffsetSource(inst, k, None)
+	dispatch.setLength(inst, k, 0, anchor)
+end
 
 -- Called by InitDispatch once per module instance, after the Dispatch table
 -- is assembled — the handlers close over that instance's dispatch (the
@@ -77,8 +100,7 @@ function module.register(dispatch: QuadTypes.Dispatch)
 		priority = dispatch.HANDLER_PRIORITY_HIGH,
 		process = function(inst: any, k: any, _v: any, _index: number): (any?, boolean) -> ()
 			-- no recursion — already nil, nothing further to hand down
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0)
+			module.registerEmptySlot(dispatch, inst, k)
 			return Void
 		end,
 	})

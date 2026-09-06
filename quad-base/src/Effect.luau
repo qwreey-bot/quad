@@ -33,6 +33,7 @@
 ]]
 
 local Brand = require("./Brand")
+local NoneModule = require("./Dispatch/None")
 local EpochMap = require("./EpochMap")
 local Err = require("./ErrorNamespace")
 local QuadTypes = require("../luau_packages/quad_types")
@@ -304,7 +305,6 @@ end
 local function registerDispatchHandlers(module: any)
 	module:RunInit(InitDispatch)
 	local dispatch: QuadTypes.Dispatch = module.Dispatch
-	local None = module.None
 	local relate = Relate() -- (inst, k) -> last bound handle; weak value (`H-71`)
 
 	dispatch.addHandler({
@@ -314,8 +314,7 @@ local function registerDispatchHandlers(module: any)
 		end,
 		priority = dispatch.HANDLER_PRIORITY_HIGH,
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
-			dispatch.setOffsetSource(inst, k, None) -- `H-39`
-			dispatch.setLength(inst, k, 0)
+			NoneModule.registerEmptySlot(dispatch, inst, k) -- `H-39` (리뷰 — 한 본문, `None.luau`)
 
 			local old = relate:GetWeak(inst, k) -- `H-71`; load-bearing dedup (`H-266`)
 			if old ~= v then

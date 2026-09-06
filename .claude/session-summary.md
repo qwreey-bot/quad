@@ -2244,3 +2244,130 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   setmetatable + __call 인자 무검사), attribute-plan error 계약 이관,
   question.md 두 항목 현황(Slot foreign — 확인 시점 도래 / AttributeGroup
   롤백 이월). 아침 검토용 문제점·후행 목록은 세션 파일이 소스.
+
+- `session/2026-09-03-02-m6-remainder.md` **[M6 잔여 마감 — 자율 구간 첫
+  단위]** 공개 CRUD 다섯(`Move`/`Swap`/`Extract`/`Replace`/`Splice`) +
+  `collectLeaves` + `rawSwap`/`rawSplice`, raw 3형제 꼬리 공용화(사용자
+  승인 — `vacate`/`maybeRecompute`), quad-types `Slot<T>`(`H-25`), `H-238`
+  태깅(`H6-10`), spec 17~21(KeyGone 세 갈래 포함). 정정: `Handlers/Slot.luau`는
+  native* 층에 흡수(`H6-14`), `H-286` ② 기각(`H6-15`). 끝 절차: 감사 3라운드
+  수렴(13→6→1), `/code-review medium` 확정 6 → `H6-19` ① 묶음(Splice 게이트
+  누수 경로·State 선행 검증·언마운트 부기 리셋·생성자 blame)+`H6-20` ②, 탐사자 `H6-21`(reconcile 예외 자리 문서화)·`H6-22`(pesde 심 재생성). §4
+  문항 넷(`H6-9` Splice 단일 물리 op / `H6-12` 래퍼 이탈 소유권 / `H6-16`
+  센티널 마커 / `H6-20` nativeSwap 계약) — **같은 날 사용자 회신으로 전량
+  반영**(`H6-9` (b) 단일 물리 op — 마운트/언마운트 플래그 walk 분리 /
+  `H6-12` (b) 슈가 래퍼만 소유권 반납 / `H6-16` (a) 마커 / `H6-20` (a)
+  문구), 부수 `H6-23`·`H6-24`(점유자 단위 dedup). 실기기 Deferred 축도 같은 날 Studio 실측
+  (`audit/m6-remainder-studio-2026-09-03.md` 11/11 ×2) — M6 잔여 전부 닫힘,
+  §4 열린 문항 0.
+
+- `session/2026-09-03-03-m10-engine-axis.md` **[M10 엔진 축 첫 단위 —
+  Tag/Attribute 엔진 op]** 사용자 위임(아침 회신 4번)으로 (d′) 형태 채택:
+  quad-roblox `EngineOps`에 `addTag`/`removeTag`(CollectionService)/
+  `setAttribute` 설치, mockProvider가 같은 셋을 심고 로그는 재설치 opt-in,
+  quad-types `Quad` op 필드, `spec.tagattribute` 신설·스텁 spec 셋 재편,
+  Studio 7/7(`audit/m10-engine-axis-studio-2026-09-03.md`), round16
+  `H10-10`. M10 잔여는 Event/OnChange·InstanceShorthand(ROADMAP M10 배너).
+
+- `session/2026-09-03-04-m10-events.md` **[M10 엔진 축 둘째 단위 —
+  Event/OnChange 핸들러]** 선행 실측으로 `GetEventsOfClass` 존재·모양 확인
+  뒤 `Handlers/Event.luau`(키 매치, `v == nil`이면 Connect 없음)·
+  `Handlers/OnChange.luau`(이름별 weak 캐시, `H-27` 얼리리턴) 전사, 확장
+  `{ D, OnChange }`, mock `declareEvents`, `spec.events` 6절, Studio 8/8
+  (`audit/m10-events-studio-2026-09-03.md`). 사용자 문항 둘 — `H10-11`(같은
+  props의 초기 대입이 OnChange를 깨우는지는 해시 순서)·`H10-12`(특수 키가
+  strict `<Class>Param<E>`에 안 들어감 — AttributeKey/Tag도 동일). M10 잔여는
+  InstanceShorthand(M11 이후 권고)뿐.
+
+- `session/2026-09-03-05-onchange-array-reversal.md` **[`OnChange` 배열부
+  값으로 역전 — 사용자 제안·동의]** 키 형태 커밋 몇 시간 만에 사용자가
+  "설계 단위 이슈"로 되돌림: `OnChange(name, fn)` 디스크립터(Tag와 같은
+  자리) → 해시 순서 비결정이 **초기값 발화 계약**으로("프로퍼티 셋 이전에
+  바운딩"), 같은 이름 둘 다 바인딩, `State<디스크립터>`. 스파이크 30으로
+  타이핑 경계 실측 — `K & keyof<PropTypes>`/`index<PropTypes, K>`만 통과하고
+  무주석 추론까지 됨, 큰 싱글톤 유니언·오버로드 교집합은 too complex,
+  test.sh `LuauSubtypingIterationLimit`(typing-limits 8.7). `H10-11` ✅,
+  `H10-12` OnChange 몫 ✅(AttributeKey 몫 잔여), `H10-14`, 옛 모양은
+  `archive/onchange-hash-key-reversed.md`.
+
+- `session/2026-09-03-06-attribute-sugar.md` **[`AttributeKey` 무타입화 +
+  타입드 스칼라 슈가 — 사용자 확정 "한 발 얹기"]** `H10-12`의 AttributeKey
+  몫을 (c) 변형으로: `AttributeKey(name)`는 제네릭을 벗은 무타입
+  프리미티브(엔진 고유 타입용, 해시부 그대로), `StringAttribute(name, value)`류는
+  배열부 슈가 = `Attribute({ [name] = value })`(새 핸들러 0 — 그룹의 개인
+  키·위치 claim·dedup·StoreBind 상속), raw 타입 검사·nil 거부는 슈가 몫.
+  quad-types `AttributeSugar<T>`, quad-roblox `NewChild`에 `Tag`/`Attribute`
+  합류(strict `D` children). spec.attribute 10절, Studio 실측, round16
+  `H10-15`. 에디터 fflags는 문서화만(typing-limits 8.5 스니펫). 같은 세션
+  말미에 M7 규약 문항지 `qa-request/m7-implementation-round17-brief.md` 신설
+  (§0 Q1~Q5, 회신 대기 — Q3 타입드 생성자 표면·Q4 flatten 호출 주체가
+  사용자 결정 자리).
+
+- `session/2026-09-04-01-m7-unit1-modifier.md` **[M7 착수 — §0 회신 +
+  단위 ① Modifier 값 런타임]** Q1~Q4 (a), Q5 상위 클래스 Modifier 타입은
+  "후순위 확정"(사용자: 최종 설계엔 필요, 지금은 아님 — ROADMAP M7 항목).
+  `Modifier.luau`(콜러블 `Modifier()`, 예약 메소드 우선 `__index`, `FieldsKey`
+  이중 clone, 4분기 setter, 핸들러 계층 값 error, `Overridden` 닷·콜론),
+  quad-types 런타임 표면, `spec.modifier` 7절. round17 `H-309`.
+
+- `session/2026-09-04-02-m7-unit2-flatten.md` **[M7 단위 ② — flatten +
+  `ProcessedModifierHandler` + drive 봉합]** 정본 의사코드 둘의 1:1 전사;
+  Q4 (a)대로 `Dispatch.drive` 첫 줄이 flatten → `New` ③ 스텁 제거·`Claim`
+  자동 봉합. `spec.flatten` 3절·handlers 10·claim 8, Studio 3/3. round17
+  `H-311`. 관측: `None` 필드는 실물에서 Property nil 방어로 쓰기 건너뜀.
+
+- `session/2026-09-04-03-m7-unit3-generator.md` **[M7 단위 ③ — 생성기
+  `<Class>Modifier` + `D.Modifier.<Class>()`]** `Field<V>` 별칭 setter 타입·
+  이벤트 제외·`DModifier` 캐스트 별칭(Q3 (a)). 클래스별 재귀 타입을 children
+  유니언에 넣으면 too complex(플래그 15종 무효) → 마커 `{ read __quadModifier:
+  true }`만(typing-limits 8.8 신설), Tarjan 40000→160000. `spec.modifiertypes`,
+  round17 `H-313`. M7 단위 ①~③ 완료 — §4 회신 대기 `H-310`/`H-312`.
+
+- `session/2026-09-04-04-m7-reply-h310-h312.md` **[M7 §4 회신 반영]**
+  `H-310` 가변 인자 `Modifier(a, b, …)`(Modifier·필드 테이블, 뒤가 덮어씀 —
+  사용자 갈래 밖 (d)) / `H-312` 해시 키 Modifier는 flatten이 error. spec 두
+  절, 정본 각주. round17 §4엔 `H-313` 마커 계약 확인만 남음.
+
+- `session/2026-09-04-05-m7-unit4-class-tags-as-into.md` **[M7 단위 ④ — 클래스
+  태그·`TypedFactory`/`DefineSubtype`·`As`·`Into`, 사용자 설계]** 사용자 제안 스파이크 둘 실측 →
+  새 솔버 유니언 서브타이핑 결함 발견(재귀 필드 + 이름 충돌) → `Apply` any →
+  `As<Desc>()` 메소드/무검사 `As<<T>>()`/`Into<Class>`/공개 레지스트리(엔진 op
+  제안은 사용자가 되돌림 — 커스텀 Modifier 허용; `Define` 하나 → 사용자 결정으로
+  `TypedFactory`/`DefineSubtype` 분리, 부모 여럿 허용)/예약 접두 `^As%u`. 상위 클래스 16종 생성(Q5 닫힘), `H-313` 소멸, Studio 8/8. `H-314`.
+  **[같은 세션 후속]** 사용자 지시로 M8 규약 문항지
+  `qa-request/m8-implementation-round18-brief.md` 신설(§0 Q1~Q6 회신 대기 —
+  Q3 children `Ref` 타입은 8.9절 결함 때문에 스파이크 선행, Q4 재진입은
+  `SetWeak` 순서 정정 권고).
+
+- `session/2026-09-04-06-m8-unit1-wait-preref-postref.md` **[M8 §0 확정 + 단위
+  ①]** Q1~Q5 (a), Q6 전제 정정(`PostRef`는 부모 부착 무보장 — 사용자), Q4
+  `SetWeak` 순서 정정을 정본 의사코드에 반영, Q5 Option 값은 사용자 몫으로
+  등재. 단위 ①: `:Wait`(항상 다음 `:Set`까지) + `PreRef`/`PostRef`(Ref 런타임
+  + 브랜드 + 마커 + `_fired`), 타입, `spec.ref` 12~14절·`spec.preref`. `H-315`/
+  `H-316`. **[같은 파일 4절]** 단위 ② — `Dispatch/Ref.luau`(pre-pass·
+  `Processed*`)·`Ref.luau`(leaf+가드, `H-278`)·`spec.refhandlers` 7절, `H-319`/
+  `H-320`(Studio 8/8). **[6절 — 커밋은 2026-09-06 00시대 KST]** `H-321` 사용자 확정 → 단위 ③ 반공변 팬텀 마커
+  `<Class>RefMarker`(`H-322`) — **M8 완료**.
+
+- `session/2026-09-06-01-audit-sweep-and-m11-brief.md` **[밤샘 자율 구간 착수 —
+  감사 스윕 6라운드 + M11 규약·단위 ①]** 사전 질문 셋 확정(순서 M11 →
+  InstanceShorthand → M9 / §0 권고 (a)로 착수·새 표면만 멈춤 / 탐사 발견은
+  영역 겹칠 때만 차단). sonnet 감사 2 병렬 × 6라운드(각도 A~L) 27건 반영 —
+  스파이크 `19`/`22` 폐기, 날짜 정정(M8 단위 ③은 2026-09-06 00시대), attribute-plan
+  `H10-8` 미반영 등. M11 brief(round19) 신설, 단위 ① 완료 `H-323`~`H-327`(생성
+  D 슬롯 `+ State<Tween<T>>`·별칭 `PVn`·`TweenConstructor` 8.6 조건부 예외·M7
+  setter `Field<T>` 하자 정정) — §4 확인 항목 2. **[7절]** fable 탐사(치명 0·중대 2·경미 2 — `H-329` 문항, `H-330`~`H-332` 반영), `audit/fable-exploration-2026-09-06.md`. **[8절]** M11 단위 ② — Property 3-상태 슬롯·override 주체는
+  들어오는 값(`H-328`), `TweenInfo.new` nil 거부 → 기본값 명시(`H-333`), Studio 6/6(플러그인
+  미연결로 Source 패치), `audit/m11-unit2-studio-2026-09-06.md`. **[9절]** 단위 ③ `Animate` — 타입 네 변형 실측 끝에
+  `(self: any) -> State<Tween<any>>`(`H-334`, 확인 항목), 단위 ② 감사 반영. **M11 세 단위 완료.** **[10절]** M10 잔여
+  InstanceShorthand(round20 `H-335`~`H-337`) — 룩업 표 핸들러·생성기 키 넷·`LuauSolverConstraintLimit`,
+  CLI 47/47·Studio 6/6. **M10 잔여 없음.** **[11절]** M9 관례 검증(round21) — `spec.component`/`spec.componenttypes`, 새 배선 없음;
+  §4 문항 둘(경계 필드 이름 Q2, `H-340` 커스텀 필드 제거 연산 `Without` 권고). **열린 마일스톤 없음.** **[12절]** 아침 회신 — `H-329` (a) 구현, Q2·`H-340` 보류(flatten 슈거), `H-343` `Override`
+  문자열 싱글톤(사용자 결정 — `Tween` 순수 함수, `H-323`/`H-324` 소멸), 스파이크 `11` 폐기, Studio 재연결. **[13절, 2026-09-07]** 핸드오버 — 감사 A·B 반영(`ba222e9`), 전체 코드 리뷰
+  여섯 동시(R1~R3 opus + `/code-review high`) → `/compact` 중 전부 중단 → 트랜스크립트 추출(sonnet) +
+  재실행. 원장 `qa-request/handover-review-2026-09-07.md` `H-344`~`H-356`: 반영 10(Tag `Removed`
+  검증·Attribute plain 가드·`BRAND_PROBES`·Store 키·에러 깊이 둘·`getOffsetAt` 베이스 재독·`NewChild`
+  `Slot<Instance>`·유니언 PV 멤버별 팔), 기각(Effect 비함수 cleanup·Splice 물리 순서·Attribute "누수"는
+  Luau GC 페이싱), 사용자 문항 Q1~Q3; `/code-review high` 재실행분 `H-357`~`H-361`(Effect UB 확장·
+  `Slot.Init` `RunInit`·gen-d Enum 게이트·무효화 표 교체 행)과 문항 Q4·Q5. CLI 49/49 — **핸드오버 완료.**
+  이어 사용자 지시로 야간 순회(02:30 KST 타이머, ① 자율·② 원장 누적) — 0순회 `H-362`~`H-367`(`H-353` 회귀 둘 정정 등, §6).

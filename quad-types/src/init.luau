@@ -45,15 +45,37 @@ export type Relate = {
 -- (`ref-plan.md` "제네릭 시그니처").
 export type RefCallback<T> = (value: T, ref: Ref<T>) -> ()
 export type Ref<T> = {
+	-- 반공변 팬텀 필드(M8 단위 ③, round18 `H-321` — 사용자 확정): children 자리의
+	-- 클래스 검사용. 생성 `<Class>Elem`이 `{ read __quadRefAccepts: (<Class>) -> () }`
+	-- 만 담으면 `Ref<Frame?>`·상위 박스 `Ref<GuiObject?>`는 들어가고 형제
+	-- `Ref<TextLabel?>`·무타입 `Ref<nil>`은 거부된다. `Set`의 파라미터가 같은 정보를
+	-- 갖지만 새 솔버가 제네릭 메소드의 반공변을 안 보고(8.9절) 유니언 멤버
+	-- `State.Set`과 이름이 충돌해 `Set`으론 검사가 안 선다 — 그래서 유니언 어디와도
+	-- 안 겹치는 비제네릭 이름에 T를 굽는다. 런타임 값은 `Void`(호출되지 않음, H-300
+	-- "타입이 약속하면 값에도"). 사용자 표현: "non-lazy type으로 T 비교자를 넣어 굽는다"
+	read __quadRefAccepts: (T) -> (),
 	Value: T,
 	Revision: number,
 	Callbacks: { [RefCallback<T> | thread]: true }, -- 강한 해시맵 셋(+ M8 `:Wait` 대기자)
 	WeakCallbacks: { [RefCallback<T>]: true }, -- weak-key 테이블
-	Set: (self: Ref<T>, value: T) -> Ref<T>,
-	Callback: (self: Ref<T>, fn: RefCallback<T>) -> Ref<T>,
-	WeakCallback: (self: Ref<T>, fn: RefCallback<T>) -> Ref<T>,
-	Uncallback: (self: Ref<T>, fn: RefCallback<T>) -> Ref<T>,
+	-- self 반환 메소드는 `<Self>` 제네릭(M8 단위 ① 리뷰 반영, round18 `H-317`):
+	-- 반환을 `Ref<T>`로 고정하면 `PreRef(x):Callback(fn)` 체이닝에서 마커
+	-- (`PreRef<T>` 교집합)가 사라져 nominal 타입이 첫 호출에 증발한다. 소형
+	-- 실측: 체이닝·마커 보존·오타 T 거부·plain Ref → PreRef 거부 전부 성립
+	Set: <Self>(self: Self, value: T) -> Self,
+	Callback: <Self>(self: Self, fn: RefCallback<T>) -> Self,
+	WeakCallback: <Self>(self: Self, fn: RefCallback<T>) -> Self,
+	Uncallback: <Self>(self: Self, fn: RefCallback<T>) -> Self,
+	-- M8 단위 ①: 항상 다음 `:Set`까지 기다린다(brief §0 Q5 (a)); thread를 주면
+	-- 등록만 하고 즉시 self. 대기자는 `.Callbacks`의 thread 키(`:Set`이 소진·resume)
+	Wait: <Self>(self: Self, thread: thread?) -> Self,
 }
+-- M8 단위 ①: `PreRef`/`PostRef` — 런타임은 `Ref` 그대로, 마커 필드로 nominal
+-- (H-300 관례 — 런타임 값에도 실제 필드). fire 시점만 다르다(`ref-plan.md`
+-- "`phase` 옵션 폐기 → 위치로 표현, `PreRef` 신설" 절 / "`PostRef`" 절).
+-- children 배열 리터럴 전용 — Modifier 필드·Source·Store 값으로는 타입 차단.
+export type PreRef<T> = Ref<T> & { read __quadPreRef: true }
+export type PostRef<T> = Ref<T> & { read __quadPostRef: true }
 
 -- ── 반응형 코어(M2 단위 2) ────────────────────────────────────────────
 -- 선언 스타일은 `.claude/base/typing-limits.md` §1②의 "데이터부/메소드부" 쪼개기 —
@@ -114,9 +136,10 @@ export type Blocker = {
 -- 값 모양은 `base/tag-plan.md` "값 모양" / `base/attribute-plan.md` "채택안"
 -- 절이 정본. 생성자들은 콜러블 네임스페이스(호출 = 생성, 필드 = 합성)라
 -- `setmetatable<A, B>` 표기로 선언한다(`H10-3`/`H10-4` (d) — 교집합은
--- 무거주라 값 캐스트·제네릭 흐름이 깨진다, typing-limits 8.6절). `AttributeKey<<T>>`의 제네릭 파라미터는
--- 런타임 무영향인 순수 정적 트릭이고 값 좁힘 성립 여부가 미실측이라([실측
--- 필요, M0/M10] — attribute-plan) 여기선 비제네릭 키 객체 타입만 둔다.
+-- 무거주라 값 캐스트·제네릭 흐름이 깨진다, typing-limits 8.6절). `AttributeKey`는
+-- [2026-09-03 사용자 확정] 제네릭 자체가 폐기된 무타입 프리미티브다(값 타입은
+-- 배열부 슈가 `AttributeSugar<T>`가 진다 — attribute-plan 머리 배너); 옛 "제네릭
+-- 파라미터 값 좁힘 미실측" 항목은 닫혔다(typing-limits §3).
 export type Tag = {
 	Added: (self: Tag, nameOrList: string | { string }) -> Tag,
 	Removed: (self: Tag, nameOrList: string | { string }) -> Tag,
@@ -129,6 +152,51 @@ export type Tag = {
 -- A/B·잔여 구멍은 typing-limits 8.6절.
 export type TagConstructor = setmetatable<{ Merged: (...Tag) -> Tag }, { __call: (self: any, ...string) -> Tag }>
 
+-- `Tween<T>` — 값-레벨 트윈 래퍼(M11 단위 ①, `base/tween-plan.md` "확정: `Tween{...}`
+-- 최종 모양" 절). quad-types는 엔진 무관이라 Roblox 타입 자리(`Info`/`Style`/
+-- `Direction`)는 `any` — quad-roblox `types.luau`는 이 타입을 **그대로 별칭**한다
+-- (round19 Q3 (a)의 정밀판은 `State<X>` 불변성 때문에 포기, `H-326`). `Override`는 문자열
+-- 싱글톤 유니언(`H-343`, 사용자 결정 — 옵션 enum은 마커 값이 아니라 리터럴 타입으로).
+-- `Mapped`는 재귀 제네릭(`Tween<U>` 반환)이라 데이터부/메소드부 쪼개기(typing-limits
+-- §1②) — 파생 자리는 결과 타입을 명시 바인딩할 것(§1①).
+export type TweenOverride = "Cancel" | "Finish"
+-- 옵션 필드는 전부 `read` — 생성자는 읽기만 하고, 미리 만든 테이블 변수를 넘길 때
+-- 가변 필드면 새 솔버가 `Time: number`를 `number?`에 불변으로 대조해 거부한다(실측).
+export type TweenOptions<T> = {
+	read Value: T,
+	read Info: any?, -- TweenInfo (엔진 타입 — 있으면 편의 필드 무시)
+	read Time: number?,
+	read Style: any?, -- Enum.EasingStyle
+	read Direction: any?, -- Enum.EasingDirection
+	read RepeatCount: number?,
+	read Reverses: boolean?,
+	read DelayTime: number?,
+	read Override: TweenOverride?, -- 기본 "Cancel"
+}
+export type TweenData<T> = {
+	read __quadTween: true,
+	read Value: T,
+	read Info: any?,
+	read Time: number?,
+	read Style: any?,
+	read Direction: any?,
+	read RepeatCount: number?,
+	read Reverses: boolean?,
+	read DelayTime: number?,
+	read Override: TweenOverride?,
+}
+-- `Mapped`는 typing-limits §1③(`typeof(named function)`) — 인라인 `<U>(…) -> Tween<U>`는
+-- 반환이 `*error-type*`으로 새고 생성자 추론까지 오염된다(2026-09-06 실측, round19).
+local function tweenMapped<T, U>(_self: TweenData<T>, _fn: (T) -> U): Tween<U>
+	return nil :: any
+end
+export type Tween<T> = TweenData<T> & {
+	Mapped: typeof(tweenMapped),
+}
+-- 순수 제네릭 함수(`H-343`): 문자열 `Override` 덕에 `Tween`엔 필드가 없어 콜러블 테이블이
+-- 필요 없다 — 제네릭 `__call`의 `T` 오염(`H-324`, `luau-test/33` A 블록)이 함께 소멸.
+export type TweenConstructor = <T>(opts: TweenOptions<T>) -> Tween<T>
+
 export type Attribute = { NameMap: (self: Attribute) -> { [string]: any } }
 export type AttributeConstructor = setmetatable<{
 	Merged: (...Attribute) -> Attribute,
@@ -136,7 +204,50 @@ export type AttributeConstructor = setmetatable<{
 }, { __call: (self: any, ...any) -> Attribute }>
 
 export type AttributeKeyObject = { Name: string }
+-- [2026-09-03 사용자 확정] AttributeKey는 무타입 프리미티브(값 타입을 모른다 —
+-- 패밀리가 못 덮는 엔진 고유 타입은 이걸로, 검증은 백엔드 setAttribute 몫)
 export type AttributeKeyConstructor = (name: string) -> AttributeKeyObject
+-- 타입드 스칼라 슈가 — 배열부 값(단일 항목 그룹 `Attribute({ [name] = value })`).
+-- 값은 T | State<T> | None(삭제); nil은 거부(런타임 검증)
+export type AttributeSugar<T> = (name: string, value: T | State<T> | None) -> Attribute
+
+-- ── Modifier (M7 단위 ①·④) — `base/modifier-plan.md` ───────────────────
+-- 런타임 표면만(예약 메소드 넷). 클래스별 필드 setter 타입(`<Class>Modifier`)은
+-- 생성기(M7 단위 ③)가 찍고, `Overridden`은 스파이크 `09`대로 `any`.
+export type Modifier = {
+	-- 마커(H-300 관례): `true` = 무타입(base `Modifier()`), 클래스 태그 값은
+	-- 클래스명 문자열 — 그 리터럴은 생성/사용자 정의 `<Class>Modifier` 타입이
+	-- 각자 선언한다(단위 ④, 11절). 런타임 값에도 실제로 있다(Modifier.luau)
+	read __quadModifier: true,
+	-- 정본 9절 `:Peek<<T>>(key)` — `store:Of<<T>>`와 같은 명시 인스턴스화 관례
+	Peek: <T>(self: Modifier, key: string) -> T | State<T> | None | nil,
+	-- ⚠️ self·factory 둘 다 `any`(typing-limits 8.9절): 자기 타입을 참조하는
+	-- 함수 필드가 유니언 멤버(`Tag`/`State`)의 같은 이름 메소드와 만나면 새
+	-- 솔버의 유니언 검사가 조용히 통과한다 — children 자리의 클래스 소속
+	-- 검사를 살리려고 재귀를 포기(사용자 확정 2026-09-04). 주석 붙인 팩토리는
+	-- 그대로 타입드, 무주석 팩토리는 `any`.
+	Apply: <U>(self: any, factory: (any) -> U) -> U,
+	Overridden: (self: Modifier, ...any) -> any,
+	-- 무검사 캐스트(11절): 인자 없으면 self 그대로(타입만), 이름을 주면 존재
+	-- 검사 후 태그 교체. 검사형 `As<Class>()`는 클래스별 타입이 메소드로 찍는다
+	As: <T>(self: Modifier, name: string?) -> T,
+}
+-- `H-310`(사용자 확정 2026-09-04): 인자는 Modifier 또는 `{ field = value }` 테이블,
+-- 뒤가 필드 단위로 덮어씀(Overridden 규칙) — `Modifier()` == `Modifier({})`.
+-- 단위 ④(사용자 확정 — 함수 하나에 일 하나): `TypedFactory<<T>>(name)`은 클래스
+-- 이름을 알리고 그 태그를 심는 생성자를 돌려준다(T는 호출자가 쓴 그 클래스의
+-- Modifier 타입 — 생성 `<Class>Modifier`나 사용자 정의), `DefineSubtype(parent,
+-- subtype)`은 관계 간선 하나만 등록한다(부모 여럿 허용 — 인터페이스). 둘 다
+-- 공개 API(프로바이더는 첫 사용자일 뿐, 컴포넌트도 같은 길), 둘 다 dedup.
+export type ModifierConstructor = setmetatable<{
+	Overridden: (...any) -> any,
+	TypedFactory: <T>(name: string) -> (...(Modifier | { [string]: any })) -> T,
+	DefineSubtype: (parent: string, subtype: string) -> (),
+}, { __call: (self: any, ...(Modifier | { [string]: any })) -> Modifier }>
+-- children 유니언용 마커 타입 — 무타입 base Modifier의 것(`true`). 클래스 태그
+-- 마커 `{ read __quadModifier: "Frame" | "GuiObject" | … }`는 생성기가 클래스별
+-- `<Class>Elem`에 찍는다(조상 체인 — 상위 클래스 Modifier가 하위 자식 자리에 감)
+export type ModifierMarker = { read __quadModifier: true }
 
 export type State<T> = StateData<T> & {
 	-- deps는 `...any`다 — 타입팩 `D...`로 위치 인자를 좁히는 형태는 strict에서 콜백 dep
@@ -234,6 +345,55 @@ export type Store<T> = T & {
 	__reservedCheck: CheckReservedKeys<keyof<T>>,
 }
 
+-- ── Slot (M6, `H-25`의 "마일스톤마다 갱신" 몫 — 2026-09-03 잔여 마감) ────
+-- 계약 정본은 `base/slot-plan.md` "CRUD API 확정" 표와 "`Slot:List(...)`" 절.
+-- 요소 자리는 `T | State<T> | Slot<T>`(반응형 raw 요소는 내부 `:Single` 래퍼로,
+-- 중첩은 Slot-in-Slot) — 같은 인자의 자기 참조라 `Ref<T>`처럼 안전하다
+-- (`typing-limits.md` §1 "정확한 경계" 표: 한계는 **다른** 인자로 자기를
+-- 돌려줄 때다).
+-- 조회(`Get`/`IndexOf`/`Extract`류 반환)는 언래핑된 원래 값이 온다.
+export type SlotElement<T> = T | State<T> | Slot<T>
+export type SlotListOpts = { Owned: boolean? }
+-- `updateFn(item, index, offset, prev, userdata) -> (result, userdata)`: `result`는
+-- 요소 | nil/None(파괴) | Detach(홀드). `item`엔 `KeyGone` 센티널도 온다.
+-- (별도 alias로 빼지 않는다 — `Slot<T>`↔`SlotElement<T>` 재귀 그룹 안에서
+-- 메소드 제네릭 `<Item, UD>`를 인자로 받는 alias는 "다른 파라미터의 재귀"로
+-- 거부된다 — 2026-09-03 실측, typing-limits §1①과 같은 제약.)
+export type Slot<T> = {
+	Length: Source<number>,
+	Offset: Source<number>,
+	Add: (self: Slot<T>, element: SlotElement<T>, index: number?) -> number,
+	Remove: (self: Slot<T>, index: number) -> (),
+	Replace: (self: Slot<T>, index: number, newElement: SlotElement<T>) -> (),
+	Extract: (self: Slot<T>, index: number, newElement: SlotElement<T>?) -> SlotElement<T>,
+	ExtractAll: (self: Slot<T>) -> { SlotElement<T> },
+	Splice: (self: Slot<T>, index: number, removeCount: number, ...SlotElement<T>) -> { SlotElement<T> },
+	Clear: (self: Slot<T>) -> (),
+	Move: (self: Slot<T>, oldIndex: number, newIndex: number) -> (),
+	Swap: (self: Slot<T>, indexA: number, indexB: number) -> (),
+	Get: (self: Slot<T>, index: number) -> SlotElement<T>?,
+	IndexOf: (self: Slot<T>, element: SlotElement<T>) -> number?,
+	List: <Item, UD>(
+		self: Slot<T>,
+		data: { Item } | State<{ Item }>,
+		updateFn: (item: Item | KeyGone, index: number, offset: Source<number>, prev: SlotElement<T>?, userdata: UD?) -> (any, UD?),
+		keyFn: ((item: Item, index: number) -> any)?,
+		opts: SlotListOpts?
+	) -> Slot<T>,
+	Single: <UD>(
+		self: Slot<T>,
+		state: T? | State<T?>,
+		updateFn: ((item: T | KeyGone, offset: Source<number>, prev: SlotElement<T>?, userdata: UD?) -> (any, UD?))?,
+		opts: SlotListOpts?
+	) -> Slot<T>,
+}
+-- 센티널 둘 — `None`과 같은 신원 값(재export). 판정은 `v == Detach` 신원
+-- 비교이고 마커 필드는 타입 좁힘용 조언층일 뿐(`H6-16` (a), 2026-09-03 사용자
+-- 확정 — `None`의 `__quadNone`과 같은 모양, `H-300`). 신원 비교로는 좁혀지지
+-- 않는다(truthiness 좁힘만) — 사용자 `Item` 쪽엔 캐스트가 남을 수 있음.
+export type Detach = { read __quadDetach: true }
+export type KeyGone = { read __quadKeyGone: true }
+
 export type Quad = {
 	Version: "0.0.0", -- quad-base/pesde.toml의 version과 항상 맞출 것
 	debug: boolean,
@@ -252,6 +412,8 @@ export type Quad = {
 	Relate: () -> Relate,
 	Void: (...any) -> (),
 	Ref: <T>(default: T) -> Ref<T>,
+	PreRef: <T>(default: T) -> PreRef<T>, -- M8 단위 ①
+	PostRef: <T>(default: T) -> PostRef<T>,
 	-- 단위 2. `State`는 런타임 생성자가 없다(파생 전용) — 타입만 위에서 export.
 	Source: <T>(v: T) -> Source<T>,
 	Store: <T>(defaults: T?) -> Store<T>,
@@ -286,10 +448,17 @@ export type Quad = {
 	-- 주입 엔진 op(`architecture.md` EngineOps) — `Effect._bindDestroying`이 부른다. 미주입이면 에러 스텁.
 	onDestroying: (inst: any, fn: () -> ()) -> { Connected: boolean, Disconnect: (self: any) -> () },
 
+	-- Slot 표면(M6 — `H-25` 몫, 2026-09-03). `Slot(initial?)`은 `:Add` 반복 sugar.
+	-- `dispose`는 quad 관리 값을 지우는 유일한 안전 경로(마운트 중이면 error).
+	Slot: <T>(initial: { SlotElement<T> }?) -> Slot<T>,
+	Detach: Detach,
+	KeyGone: KeyGone,
+	dispose: (value: any) -> (),
+	isSlot: (x: any) -> boolean,
+
 	-- 브랜드 술어(`.claude/base/brand-plan.md`). `isTag`/`isAttribute*`는
-	-- M10 편입(2026-09-03)으로 아래 합류 — 나머지(`isTween`/`isSlot`)는
-	-- 그 타입의 마일스톤에서(`isSlot` 값은 이미 M6 편입으로 module에 산다 —
-	-- `Quad` 타입 등재는 M6 잔여 `H-25` 몫과 함께).
+	-- M10 편입(2026-09-03)으로 아래 합류, `isSlot`은 위 Slot 표면과 함께,
+	-- `isTween`은 M11 단위 ①(2026-09-06)로 합류 — 술어 전원 등재.
 	isEpoch: (x: any) -> boolean,
 	isSource: (x: any) -> boolean,
 	isState: (x: any) -> boolean,
@@ -329,9 +498,17 @@ export type Quad = {
 	nativeClaim: (inst: any) -> (),
 	-- 매퍼 키 해석 op(claim-plan — 조회라 조합 폴백 예외, 미주입이면 error).
 	nativeFindChild: (inst: any, key: any) -> any,
+	-- base 소유 핸들러(Tag/Attribute)가 부르는 주입 op(`dispatch-core-plan.md`
+	-- "base가 소유하는 핸들러와 주입되는 엔진 op"). quad-base는 안내 스텁을
+	-- 두고 프로바이더가 덮어쓴다 — **[2026-09-03 M10 엔진 축]** quad-roblox
+	-- `EngineOps`가 CollectionService/`SetAttribute`로 채움.
+	addTag: (inst: any, names: { string }) -> (),
+	removeTag: (inst: any, names: { string }) -> (),
+	setAttribute: (inst: any, name: string, v: any) -> (),
 
 	-- M10 (round16 spike) — Tag/Attribute 표면(`H-25`의 "마일스톤마다 갱신" 몫)
 	isTag: (x: any) -> boolean,
+	isTween: (x: any) -> boolean, -- M11 단위 ①
 	isAttribute: (x: any) -> boolean,
 	isAttributeKey: (x: any) -> boolean,
 	-- 콜러블 네임스페이스 둘은 `setmetatable<A,B>` 표기(`H10-3`/`H10-4`
@@ -339,11 +516,13 @@ export type Quad = {
 	-- 제네릭 추론을 오염시키던 시절의 것. 실측·잔여 구멍(__call 인자
 	-- 무검사)은 typing-limits 8.6절이 소스)
 	Tag: TagConstructor,
+	Tween: TweenConstructor, -- M11 단위 ① — 값 타입만(엔진 무관), 소비는 quad-roblox PropertyHandler
+	Modifier: ModifierConstructor, -- M7 단위 ①
 	Attribute: AttributeConstructor,
 	AttributeKey: AttributeKeyConstructor,
-	StringAttribute: AttributeKeyConstructor,
-	NumberAttribute: AttributeKeyConstructor,
-	BooleanAttribute: AttributeKeyConstructor,
+	StringAttribute: AttributeSugar<string>,
+	NumberAttribute: AttributeSugar<number>,
+	BooleanAttribute: AttributeSugar<boolean>,
 }
 
 --[[

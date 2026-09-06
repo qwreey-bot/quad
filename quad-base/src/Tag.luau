@@ -25,6 +25,7 @@
 ]]
 
 local Brand = require("./Brand")
+local NoneModule = require("./Dispatch/None")
 local Relate = require("./Relate")
 local QuadTypes = require("../luau_packages/quad_types")
 local Err = require("./ErrorNamespace")
@@ -66,13 +67,13 @@ function TagImpl.Added(self: any, nameOrList: any): any
 end
 
 function TagImpl.Removed(self: any, nameOrList: any): any
+	-- `H-344`: same validation as `Added` — a non-string used to be a silent
+	-- no-op and `nil` a VM "table index is nil" blaming this file
+	local toRemove: { [string]: true } = {}
+	flattenInto(toRemove, nameOrList)
 	local names = table.clone(self._names)
-	if type(nameOrList) == "table" then
-		for _, name in ipairs(nameOrList) do
-			names[name] = nil
-		end
-	else
-		names[nameOrList] = nil
+	for name in pairs(toRemove) do
+		names[name] = nil
 	end
 	return newTag(names)
 end
@@ -148,7 +149,7 @@ local function notInstalled(name: string): (...any) -> ...any
 		-- stub itself and Nearest would blame quad internals (`H-272` reasoning)
 		Err.errorBefore(
 			`quad: {name} is not available — no backend has installed the tag ops `
-				.. "(quad-roblox does this in M10; tests use mock.installTagAttributeOps)",
+				.. "(install a provider with quad:UseProvider — a bare Quad.New() has none)",
 			SURFACE
 		)
 	end
@@ -169,7 +170,6 @@ local function Init(module: any)
 
 	module:RunInit(InitDispatch) -- idempotent pull (`H-174` idiom)
 	local dispatch: QuadTypes.Dispatch = module.Dispatch
-	local None = module.None
 
 	-- {[inst(weak)] = {[tagName] = {[k]: true}}} — per-name POSITION sets
 	-- (tag-plan: holders keyed by position, not Tag identity — the same
@@ -187,8 +187,7 @@ local function Init(module: any)
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
 			-- `H-39`: terminal handlers register their array position — a Tag
 			-- contributes no physical element, so the pair is None/0
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0, inst)
+			NoneModule.registerEmptySlot(dispatch, inst, k, inst) -- `H-39` (리뷰 — 한 본문, `None.luau`)
 
 			local added: { string } = {}
 			for name in v:Names() do
@@ -224,6 +223,10 @@ local function Init(module: any)
 					holders[k] = nil
 					if next(holders) == nil then
 						table.insert(removed, name)
+						-- `H-331` (fable 탐사 2026-09-06): drop the empty holder set —
+						-- dynamic names (`Tag("item-" .. id)`) otherwise accumulate one
+						-- table per name for the instance's lifetime
+						tagNameMap:SetStrong(inst, name, nil)
 					end
 				end
 				if #removed > 0 then

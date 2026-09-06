@@ -14,7 +14,17 @@ M5 체크박스(전부 `[x]`). 단위 ⑤ 확정 요지(프로바이더 설치
 (a)·rojo 라이브 싱크 반입)는 `.claude/todos.md` 00번이 소스. **같은 날 병렬 탐사 승인, 2026-09-03 통합 완료** — fork 둘이 worktree에서
 M6(Slot)/M10(Tag·Attribute)을 mock 축으로 탐사 구현 후 **메인에 머지됨**
 (발견 접두 `H6-`/`H10-`, 원장 `round15`/`round16` — 잔여·후행은
-`ROADMAP.md` M6/M10 배너가 소스)** —
+`ROADMAP.md` M6/M10 배너가 소스). **같은 날 M6 잔여 마감 단위 완료**(공개
+CRUD 다섯·`collectLeaves`·quad-types `Slot<T>`·실기기 Deferred 축 실측까지 —
+M6 잔여 전부 닫힘, `H6-9`~`H6-24`, §4 회신 반영 완료) + **M10 엔진 축 첫 단위**(Tag/Attribute
+엔진 op 셋 실설치, `H10-10`) + **둘째 단위**(Event/OnChange 핸들러,
+`H10-13`; 같은 날 사용자 제안으로 `OnChange`는 배열부 값 `OnChange(name, fn)`
+으로 역전·재구현 `H10-14` — 초기값 발화 계약·생성기 타이핑; 이어서
+`AttributeKey` 무타입화 + 타입드 스칼라 슈가 `StringAttribute(name, value)`
+`H10-15`로 round16 열린 문항 0) — **[2026-09-04] M7(Modifier) 자율 구현
+구간 — 같은 날 완료**: 규약 `.claude/qa-request/m7-implementation-round17-brief.md`
+§0 확정, 단위 ①~④ + §4 회신(`H-310`/`H-312`) 반영 완료 — **M7 완료**(단위 ④는 사용자 설계 — 클래스 태그·`TypedFactory`/`DefineSubtype`·`As`·`Into`·상위 클래스 Modifier, `H-314`; `H-313` 소멸), round17 §4 열린 문항 0; **[2026-09-04] M8(Ref) 자율 구현 구간 — 2026-09-06 새벽 완료(단위 ①·②는 2026-09-04, 단위 ③·`H-317`은 2026-09-06 00시대 KST 커밋)** — 규약 `qa-request/m8-implementation-round18-brief.md` §0 확정, 단위 ①~③ 완료(`H-315`/`H-319`/`H-322` — ③은 `H-321` 사용자 확정 반공변 팬텀 마커) — **M8 완료**, 원장 `-round18.md`, 진행 소스는 ROADMAP M8 체크박스; **[2026-09-06] 다음 순서 사용자 확정 M11 → InstanceShorthand → M9, M11 자율 구간 착수 — 같은 날 단위 ①·②·③ 완료**(규약 `qa-request/m11-implementation-round19-brief.md`, 원장 `-round19.md` `H-323`~`H-343`, §4 상태는 그 원장이 소스(2026-09-06 아침 회신으로 전부 닫힘); 단위 ② Studio 6/6); **[같은 날 M10 잔여 InstanceShorthand 완료 — round20 `H-335`~`H-337`, Studio 6/6 — M10 잔여 없음]**; **[같은 날 M9 관례 검증 완료 — round21, `spec.component`; Q2·`H-340`은 백로그 `research/component-flatten-sugar-plan.md`로 — 열린 마일스톤 없음]**; M7 진행 소스는 그 brief §1과
+`ROADMAP.md` M7 체크박스, 발견 원장은 `-round17.md`** —
 **M4는 같은 날 자율 구간으로 착수·종결**(사용자 조건부 승인 — 규약
 `.claude/qa-request/m4-implementation-round13-brief.md` §0 전량 (a), 발견
 `-round13.md`(`H-287`~; §4 열린 문항 0): `Dispatch/StoreBind.luau` +

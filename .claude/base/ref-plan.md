@@ -92,7 +92,13 @@ Instance를 직접 받으므로 — `base/dispatch-core-plan.md` "확정된 디�
   (coroutine 컨텍스트에서 사용 — 렌더 함수 바디 안에서 `return` 위에 바로
   못 씀, 그래서 콜백도 같이 필요) **세 메소드로 확정(2026-08-07 여섯 번째
   세션)**. `:Set`/`:Callback`/`:Wait` 전부 **mutation 패턴이라 자기 자신
-  (`Ref<T>`)을 반환** — `store.key:Set(value)`류 "값을 바꾸는 연산엔 `:`
+  (`Ref<T>`)을 반환** — **[2026-09-04 정정, M8 단위 ① 리뷰 `H-317`, 사용자
+  수용]** 타입 표기는 `Ref<T>` 고정이 아니라 **`<Self>(self: Self, …) -> Self`
+  제네릭**이다(quad-types `Ref<T>`의 다섯 메소드 전부): 반환을 `Ref<T>`로
+  고정하면 `PreRef(x):Callback(fn)` 체이닝 첫 호출에서 `PreRef<T>` 교집합
+  마커가 증발해 nominal 타입이 사라진다. 부작용은 실측 무해(무주석
+  체이닝 추론·콜백 인자 추론·`Effect` dep 자리·마커 보존 전부 성립 —
+  round18 `H-317`). 아래 시그니처 표기의 `-> Ref<T>`는 이 뜻으로 읽을 것 — `store.key:Set(value)`류 "값을 바꾸는 연산엔 `:`
   체이닝 허용" 원칙(`base/store-plan.md`의 "Store 값 설정 문법" 절)의 자연스러운 재적용.
   이 self-반환 덕에 Luau의 `if`-표현식과 결합해 흔한 관용구를 한 줄로
   쓸 수 있음(사용자 제시 예):
@@ -220,6 +226,16 @@ Instance를 직접 받으므로 — `base/dispatch-core-plan.md` "확정된 디�
         `WeakRef:Set(v)`/`:Get()`만 주고(`.Value`가 아닌 이유는 내부 값이
         항상 있다고 확정된 상태가 아니라서), 내부는
         `setmetatable({}, {__mode = "v"})`의 1-슬롯.
+  - **`:Wait`는 항상 다음 `:Set`까지 기다린다 — 이미 채워져 있어도**
+    (**[2026-09-04 M8 brief §0 Q5 (a), 사용자 확정]** *"항상 기다리면 돼"*).
+    "채워짐"은 런타임이 판정할 수 없다 — `Ref<<T?>>`에서 `nil`은 정당한
+    값이고, 위 관용구가 `if ref.Value` 선검사를 전제하는 이유가 그것.
+    "값 없음"과 "`nil`이라는 값"을 가르고 싶으면 사용자가 `Just`/`Nothing`류
+    Option 값을 `T`로 주입하면 되고(*"Option/Monad 같은 값을 제공하면 된다
+    … 당장 필요하지도 않고 유저가 간단히 만들어 주입 가능한 타입 … 처음부터
+    null/undefined 가 없는 언어라서, 유저 선택에 맞겨야할 부분"*), quad가
+    개념을 직접 도입하는 건 명문화가 필요해지면 그때(백로그 아님, 필요 시
+    사용자 결정).
   - **`:Wait(thread?)`의 `thread` 인자(2026-08-07 여섯 번째 세션, 사용자
     제안, 확정)**: 생략(`nil`)하면 `coroutine.running()`으로 호출 중인
     코루틴 자신을 캡처해 대기자로 등록하고 그 자리에서 `coroutine.yield()`로
@@ -499,8 +515,13 @@ Instance를 직접 받으므로 — `base/dispatch-core-plan.md` "확정된 디�
 > 모델 원문은 `archive/dispatch-hintvalue-model-reversed.md`.
 
 **배경**: `Ref`는 이미 "일반 프로퍼티/Modifier 필드/Store 값 어디든 자유롭게
-들어감"(아래 "동적 경로 가드" 절)이 확정돼 있어 — `State<Ref>`가 실제로
-가능하고, 그러면 Store 값이 `refA`에서 `refB`로 바뀌는 경우가 생김. 이때
+들어감"(아래 "동적 경로 가드" 절)이 확정돼 있어(**[2026-09-04 한정, M8 round18
+`H-316`]** 이 옛 문장 중 "Modifier 필드"는 이제 틀리다 — `modifier-plan.md`
+4절이 핸들러 계층 값(Ref 계열 포함)의 Modifier 필드 진입을 즉시 error로
+확정했고(2026-08-09), leaf 바인딩이 배열 전용이라(2026-08-18 한정) 해시 키로
+flatten될 자리는 의미도 없다. 살아남는 것은 **Store/State 값**뿐 — M2 가드가
+`isModifier`만 보므로 `State<Ref>`는 런타임에서 그대로 성립한다) — `State<Ref>`가
+실제로 가능하고, 그러면 Store 값이 `refA`에서 `refB`로 바뀌는 경우가 생김. 이때
 `refA`가 계속 "확정된 값(대개 이전 `inst`)"을 들고 있으면, 그 자리가 이제
 `refB`로 넘어갔다는 걸 모르는 코드가 `refA.Value`를 계속 유효하다고 믿는
 조용한 버그가 남음 — `PreRef` 재사용 버그(위 절)와 같은 클래스의 문제.
@@ -531,8 +552,10 @@ RefLeafHandler.isHandlable(inst, k, v) =
     -- 안 갱신돼 있었음 — 아래 "타입/판별" 절의 최종 공식과 일치시킴
     -- [2026-08-18 구현 전 QA] type(k) == "number" 체크가 빠져 있었음 — leaf 바인딩은
     -- 배열 전용이고(사용자 확정: "배열 전용이 맞음"), 짝인 ObserverEffectLeafHandler엔
-    -- 이 체크가 필수라고 이미 명시돼 있었음. 빠지면 named 자리로 흘러온 Ref를 잡으려는
-    -- HANDLER_PRIORITY_FALLBACK 가드(아래 "동적 경로 가드")가 죽은 코드가 된다.
+    -- 이 체크가 필수라고 이미 명시돼 있었음. 빠지면 HIGH 우선순위 leaf가 named 자리로
+    -- 흘러온 Ref까지 삼킨다 — [2026-09-06 리뷰 정정] plain Ref엔 FALLBACK 가드가 없다
+    -- (등록된 가드는 PreRef/PostRef뿐 — named 자리의 plain Ref는 일반 no-match error,
+    -- spec.refhandlers 7절); 이 검사는 그 no-match가 살아 있게 하는 자리다.
 
 function RefLeafHandler.process(inst, k, v, index)
     -- [2026-08-24 6라운드 `H-39`] **말단 핸들러의 배열 자리 부기** — 빠져 있었다.
@@ -548,6 +571,9 @@ function RefLeafHandler.process(inst, k, v, index)
     if old ~= v then  -- 이미 같은 Ref가 이 자리를 차지 중이면 재통지 skip
         bindLifetime(inst, v)  -- v가 이미 다른 자리에 살아있으면 여기서 즉시 error —
                                 -- 이중 배치 방지("이중 배치 방지" 절 참고), 별도 Relate 불필요
+        relate:SetWeak(inst, k, v)  -- ⭐ [2026-09-04 M8 §0 Q4 (a), 사용자 확정] `Set` **앞** —
+                                    --   콜백이 같은 (inst,k)를 같은 v로 재귀 재디스패치해도
+                                    --   old == v로 dedup에 걸린다(아래 배너의 "기록 순서 미스" 해소)
         v:Set(inst)
     end
     -- ⭐ [2026-08-25, 7라운드 `H-71`] `SetStrong` 아님 — `v:Set(inst)`로 값이
@@ -565,8 +591,14 @@ function RefLeafHandler.process(inst, k, v, index)
     -- "일반적인 재진입/무한루프는 방어 안 함(사용자 코드 버그로 간주)"
     -- 원칙(2026-08-04, dispatch-core-plan 등이 인용)이 이 사례를 커버해
     -- UB로 닫을 수 있는지까지 포함해 M8에서 RefLeafHandler를 짤 때
-    -- 판단할 것(round12 §6).
-    relate:SetWeak(inst, k, v)
+    -- 판단할 것(round12 §6). **[2026-09-04 판단됨 — M8 brief §0 Q4 (a)]** UB로
+    -- 닫지 않고 `SetWeak`를 `Set` 앞으로 옮겼다(위). 같은 v 재진입은 이제
+    -- dedup으로 무해. 다른 v'로의 재진입(콜백이 같은 자리를 다른 Ref로
+    -- 재디스패치)은 순서와 무관하게 슬롯 클로저가 겹쳐 써져 v가 언바인드
+    -- 안 되는 채 남는데, 이건 옮기기 전에도 같았고 "재진입 방어 안 함"
+    -- 원칙 그대로 UB. `Set`이 콜백 error로 중단돼도 기록은 남지만 그 error는
+    -- pcall 없이 drive 밖으로 나가 구성 자체가 버려지므로(no-pcall 계약)
+    -- 실질 차이 없음 — 사용자 지시("다른 동작 변이가 있는지만 보고")로 훑은 결과.
     return function(nextValue)
         -- nextValue는 nil이거나 같은 핸들러가 곧 처리할 새 Ref(타입 보장됨) — v는
         -- 이 process 호출이 만든 클로저가 직접 캡처(Relate 재조회 불필요)
@@ -598,8 +630,9 @@ end
   세션)** — `Ref`는 "채워지길 기다리는 박스"뿐 아니라 "이미 확정된 값을
   여기저기서 부작용 없이 읽는" 용도로도 쓰일 수 있어 `Ref<T>`(T가
   non-nilable)를 계속 지원할 이유가 있음. 위 언바인딩(`old:Set(nil)`)이
-  실제로 발생하는 자리는 **Store/Modifier 필드에 놓여 재바인드/retract가
-  가능한 `Ref`뿐**이므로, 그 자리에 놓을 `Ref`는 **호출자가 직접
+  실제로 발생하는 자리는 **Store 값으로 놓여 재바인드/retract가
+  가능한 `Ref`뿐**이므로(**[2026-09-04 `H-316`]** 옛 "Store/Modifier 필드"에서
+  Modifier 필드는 뺐다 — 그 자리는 즉시 error), 그 자리에 놓을 `Ref`는 **호출자가 직접
   `Ref<<T?>>(...)`로 명시**할 것 — 이미 있는 "초기값이 `nil`이면 명시적
   제네릭 적용으로 타입을 넓힌다"는 관용구(위 "제네릭 시그니처" 절)를
   그대로 재사용하는 것뿐, 새 타입 규칙 추가 아님. 프레임워크가 자동으로
@@ -1003,8 +1036,9 @@ flatten된 값은 해시 파트(프로퍼티 키)로 존재하게 되고, Store�
       자체는 요소 타입으로 `Ref`/`PreRef`를 이미 금지하고 있어(위
       "요소 타입 제약" 절, `slot-plan.md`) 이 관용구가 실제로 문제되는
       자리는 `updateFn` 안에서 호출하는 컴포넌트 함수 내부뿐임.)
-- **일반 `Ref`도 값으로서는 Modifier 필드/Store 값 어디로든 전달될 수
-  있음** — Store를 통해 나중에 도착하는 Ref는 그냥 도착한 그 순간
+- **일반 `Ref`도 값으로서는 Store 값 어디로든 전달될 수 있음**(**[2026-09-04
+  한정, `H-316`]** 옛 문장의 "Modifier 필드"는 뺐다 — `modifier-plan.md` 4절이
+  Ref 계열의 Modifier 필드 진입을 즉시 error로 확정) — Store를 통해 나중에 도착하는 Ref는 그냥 도착한 그 순간
   처리하면 됨, phase 개념 자체가 필요 없음("만난 순간 처리"로 충분).
   **[한정, 2026-08-18 구현 전 QA] 다만 leaf 바인딩이 일어나는 자리는
   배열(숫자 키) 전용이다** — 옛 문장("Modifier/Store 어디든 자유롭게
@@ -1088,12 +1122,18 @@ flatten된 값은 해시 파트(프로퍼티 키)로 존재하게 되고, Store�
   이유였던 "이벤트가 setup 도중 동기 발화" 문제의 반대편 끝.
 
 **끝나 있지 **않은** 것**(문서화 필수, 이름만 보고 오해하기 쉬움):
-- **이 인스턴스 자신이 부모에 붙는 것(`.Parent` 대입)** — 부모가 이
-  인스턴스를 자기 배열 파트에서 처리하는 건 이 `drive`가 **끝난 뒤**임
-  (`Frame { Frame {...} }`처럼 리터럴로 중첩하면 안쪽 `Frame` 호출이 먼저
-  완결되어야 바깥 `Frame`의 props 테이블이 완성됨). 즉 `PostRef`는
-  **자기 아래(서브트리)의 완성만 보장하고, 자기 위(조상 체인)는 아직
-  없을 수 있음** — "화면에 올라간 시점"이 아님. `OnRendered`라는 이름이
+- **이 인스턴스 자신이 부모에 붙는 것(`.Parent` 대입)** — **[2026-09-04
+  정정, M8 brief §0 Q6 — 사용자]** 여기 한때 *"부모에 붙는 것보다 먼저"*라고
+  적혀 있었는데 그건 **보장이 아니다**: 리터럴 중첩(`Frame { Frame {...} }`)
+  에선 안쪽 `drive`가 끝난 뒤 부모가 붙이므로 아직 안 붙어 있지만,
+  `Claim`으로 이미 있는 트리를 소유하거나 어딘가에서 `.Parent`가 미리
+  세팅된 인스턴스면 붙어 있는 채로 fire된다. 사용자 원문: *"'먼저다' 는
+  아니긴 함. Claim 을 건다던가, 어딘가 이미 Parent 가 셋팅 되든 우린 상관
+  안 함. 우리가 정의할 수 있는건 단지 자식이 다 붙은 다음이지, 부모에게
+  붙었을 지 안 붙었을 지 그건 보장하는 바가 아님. 기본적으론 안 붙는게
+  맞다는건 맞지만."* 즉 `PostRef`는 **자기 아래(서브트리)의 완성만 보장**하고,
+  자기 위(조상 체인)는 **어느 쪽도 보장하지 않는다**(기본 경로에선 없다) —
+  "화면에 올라간 시점"이 아님. `OnRendered`라는 이름이
   React `componentDidMount`(DOM 삽입 후)처럼 읽힐 수 있으므로 이 차이를
   `base/lifecycle-hooks-plan.md`와 사용자 문서에 명시할 것.
 - **나중에 동적으로 도착하는 것들** — Store를 통해 뒤늦게 바뀌는 값,
@@ -1148,7 +1188,11 @@ dispatch-core-plan.md` "Length/Offset" 절의 계약을 특수 취급 없이 그
 ### 동적 경로 가드 Handler도 거울상으로 하나 더
 
 `PreRef`와 똑같이, `PostRef`도 **children 배열의 리터럴 아이템으로만** 놓을
-수 있음 — Modifier 필드/Source/Store 값으로는 **타입으로 차단**(이유도
+수 있음 — Modifier 필드/Source/Store 값으로는 **타입으로 차단**(**[2026-09-04
+M8 단위 ② 리뷰 반영]** 가드는 `k`를 안 보므로 `Source(PreRef)`처럼 **숫자 키**로
+도달한 경우 아래 문구("but got number")가 자기모순이 된다 — 그 경우만 "State/Store
+값을 거쳐 배열 index {k}에 도달했다, pre-pass는 그걸 못 본다"로 원인을 지목하고,
+named 키면 아래 문구 그대로. `PreRef` 가드도 동일)(이유도
 동일: flatten되면 해시 파트로 존재하게 돼 "배열 파트" 전제를 벗어나고,
 Store 경로로 뒤늦게 도착한 값은 "이 인스턴스의 construction 훅"이라는
 정의 자체를 만족시킬 수 없음). 타입은 런타임에 지워지므로 정상 우선순위
@@ -1167,6 +1211,20 @@ index item, but got {typeof(k)}`, SURFACE) }` Handler를 등록
 객체를 다시 놓으면 stale `.Value`로 콜백이 조용히 잘못 호출됨). "취소
 개념이 없다"도 동일 — 체인엔 올라가지만 그 자리 retract가 하드코딩된
 no-op이라 되돌릴 상태가 없음.
+
+**children 자리의 타입(M8 단위 ③, 2026-09-04 — round18 `H-321`, 사용자 확정
+*"non-lazy type 으로 T 비교자를 넣어 굽는구나. 권고대로 진행"*)**: 생성
+`<Class>Elem`은 `Ref<T>`를 직접 담지 않고 **반공변 팬텀 마커**
+`<Class>RefMarker = { read __quadRefAccepts: (<Class>) -> () }`(+ `State<…>`)만
+담는다. `Ref<T>`가 `read __quadRefAccepts: (T) -> ()`(런타임 값 `Void`)를 가지므로
+`Ref<Frame?>`·`Ref<Frame>`·상위 박스 `Ref<GuiObject?>`는 통과하고 형제
+`Ref<TextLabel?>`·무타입 `Ref<nil>`(`Ref()` — 호출자가 `Ref<<T?>>`로 넓히는
+기존 관용구 강제)은 거부된다. `Ref<T>`를 직접 넣으면 실물 규모에서 형제 클래스
+Ref가 조용히 통과했다(`typing-limits.md` 8.9절 — `Set`/`Callback` 이름 충돌 +
+제네릭 메소드 반공변 미검사; 실측 `luau-test/32`, round18 `H-321`). `State<Ref>`는
+`State<T>` 불변성 때문에 `q.Source(ref :: DModule.FrameRefMarker)`로 만든다(8.7
+캐비엇 5). `PreRef`/`PostRef`는 `Ref<T>`의 교집합이라 같은 마커로 통과하며,
+`State<PreRef>`는 타입이 못 가르고 런타임 가드가 잡는다.
 
 **타입/판별**: `isPostRef`는 `isPreRef`와 같은 층위의 가장 구체적인 항등
 체크이고, `isRef`가 그 위에 얹히는 상위 개념 — Ref leaf 핸들러(M8,

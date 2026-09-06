@@ -55,6 +55,19 @@ Roblox Instance 이름과 맞춘 `UICorner`/`UIPadding`(+`UIPaddingOffset`)/
 
 ## 메커니즘 — 새 아키텍처 개념 불필요
 
+**[2026-09-06 구현됨 — M10 잔여, round20 `H-335`~`H-337`]** `quad-roblox/src/Handlers/
+InstanceShorthand.luau` — 아래 "남은 열린 질문"의 단순화 후보대로 **룩업 표 하나**
+(`{ key → { class, childName, props, wrap } }`)로 키 넷을 구동한다. 우선순위
+`HANDLER_PRIORITY_NORMAL + 1`, 자식은 `quad.D.New(class)({ Name = childName })`로
+(`UI-5` 자동 충족) 만들어 핸들러가 부착, 조회는 `Relate`. 값 모양: `UICorner: number |
+UDim`(number → offset), `UIPadding: UDim`, `UIPaddingOffset: number`, `UIScale: number`.
+**캐비엇 `H-335`**: `UIPadding`/`UIPaddingOffset`은 v1처럼 `_quad_padding` 하나를 공유한다
+— 한 인스턴스에 둘을 같이 쓰면 나중 것이 이기고, 한 키를 `nil`로 내리면 공유 자식이
+파괴된다(같은 뜻의 두 표기라 동시 사용은 의미 없음). 생성기는 GuiObject 계열의
+`<Class>Param`·`<Class>Modifier`에 키 넷을 얹는다(`H-336`, 위 "보강" 문단의 체크리스트
+항목 이행). **UB(2차 리뷰 `H-342`)**: 핸들러는 키만 보고 대상 클래스를 검사하지 않는다 —
+타입을 우회해 non-GuiObject에 넣으면 무해한 관리 자식이 조용히 생긴다.
+
 이미 있는 pluggable Handler로 그대로 커버됨. `UICorner`/`UIPadding`/
 `UIScale` 같은 특수 키를 인식하는 Handler(`isHandlable`이 그 키를 매칭)가
 "이름 붙은 자식을 찾거나 만들고 그 자식의 프로퍼티를 세팅"을
@@ -73,9 +86,10 @@ Roblox Instance 이름과 맞춘 `UICorner`/`UIPadding`(+`UIPaddingOffset`)/
 
 **⭐ [2026-08-27 확정, 9라운드 `H-138`] 매치 우선순위 — 숏핸드 핸들러가
 `PropertyHandler`보다 높다.** `Frame { UICorner = 8 }`에서
-`getHandler(inst, "UICorner", 8)`이 `UICornerHandler`를 고르는 근거는
+`getHandler(inst, "UICorner", 8)`이 숏핸드 핸들러(`InstanceShorthand` — 키 넷을 한
+핸들러가)를 고르는 근거는
 `PropertyHandler`가 리플렉션으로 그 키를 거부해서가 **아니라** `priority`다
-(구체 상수는 구현 시 — `PropertyHandler`보다 높은 밴드면 된다). 사용자 논거:
+(**[2026-09-06 확정]** `HANDLER_PRIORITY_NORMAL + 1` — round20 Q4 (a), HIGH 밴드 미침범). 사용자 논거:
 *"당연히 숏핸드 우선순위가 높음. 안 그러면 프로퍼티 핸들러가 숏핸드 계층을
 인지하고 준비한다는 말이 돼"* — 거부에 기대면 하위 계층(프로퍼티)이 상위
 계층(숏핸드)의 키 집합을 알아야 하는 역방향 의존이 생긴다. 이름 충돌 방지도
@@ -213,7 +227,7 @@ end
 - **Tween 해석 코드를 여기 복제하지 않는 게 핵심 이득** — `Tween<T>`를
   실제로 읽는 코드는 여전히 `PropertyHandler` 하나뿐이라는
   `base/tween-plan.md`의 불변식이 유지됨. 3-상태 릴레이션 슬롯
-  (`{Tween, Value} | true | nil`), `Tween.Cancel`/`Tween.Finish` override
+  (`{Tween, Value} | true | nil`), `"Cancel"`/`"Finish"`(옛 표기 `Tween.Cancel`/`Tween.Finish` — `H-343`) override
   정책, "첫 세팅은 애니메이션 없이 즉시" 규칙까지 전부 `(child, prop)`
   자리에서 그대로 재사용됨 — 이 문서가 따로 정할 게 없음.
 - **타입 대수도 그대로** — 숏핸드 키의 값 타입이 `number`였다면 이제
@@ -300,6 +314,10 @@ PropertyHandler의 "첫 세팅은 애니메이션 없이 즉시"(`prev == nil`) 
 
 ## store-bind — 이 숏핸드도 지원
 
+**[2026-09-07 `H-353`]** `UICorner: number | UDim`은 생성 D에서 유일한 유니언 타입이라
+`State<number | UDim>` 한 팔로는 store-bind가 strict에서 거부됐다(`State<X>` 불변) —
+멤버별 팔로 정정, 근거는 `typing-limits.md` 8.9절 (3).
+
 v1에서도 `Corner`/`PaddingAll`/`Scale`은 store 값으로 바인드 가능했음
 (`myStore "key"` 체이닝으로 다른 프로퍼티와 동일하게 취급됨) — quad-v2도
 이 능력을 유지한다. **[정정, 2026-08-14 세션]** 이 절의 원 서술은 "트윈처럼
@@ -331,7 +349,10 @@ Tween 상태를 기억해두는 것과 정확히 같은 패턴. 새 메커니즘
 바꿀 이유는 없음, M10(Handlers/Attribute 등) 전후로 다른 세부 Handler와
 함께 구현하면 충분.
 
-## 남은 열린 질문 (단순화 후보, 사소함)
+## 남은 열린 질문 (단순화 후보, 사소함) — [해소됨, 2026-09-06 round20 Q2 (a)]
+
+**후자(룩업 테이블 단일 `Handlers/InstanceShorthand.luau`)로 확정·구현됐다** — 위 "메커니즘"
+절 배너. 아래는 당시 서술.
 
 - UICorner/UIPadding/UIScale 3개 거의 동일한 형태의 Handler를 각각 만들지,
   `{key -> {ChildClassName, ChildDefaultName, Properties, wrap=fn}}` 룩업

@@ -41,6 +41,9 @@ local Err = require("./ErrorNamespace")
 local InitBookkeeping = require("./Bookkeeping")
 local NoneModule = require("@self/None")
 local StoreBindModule = require("@self/StoreBind")
+local ProcessedModifierModule = require("@self/Modifier") -- M7 단위 ②
+local flatten = require("./Modifier").flatten -- M7 단위 ② — drive의 첫 pre-pass(round17 Q4 (a))
+local RefPrePass = require("@self/Ref") -- M8 단위 ② — (a) PreRef/PostRef pre-pass + (c) postRefList
 
 local QuadTypes = require("../luau_packages/quad_types")
 local HandlerModule = require("@self/Handler")
@@ -73,6 +76,12 @@ local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 -- module surface, extend this list too or the new brand silently falls back
 -- to typeof (the `type(predicate) == "function"` guard hides omissions).
 local BRAND_PROBES = {
+	"isMapperDescriptor", -- M5 Claim (핸드오버 리뷰 `H-346` — 체크리스트 0-b의 마지막 누락)
+	"isTween", -- M11 (round19 리뷰 — 빠지면 Tween이 `value: table`로 보고된다)
+	"isTag", -- M10 (2차 리뷰 `H-342` — 같은 결함 클래스 넷)
+	"isAttributeKey", -- most-specific-first: 키 객체가 그룹보다 먼저
+	"isAttribute",
+	"isSlot",
 	"isPreRef",
 	"isPostRef",
 	"isRef",
@@ -147,7 +156,14 @@ local function Init(module: any)
 		return nil
 	end
 
-	local function retractFrom(inst: any, k: any, index: number)
+	-- `release` (`H-329`, 사용자 확정 (a) 2026-09-06): a PURE retract that empties
+	-- the chain also drops the list from `chains` and from the inst's gchold —
+	-- otherwise every fresh key (the per-object group keys `State<Attribute>`
+	-- emits) leaves an empty list + its key alive for the instance's lifetime
+	-- (fable 탐사 X-1: ~500 B per emit). The (B) branch of `process` passes
+	-- false: it reinstalls into the SAME list right after, so releasing there
+	-- would cut the chain it is about to fill.
+	local function retractRange(inst: any, k: any, index: number, release: boolean)
 		-- From index (inclusive) to the tail, retracted tail-first (deepest
 		-- index first — LIFO: the shallower slot created the deeper one).
 		-- Arguments are always (nil, true) here: plain retract with no
@@ -165,6 +181,14 @@ local function Init(module: any)
 			slot.retractor(nil, true)
 			list[i] = nil
 		end
+		if release and #list == 0 then
+			module.unbindLifetime(list) -- the `H-229` anchor — pure GC relation, symmetric release
+			chains:SetWeak(inst, k, nil)
+		end
+	end
+
+	local function retractFrom(inst: any, k: any, index: number)
+		retractRange(inst, k, index, true)
 	end
 
 	local function process(inst: any, k: any, v: any, index: number)
@@ -212,8 +236,8 @@ local function Init(module: any)
 			slot.retractor = retractor
 		else
 			-- (B) different handler (or empty slot) — retract this slot and below,
-			-- then install fresh.
-			retractFrom(inst, k, index)
+			-- then install fresh (no release — same list, `H-329`).
+			retractRange(inst, k, index, false)
 			-- Occupancy marker first: while h.process recurses, `list` must stay a
 			-- hole-free sequence for `#list` to be defined (`#` on holey tables is
 			-- unspecified).
@@ -286,13 +310,34 @@ local function Init(module: any)
 		-- Blocker + bk). Single generalized `for` gives array part before hash
 		-- part (`F-4-1` — a language behavior base leans on by contract;
 		-- spec.drive.luau measures it). Chain entry is always index 1.
+		-- ③ flatten — Modifier slots consumed in place (`ProcessedModifier`),
+		-- fields merged into the hash part. Owned HERE, not by `New` (round17
+		-- §0 Q4 (a), 2026-09-04): one call site serves `New` and `Claim` alike.
+		-- Runs before the batching test — it never changes the array length.
+		flatten(flattened)
 		local batching = flattened[1] ~= nil
 		local blocker = if batching then bookkeeping.getBlocker(inst) else nil
 		if blocker then
 			blocker:On()
 		end
+		-- (a) M8 단위 ②: PreRef fires here (hoisted, index order), PostRef is
+		-- collected; both slots become `Processed*Ref` so the array stays
+		-- hole-free for the body loop (Dispatch/Ref.luau). AFTER the gate opens
+		-- (canon ⓪ → (a)): a PreRef callback that touches this inst's
+		-- bookkeeping must be absorbed like everything else in the batch
+		-- (review finding — before the gate it crashed in recompute).
+		local postRefList = RefPrePass.prePass(inst, flattened)
 		for k, v in flattened do
 			process(inst, k, v, 1)
+		end
+		-- (c) M8 단위 ②: PostRef fires after the body loop, BEFORE the batch
+		-- closes — the gate is still on, so a callback's `slot:Add`-style
+		-- mutation is absorbed and the single recompute below catches up
+		-- (`H-17`: "post-pass 포함 … 한 뒤 OffWithoutEmit"; bind-system
+		-- pipeline (c) precedes ⓪'). Every child of this instance is already
+		-- placed physically by its handler (ref-plan "`PostRef`" 절).
+		if postRefList then
+			RefPrePass.firePostRefs(inst, postRefList)
 		end
 		-- ⓪' close the batch once, after everything — then exactly one
 		-- recompute, itself gated against reentry (`H-119`).
@@ -340,6 +385,10 @@ local function Init(module: any)
 	-- NoneHandler (recursion only) + NilHandler (the one place an empty array
 	-- position is registered out of the order math).
 	NoneModule.register(Dispatch)
+	-- M7 단위 ②: the flatten sentinel's nop terminal (`H-35`) — registered
+	-- with the None pair for the same self-ownership reason.
+	ProcessedModifierModule.register(Dispatch)
+	RefPrePass.register(Dispatch) -- M8 단위 ② — ProcessedPreRef/PostRef 전담 핸들러
 	-- M4: StoreBind — the descending diff's own recursion, so it registers
 	-- here like the None pair, not from a value module (round13 §0 Q3 (a);
 	-- `H-278`'s scope was leaf handlers for one value type). It needs `module`

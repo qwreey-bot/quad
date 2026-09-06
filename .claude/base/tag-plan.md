@@ -32,7 +32,7 @@
 ```
 Tag(name1, name2, ...)                  -- 생성자, 가변인자. Tag() 빈 값도 유효
 tag:Added(name: string | {string}): Tag   -- clone 후 이름(들) 추가, 원본 안 건드림
-tag:Removed(name: string | {string}): Tag -- clone 후 이름(들) 제거
+tag:Removed(name: string | {string}): Tag -- clone 후 이름(들) 제거 — 검증은 Added와 동일(H-344)
 tag:Contains(name): boolean -- 멤버십 확인
 tag:Names(): iterator<string> -- 담고 있는 이름 순회(아래 "메커니즘" 절이 쓰는 것)
 tag:Apply(factory): U        -- factory(self) 체이닝 설탕(Modifier와 동일 패턴)
@@ -157,8 +157,9 @@ local tagNameMap = Relate()   -- {[inst(weak)] = {[tagName]: {[k]: true}}} — �
 -- process = TagHandler.process }`가 실제로 등록되는 얇은 래퍼(2026-08-14 열두 번째 세션 정정)
 -- [정정, 2026-08-24 6라운드 손 트레이싱 `H-52`] **`type(k) == "number"` 가드 추가.**
 -- 주석은 "array-part 전용"이라 말하면서 실제 판정은 값만 봤다. `RefLeafHandler`가
--- 2026-08-18에 정확히 같은 버그를 고친 전례가 있다 — 빠지면 named 자리로 흘러온
--- 값을 잡으려는 `HANDLER_PRIORITY_FALLBACK` 가드가 죽은 코드가 된다.
+-- 2026-08-18에 정확히 같은 버그를 고친 전례가 있다 — 빠지면 이 FALLBACK 핸들러
+-- 자신이 named 자리로 흘러온 Tag까지 오매치한다([2026-09-06 감사 정정] named
+-- 자리의 Tag를 잡는 별도 가드는 없다 — 일반 no-match error가 답, ref-plan과 동형).
 TagHandler.isHandlable(inst, k, v) = (type(k) == "number" and isTag(v))
 
 function TagHandler.process(inst, k, v, index)
@@ -257,6 +258,13 @@ end
   `dispatch-core-plan.md` "Dispatch 체인" 절.
 
 ## 패키지 배치 — 값도 알고리즘도 quad-base, 주입되는 건 `addTag`/`removeTag` (2026-08-13 열네 번째 세션 재배치)
+
+**[2026-09-06 fable 탐사 `H-331`]** retractor는 이름의 마지막 홀더가 빠지면 `removeTag`뿐 아니라 **빈 holders 집합도 지운다** — 동적 이름(`Tag("item-" .. id)`)이 인스턴스 수명 동안 이름당 테이블 하나씩 누적되던 것을 닫음(아래 의사코드엔 없던 한 줄).
+
+**[2026-09-03 구현 배치 — round15/16 `H10-1`, `H-278` 관용구]** 아래 의사코드의
+`TagHandler`/`TagFallbackHandler` 분리와 ROADMAP 옛 `Dispatch/Tag.luau`+`TagFallback.luau`
+분할은 구현에서 **`Tag.luau`의 `Init(module)` 안에 핸들러 리터럴 하나로 인라인**됐다
+(등록 소유는 값을 선언한 모듈 — `H-278`). 공개 API·계약은 이 절 그대로다.
 
 **Tag의 값 타입/clone 체이닝 API(`Tag(...)`/`:Added`/`:Removed`/
 `:Contains`/`:Apply`/`Merged`/`:Names`)가 quad-base인 건 처음부터 그대로**

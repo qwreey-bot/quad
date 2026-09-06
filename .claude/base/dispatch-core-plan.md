@@ -675,7 +675,13 @@ end
   **구현 디테일 캐비엇**: `None→nil`이 Roblox의 nil을 허용 안 하는 타입
   프로퍼티(Color3/number 등)에 도달하면 `inst[k] = nil`은 런타임 에러 —
   PropertyHandler 자신이 `v == nil`이면 셋을 건너뛰는 방어를 갖고 있어야
-  함(None 자체의 문제가 아니라 PropertyHandler 구현 디테일, M9/M10로 미룸).
+  함(None 자체의 문제가 아니라 PropertyHandler 구현 디테일, M9/M10로 미룸
+  — **[2026-09-03 M10 구현됨]** `quad-roblox/src/Handlers/Property.luau`의
+  `v == nil → Void` 얼리리턴, `spec.handlers` 9절; 마지막 쓴 값이 남는다).
+  **[2026-09-06 M11 단위 ②, brief Q5 (a)]** 같은 부류가 하나 더 — `Tween{...}`의
+  엔진 타입 옵션(`Info`/`Style`/`Direction`)은 quad가 검사할 수 없어, 틀린 값은
+  `Property.luau`의 `buildInfo`(`TweenInfo.new`)/`TweenService:Create` 자리에서
+  엔진 원시 에러가 나고 이 NOOP 마커 캐비엇이 그대로 적용된다.
 - **반환하는 retractor는 여기서 할 일이 없음** — `NoneHandler`는 `v==None`을
   매치했을 때 재귀 호출로 곧바로 `Dispatch.process(inst,k,nil,index+1)`을
   부르는 게 전부고 자기 자신이 들고 있는 별도 상태가 없어서(`Relate` 등
@@ -962,14 +968,21 @@ Fallback Handler들도 존재하지 않아**, 위 "매치 실패는 즉시 `erro
     (부분 생성 후 예외로 생긴 Instance 자체의 회수 문제는 **백로그** —
     `Fallback`/`Traceback`이 그 경로를 계속 살려두는 걸 존재 이유로 삼는
     대표 사용처라 그 둘을 구현할 때 같이 다룬다.)
-- **타입 패밀리는 백엔드 몫**: `AttributeKey<<T>>` 제네릭 생성자와
-  스칼라 편의 패밀리(`StringAttribute`/`NumberAttribute`/`BooleanAttribute`)
-  까지가 base이고, `Color3Attribute`류처럼 **엔진 고유 타입**에 묶인
+- **타입 패밀리는 백엔드 몫**: `AttributeKey(name)` 생성자(**[2026-09-03]** 무타입
+  프리미티브 — 제네릭 폐기)와 스칼라 슈가(`StringAttribute(name, value)`/
+  `NumberAttribute`/`BooleanAttribute` — 배열부 단일 항목 그룹, `attribute-plan.md`
+  머리 배너)까지가 base이고, `Color3Attribute`류처럼 **엔진 고유 타입**에 묶인
   패밀리는 그 백엔드(quad-roblox의 `D` 층)가 자기 것으로 추가함 —
   "이 값이 이 백엔드에서 표현 가능한가"라는 검증도 base가 아니라 주입된
   `setAttribute`의 몫(`base/attribute-plan.md` "패키지 배치" 절).
 
 ### Dispatch 체인 — 인덱스 기반 추적, 재디스패치는 하강 diff (2026-08-08 세 번째 세션 신설, 2026-08-13 다섯 번째 세션 인덱스화, 같은 날 열네 번째 세션 하강 diff로 전면 교체)
+
+**[2026-09-06 `H-329` (a), 사용자 확정]** 공개 `retractFrom(inst, k, index)`가 체인을 **비우면**(순수
+철거) 그 리스트를 `chains`와 inst의 gchold(`H-229` 앵커, `unbindLifetime`)에서 놓는다 —
+안 그러면 새 키마다(`State<Attribute>`의 객체별 그룹 키) 빈 리스트+키가 인스턴스 수명
+동안 누적된다(fable 탐사 X-1). `process`의 (B) 분기는 같은 리스트에 곧바로 재설치하므로
+해제 없이 내부 `retractRange(…, false)`를 쓴다. spec.dispatch 15절.
 
 **[전면 교체, 2026-08-13 열네 번째 세션 — `question.md` 0-A/0-Z 확정]**
 이 절은 원래 **"래핑 핸들러가 재-dispatch 전에 자기 아래를 먼저
@@ -1193,7 +1206,7 @@ retractor 생략의 `2`는 **[2026-08-31 `H-222` (a) 사용자 확정]** —
   | `ObserverLeafHandler` / `EffectLeafHandler`(**[2026-09-01 `H-278`]** 옛 결합 `ObserverEffectLeafHandler`가 소유 모듈별 둘로) | 말단 | `bindLifetime` (+ 부기 — `H-39`) |
   | `ProcessedPreRefHandler` / `ProcessedPostRefHandler` | 말단 | 없음(부기만) |
   | `ProcessedModifierHandler` | 말단 | 없음(부기만 — `H-35`) |
-  | `UICornerHandler` | 말단 | 자식 Instance 생성/제거 |
+  | `UICornerHandler` | 말단 | 자식 Instance 생성/제거 **[2026-09-06]** 실제 등록명은 `InstanceShorthand` 하나(키 넷 — round20) |
 
   **[2026-08-24 `H-39`/`H-35`] 이 표 자체가 비대칭을 드러내고 있었다** —
   `NilHandler` 행엔 부기가 적혀 있는데 바로 아래 `RefLeafHandler` 행엔
@@ -1349,6 +1362,10 @@ retractor 생략의 `2`는 **[2026-08-31 `H-222` (a) 사용자 확정]** —
 **같은 종류의 착각**에서 나왔음. 새 Handler를 짜거나 기존 걸 고칠 때
 이 목록을 먼저 훑을 것 — 전부 "그럴듯해 보이는데 틀린" 것들이라
 리뷰로 잡기 어렵다.
+
+**0. [2026-09-06 신설 — 세 번 반복: `H-272`·`H10-2`·`H-330`] 디스패치·발행 깊이에서 raise할 땐 `errorBefore`, 직접 호출 표면에서만 `errorBeforeNearest`.** `process`/retractor/reconcile 안(또는 `Source:Set`의 파동 안)에서 `errorBeforeNearest`를 쓰면 최근접 태그 프레임이 핸들러 자신이라 `Dispatch/init.luau`나 `Source.luau`가 blame된다. 판별: 그 raise가 사용자의 `drive`/`:Set` 줄에서 시작한 스택 안이면 `errorBefore`.
+
+**0-b. [2026-09-06 신설 — 하루에 세 번 반복: `H-338`·`H-342`] 새 브랜드 술어(`isX`)를 모듈 표면에 얹으면 `Dispatch/init.luau`의 `BRAND_PROBES`에도 넣을 것.** 무매치 진단이 그 값을 `typeof`(`table`)로 보고해 "프로바이더 미초기화"로 오도한다 — 목록은 손 복사라 게이트가 없다.
 
 **1. 클로저는 early-return해도 체인에서 *소비*된다.**
 `Dispatch.retractFrom`은 저장된 retractor를 호출하고 **항상**
@@ -1928,9 +1945,13 @@ function Dispatch.getOffsetAt(ownerKey, at)
         if bk.offsetCacheValidUpTo < i then
             -- 그 사용자 코드가 아래를 무효화했다 — 하강점 너머에 이미 쓴
             -- 엔트리는 낡은 길이로 만든 것, 거기서부터 다시.
-            -- (max 1: M3의 하강은 1 밑으로 안 내려간다 — splice의 `j-1 = 0`
-            -- 케이스는 M6에서 오고, 그땐 베이스 재독까지 필요)
-            i = math.max(bk.offsetCacheValidUpTo, 1)
+            -- [2026-09-07 `H-350`] 0으로 내려갔으면(M6 splice의 `j-1 = 0`,
+            -- owner base 이동 — Slot `_baseObserver`) 베이스를 먼저 다시 읽는다:
+            -- 진입부와 같은 ensureBase — 옛 offsetCache[1] 위에 재구축하면 그
+            -- owner의 형제 offset이 base 차이만큼 영구히 어긋난다(옛 주석의
+            -- "max 1 — M6가 베이스 재독을 넣어야"가 미이행이었던 자리)
+            ensureBase()
+            i = bk.offsetCacheValidUpTo
             cur = bk.offsetCache[i]
             continue
         end
@@ -2011,7 +2032,7 @@ bk.offsetSetUpTo        = math.min(bk.offsetSetUpTo,        ?)
 |---|---|---|
 | `setLength(ownerKey, i, ...)`, 그리고 그 State가 나중에 emit할 때 | `i` | **`i` 자리의 offset은 안 바뀐다**(그건 `1..i-1`의 합) — 바뀌는 건 그 **뒤**뿐. 사용자: *"정확히 입력받은 자신 인덱스까지 당김"* |
 | `spliceArraysUp`/`spliceArraysDown`(자리 삽입·삭제) | **`i - 1`** | **[2026-08-26 정정, `H-113`]** 한때 `i`였다 — `recompute`의 커서가 정확히 `i`일 때 `i`로 당기면 "변경 없음"과 구분이 안 돼 되감기가 안 걸린다. 근거는 아래 "되감기 신호는 `bk.invalidAfter` 하나로 통일한다" 절(제목은 역전 *전* 이름 그대로다 — 그 절이 폐기를 서술한다) |
-| `rawMove`/`rawSwap`, 그리고 `rawExtract`의 **교체 형태**(`newElement` 지정) — **자리 수가 안 바뀌는 경로만.** ⚠️ `rawSplice`/`rawClear`/`rawExtract`의 **제거 형태**(`newElement` 생략)는 자리 수가 바뀌므로 위 splice 행 | **`minPos - 1`** | **[2026-08-26 신설, `/code-review high`]** splice와 같은 이유다 — 바뀐 최소 위치가 커서와 같으면 `math.min(i, i) = i`라 되감기가 안 걸리고, 그 자리로 옮겨온 요소의 offset이 조용히 낡는다. `base/slot-plan.md`의 `H-29` 규약 3번이 짝이고, 이 표에 행이 없어 "세 규칙"으로 세어지던 자리다 |
+| `rawMove`/`rawSwap` — **자리 수가 안 바뀌고 순서가 바뀌는 경로만.** **[2026-09-07 `H-360`]** 한때 여기 `Extract(index, new)`의 교체 형태(= `rawReplace`)도 적혀 있었는데 빠졌다 — 교체는 그 자리로 *옮겨오는* 요소가 없어 `i` 자리 offset이 안 바뀌고, `rawReplace`의 `setLength(i)`가 위 첫 행(`i`)을 그대로 적용한다(코드·`slot-plan.md` raw* 의사코드·`Bookkeeping.luau`의 UB 경계 주석이 모두 그렇고, 이 행만 달랐다; 커서 `i`에서의 자기 자리 교체는 그 주석이 명시한 UB) ⚠️ `rawSplice`/`Clear`(`rawRemove` 반복)/`Extract(index)`의 **제거 형태**(= `rawUnmount`)는 자리 수가 바뀌므로 위 splice 행(**[2026-09-03]** 한때 `rawExtract`/`rawClear`라 적었으나 별도 함수가 아니다 — `slot-plan.md`의 raw* 규약 의사코드 주석(2026-09-03 M6 잔여 마감 각주)이 소스) | **`minPos - 1`** | **[2026-08-26 신설, `/code-review high`]** splice와 같은 이유다 — 바뀐 최소 위치가 커서와 같으면 `math.min(i, i) = i`라 되감기가 안 걸리고, 그 자리로 옮겨온 요소의 offset이 조용히 낡는다. `base/slot-plan.md`의 `H-29` 규약 3번이 짝이고, 이 표에 행이 없어 "세 규칙"으로 세어지던 자리다 |
 | owner의 베이스 변경(`ownerKey.Offset`이 바뀜 = `_baseObserver`가 도는 순간) | `0` | 1번 자리부터 전부 다시 |
 
 **⭐ [2026-08-24 6라운드 손 트레이싱 `H-3`] 이 표는 산문으로만 있었고 실제
@@ -2037,7 +2058,8 @@ bk.offsetSetUpTo        = math.min(bk.offsetSetUpTo,        ?)
    해야 하는 일 목록도 같은 커밋에서 맞췄다).
 3. **`slot._baseObserver` 콜백** — 베이스가 바뀐 경우라 **두 필드 다 `0`**.
    `recompute`를 부르기 전에 당긴다.
-4. **⭐ [2026-08-26 신설, `/code-review high`] `rawMove`/`rawSwap`/`rawExtract`류**
+4. **⭐ [2026-08-26 신설, `/code-review high`] `rawMove`/`rawSwap`**(**[2026-09-07 `H-360`/`H-366`]**
+   한때 "`rawExtract`류"라 적혀 교체 형태까지 읽혔다 — 교체 `rawReplace`는 위 표 첫 행의 `setLength(i)`뿐)
    — 자리 수는 안 바뀌고 순서만 바뀌는 경로. 바뀐 최소 위치로
    **두 필드 다** `math.min(…, minPos - 1)`.
    **이 항목이 빠져 있었다** — 표에 행만 넣고 배치 자리를 안 적었는데, 이
@@ -2140,7 +2162,7 @@ local function recompute(ownerKey, bk)
         -- ⭐⭐ [2026-08-27 재배치, 9라운드 `H-124`] **되감기 판정이 `lengthList[i]`
         --   읽기보다 먼저다.** 옛 순서(읽기·누적 → 판정)에선 `offset:Set(abs)` 안의
         --   사용자 코드가 요소를 제거해 `i > bk.N`이 되면(커서가 마지막 자리일 때
-        --   아무 자리나 제거, 또는 `rawSplice`/`rawClear`의 다중 제거)
+        --   아무 자리나 제거, 또는 `rawSplice`/`Clear`의 다중 제거)
         --   `lengthList[i]`가 이미 `nil`이라 `sum += nil`로 죽고, 그 error가
         --   `recomputeBlocker:On()`과 `OffWithoutEmit()` 사이라 **차단기가 영원히
         --   켜진 채 남는다**(그 owner의 레이아웃 영구 동결, `H-87` 부류). 되감으면

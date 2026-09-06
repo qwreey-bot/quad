@@ -376,6 +376,10 @@ function bindLifetime(inst, value)
         -- 호출(최외곽 태그 = bindLifetime 자신)과 디스패치 경유(최외곽 = drive)
         -- 양쪽에서 사용자 줄에 닿는다. 메시지도 error 계약대로 영어
         -- (`H-216` 부류의 잔존이 이 스케치에 남아 있었다).
+        -- [2026-09-06 fable 탐사 `H-330`] 같은 규칙이 Slot의 디스패치·발행 깊이
+        -- raise 8곳(claimOwner/wrapElement 검증/mountSlot/KeyGone)에도 적용됐고,
+        -- `Source:Set`은 태그된 `Emit` 대신 태그 없는 로컬 꼬리를 불러 파동 안
+        -- Nearest raise가 Source.luau를 blame하지 않게 했다.
         Err.errorBefore(if isGlobal
             then "bindLifetime: value is already subscribed"   -- [2026-08-26 H-111] 강/약 어느 쪽이든
             else "bindLifetime: value is already bound to another Instance", SURFACE)

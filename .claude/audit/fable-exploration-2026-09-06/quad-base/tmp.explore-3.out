@@ -1,0 +1,36 @@
+(recorded from the run at HEAD a716eb4; .luau removed from the repo mid-session by someone else — key sections)
+
+=== O1 Observer reentrant Set inside fn: `_running` tail guard bypass? ===
+_running guard in reentrant tail — ok/err:	false ./quad-base/test/tmp.explore-3.luau:19: Observer: already subscribed	| _running now	false
+  (the nested _receive lowered `_running` to false before the outer fn returned → the H-183 `_running` guard was bypassed; the subscription guard caught it instead)
+
+=== O2 Effect: dep Set inside fn → _pending rerun; then fn reads latest ===
+runs	3	last	3
+
+=== O4 GateNode + Get loop: downstream Compute of a closed gate sees fresh value; flush notifies once ===
+closed: c:Get()	10	fires	0
+open: fires	1	c:Get()	10
+
+=== O5 Two blockers, gate chain ===
+after b1 off fires	0
+after b2 off fires	1
+
+=== O6 Effect Unsubscribe → cleanup runs; then dep change holds; Subscribe again → replays once ===
+after unsub runs/cleans	1	1
+after sets runs/cleans	1	1
+after resub runs/cleans	2	1
+
+=== O8 Store defaults with numeric key ===
+numeric key ok=	true	(accepted — Names() then returns a number; type says { string })
+
+=== O9 Slot: element Length observer survives owner Destroy? (leaks?) ===
+after Destroy+drop: inner	nil	outer	nil	inst	nil
+
+=== O10 Slot: outer Destroy, then user re-mounts the same (still referenced) Slot elsewhere ===
+remount after owner Destroy ok=	false	./quad-base/src/Dispatch/init.luau:224: Slot: this element is already mounted elsewhere — multiple mounts are not allowed
+
+=== O11 Effect deps: same Source twice (dedup) and Ref + Source ===
+runs	3	(expect 3)
+
+=== O12 Observer WeakSubscribe then drop → GC'd, no fire ===
+fires after GC	0

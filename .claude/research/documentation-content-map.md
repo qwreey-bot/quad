@@ -4,7 +4,7 @@
 + 백엔드별 트랙 분리)이 확정된 뒤, 실제로 각 축에 뭘 채울지 `.claude/base/*.md`
 전체 + 관련 `research/*.md`(tween-plan, ui-shorthand-plan)를 2026-08-06 세션에
 6개 에이전트로 병렬 서베이해 분류함. **아직 문서를 쓰라는 뜻 아님** — 착수
-시점은 여전히 구현 우선(`.claude/todos.md` 1번). 나중에 실제 문서화를
+시점은 여전히 구현 우선(`.claude/todos.md` 00번(옛 1번 — 2026-09-06 구현 착수 항목은 마일스톤 완료로 지워짐)). 나중에 실제 문서화를
 시작할 때 이 맵을 목차/우선순위표로 쓰면 됨.
 
 > **⚠️ [2026-08-14 아홉 번째 세션 감사] 이 서베이는 2026-08-06 시점의
@@ -84,7 +84,7 @@ v1 폐기 API/버그/구조 결함 전부 v2 설계를 정당화하는 내부 �
 - skip: quad2-try 리서치 결과 섹션 전체(OOP 상속/커스텀 파서/Slot 스텁/`Pipe` 폐기 이력) / PA님 코드 교차검증 절(역사적 검증 기록) / "남은 열린 질문"/"확정된 것" 메타 요약
 
 ### component-composition-plan.md / module-lifecycle-plan.md
-- 초심자: 컴포넌트=순수 함수 / 리프 프로퍼티 바인딩(**[정정, 2026-08-09 열한 번째 세션] "State만"이 아님 — 단순 원본 토글(`Frame{Visible=source}`)은 Source 직접 바인딩이 정상 경로, 여러 값에서 파생된 계산 결과일 때만 자연히 State가 됨, `component-composition-plan.md` 5번 절 참고**) / `props.Modifier`/`props.Ref` named parameter 경계 전달(**`props.Modifier or None`/`props.Ref or None` 필수 관용구 — 안 쓰면 nil-hole 버그, 2026-08-07 열 번째 세션 확정**) / `InitRoblox(Module)` 팩토리 초기화
+- 초심자: 컴포넌트=순수 함수 / 리프 프로퍼티 바인딩(**[정정, 2026-08-09 열한 번째 세션] "State만"이 아님 — 단순 원본 토글(`Frame{Visible=source}`)은 Source 직접 바인딩이 정상 경로, 여러 값에서 파생된 계산 결과일 때만 자연히 State가 됨, `component-composition-plan.md` 5번 절 참고**) / `props.Modifier`/`props.Ref` named parameter 경계 전달(**`props.Modifier or None`/`props.Ref or None` 필수 관용구 — 안 쓰면 nil-hole 버그, 2026-08-07 열 번째 세션 확정; [2026-09-06 M9] 실물 예제는 `quad-roblox/test/spec.component.luau`(단일 루트·Slot 반환·`Overridden`·커스텀 클래스 상향)**) / `InitRoblox(Module)` 팩토리 초기화
 - api: State(파생, 읽기전용) vs Source(원본, 쓰기가능) 경계 요약(→심화) / Slot 반환 컴포넌트는 Modifier/Ref 파라미터 미선언 / `Modifier.Overridden(mod1, mod2, ...)` 유틸(구 `Merge`, `props.Modifier` 단일 슬롯용 특수 상황으로 한정 소개 — 아래 modifier-plan.md 절 참고) / Bind는 유일 슬롯(재호출 no-op, 충돌 에러, →심화) / `:With`/`:Compute`로 파생 State 생성 시그니처 / 모듈 싱글톤 스코프
 - 심화: v1 `Extend` 자동 store 소유 폐지 이유(React 벤치마킹) / Source가 State를 구조적으로 만족하는 서브타입 설계(2026-08-06 후속 세션 — `StoreSource` 프록시 중간안은 폐기되고 이걸로 대체됨, `base/source-state-plan.md` 참고) / named-parameter 경계 방식 채택 이유(Compose/Fusion/Vide/v1 선례 수렴) / 다중 루트 반환 개념 제거 근거 / 팩토리 초기화 패턴 채택 이유(RBVM `InitNamespace` 반례) / Store 책임 분리(base가 `LifetimeHandle` 소유) / v1 named 체이닝 연산 폐기
 - skip: Compose/Fusion/Vide/v1 프레임워크 비교 원자료 / provider/processor 네이밍 미정 등 열린 질문 메모
@@ -104,7 +104,7 @@ v1 폐기 API/버그/구조 결함 전부 v2 설계를 정당화하는 내부 �
   별도 개념 아님.
 - 초심자: Modifier 기본 체이닝+merge 우선순위 규칙 실제 예시 / Slot 기본 개념(children 배열)+클래스가 슬롯 받는 방법(Named Slot 없음) / 마운트된 slot 재마운트 시 즉시 throw
 - api: Setter가 리터럴/변환 함수 둘 다 받음(→심화: getter 없는 이유) / 필드가 State일 수 있는 4가지 조합 표(→심화: 반응성 유지/끊김 이유) / `mod:UICorner(8)` dot-access 생성자 관습 / Slot은 인스턴스당 여럿 가능 / 중첩 인스턴스 자식 처리 / ~~retract 시 slot 내용 폐기(→심화: portal 없는 이유)~~ **[2026-08-13 정정] 2026-08-13 여섯 번째 세션에 역전 — `State<Slot>` 교체는 이제 파괴가 아니라 언마운트, portal은 그 자연스러운 귀결(`base/slot-plan.md`)** / `:Apply(factory)` 기본 체이닝 관용구(→심화: 언제 `Apply` vs `Overridden`인지 성능 기준) / `:Peek<<T>>(key)` + `isState`(→심화: `Get`과 이름을 다르게 한 이유)
-- 심화: 정적 merge vs 런타임 pluggable 기각 이유(CSS cascade) / immutable+clone 체이닝 이유(형제 오염 방지) / getter 미채택 이유 / `__index` 런타임 구현 통찰 / Modifier가 핸들러 계층을 모르는 이유 / base/roblox 패키지 경계(Dispatch/Slot vs Handlers/Slot) / Slot 단일 마운트 소유권이 v1/Fusion/Vide 대비 개선인 이유 / ~~retract=폐기 확정 히스토리(portal 검토 후 기각)~~ **[2026-08-13 정정] 위와 같은 이유로 역전 — 이 항목은 "왜 한때 destroy+no-portal로 결정했었는가"라는 히스토리 소재로만 유효, 현재 결론 아님** / **왜 `Apply`가 기본이고 `Overridden`는 최적화 특수 케이스인가**(계산 의존성 있는 조합 vs 독립적 재사용 가능 조각의 병합 — 2026-08-07 다섯 번째 세션, `modifier-plan.md` 9번) / 왜 `Apply`가 clone 대신 mutate하지 않는가(형제 오염 방지가 개별 clone 비용 절감보다 우선)
+- 심화: 정적 merge vs 런타임 pluggable 기각 이유(CSS cascade) / immutable+clone 체이닝 이유(형제 오염 방지) / getter 미채택 이유 / `__index` 런타임 구현 통찰 / Modifier가 핸들러 계층을 모르는 이유 / base/roblox 패키지 경계(base `Dispatch/Slot` vs quad-roblox `EngineOps`의 native* — **[2026-09-03]** 옛 표기 `Handlers/Slot`은 존재한 적 없는 파일, `slot-plan.md` 경계 절 정정) / Slot 단일 마운트 소유권이 v1/Fusion/Vide 대비 개선인 이유 / ~~retract=폐기 확정 히스토리(portal 검토 후 기각)~~ **[2026-08-13 정정] 위와 같은 이유로 역전 — 이 항목은 "왜 한때 destroy+no-portal로 결정했었는가"라는 히스토리 소재로만 유효, 현재 결론 아님** / **왜 `Apply`가 기본이고 `Overridden`는 최적화 특수 케이스인가**(계산 의존성 있는 조합 vs 독립적 재사용 가능 조각의 병합 — 2026-08-07 다섯 번째 세션, `modifier-plan.md` 9번) / 왜 `Apply`가 clone 대신 mutate하지 않는가(형제 오염 방지가 개별 clone 비용 절감보다 우선)
 - 열린 질문(문서화 보류): ~~여러 Slot이 형제로 섞일 때 순서 보장~~ **[해소됨,
   2026-08-09 여섯 번째 세션]** Length/Offset 누적합으로 확정, 심화 목록에
   추가 필요(`base/dispatch-core-plan.md` "Length/Offset" 절).
@@ -176,7 +176,11 @@ v1 폐기 API/버그/구조 결함 전부 v2 설계를 정당화하는 내부 �
     화이트리스트 error로 시끄럽게 드러나면 다행이고, 값 종류에 따라 조용히
     무시될 수도 있다. 지금 설계로 막을 일이 아니라 **문서화할 사실**이다
     (버전 정책의 타입 레벨 축은 `type-version-check`가 이미 다룬다 —
-    이건 그 런타임 판별 판). 코퍼스 어디에도 언급이 없어서 여기 등록한다
+    이건 그 런타임 판별 판). 코퍼스 어디에도 언급이 없어서 여기 등록한다.
+    **[2026-09-04 추가, M7 단위 ④]** `Modifier.TypedFactory`/`DefineSubtype`의
+    클래스 레지스트리(`known`/`parents`/`constructors`, `Modifier.luau` 모듈
+    수준)도 같은 목록에 든다 — 한 사본에서 등록한 클래스는 다른 사본의 `As<Class>()`가 "unknown
+    modifier class"로 거부한다(`modifier-plan.md` 11절)
 21. **[2026-08-28 신설] 이미 있는 트리 — `Claim`과 루트 `.Parent`** —
     `base/claim-plan.md` §9의 문서화 대상: (1) claim-once·own-all 계약 — 부기 대상
     자식은 전부 매핑, 디스크립터 순서가 정본, 숏핸드 `UI*`는 (i) 템플릿에 없고
@@ -263,7 +267,8 @@ additional-primitives-plan.md`의 "문서화 백로그" 절이 원자료)**:
    **[2026-08-14 아홉 번째 세션] `PostRef`가 생겨 이 프레이밍은 3항이 됨**
    — "pre-hook / hook / post-hook"으로 자연히 확장되고, 특히
    `PostRef`("두 패스가 전부 끝난 뒤")가 **자기 서브트리 완성은 보장하되
-   자기가 부모에 붙기 전**이라는 점은 React `componentDidMount`와의 대조
+   부모 부착 여부는 보장하지 않는다**(**[2026-09-04 정정, M8 Q6]** 옛 "붙기
+   전"은 리터럴 중첩에만 맞음)는 점은 React `componentDidMount`와의 대조
    소재로 좋음(`ref-plan.md`의 "`PostRef`" 절, `base/lifecycle-hooks-plan.md`).
    **[해소됨, 2026-08-12 여섯 번째 세션]** 취소 가능 여부 — PreRef는
    취소 개념 자체가 없고(**[정정, 2026-08-14 두 번째 세션]** 근거가
@@ -317,7 +322,7 @@ additional-primitives-plan.md`의 "문서화 백로그" 절이 원자료)**:
   `dispatch-core-plan.md` "Length/Offset" 절 참고.
 - **[해소됨, 2026-08-13 정정]** Tween 오버라이드/옵션 값 모양 —
   2026-08-12 첫 번째 세션에 `Info: TweenInfo?`+편의 필드 폴백,
-  override 정책은 `Tween.Cancel`(기본)/`Tween.Finish` 2값으로 확정,
+  override 정책은 `"Cancel"`(기본)/`"Finish"` 문자열 싱글톤 2값으로 확정(`H-343` — 옛 `Tween.Cancel` 표기),
   `tween-plan.md` 자체가 `research/`에서 `base/`로 승격됨(이 줄이 그
   갱신을 놓치고 있었음). **다만 아래 §1/§2의 Tween 예시(`[Tween(key,
   ...)] = storeValue` 특수 바인드 키, "Tween 핸들러가 Instance

@@ -78,6 +78,9 @@ RefSource라는 별도 타입은 폐기**하는 쪽으로 수렴.
   자리엔 Source를 넣을 수 있지만 역은 안 됨(Svelte의 `Writable<T> extends
   Readable<T>`와 같은 모양). Source는 State가 주는 모든 것(`:Get()`,
   `:With(...)`, `:Compute(fn)`) 위에 `:Set(value)`/`:Emit()`을
+  **[2026-09-06 `H-330`]** 구현에서 `:Set`은 태그된 `:Emit`을 부르지 않고 태그
+  없는 로컬 꼬리(`bumpAndEmit`)를 공유한다 — 파동 안의 Nearest raise가 사용자의
+  `:Set` 줄을 blame하게(`H-207`의 "꼬리 한 벌"은 그대로).
   추가로 가짐([정정, 2026-08-07] 프로퍼티 읽기 표기는 State/Source에서 제외되고
   `Get()`으로 통일됨, 그 표기는 Ref의 `.Value` 전용으로 좁혀짐 — 아래
   "`:With`/`:Compute` — self 인자도 lazy 핸들로 통일" 절 참고).
@@ -161,9 +164,10 @@ RefSource라는 별도 타입은 폐기**하는 쪽으로 수렴.
 
 - **독립 존재 가능한 프리미티브** — Source, Ref, Store, Modifier. 다른
   무언가 없이 그 자체로 `Type(args)` 팩토리 함수로 만들어짐(`Source(default)`/
-  `Ref(default)`/`Store({defaults})`/`Modifier()`, 아래 "생성자
-  스타일 확정" 참고 — `Modifier()`는 빈 인스턴스, 실제 필드는
-  `mod:UICorner(8)`류 체이닝으로 그 위에 얹음).
+  `Ref(default)`/`Store({defaults})`/`Modifier(a, b, …)`, 아래 "생성자
+  스타일 확정" 참고 — **[2026-09-04 round17 `H-310`]** `Modifier()`는 빈
+  인스턴스, 인자를 주면 Modifier·`{ field = value }` 테이블을 순서대로 병합
+  (뒤가 이김); 그 위에 `mod:UICorner(8)`류 체이닝으로 필드를 얹음).
 - **원천에 종속된 파생 데이터** — State, Observer. 자기 혼자 존재할 수
   없고 항상 특정 원천(Source/다른 State)에 의존 — 그래서 이 둘은 자유
   함수 생성자가 없고, 항상 원천에 대한 메소드 호출로만 얻어진다
@@ -268,9 +272,15 @@ end
 --   `_running` 플래그로 둘러싼다(설치 발화 포함) — `fn`이 자기 생명주기를 못
 --   바꾼다는 `H-147`의 Observer 대칭. 근거·가드 목록은 `lifecycle-pattern.md`
 --   (2) 배너, 실제 코드는 `Observer.luau`.
+-- ⭐ [2026-09-06 fable 탐사 `H-332`] 플래그는 true/false가 아니라 **save/restore**다 —
+--   `fn` 안에서 자기 State를 `Set`하면 중첩 `_receive`가 `false`로 내려 바깥 `fn`의
+--   꼬리가 가드 없이 진행했다(spec.observer 9a). 아래 의사코드에 그대로 반영.
 function Observer:_receive(from)
     if canExecute(self) then
+        local outer = self._running        -- `H-332` save
+        self._running = true               -- `H-183`
         self.fn(self._state, self, from)   -- ⭐ (리시버 State, Observer 자신, 출처)
+        self._running = outer              -- `H-332` restore
     else
         self._rerunRequired = true         -- [2026-08-28 `H-159`] 묶이기 전의 변경은 홀드 — 묶일 때 1회
     end                                    --   (Effect의 내부 Observer도 이 경로 — `fire`가 `fn`이다)
@@ -283,7 +293,10 @@ end
 function Observer:_catchUp()
     if self._rerunRequired then
         self._rerunRequired = false
+        local outer = self._running        -- `H-183`/`H-332` — _receive와 같은 save/restore
+        self._running = true
         self.fn(self._state, self, nil)
+        self._running = outer
     end
 end
 
@@ -1300,8 +1313,8 @@ override 의미론 실측, 해당 체크박스는 `[x]`) — **[2026-09-01 `H-27
 등으로 동적으로 흘러들어오면(타입 우회 버그) 명확히 에러내야 함 —
 전용 `Handler` 등록: `{ priority = HANDLER_PRIORITY_FALLBACK,
 isHandlable = function(inst,k,v) return isObserver(v) end, process =
-function(inst,k,v) Err.errorBefore(`Ref/Observer binding should be array
-index item, but got {typeof(k)}`, SURFACE) end }`(**[2026-08-31 단위 4]**
+function(inst,k,v) Err.errorBefore(`Observer binding should be array
+index item, but got {typeof(k)}`, SURFACE) end }`(**[2026-09-06 리뷰]** 옛 `Ref/Observer` 접두 제거 — Ref 가드는 `Ref.luau`가 따로)(**[2026-08-31 단위 4]**
 error 발화는 `H-231` 워커의 최외곽 스캔 — 매치 실패와 같은 논증으로
 `drive`를 뚫고 사용자 진입점을 blame한다, `Observer.luau`의
 `registerDispatchHandlers` 주석.
@@ -1319,7 +1332,11 @@ got typeof k 처럼 알려줄 필요는 있는듯"*. 근거는 **메시지에 `k
 평범한 우선순위로 등록된 다른 Handler가 있으면 그쪽이 이기는" 자리이기
 때문(`base/dispatch-core-plan.md`의 "base가 소유하는 핸들러와 주입되는
 엔진 op" 절) —
-지금은 아무도 그 자리를 안 가져가서 항상 이 가드가 에러를 내지만, 이
+**[2026-09-07 정정 — 핸드오버 리뷰 `H-361`, 문항]** quad-roblox의 `PropertyHandler`(NORMAL, 키만
+검사)가 **실프로퍼티 키**를 먼저 가져가므로 `Frame { BackgroundTransparency = state:Observer(fn) }`은
+이 가드가 아니라 엔진의 "number expected, got table"로 죽는다(`H-103` NOOP 마커 잔존) — 비프로퍼티
+키에서만 이 가드가 발화한다. 타입이 1차 방어(strict는 `PVn`이 거부). 처리는
+`qa-request/handover-review-2026-09-07.md` §4 Q4. 아래 원문은 M2 시점 서술: 지금은 아무도 그 자리를 안 가져가서 항상 이 가드가 에러를 내지만, 이
 Handler를 만드는 게 목적이 아니라 "지금은 확정된 기능이 없다"는 default를
 base가 값싸게 제공하는 것뿐. (**이 가드가 없던 이전엔** 확정된 "매치
 실패는 즉시 error" 규칙에 의해 결과적으로 똑같이 에러가 났었음 — 이

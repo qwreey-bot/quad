@@ -37,7 +37,19 @@ export type Tween<T> = Types.Tween<T>
 export type NewChild = Types.NewChild
 export type D = DModule.D
 export type DMapper = DModule.DMapper
-export type RobloxExtension = { D: DModule.D }
+export type OnChangeDescriptor = Types.OnChangeDescriptor
+export type PropTypes = DModule.PropTypes
+export type OnChangeFn = DModule.OnChangeFn
+-- M10: `OnChange(name, fn)` rides the same extension merge as `D` — the
+-- runtime (Handlers/OnChange.luau) is untyped, the GENERATED `OnChangeFn`
+-- (name → callback parameter type via `index<PropTypes, K>`, luau-test `30`)
+-- is what `q.OnChange` carries through `Self & P`
+export type AnimateInfo = Types.AnimateInfo
+export type AnimateFn = Types.AnimateFn
+-- M11 단위 ③: `Animate`(tween-plan "`Animate` 콤비네이터" 절)도 같은 병합 —
+-- `q.Source(v):Apply(q.Animate{ Time = 0.3 })` → 선언 타입 `State<Tween<any>>`(`H-334` — 정직한
+-- `State<T | Tween<T>>`는 슬롯 유니언에서 too complex, `types.luau` 주석)
+export type RobloxExtension = { D: DModule.D, OnChange: OnChangeFn, Animate: AnimateFn }
 
 local function QuadRoblox<T>(quad: T): RobloxExtension
 	local q = quad :: any

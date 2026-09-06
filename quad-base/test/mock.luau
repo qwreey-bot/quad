@@ -102,12 +102,33 @@ type Data = {
 	children: { Data },
 	changed: { [any]: Signal },
 	properties: { [any]: any },
+	events: { [string]: Signal }, -- lazily minted per declared event name (M10)
 	destroying: Signal,
 	destroyed: boolean,
 }
 
 local dataOf = setmetatable({}, { __mode = "k" }) :: { [any]: Data }
 local proxyOf = setmetatable({}, { __mode = "v" }) :: { [Data]: any }
+
+-- M10 (2026-09-03): engine events. Real instances expose `inst.MouseButton1Click`
+-- as an RBXScriptSignal AND Reflection lists it under `GetEventsOfClass`; the
+-- mock keeps both in step from ONE registry — a spec declares the event names
+-- of a class once (`mock.declareEvents`), then `inst[name]` on that class
+-- yields a Signal (lazily minted, per instance) and `gameShim`'s
+-- `GetEventsOfClass` returns `{ Name = ... }` descriptors for the same names.
+-- Flat by class name (no inheritance model in the mock).
+local declaredEvents: { [string]: { [string]: true } } = {}
+
+local function declareEvents(className: string, names: { string })
+	local set = declaredEvents[className]
+	if set == nil then
+		set = {}
+		declaredEvents[className] = set
+	end
+	for _, n in names do
+		set[n] = true
+	end
+end
 
 local methods = {}
 
@@ -148,6 +169,15 @@ local function getProxy(data: Data): any
 			elseif key == "Destroying" then
 				return data.destroying
 			else
+				local declared = declaredEvents[data.className]
+				if declared ~= nil and declared[key] then
+					local sig = data.events[key]
+					if sig == nil then
+						sig = newSignal()
+						data.events[key] = sig
+					end
+					return sig
+				end
 				return data.properties[key]
 			end
 		end,
@@ -174,6 +204,13 @@ local function getProxy(data: Data): any
 					table.insert(newParentData.children, data)
 				end
 			else
+				local declared = declaredEvents[data.className]
+				if declared ~= nil and declared[key] then
+					-- Roblox rejects assignment to a signal member; keep the mock's
+					-- read/write fidelity symmetric so `inst.Event = fn` cannot
+					-- pass under CLI and fail only in Studio (M10 리뷰 반영)
+					error(`{key} is an event of {data.className} and cannot be assigned`, 2)
+				end
 				data.properties[key] = value
 			end
 			fireChanged(data, key)
@@ -195,10 +232,85 @@ function Instance.new(className: string): MockInstance
 		children = {},
 		changed = {},
 		properties = {},
+		events = {},
 		destroying = newSignal(),
 		destroyed = false,
 	}
 	return (getProxy(data) :: any) :: MockInstance
+end
+
+-- M10 engine-axis (2026-09-03): tag/attribute state lives here so BOTH routes
+-- observe the same store — the mock provider's own ops (mock backend, quad-base
+-- specs) and quad-roblox's real EngineOps run under CLI against these mock
+-- instances (`inst:SetAttribute` + a CollectionService shim from `gameShim`).
+-- Keyed by the Data record (like `properties`/`changed`), NOT the proxy: the
+-- proxy is re-minted after GC (`proxyOf` is weak-valued), so a proxy-keyed
+-- store would silently drop tags/attributes a spec re-derives through
+-- Parent/GetChildren after a collect (통합 리뷰 발견). One private set of
+-- mutators/readers — the shim, the instance methods and the provider ops all
+-- delegate here so the two routes cannot drift.
+local tagsOfData = setmetatable({}, { __mode = "k" }) :: { [Data]: { [string]: true } }
+local attributesOfData = setmetatable({}, { __mode = "k" }) :: { [Data]: { [string]: any } }
+
+local function tagSetOf(inst: any, create: boolean): { [string]: true }?
+	local data = getData(inst)
+	local set = tagsOfData[data]
+	if set == nil and create then
+		set = {}
+		tagsOfData[data] = set
+	end
+	return set
+end
+
+local function attrMapOf(inst: any): { [string]: any }
+	local data = getData(inst)
+	local map = attributesOfData[data]
+	if map == nil then
+		map = {}
+		attributesOfData[data] = map
+	end
+	return map
+end
+
+local function addNames(inst: any, names: { string })
+	local set = tagSetOf(inst, true) :: { [string]: true }
+	for _, n in names do
+		set[n] = true
+	end
+end
+
+local function removeNames(inst: any, names: { string })
+	local set = tagSetOf(inst, false)
+	if set then
+		for _, n in names do
+			set[n] = nil
+		end
+	end
+end
+
+local function readTags(inst: any): { string }
+	local out: { string } = {}
+	for n in pairs(tagSetOf(inst, false) or {}) do
+		table.insert(out, n)
+	end
+	table.sort(out)
+	return out
+end
+
+local function readAttributes(inst: any): { [string]: any }
+	return table.clone(attrMapOf(inst))
+end
+
+function methods.SetAttribute(inst: any, name: string, v: any)
+	attrMapOf(inst)[name] = v -- nil deletes, like Roblox
+end
+
+function methods.GetAttribute(inst: any, name: string): any
+	return attrMapOf(inst)[name]
+end
+
+function methods.GetAttributes(inst: any): { [string]: any }
+	return readAttributes(inst)
 end
 
 function methods.GetPropertyChangedSignal(inst: any, property: string): Signal
@@ -253,6 +365,9 @@ function methods.Destroy(inst: any)
 		methods.Destroy(getProxy(childData))
 	end
 	data.destroying:DisconnectAll()
+	for _, sig in data.events do
+		sig:DisconnectAll() -- event Connections die with the instance too (M10 리뷰 반영)
+	end
 	for _, sig in data.changed do
 		sig:DisconnectAll()
 	end
@@ -337,6 +452,46 @@ end
 -- 락으로 대체 — 이 `mockProvider`가 락 키가 되는 안정 identity다. 아래
 -- `installLifetime`은 `quad:UseProvider(mockProvider)` 위임 래퍼(기존 spec
 -- 호출부 호환).
+-- M10 (round16 spike → 2026-09-03 engine axis): mock tag/attribute ops. The
+-- mock provider installs them like every other op (H-305 (d′) "all providers
+-- have the same shape" — user-delegated choice, fork-integration morning
+-- reply 4); `installTagAttributeOps(quad, log)` stays exported as the
+-- OBSERVATION re-install: the optional `log` records every engine call (names
+-- sorted — set iteration order is not deterministic) so specs can assert the
+-- batching / "only truly changed names" contracts. Bodies delegate to the
+-- private store helpers up by the instance methods.
+local function installTagAttributeOps(quad: any, log: { string }?)
+	local function record(op: string, names: { string })
+		if log == nil then
+			return
+		end
+		local sorted = table.clone(names)
+		table.sort(sorted)
+		table.insert(log, op .. ":" .. table.concat(sorted, ","))
+	end
+	local function addTag(inst: any, names: { string })
+		addNames(inst, names)
+		record("addTag", names)
+	end
+	local function removeTag(inst: any, names: { string })
+		removeNames(inst, names)
+		record("removeTag", names)
+	end
+	local function setAttribute(inst: any, name: string, v: any)
+		attrMapOf(inst)[name] = v -- v == nil deletes (the injected-op contract)
+		if log ~= nil then
+			table.insert(log, `setAttribute:{name}={tostring(v)}`)
+		end
+	end
+	quad.addTag = addTag
+	quad.removeTag = removeTag
+	quad.setAttribute = setAttribute
+	-- `H-238`: the backend tags everything it installs
+	for _, fn in { addTag, removeTag, setAttribute } :: { any } do
+		quad.errorNamespace.setFuncLevel(fn, QuadTypes.ERROR_LEVEL_SURFACE)
+	end
+end
+
 local function mockProvider(quad: any): { [any]: any }
 	local isObserver, isEffect = quad.isObserver, quad.isEffect
 	-- `H-272`: 백엔드 교체 함수의 사용자 오용 error도 워커 경유 — 단위 4 이후
@@ -470,6 +625,7 @@ local function mockProvider(quad: any): { [any]: any }
 		quad.errorNamespace.setFuncLevel(fn, QuadTypes.ERROR_LEVEL_SURFACE)
 	end
 	installNative(quad) -- [M6 편입] native*+isInst도 mock 백엔드의 일부 — 한 프로바이더가 전부 설치(H-305 (d′) "전부 같은 형태")
+	installTagAttributeOps(quad) -- [M10 엔진 축] addTag/removeTag/setAttribute도 같은 프로바이더가(로그는 재설치 opt-in)
 	return {} -- mock은 얹는 공개 표면이 없다(D 없음) — 빈 확장
 end
 
@@ -530,92 +686,121 @@ end
 -- 심을 손 복사하고 있었다(`H-261` 선례: 공유 헬퍼는 mock이 집). 디스크립터
 -- 모양은 Studio 실측(.Name + Permits.Write 키 유무 = 쓰기 가능성)과 동형 —
 -- 모양이 또 바뀌면 여기 한 곳만 고친다. REFLECTED 내용은 spec별 파라미터.
+-- CollectionService shim (M10 engine axis) — the four members quad-roblox
+-- EngineOps uses — delegates to the private store helpers (same store `mock.getTags` reads).
+local collectionServiceShim = {
+	AddTag = function(_self: any, inst: any, name: string)
+		addNames(inst, { name })
+	end,
+	RemoveTag = function(_self: any, inst: any, name: string)
+		removeNames(inst, { name })
+	end,
+	HasTag = function(_self: any, inst: any, name: string): boolean
+		local set = tagSetOf(inst, false)
+		return set ~= nil and set[name] == true
+	end,
+	GetTags = function(_self: any, inst: any): { string }
+		return readTags(inst)
+	end,
+}
+
+-- TweenService shim (M11 unit ②, round19) — no interpolation: `Create` records
+-- the call and hands back a tween whose Play/Cancel only flip PlaybackState
+-- (Cancel leaves the property untouched, like the engine). Specs read
+-- `tweenLog` and reset it per section. `TweenInfo` shim records the
+-- positional args as-is (the handler fills absent fields with the engine
+-- defaults — `H-333`, an explicit nil is rejected by the real TweenInfo.new;
+-- the spec asserts the filled values).
+local tweenLog: { any } = {}
+
+local function newMockTween(inst: any, info: any, props: { [string]: any }): any
+	local tween = {
+		Instance = inst,
+		TweenInfo = info,
+		PropertyTable = props,
+		PlaybackState = "Begin",
+		plays = 0,
+		cancels = 0,
+	}
+	function tween.Play(self: any)
+		self.plays += 1
+		self.PlaybackState = "Playing"
+	end
+	function tween.Cancel(self: any)
+		self.cancels += 1
+		self.PlaybackState = "Cancelled"
+	end
+	return tween
+end
+
+local tweenServiceShim = {
+	Create = function(_self: any, inst: any, info: any, props: { [string]: any }): any
+		local tween = newMockTween(inst, info, props)
+		table.insert(tweenLog, { inst = inst, info = info, props = props, tween = tween })
+		return tween
+	end,
+}
+
+local tweenInfoShim = {
+	new = function(...: any): any
+		return table.freeze({ __mockTweenInfo = true, args = table.pack(...) })
+	end,
+}
+
+local function resetTweenLog()
+	table.clear(tweenLog)
+end
+
 local function gameShim(reflected: { [string]: { any } })
 	return {
 		GetService = function(_self: any, name: string): any
-			assert(name == "ReflectionService", "only ReflectionService is shimmed")
+			if name == "CollectionService" then
+				return collectionServiceShim
+			end
+			if name == "TweenService" then
+				return tweenServiceShim
+			end
+			assert(name == "ReflectionService", "only ReflectionService/CollectionService/TweenService are shimmed")
 			return {
 				GetPropertiesOfClass = function(_s: any, className: string): { any }
 					return reflected[className] or {}
+				end,
+				-- events come from the mock's own registry (`declareEvents`) so
+				-- Reflection and `inst[name]` never disagree
+				GetEventsOfClass = function(_s: any, className: string): { any }
+					local out: { any } = {}
+					for name in pairs(declaredEvents[className] or {}) do
+						table.insert(out, { Name = name })
+					end
+					table.sort(out, function(a: any, b: any)
+						return a.Name < b.Name
+					end)
+					return out
 				end,
 			}
 		end,
 	}
 end
 
--- M10 (round16 spike): mock tag/attribute ops — the backend share quad-roblox
--- fills in M10, mirrored here so the base-owned handlers can run under CLI.
--- Observation helpers expose applied state; the optional `log` records every
--- engine call (names sorted — set iteration order is not deterministic) so
--- specs can assert the batching / "only truly changed names" contracts.
-local instTags = setmetatable({}, { __mode = "k" }) :: { [any]: { [string]: true } }
-local instAttributes = setmetatable({}, { __mode = "k" }) :: { [any]: { [string]: any } }
+-- observation readers for specs (the same functions the shim/methods use)
+local getTags = readTags
+local getAttributes = readAttributes
 
-local function installTagAttributeOps(quad: any, log: { string }?)
-	local function record(op: string, names: { string })
-		if log == nil then
-			return
-		end
-		local sorted = table.clone(names)
-		table.sort(sorted)
-		table.insert(log, op .. ":" .. table.concat(sorted, ","))
-	end
-	local function addTag(inst: any, names: { string })
-		local set = instTags[inst]
-		if set == nil then
-			set = {}
-			instTags[inst] = set
-		end
-		for _, n in names do
-			set[n] = true
-		end
-		record("addTag", names)
-	end
-	local function removeTag(inst: any, names: { string })
-		local set = instTags[inst]
-		if set ~= nil then
-			for _, n in names do
-				set[n] = nil
-			end
-		end
-		record("removeTag", names)
-	end
-	local function setAttribute(inst: any, name: string, v: any)
-		local map = instAttributes[inst]
-		if map == nil then
-			map = {}
-			instAttributes[inst] = map
-		end
-		map[name] = v -- v == nil deletes (the injected-op contract)
-		if log ~= nil then
-			table.insert(log, `setAttribute:{name}={tostring(v)}`)
-		end
-	end
-	quad.addTag = addTag
-	quad.removeTag = removeTag
-	quad.setAttribute = setAttribute
-	-- `H-238`: the backend tags everything it installs
-	for _, fn in { addTag, removeTag, setAttribute } :: { any } do
-		quad.errorNamespace.setFuncLevel(fn, QuadTypes.ERROR_LEVEL_SURFACE)
-	end
-end
-
-local function getTags(inst: any): { string }
-	local out: { string } = {}
-	for n in pairs(instTags[inst] or {}) do
-		table.insert(out, n)
-	end
-	table.sort(out)
-	return out
-end
-
-local function getAttributes(inst: any): { [string]: any }
-	return table.clone(instAttributes[inst] or {})
+-- isDestroyed(inst) — spec predicate for "Destroy() ran on this mock
+-- instance" (the proxy exposes no field for it; `inst._destroyed` reads nil
+-- and made spec.slot 12's assertion vacuous — M6 잔여 마감 발견).
+local function isDestroyed(inst: any): boolean
+	return getData(inst).destroyed
 end
 
 return {
 	Instance = Instance,
+	isDestroyed = isDestroyed,
+	declareEvents = declareEvents,
 	gameShim = gameShim,
+	tweenLog = tweenLog, -- M11 unit ②
+	tweenInfoShim = tweenInfoShim,
+	resetTweenLog = resetTweenLog,
 	newSignal = newSignal,
 	isMockInstance = isMockInstance,
 	installLifetime = installLifetime,

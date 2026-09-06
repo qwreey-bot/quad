@@ -21,19 +21,28 @@ local installEngineOps = require("./EngineOps")
 local InitD = require("./D")
 local installPropertyHandler = require("./Handlers/Property")
 local installInstanceChildHandler = require("./Handlers/InstanceChild")
+local installEventHandler = require("./Handlers/Event")
+local installInstanceShorthandHandler = require("./Handlers/InstanceShorthand") -- M10 잔여(round20)
+local OnChangeModule = require("./Handlers/OnChange")
+local installAnimate = require("./Animate") -- M11 단위 ③ — :Apply 콤비네이터(모듈 인스턴스의 Tween/isState 위)
 
 local function RobloxFactory(module: any): any
 	installLifetime(module)
 	installEngineOps(module)
-	-- backend-owned handlers (M5 단위 ③ — Property/InstanceChild;
-	-- Event/OnChange/Slot은 각 마일스톤에서 합류)
+	-- backend-owned handlers (M5 단위 ③ — Property/InstanceChild; M10 —
+	-- Event/OnChange; Slot의 핸들러는 quad-base 소유라 여기 없다)
 	installPropertyHandler(module)
 	installInstanceChildHandler(module)
+	installEventHandler(module)
+	installInstanceShorthandHandler(module) -- UICorner/UIPadding/UIPaddingOffset/UIScale — PropertyHandler보다 높은 우선순위(H-138)
+	OnChangeModule.install(module)
 	-- `H-299` → `H-305` (d′): `D`는 module.D 직접 대입이 아니라
 	-- `UseProvider`의 확장 병합으로 실린다 — 반환 테이블이 그 확장이고,
 	-- `RobloxExtension` 타입(init.luau)이 이 모양의 정본. 사용법은 동일:
 	-- `local D = quad.D`(병합 후) 또는 반환 교집합에서 바로 `q.D`.
-	return { D = InitD(module) }
+	-- `OnChange`(M10)도 같은 병합으로 실린다 — 디스크립터 팩토리는 모듈
+	-- 레벨, 타입은 생성 `OnChangeFn`(init.luau `RobloxExtension`)이 입힌다.
+	return { D = InitD(module), OnChange = OnChangeModule.OnChange, Animate = installAnimate(module) }
 end
 
 return RobloxFactory

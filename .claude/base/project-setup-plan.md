@@ -49,7 +49,7 @@ quad/
   필요(공식 workspace 가이드 예제가 루트에도 `[target]`을 요구함 — 이
   세션엔 `roblox` 하나만 있어 실제로 검증 안 됨, 필요 여부/의미는 M5 이후
   재확인 후보).
-- **서브패키지 `pesde.toml`**: `[target] environment = "roblox"` +
+- **서브패키지 `pesde.toml`**: `[target] environment`는 **`quad-roblox`만 `"roblox"`, 나머지 넷은 `"luau"`**(`H-234`, 아래 2026-08-31 문단이 소스 — 2026-09-06 감사가 이 줄의 일반 서술을 정정) +
   `build_files = ["src"]` + `lib = "src/init.luau"`.
   **⚠️ [2026-09-02 정정, M5 round14 Q3 (a) 사용자 확정]** 여기 한때
   *"`quad-roblox`는 `[dependencies] quad_base = …`"*라고 적혀 있었는데
@@ -77,6 +77,12 @@ quad/
 - **`pesde install`은 워크스페이스 루트에서 한 번**만 돌리면 **모든
   워크스페이스 멤버**가 스캔·링크됨(개수는 `architecture.md`의
   `workspace_members`가 소스 — 새 멤버가 늘어도 이 동작은 안 바뀜).
+  - **⚠️ [2026-09-03 실측, round15 `H6-22`] `quad-types`에 `export type`을
+    추가하면 `pesde install`을 다시 돌려야 한다.** 소비자가 require하는
+    `luau_packages/quad_types.luau`는 pesde가 **타입 이름을 하나씩 재export하는
+    생성 심**(gitignore)이고 `scripts/relink.sh`는 `.pesde/` 아래 사본만
+    갱신하지 이 심은 안 건드린다 — 새 타입은 심에 없어 `QuadTypes.Slot`이
+    "Unknown type"이 된다(M6 잔여 마감에서 탐사자가 잡음, `Slot<T>` 등 5개).
 - **[2026-08-19 후속, `type-version-check` 신설 때 실측] 의존하는
   워크스페이스 멤버의 `target`이 자기 자신의 기본 target과 다르면
   `workspace = "..."` 의존 선언에 `target = "..."`를 명시해야 한다.**
@@ -443,5 +449,6 @@ lockfile들이 **게시되는 대상이 아니기** 때문 — 루트는 `privat
   없으면 linking에 문제가 생길 수 있다"는 WARN의 실제 영향 범위 — 지금은
   install 자체를 막지 않아서 방치, 실제 Rojo 동기화 단계에서 문제가
   드러나면 그때 pesde 문서의 `[target.scripts]` 절을 찾아볼 것
+  **[2026-09-06 간접 해소 — 사용자 확정]** M5 단위 ⑤(2026-09-02)·M8 단위 ②·M11 단위 ②·round20에서 rojo 라이브 싱크와 Studio 실측이 반복 성공했다 — 이 WARN은 실제 동기화를 막지 않았다. 닫음(문제가 드러나면 그때 다시 연다).
 - ~~`pesde.lock` 커밋 여부 최종 확정~~ — **[2026-08-26 해소]** 커밋하는
   것으로 확정(위 절).

@@ -147,7 +147,7 @@ do
 		q.Dispatch.drive(inst, { MyThing = o })
 	end)
 	assert(
-		not ok and string.find(tostring(err), "Ref/Observer binding should be array index item, but got string", 1, true) ~= nil,
+		not ok and string.find(tostring(err), "Observer binding should be array index item, but got string", 1, true) ~= nil,
 		`observer guard message: {tostring(err)}`
 	)
 	-- errorBefore(최외곽 표면)라 drive를 뚫고 사용자 호출부(이 파일)를 blame

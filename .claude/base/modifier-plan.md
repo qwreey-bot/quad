@@ -41,6 +41,15 @@ cascade 문제가 그대로 오는데, 이건 이미 확정된 "Store 바인드 
 
 ### flatten의 정확한 형태 — in-place 뮤테이션 + `ProcessedModifier` 소진 (2026-08-20 구현 전 QA 4라운드 `M-2` 확정)
 
+> **[2026-09-04 구현됨 — M7 단위 ②, round17 `H-311`]** `quad-base/src/Modifier.luau`의
+> `flatten`(아래 의사코드 1:1) + `Dispatch/Modifier.luau`의 `ProcessedModifierHandler`
+> (`H-35` 의사코드 1:1, HIGH 우선순위 — None 쌍과 같이 InitDispatch가 등록).
+> **호출 주체는 `Dispatch.drive`의 첫 pre-pass**(round17 §0 Q4 (a), 사용자 확정) —
+> `New`의 ③은 사라졌고 `Claim`은 같은 경로로 자동 봉합됐다(`bind-system-plan.md`
+> 파이프라인 의사코드 정정). `ProcessedModifier`는 `Modifier.luau` export(내부 —
+> 최상위 재노출 없음, 아래 "공개 표면 위치" 항목대로). spec은
+> `quad-base/test/spec.flatten.luau`, Studio 실측 `audit/m7-unit2-studio-2026-09-04.md`.
+
 **여기 있던 갭**: 위 문단은 "Modifier 항목의 필드를 뽑아 merge한다"고만 적고
 **뽑아낸 그 배열 자리를 어떻게 하는지를 한 번도 안 적었다.** 그냥 지우면
 배열에 구멍이 생기고, 그건 `PreRef` pre-pass가 `ProcessedPreRef`로 소진해야
@@ -95,6 +104,11 @@ end
   정반대가 된다. 역순으로 돌면 마지막 modifier가 먼저 써서 이긴다 —
   인라인 우선은 어느 방향이든 그대로 성립(인라인은 루프 시작 전에 이미
   들어 있으므로).
+- **[2026-09-04 확정, round17 `H-312` — 사용자] 해시 키 자리의 Modifier는
+  error** — `Frame { Size = mod }`처럼 해시 키의 값이 Modifier면 flatten이
+  슬롯을 소진하기 전에 `errorBefore`로 거부한다(사용자: *"해시키를 지원할
+  이유가 없어서 에러 내는거 동의"*). 위 의사코드는 배열 파트만 훑으므로 그대로
+  두면 그 값이 키의 핸들러에 raw로 넘어가 엔진 원시 에러가 났다(리뷰 발견).
 - **배열 파트를 훑으며 해시 키를 같이 쓰는 것은 안전** — 숫자 `for`의 상한이
   루프 진입 시 한 번만 평가되고, 해시 파트 추가는 그 순회에 영향을 주지
   않는다.
@@ -245,7 +259,22 @@ mutable하게 구현하면 같은 modifier 레퍼런스를 공유하는 형제 �
 `Store({defaults})`와 같은 "`Type(args)` 팩토리" 관습을 그대로 적용하면
 됨, Modifier는 초기 필드가 필수가 아니므로 `args`가 비어도 되는
 `Modifier()`. `mod:FontSize(20)`처럼 체이닝하는 모든 예시가 실은 이
-`Modifier()`가 만든 빈 인스턴스 위에서 시작함. `base/source-state-plan.md`
+`Modifier()`가 만든 빈 인스턴스 위에서 시작함. **[2026-09-04 확정, round17
+`H-310` — 사용자]** 그 `args`의 모양: **`Modifier(a, b, …)` — 각 인자는 Modifier
+또는 `{ field = value }` plain 테이블, 순서대로 병합해 뒤가 필드 단위로
+이긴다**(9절 `Overridden`과 같은 병합 규칙 — 단 0인자 `Modifier()`는 빈 값이고
+`Overridden()`은 error라 동치는 인자가 하나 이상일 때만). `Modifier()`는
+`Modifier({})`와 같다.
+원문: *"(default1 = {}, Modifier, { k=v }) 형태로 받게 … 뒤로 갈 수록 높은
+우선순위의 override 처럼 … 초기 붙이는건 비용이 싸지고, 약간 슈거처럼
+작동"*. **사용자 인용이 승인한 것은 모양과 병합 순서까지다.** 아래 검증 규칙은
+**에이전트 추가**(round17 `H-310` 행, 뒤집기 가능): 필드 테이블은 메타테이블 없는
+plain 테이블만(Source/State/Ref/None 등 quad 객체를 넘기면 내부 필드가 merge되는
+사고를 막는다 — 리뷰 발견), 키는 문자열만, 값은 setter와 같은 핸들러 계층 검사,
+**함수 값은 거부**(setter는 함수를 변환으로 읽으므로 raw 저장하면 두 생성
+경로가 조용히 갈린다 — 변환은 `mod:Field(fn)`으로), 비테이블 인자는 error.
+타입은 `(...(Modifier | { [string]: any })) -> Modifier`(클래스별 필드 테이블
+타입은 안 찍는다 — 필요가 관측되면 그때). `base/source-state-plan.md`
 "독립 존재 가능한 프리미티브" 절의 예시 목록도 이걸로 갱신.
 
 ### 4. Setter는 리터럴 값과 변환 함수 둘 다 받음, 별도 Getter는 없음
@@ -434,6 +463,19 @@ PA님 방식인 문자열 키 + 런타임 리플렉션으로 감, `base/event-pl
 "이벤트 바인딩 — self 미전달" 절 참고. Modifier는 이벤트가 아니라 Store/인스턴스
 생성과 같은 카테고리라 dot-access 관습이 그대로 적용됨.)
 
+**[2026-09-04 구현됨 — M7 단위 ③, round17 `H-313`]** 생성기(`scripts/gen-d.py`)가
+클래스별 `<Class>Modifier`(프로퍼티 setter `(self, value: Field<T>) -> <Class>Modifier` — **[2026-09-06 M11 `H-327`]** 옛 `Field<T | Tween<T>>`는 새 솔버 `State` 불변성으로 plain `State<T>`를 거부했다, 지금 `Field<T> = T | Tween<T> | State<T> | State<Tween<T>> | None | fn`, 10절 배너 — + 예약 메소드(단위 ③ 시점엔 `Apply`/`Peek`/`Overridden` — 단위 ④에서 `As`가 합류, 목록은 11절이 소스), **이벤트 필드는 제외** — 4절의 "함수 인자는
+변환 함수" 규칙과 콜백이 겹쳐서)와 타입드 생성자 `D.Modifier.<Class>()`(round17
+§0 Q3 (a) — 단위 ③ 시점엔 런타임이 base `Modifier()` 하나에 클래스별 캐스트
+별칭이었고, **[2026-09-04 단위 ④]**부터는 `Modifier.TypedFactory(name)`이
+돌려주는 클래스별 태그 생성자 + `DefineSubtype(parent, name)` 간선이다 — 11절)를
+찍는다.
+children 유니언은 클래스별 타입이 아니라 마커만 본다(`typing-limits.md` 8.8절 —
+재귀 메소드 테이블을 유니언에 넣으면 too complex). `Overridden`은 9-2대로 `any`.
+**[2026-09-04 단위 ④]** 마커가 클래스 태그(조상 체인 문자열 유니언)로 바뀌어
+children 자리의 클래스 소속 검사가 돌아왔고, 상위 클래스(`GuiObjectModifier`류
+조상 전부)도 같이 생성된다 — 아래 11절(개수는 거기가 소스).
+
 `mod:UICorner(8)`가 실제로 어떻게 UICorner 자식을 만들어 붙이는지(v1의
 `Corner` 특수 프로퍼티 선례, 핸들러 배치 소견)는
 `base/ui-shorthand-plan.md` 참고 — 이 문서는 Modifier 값 자체의
@@ -553,6 +595,14 @@ setter 클로저(4번)와 이름이 겹치면 안 됨 — `__index`가 고정 �
 만들어진 modifier 값 두 개 이상을 합쳐야 하는" 경우로만 좁혀서 문서화(용도
 구분 절 참고).
 
+**[2026-09-04 타입 정정 — 단위 ④, `typing-limits.md` 8.9절]** `Apply`의 타입은
+`<U>(self: any, factory: (any) -> U) -> U`다 — self·factory 둘 다 `any`. 자기
+타입을 참조하는 함수 필드가 children 유니언 멤버(`Tag`/`State`)의 같은 이름
+메소드와 만나면 새 솔버의 유니언 검사가 조용히 통과해 11절의 클래스 소속
+검사가 무력화되기 때문(**사용자 확정**: *"apply 의 재귀를 포기하고 다른 부분의
+편의를 택하는건 동의해"*). 주석 붙인 팩토리(`function(mod: TextButtonModifier)`)는
+그대로 타입드이고, 무주석 팩토리는 예전의 에러 대신 `any`로 통과한다.
+
 **`Apply`는 `factory(self)` 그 이상도 이하도 아님 — 특별한 계약 없음,
 문서화 필요.** `factory` 내부가 `Peek`으로 State를 기대했는데 없다고
 `error`를 던지거나, 특정 조건에서 그냥 죽어버리는 것도 `Apply` 입장에선
@@ -657,6 +707,13 @@ Modifier 값을 변수/모듈 상수로 만들어 재사용하는, 기존에도 
 점을 문서에서 분명히 할 것(라이브러리 차원의 자동 메모이제이션은 지금
 검토 대상 아님 — 실제로 필요하다고 확인되면 그때 별도로 논의).
 
+**[2026-09-04 관계 명시, round17 `H-310`]** 기본 생성자 `Modifier(a, b, …)`가
+Modifier 인자를 받으면 `Overridden`과 같은 병합을 한다(사용자: *"약간 슈거처럼
+작동"*) — 초심자에게 `Overridden`을 숨기는 방침은 그대로이되, "초기값 몇 개를
+겹쳐 시작하는" 용법은 생성자 인자로 자연스럽게 노출된다. 문서 저자는 이 둘을
+"같은 규칙의 두 입구"로 적을 것(생성자 = 시작점, `Overridden` = 이미 만들어진
+값들의 사후 결합).
+
 **문서 배치**: 초심자 문서엔 `Overridden`를 아예 안 보여주고(위 "용도를 좁게
 문서화" 절), 이 "언제 `Apply` vs `Overridden`, 성능 기준" 절 전체는 api/심화
 문서 전용 — `research/documentation-content-map.md`의 modifier-plan.md
@@ -706,7 +763,13 @@ Modifier 값을 변수/모듈 상수로 만들어 재사용하는, 기존에도 
 `Overridden(...: any): any`류로 느슨하게 열어 정적 체크를 포기 — 이건 임시
 처치로 명시하고, M7 실제 구현
 시점에 실 테스트 결과에 따라 다시 좁히는 걸 목표로 로드맵에 남김
-(`ROADMAP.md` M7).
+(`ROADMAP.md` M7). **[2026-09-04 M7 착수 회신, round17 §0 Q5 — 같은 날 단위 ④로
+번복됨: 조상 클래스 Modifier 타입이 M7 안에서 생성됐다, 11절]** 당시엔 상위 클래스
+Modifier 타입 자체의 **생성**을 M7 밖 후순위로 확정했었다 — 사용자: *"상위 클래스에
+대해서 생성하는건 있을 필요가 있긴한 부분 … 다만 지금 당장 할 필요가 있냐
+하면 그건 아닐 수 있어"*(`TextButton`/`TextLabel`이 공유하는 `Boldify`류
+프리셋의 타입 자리). 그때 이 절의 한계를 넘는 메커니즘도 같이 결정한다
+(`ROADMAP.md` M7 후순위 항목).
 
 **`:Peek<<T>>(key): T | State<T> | None | nil`** — Modifier 필드를 확정하지
 않고 그대로 읽는 접근자. 이름을 `Get`이 아니라 `Peek`로 정한 이유: 이
@@ -745,6 +808,13 @@ Source도 같이 잡아줌 — **[2026-08-07 여덟 번째 세션 정정] `isSou
 
 ### 10. `Tween<T>`와의 타입 합성 — `T' = T | Tween<T>` 치환만으로 해결 (2026-08-10 세션)
 
+**[2026-09-06 실측 정정 — M11 단위 ① `H-327`]** 아래 "자동으로 `T | Tween<T> |
+State<T | Tween<T>>`가 나옴"은 새 솔버에서 성립하지 않는다 — `State<X>`가
+불변이라 그 모양의 setter는 plain `State<T>`를 거부했다(strict 실측, M7 spec은
+캐스트로 우회해 못 봤음). 실물 `Field<T> = T | Tween<T> | State<T> | State<Tween<T>>
+| None | fn`(생성기 `gen-d.py`, `tween-plan.md` "타입 대수" 절 배너). "런타임엔
+`Tween` 인지 로직 불필요"·"raw 데이터 값이라 7번 절에 안 걸림"은 그대로 유효.
+
 `base/tween-plan.md`가 값-레벨 `Tween<T>` 래퍼로 재설계되며, 프로퍼티류
 Modifier 필드 setter가 트윈 값도 받을 수 있어야 하는지가 자연히 따라오는
 질문이었음 — **답은 "이미 있는 `T | State<T>` 필드 타입 모양에 새 케이스를
@@ -763,6 +833,113 @@ PropertyHandler가 판단).
 error" 규칙에 안 걸림(`Tween<T>`는 `process`/`retract`를 가진 dispatch
 참가자가 아니라 `None`처럼 순수 raw 데이터 값, 위 7번 절 "Slot/Tag/Attribute
 등" 목록에서 Tween을 뺀 정정 참고).
+
+### 11. 클래스 태그·`TypedFactory`/`DefineSubtype`·`As`·`Into` — 상위 클래스 Modifier와 검사형/무검사 캐스트 (2026-09-04 단위 ④, 사용자 설계)
+
+**계기**: 단위 ③이 children 자리의 클래스 소속 검사를 잃었고(`H-313` — 마커
+`{ read __quadModifier: true }`만 보므로 `Frame { textLabelMod }`가 통과), Q5
+상위 클래스 Modifier(`Boldify`를 TextLabel/TextButton이 같이 쓰기)가 후순위로
+남아 있었다. 사용자 제안 스파이크 둘의 실측(`audit/m7-unit4-as-modifier-2026-09-04.md`)
+에서 (1) 클래스 문자열 마커는 통과하지만 **`Apply`가 재귀인 한 검사가 새고**
+(8.9절 솔버 결함), (2) 공유 props의 `&` 호이스팅은 **성립하지 않는다**는 게
+드러났고, 이어진 대화에서 아래 구성이 확정됐다.
+
+**값의 태그**: 모든 Modifier 값은 `__quadModifier`에 태그를 갖는다 — base
+`Modifier()`는 `true`(무타입), 클래스 생성자가 만든 값은 **클래스명 문자열**
+(`"TextLabel"`). setter는 태그를 유지하고, `Overridden`은 무타입을 돌려준다
+(입력 태그 중 하나를 고르지 않는다). 생성/사용자 정의 `<Class>Modifier` 타입은
+같은 리터럴을 `read __quadModifier: "<Class>"`로 선언한다 — 타입이 약속하는
+태그가 곧 값의 태그(`H-300` 관례).
+
+**`Modifier.TypedFactory<<T>>(name) -> ctor` / `Modifier.DefineSubtype(parent, subtype)`
+— 공개 base API, 함수 하나에 일 하나.** 처음엔 `Define(name, parent?)` 하나가
+이름 등록·관계 등록·생성자 반환 셋을 했는데 같은 날 사용자가 갈랐다 — *"Define
+은 단순해져야해. 하나의 동작만 하도록 만들고 싶어 … 지금껏 하나가 둘 이상의
+작용을 하려 하면 분리하려 했던건 기본 원칙 같은거라서"*(`conventions.md`의 "하나의
+무언가가 두 일을" 원칙). 그래서:
+- **`TypedFactory<<T>>(name)`**: 이름을 알리고 그 태그를 심는 생성자(`Modifier(...)`와
+  같은 병합 본문, `H-310`)를 돌려준다. 관계는 모른다. `T`는 호출자가 명시하고 그
+  타입은 사용자가 전부 쓴다(*"입력 T는 유저가 전부 타입을 구현해야하고"* —
+  생성기는 D 스코프 것만 찍는다). **dedup**: 같은 이름은 항상 같은 생성자.
+- **`DefineSubtype(parent, subtype)`**: 간선 `subtype ⊂ parent` 하나만 등록한다.
+  양쪽 이름이 같이 알려지므로 등록 순서가 자유롭고, **한 subtype에 부모가 여럿**
+  들어갈 수 있다 — 인터페이스·다중 상속(*"갈래 상 다중상속을 전혀 지원하지 않는게
+  일반적이지만(로블록스 엔진 기준) … modifier 자체는 그게 지원 될 수 있다고 봄.
+  값이 있거나 없을 수 있고, 서브타입으론 멀쩡히 계속 내려가거든"*). 같은 간선
+  재등록은 no-op, 거부하는 것은 순환뿐.
+**프로바이더는 첫 사용자일 뿐 특권이 없다** — quad-roblox의 `D`는 `UseProvider`
+때 생성기가 찍은 클래스 전부(스코프 + 조상 — 개수는 생성 파일의 `<Class>Modifier`
+선언이 소스)를 이 둘로 등록하고, 컴포넌트 저자는
+`MaterialButton.Modifier = quad.Modifier.TypedFactory<<MaterialButtonModifier>>("MaterialButton")`
++ `quad.Modifier.DefineSubtype("TextButton", "MaterialButton")`로 자기 클래스를
+같은 지위로 얹는다. **사용자 논거**: *"Modifier 자체는 어느 엔진이든, 가상객체에
+대한 상태이든 포괄해 … 엔진 단에 그걸 가능하게 둔다는건 커스텀 modifier 를
+허용하지 않게 된다는 말"* — 레지스트리를 엔진 op로 두려던 첫 제안을 사용자가
+되돌렸다. **이름 공간은 하나다** — 프로바이더가 등록한 엔진 클래스명(`Model`,
+`Frame` …)과 컴포넌트의 클래스명이 같은 표를 쓰므로 같은 이름은 한 클래스다
+(리뷰 지적, 2026-09-04 — 부모 여럿을 허용하는 순간 이건 정의대로의 동작이고,
+컴포넌트 클래스명을 엔진 클래스명과 겹치지 않게 짓는 것이 저자 몫). 레지스트리는
+모듈 수준이라 quad 두 벌 공존 시 Brand/None처럼 사본마다 갈린다(기존 계약).
+
+**검사형 하강 `mod:As<Class>()`** — 런타임: 대상이 미등록이면 error, 현재 태그가
+`true`(무타입)이거나 대상 자신이거나 대상의 **조상**(모든 부모 경로의 합집합 —
+인터페이스 쪽 경로도 인정)이면 태그를 바꾼 클론을 돌려주고, 아니면 error(형제·
+상향 모두). 타입: 클래스별 타입이 **자기 하위
+클래스와 자기 자신(항등)**만 `As<Desc>: (self) -> <Desc>Modifier` 메소드로
+가진다 — 자동완성이 곧 "내려갈 수 있는 목록"이고, 잎 클래스엔 하강 메소드가
+없다. **사용자 판정**: *"AsXXX 형식은 … 자동완성도 돕고, 바꿀 수 있는게 뭐가
+있는지 바로 보여서 좋은 생각이야"*. 문자열 인자형 `As("TextLabel")`(`K & keyof`
+/`index<>`)과 오버로드 교집합은 실물 규모에서 too complex(8.9절)라 못 간다.
+
+**무검사 `mod:As<<T>>()` / `mod:As(name)`** — *"상위 요소가 하위 요소를 알아야
+해 … D 에 없는걸 만들어야 해서 확장해야하는 경우 걸림이 될 수 있어. 따라서 :As
+무검사 방식도 같이 있어야한다"*(사용자). 인자 없으면 self 그대로(타입만 바꾸는
+캐스트 — 태그는 못 정하니 안 건드린다), 이름을 주면 **존재 검사만** 하고(오타
+방지) 조상 검사 없이 재태그한다. 상향(TextLabel → GuiObject)도 이 길 — 검사형
+상향 메소드는 상하위 상호 참조 순환으로 분석 시간이 3배가 돼 두지 않는다.
+
+**`Into<Class> = { As<Class>: (self: any) -> <Class>Modifier }`** — Rust `Into`처럼
+"그 클래스로 갈 수 있는 모든 것"의 인터페이스(사용자 제안). 상위 클래스
+Modifier(하강 메소드 보유)·자기 자신(항등 `As<Self>`)·D 밖의 커스텀 구현체(그
+메소드 하나만 구현)가 전부 만족한다(**[2026-09-06 round21 `H-340`]** 단, 커스텀 **서브타입 Modifier 값** 자신은 `^As%u`가 예약 접두라 자기 `As<Parent>` 메소드를 못 얹고 검사형 캐스트는 하강 전용이라 **런타임에선** 이 경로를 못 쓴다 — 무검사 `As(name)`뿐이고 커스텀 필드 제거는 백로그 `research/component-flatten-sugar-plan.md` — 2026-09-06 사용자 결정) — 텍스트 처리자류 헬퍼는 `function
+Bold(m: IntoTextLabel) return m:AsTextLabel():FontFace(…) end` 하나로 셋을 다
+받고, 결과에서 다시 `As<목적지>`로 이어 갈 수 있다. `self`는 `any`여야 한다
+(인터페이스 타입을 self로 두면 반공변 때문에 실제 Modifier가 안 들어온다 —
+실측). 생성기가 클래스마다 찍고, 커스텀 클래스는 사용자가 같은 형태로 쓴다.
+
+**예약 캐스트 접두**: 런타임 `__index`는 예약 메소드(`Apply`/`Peek`/
+`Overridden`/`As`) → **`^As%u`(As 뒤 대문자)면 캐스트 경로** → 나머지만 setter.
+그래서 `mod:AsTextLabl()` 같은 오타는 필드 `AsTextLabl`을 조용히 만들지 않고
+error다 — **사용자 요구**: *"As로 시작하는건 전부 Cast 프리디파인드로 두고
+시작해야할것 같아"*(안 그러면 As가 프로퍼티처럼 동작해 타입도 런타임도 못 잡는
+구간이 생긴다). `AspectRatio`처럼 As 뒤가 소문자인 프로퍼티는 setter로 남고,
+생성기는 접두와 겹치는 프로퍼티를 만나면 생성을 실패시킨다. 정말 그런 이름이
+필요하면 `Modifier({ AssemblyMass = 1 })` 플레인 테이블 경로가 `__index`를
+우회한다.
+
+**children 자리**: `<Class>Elem`이 `{ read __quadModifier: "Frame" | "GuiObject"
+| "GuiBase2d" | "GuiBase" | "Instance" }` 한 멤버(자기 + 조상 체인)를 담는다 —
+자기 클래스와 상위 클래스의 Modifier만 들어오고 형제 클래스는 태그 불일치로
+거부(**`H-313` 닫힘**). 무타입 base 값은 `NewChild`의 `{ read __quadModifier:
+true }`로 명시 허용. 컴포넌트가 무엇을 받을지는 컴포넌트 param 타입이 정한다
+(`IntoMaterialButton`이든 마커든) — `<Class>Elem`은 `D.<Class>` 자리에만 걸린다.
+flatten과 나중의 "PreRef/Ref/PostRef 추출 + flatten" 슈가는 태그를 보지 않는다.
+
+**타입 쪽은 단일 상속 트리만 생성한다 — 다중 부모의 타입은 사용자 몫.** 런타임
+레지스트리는 DAG(부모 여럿)이지만 생성기의 `As<Desc>`·`Into<Class>`·`<Class>Elem`
+마커는 엔진의 단일 상속 체인만 걷는다. 인터페이스 방향(`Elevated → MaterialButton`)의
+`As`/`Into`와 커스텀 클래스의 Modifier 타입은 저자가 직접 쓴다 — **사용자 확정**
+(*"입력 T는 유저가 전부 타입을 구현해야하고"*). 따라오는 경계 하나: 커스텀
+태그(`"MaterialButton"`)는 생성 `<Class>Elem` 마커 유니언에 없으므로 `D.TextButton {
+materialMod }`는 **런타임은 통과하고 타입만 거부**한다 — 그 자리엔 무검사
+`materialMod:As<<TextButtonModifier>>()`(타입만) 또는 `As("TextButton")`(재태그)을
+쓰고, 컴포넌트 자신의 자식 자리는 자기 param 타입(`IntoMaterialButton` 등)이
+정하므로 이 경계가 없다(감사 지적 2026-09-04 — 생성기가 커스텀 인터페이스
+타입까지 찍는 확장은 실수요가 관측되면 그때).
+
+**안 하는 것**: drive 시점에 태그와 실제 인스턴스 클래스를 `IsA`로 대조하는
+안전망 — 잘못된 필드는 Property 핸들러의 리플렉션 검사가 이미 error를 내고,
+`nativeIsA` op가 새로 필요해 관측된 문제가 아니다.
 
 ## 열린 질문 (`.claude/question.md`에도 취합)
 
