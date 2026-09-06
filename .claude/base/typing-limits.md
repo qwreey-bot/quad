@@ -704,17 +704,14 @@ A/B 실측). 실사용은 `quad-types`의 `TagConstructor`/`AttributeConstructor
 아니다(SyntaxError — 프린터 전용). 결정 경위·사용자 인용은
 `session/2026-09-02-03-h10-3-setmetatable-decision.md`.
 
-**⭐ [2026-09-06 조건부 예외 — M11 단위 ① `H-324`, `luau-test/done/33`, 사용자
-확인 대상] `__call`이 제네릭이면 `setmetatable<A, B>` 형은 쓸모가 없다** —
-`Tween{ Value = 1 }`의 `T`가 `*error-type* | number`로 추론돼 다른 `T`의 슬롯
-대입·옵션 필드·`Mapped` 결과 오타입을 전부 놓친다(위 "잔여 구멍"이 인자만이
-아니라 제네릭 결과까지 번진다). 함수∩테이블 교집합
-`(<T>(opts) -> Tween<T>) & { Cancel, Finish }`는 셋 다 잡고 UseProvider 교집합
-통과·필드 접근도 클린이었다. 대신 위 1번(값 캐스트 붕괴)은 그대로라 `init.luau`의
-`:: Quad` 리터럴이 raw 콜러블을 거부한다 — **모듈이 `(raw :: any) :: TweenConstructor`로
-타입을 실어 내보낸다**(생성 D의 `TypedFactory` 이중 캐스트 선례). 규칙: **비제네릭
-`__call`(Tag/Attribute)은 `setmetatable` 형, 제네릭 `__call`(Tween)은 교집합 + 모듈
-쪽 이중 캐스트.**
+**[2026-09-06 실측 — M11 단위 ① `H-324`, `luau-test/done/33`; 같은 날 `H-343`으로 quad에선
+소멸]** `__call`이 **제네릭**이면 `setmetatable<A, B>` 형은 쓸모가 없다 — `Tween{ Value = 1 }`의
+`T`가 `*error-type* | number`로 추론돼 다른 `T`의 슬롯 대입·옵션 필드·`Mapped` 결과 오타입을
+전부 놓친다(위 "잔여 구멍"이 인자만이 아니라 제네릭 결과까지 번진다). 함수∩테이블 교집합 +
+모듈 쪽 이중 캐스트로 한때 우회했으나, **`Override`를 문자열 싱글톤으로 바꾸자 `Tween`에
+필드가 없어져 순수 제네릭 함수가 됐다**(`H-343`) — 규칙: **콜러블 테이블의 `__call`은
+비제네릭으로만 두고(Tag/Attribute/Modifier), 제네릭 생성자엔 필드를 얹지 말 것**(옵션
+enum은 문자열 싱글톤 `"a" | "b"`로 — Fusion 관례와 같다).
 
 ---
 

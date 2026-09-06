@@ -36,7 +36,7 @@
 	Order invariant: an active tween is cancelled BEFORE the new value is
 	written (the engine keeps writing the property asynchronously). The
 	override policy consulted is the INCOMING Tween's `Override` (`H-328`):
-	`Tween.Finish` snaps the previous target first; `Tween.Cancel` (default)
+	`"Finish"` snaps the previous target first; `"Cancel"` (default, `H-343`)
 	and a plain incoming value continue from the interpolated value as-is.
 	`TweenInfo`: `Info` wins; otherwise the convenience fields go to
 	`TweenInfo.new` positionally with the engine's own defaults filled in for
@@ -56,7 +56,6 @@ local function install(quad: any)
 	local dispatch = quad.Dispatch
 	local Void = quad.Void
 	local isTween = quad.isTween
-	local TweenNS = quad.Tween
 
 	-- 3-state slot (header) — weak-keyed by inst through Relate, so a dying
 	-- instance drops its slots (and the engine tween handle) with it
@@ -139,7 +138,7 @@ local function install(quad: any)
 			if type(prev) == "table" then
 				-- branch 3: an engine tween is active — clean it up FIRST
 				prev.Tween:Cancel()
-				if tweenIn and v.Override == TweenNS.Finish then
+				if tweenIn and v.Override == "Finish" then
 					inst[k] = prev.Value -- Finish: snap to the previous target before continuing
 				end
 			end

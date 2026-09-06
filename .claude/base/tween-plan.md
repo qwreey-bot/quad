@@ -444,6 +444,15 @@ DelayTime: number?        -- default 0
 
 ### override 정책 — `Tween.Cancel` / `Tween.Finish` 두 값으로 압축 (확정)
 
+**[2026-09-06 `H-343` — 사용자 결정, 표기 정정]** 두 값은 **문자열 싱글톤** `"Cancel"` /
+`"Finish"`다(`Override = "Finish"`) — 아래 `Tween.Cancel`/`Tween.Finish`는 옛 표기로 읽을 것.
+사용자 원문: *"Numeric enum 아니고서야 보통 루아우는 singleton string인지라, 타입에서도
+쉽게 처리되고 마커 필드도 필요 없이 `"..." | "..."` 하면 끝남. 어쩌면 언어 기능이 권유하는
+바를 우리가 너무 무시하고 있었을지도. 이건 Priority나 ErrorLevel 같은거랑은 완전히 다른
+거라서."* Fusion도 같은 관례(`timeliness: "lazy" | "eager"`). 부수 효과: `Tween`에 필드가
+없어져 **순수 제네릭 함수**가 되고 8.6절 예외(`H-324`)가 소멸. frozen 마커 센티널은 슬롯에서
+값을 사용자 데이터와 구분해야 하는 자리(`None`/`Detach`/`KeyGone`/`Processed*`)에만 남는다.
+
 **[2026-09-06 `H-328`]** 정책의 **주체는 활성 트윈 위에 새로 들어오는 값의
 `Override`**다 — 슬롯(`{ Tween, Value }`)엔 정책이 없다. plain 값이 들어오면
 정책이 없어 `Cancel`과 같다(아래 "Tween→plain 전환" 수렴). 구현 배너는 "3-상태
@@ -476,9 +485,9 @@ sentinel 상수(구현 세부는 M11 착수 시, 문자열이든 전용 테이�
 **[2026-09-06 구현됨 — M11 단위 ①, round19]** 아래 스케치의 실물: 값 타입의
 정본은 **quad-types**(`Tween<T>` = `TweenData<T>` & `{ Mapped }`, `TweenOptions<T>`
 — 엔진 무관이라 `Info`/`Style`/`Direction` 자리는 `any`, 옵션 필드는 전부 `read`
-`H-325`), `Override`는 frozen 마커 센티널 둘(`TweenCancel`/`TweenFinish`, `None`과
-같은 `sentinel(name)` — `H-323`), 생성자 타입은 함수∩테이블 교집합
-`TweenConstructor`(8.6절의 조건부 예외 — 제네릭 `__call`, `H-324`), `Mapped`는
+`H-325`), `Override`는 문자열 싱글톤 `"Cancel" | "Finish"`(`H-343` — 처음의 frozen 마커
+센티널 `H-323`은 폐기), 생성자는 **순수 제네릭 함수** `<T>(opts) -> Tween<T>`(8.6절 예외
+`H-324`는 소멸), `Mapped`는
 `typeof(named function)`(§1③). quad-roblox `Types.Tween<T>`는 quad-types 별칭
 그대로 — `read Info: TweenInfo?` 정밀화는 `State<X>` 불변성 때문에 포기(`H-326`).
 
@@ -492,7 +501,7 @@ Tween(opts: {
   RepeatCount: number?,
   Reverses: boolean?,
   DelayTime: number?,
-  Override: (typeof(Tween.Cancel) | typeof(Tween.Finish))?,  -- default Tween.Cancel
+  Override: ("Cancel" | "Finish")?,  -- default "Cancel" ([2026-09-06 H-343] 옛 표기 typeof(Tween.Cancel) | typeof(Tween.Finish))
 }) -> Tween<T>
 ```
 

@@ -2362,4 +2362,5 @@ Q4(`EffectHandle` 네 진입점 의사코드 — Observer 것 재사용, `Unsubs
   `(self: any) -> State<Tween<any>>`(`H-334`, 확인 항목), 단위 ② 감사 반영. **M11 세 단위 완료.** **[10절]** M10 잔여
   InstanceShorthand(round20 `H-335`~`H-337`) — 룩업 표 핸들러·생성기 키 넷·`LuauSolverConstraintLimit`,
   CLI 47/47·Studio 6/6. **M10 잔여 없음.** **[11절]** M9 관례 검증(round21) — `spec.component`/`spec.componenttypes`, 새 배선 없음;
-  §4 문항 둘(경계 필드 이름 Q2, `H-340` 커스텀 필드 제거 연산 `Without` 권고). **열린 마일스톤 없음.**
+  §4 문항 둘(경계 필드 이름 Q2, `H-340` 커스텀 필드 제거 연산 `Without` 권고). **열린 마일스톤 없음.** **[12절]** 아침 회신 — `H-329` (a) 구현, Q2·`H-340` 보류(flatten 슈거), `H-343` `Override`
+  문자열 싱글톤(사용자 결정 — `Tween` 순수 함수, `H-323`/`H-324` 소멸), 스파이크 `11` 폐기, Studio 재연결.

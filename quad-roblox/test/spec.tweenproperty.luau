@@ -96,7 +96,7 @@ do
 	src:Set(Tween({ Value = 10 }))
 	local first = lastTween()
 	f.Size = 4
-	src:Set(Tween({ Value = 20, Override = Tween.Finish }))
+	src:Set(Tween({ Value = 20, Override = "Finish" }))
 	assert(first.cancels == 1, "previous cancelled")
 	assert(f.Size == 10, "snapped to the previous target before the new tween")
 	assert(#log == 2 and log[2].props.Size == 20, "new tween started after the snap")

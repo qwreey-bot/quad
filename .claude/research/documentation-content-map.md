@@ -322,7 +322,7 @@ additional-primitives-plan.md`의 "문서화 백로그" 절이 원자료)**:
   `dispatch-core-plan.md` "Length/Offset" 절 참고.
 - **[해소됨, 2026-08-13 정정]** Tween 오버라이드/옵션 값 모양 —
   2026-08-12 첫 번째 세션에 `Info: TweenInfo?`+편의 필드 폴백,
-  override 정책은 `Tween.Cancel`(기본)/`Tween.Finish` 2값으로 확정,
+  override 정책은 `"Cancel"`(기본)/`"Finish"` 문자열 싱글톤 2값으로 확정(`H-343` — 옛 `Tween.Cancel` 표기),
   `tween-plan.md` 자체가 `research/`에서 `base/`로 승격됨(이 줄이 그
   갱신을 놓치고 있었음). **다만 아래 §1/§2의 Tween 예시(`[Tween(key,
   ...)] = storeValue` 특수 바인드 키, "Tween 핸들러가 Instance

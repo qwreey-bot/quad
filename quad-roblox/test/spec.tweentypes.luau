@@ -24,7 +24,7 @@ local function _types()
 	-- D 슬롯: Tween 직접 / Info 우선 + Override 센티널 / State<Tween<T>> / Mapped 결과
 	local f1 = q.D.Frame({
 		Position = t,
-		Size = q.Tween({ Value = UDim2.new(), Info = TweenInfo.new(0.2), Override = q.Tween.Finish }),
+		Size = q.Tween({ Value = UDim2.new(), Info = TweenInfo.new(0.2), Override = "Finish" }),
 		BackgroundTransparency = q.Tween({ Value = 0 }):Mapped(function(v: number): number
 			return v * 0.5
 		end),
@@ -39,7 +39,7 @@ local function _types()
 	local f3 = q.D.Frame({ Position = animated })
 	local m3 = q.D.Modifier.Frame():Position(animated)
 	-- 센티널·옵션 타입
-	local o: QuadTypes.TweenOverride = q.Tween.Cancel
+	local o: QuadTypes.TweenOverride = "Cancel"
 	local opts: QuadTypes.TweenOptions<number> = { Value = 1, Reverses = true }
 	local t2: QuadTypes.Tween<number> = q.Tween(opts)
 	return refined, f1, f2, f3, m3, o, t2
@@ -47,9 +47,9 @@ end
 
 print("=== 1. 런타임 대응 — 타입이 약속한 값이 실제로 있다(H-300) ===")
 do
-	local t = q.Tween({ Value = 1, Override = q.Tween.Finish })
-	assert(q.isTween(t) and t.Override == q.Tween.Finish and (t :: any).__quadTween == true, "value matches the type")
-	assert(q.Tween.Cancel ~= q.Tween.Finish, "sentinels distinct")
+	local t = q.Tween({ Value = 1, Override = "Finish" })
+	assert(q.isTween(t) and t.Override == "Finish" and (t :: any).__quadTween == true, "value matches the type")
+	assert("Cancel" ~= "Finish", "sentinels distinct")
 	print("PASS")
 end
 

@@ -155,12 +155,11 @@ export type TagConstructor = setmetatable<{ Merged: (...Tag) -> Tag }, { __call:
 -- `Tween<T>` — 값-레벨 트윈 래퍼(M11 단위 ①, `base/tween-plan.md` "확정: `Tween{...}`
 -- 최종 모양" 절). quad-types는 엔진 무관이라 Roblox 타입 자리(`Info`/`Style`/
 -- `Direction`)는 `any` — quad-roblox `types.luau`는 이 타입을 **그대로 별칭**한다
--- (round19 Q3 (a)의 정밀판은 `State<X>` 불변성 때문에 포기, `H-326`). 센티널 둘은 `None`과 같은 frozen 마커(`sentinel(name)`, `H-300`).
+-- (round19 Q3 (a)의 정밀판은 `State<X>` 불변성 때문에 포기, `H-326`). `Override`는 문자열
+-- 싱글톤 유니언(`H-343`, 사용자 결정 — 옵션 enum은 마커 값이 아니라 리터럴 타입으로).
 -- `Mapped`는 재귀 제네릭(`Tween<U>` 반환)이라 데이터부/메소드부 쪼개기(typing-limits
 -- §1②) — 파생 자리는 결과 타입을 명시 바인딩할 것(§1①).
-export type TweenCancel = { read __quadTweenCancel: true }
-export type TweenFinish = { read __quadTweenFinish: true }
-export type TweenOverride = TweenCancel | TweenFinish
+export type TweenOverride = "Cancel" | "Finish"
 -- 옵션 필드는 전부 `read` — 생성자는 읽기만 하고, 미리 만든 테이블 변수를 넘길 때
 -- 가변 필드면 새 솔버가 `Time: number`를 `number?`에 불변으로 대조해 거부한다(실측).
 export type TweenOptions<T> = {
@@ -172,7 +171,7 @@ export type TweenOptions<T> = {
 	read RepeatCount: number?,
 	read Reverses: boolean?,
 	read DelayTime: number?,
-	read Override: TweenOverride?, -- 기본 Tween.Cancel
+	read Override: TweenOverride?, -- 기본 "Cancel"
 }
 export type TweenData<T> = {
 	read __quadTween: true,
@@ -194,11 +193,9 @@ end
 export type Tween<T> = TweenData<T> & {
 	Mapped: typeof(tweenMapped),
 }
--- ⚠️ 8.6절의 예외(2026-09-06 실측, round19 `H-324` — 사용자 확인 대상): 제네릭
--- `__call`을 `setmetatable<A, B>`로 두면 `T`가 `*error-type* | number`로 오염돼
--- 다른 `T`의 슬롯 대입을 못 잡고 옵션도 무검사인데, 함수∩테이블 교집합은 추론·
--- 음성 전부 정확하고 `:: Quad` 캐스트·UseProvider 통과도 클린(test.sh 전 스위트).
-export type TweenConstructor = (<T>(opts: TweenOptions<T>) -> Tween<T>) & { Cancel: TweenCancel, Finish: TweenFinish }
+-- 순수 제네릭 함수(`H-343`): 문자열 `Override` 덕에 `Tween`엔 필드가 없어 콜러블 테이블이
+-- 필요 없다 — 제네릭 `__call`의 `T` 오염(`H-324`, `luau-test/33` A 블록)이 함께 소멸.
+export type TweenConstructor = <T>(opts: TweenOptions<T>) -> Tween<T>
 
 export type Attribute = { NameMap: (self: Attribute) -> { [string]: any } }
 export type AttributeConstructor = setmetatable<{

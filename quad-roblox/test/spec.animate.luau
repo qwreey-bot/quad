@@ -13,16 +13,16 @@ local QuadRoblox = require("../src").QuadRoblox
 local mock = require("../../quad-base/test/mock")
 
 local q: any = Quad.New():UseProvider(QuadRoblox)
-local Animate, Tween = q.Animate, q.Tween
+local Animate = q.Animate
 
 print("=== 1. 기본 — :Apply(Animate{…}) → State<Tween<T>>, 옵션은 plain으로 실림, Value는 소스 값 ===")
 do
 	local src = q.Source(1)
 	local styleS = q.Source("Bounce")
-	local anim = src:Apply(Animate({ Time = 0.3, Style = styleS, Override = Tween.Finish }))
+	local anim = src:Apply(Animate({ Time = 0.3, Style = styleS, Override = "Finish" }))
 	assert(q.isState(anim), "factory returns a State")
 	local t = anim:Get()
-	assert(q.isTween(t) and t.Value == 1 and t.Time == 0.3 and t.Style == "Bounce" and t.Override == Tween.Finish, "Tween built from resolved options")
+	assert(q.isTween(t) and t.Value == 1 and t.Time == 0.3 and t.Style == "Bounce" and t.Override == "Finish", "Tween built from resolved options")
 	src:Set(2)
 	local t2 = anim:Get()
 	assert(t2 ~= t and t2.Value == 2 and t2.Time == 0.3, "Value change → new Tween with the same options")

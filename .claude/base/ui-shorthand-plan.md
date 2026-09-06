@@ -227,7 +227,7 @@ end
 - **Tween 해석 코드를 여기 복제하지 않는 게 핵심 이득** — `Tween<T>`를
   실제로 읽는 코드는 여전히 `PropertyHandler` 하나뿐이라는
   `base/tween-plan.md`의 불변식이 유지됨. 3-상태 릴레이션 슬롯
-  (`{Tween, Value} | true | nil`), `Tween.Cancel`/`Tween.Finish` override
+  (`{Tween, Value} | true | nil`), `"Cancel"`/`"Finish"`(옛 표기 `Tween.Cancel`/`Tween.Finish` — `H-343`) override
   정책, "첫 세팅은 애니메이션 없이 즉시" 규칙까지 전부 `(child, prop)`
   자리에서 그대로 재사용됨 — 이 문서가 따로 정할 게 없음.
 - **타입 대수도 그대로** — 숏핸드 키의 값 타입이 `number`였다면 이제

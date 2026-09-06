@@ -16,12 +16,12 @@ local Tween = Quad.Tween
 -- 타입 양성(strict — 본문 실행 없음): 생성자 제네릭 추론, `Mapped`의 U 전환,
 -- 센티널 타입, `TweenData<T>` 자리(D 유니언 멤버)에 Tween 값이 들어간다
 local function _types()
-	local a: QuadTypes.Tween<number> = Tween({ Value = 1, Time = 0.3, Override = Tween.Finish })
+	local a: QuadTypes.Tween<number> = Tween({ Value = 1, Time = 0.3, Override = "Finish" })
 	local b: QuadTypes.Tween<string> = a:Mapped(function(v: number): string
 		return tostring(v)
 	end)
 	local c: QuadTypes.TweenData<string> = b
-	local d: QuadTypes.TweenOverride = Tween.Cancel
+	local d: QuadTypes.TweenOverride = "Cancel"
 	local e: number = a.Value
 	return c, d, e
 end
@@ -45,13 +45,12 @@ do
 end
 
 print()
-print("=== 2. 센티널 — Cancel/Finish 항등·서로 다름·frozen·tostring ===")
+print("=== 2. Override — 문자열 싱글톤 \"Cancel\"/\"Finish\"(H-343), Tween은 순수 함수 ===")
 do
-	assert(Tween.Cancel ~= Tween.Finish, "two distinct sentinels")
-	assert(tostring(Tween.Cancel) == "TweenCancel" and tostring(Tween.Finish) == "TweenFinish", "named for diagnostics")
-	assert(table.isfrozen(Tween.Cancel :: any) and table.isfrozen(Tween :: any), "sentinels and namespace frozen")
-	local t = Tween({ Value = 1, Override = Tween.Finish })
-	assert(t.Override == Tween.Finish, "Override stored by identity")
+	assert(type(Tween) == "function", "Tween is a plain function — no namespace fields")
+	local t = Tween({ Value = 1, Override = "Finish" })
+	assert(t.Override == "Finish", "Override stored as the string")
+	assert(Tween({ Value = 1 }).Override == nil, "absent = default (Cancel applied by the consumer)")
 	print("PASS")
 end
 
@@ -65,7 +64,7 @@ do
 		{ { Value = 1, RepeatCount = true }, "RepeatCount must be a number" },
 		{ { Value = 1, DelayTime = {} }, "DelayTime must be a number" },
 		{ { Value = 1, Reverses = 1 }, "Reverses must be a boolean" },
-		{ { Value = 1, Override = "Cancel" }, "Override must be Tween.Cancel or Tween.Finish" },
+		{ { Value = 1, Override = "cancel" }, 'Override must be "Cancel" or "Finish"' },
 	}
 	for _, case in cases do
 		local ok, err = pcall(function()
@@ -84,12 +83,12 @@ end
 print()
 print("=== 4. Mapped — 원본 불변·옵션 보존·Value만 교체·재검증·재브랜드 ===")
 do
-	local base = Tween({ Value = 4, Time = 0.15, Override = Tween.Finish })
+	local base = Tween({ Value = 4, Time = 0.15, Override = "Finish" })
 	local mapped = base:Mapped(function(v: number): string
 		return "v" .. v
 	end)
 	assert(mapped ~= base and base.Value == 4, "original untouched")
-	assert(mapped.Value == "v4" and mapped.Time == 0.15 and mapped.Override == Tween.Finish, "only Value replaced")
+	assert(mapped.Value == "v4" and mapped.Time == 0.15 and mapped.Override == "Finish", "only Value replaced")
 	assert(Quad.isTween(mapped) and table.isfrozen(mapped :: any), "result is a branded frozen Tween")
 	local ok, err = pcall(function()
 		return base:Mapped(function(_v: number): nil

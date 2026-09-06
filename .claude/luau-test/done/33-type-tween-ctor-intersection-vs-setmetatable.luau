@@ -9,6 +9,9 @@
 
 	배경: `base/typing-limits.md` 8.6절(`H10-3`/`H10-4` — Tag/Attribute는
 	비제네릭 __call이라 setmetatable 형이 맞았다), `base/tween-plan.md`.
+	[2026-09-06 후속 `H-343`] quad는 `Override`를 문자열 싱글톤으로 바꾸며 `Tween`을 순수
+	함수로 되돌려 이 문제 자체를 피했다 — 이 파일은 "제네릭 __call 콜러블 테이블을 만들지
+	말 것" 규칙(typing-limits 8.6)의 근거로 남는다.
 	실행: `luau-analyze 33-*.luau` — 기대: A(setmetatable) 블록은 L-A2·L-A3이
 	**진단 없이 통과**(결함 재현), B(교집합) 블록은 L-B2·L-B3·L-B4가 정확히 에러.
 	(quad-types 없이 자립 — 최소 재현.)
