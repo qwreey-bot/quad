@@ -139,7 +139,7 @@ v1의 `ProcessQuadProperty`(`.claude/initreq/quad/src/class.lua:134-214`)는
   유리" 항목). **스캔·매치·체인 부기엔 아무 영향 없고, 없으면 priority만
   보인다.** 배경: `listHandlers`와 체인 덤프 서술이 "이름"을 전제하는데 계약
   3종엔 이름이 없다는 게 M3 단위 1 구현에서 드러났고
-  (`qa-request/m3-implementation-round12.md` `H-214`), 사용자가 선택 필드
+  (`archive/v2-initial-implementation/m3-implementation-round12.md` `H-214`), 사용자가 선택 필드
   안을 채택했다(2026-08-31, *"전부 권고안에 동의해"*). 별도 등록 인자
   (`addHandler(h, name)`) 안은 이름이 레지스트리에 살게 돼 체인 슬롯
   덤프(슬롯엔 handler 객체만 저장)가 역조회를 요구해서 기각.
@@ -720,6 +720,14 @@ function NilHandler.process(inst, k, v, index)
 end
 ```
 
+**[2026-09-07 post-implementation round1 Q3 ③, 사용자 확정 *"setEmpty 같은걸 넣어도 큰 문제는
+없어보이겠다"*] 이 쌍은 `Dispatch.setEmpty(ownerKey, i, anchor?)` 한 본문으로 제공된다** —
+`setOffsetSource(…, None)` → `setLength(…, 0, anchor)` 순서를 Bookkeeping이 쥐고, 말단
+nop/leaf 핸들러(NilHandler·`Processed*`·Tag/Attribute/Effect/Observer/Ref/Slot leaf, quad-roblox
+`OnChange`·`InstanceChild` 해제 팔)는 전부 그걸 부른다. 위 의사코드의 두 줄은 그 본문이고
+계약(순서·`anchor` 인자)은 그대로 — 손 복제가 패키지 경계 너머에도 남아 있던 것을 접은
+것뿐이다(원장 `qa-request/post-implementation-review-round1.md` §15).
+
 - **매치 범위는 `k`가 숫자인 자리로 한정** — 해시 자리의 `nil`은 그 키를
   원래 담당하던 핸들러(프로퍼티/이벤트)의 몫이다(`None` 재귀가 도착하는
   기존 경로 그대로, 위 절). 이벤트 키에서 `nil`이 disconnect를 뜻한다는
@@ -777,7 +785,7 @@ end
   `.claude/question.md`가 2026-08-08 세션에 "quad-base/quad-roblox 중
   어디 사는지 미확인"으로 남겨뒀던 항목, 이 결론으로 해소: quad-base,
   **[2026-09-01 `H-278`]** 등록 주체는 각 값의 선언 모듈(`Observer.luau`/`Effect.luau`,
-  M8은 `Ref.luau`), 전부 `Dispatch.addHandler`로 등록). quad-roblox의
+  M8은 `Ref/init.luau`), 전부 `Dispatch.addHandler`로 등록). quad-roblox의
   Property/Event 핸들러도 **같은** `Dispatch.addHandler` 레지스트리에
   등록됨 — base 기본 핸들러와 backend 핸들러가 별도 경로로 안 갈리고
   전부 하나의 우선순위 스캔을 공유. **[정정, 2026-08-10 세션]** Tween은
@@ -839,14 +847,14 @@ end
   index)`/`unmountInst(element)`로 적히고 "이름은 아직 가칭이라 정식 등재는
   확정 시점에 한다"고 미뤄져 있었으나, 이름은 같은 날 `native*`로
   확정됐다** — `nativeInsert`/`nativeExtract`/`nativeRemove`/`nativeMove`/
-  `nativeSwap`/`nativeDispose`. 시그니처와 조합 폴백 규칙의 소스는
+  `nativeSwap`/`nativeDispose`. 시그니처(와 옛 조합 폴백 규칙 — **[2026-09-07 Q6]** 철회, 백로그)의 소스는
   `base/slot-plan.md`의 "물리 조작은 주입 op다" 절이고, 주입 op 전체
   목록의 소스는 `base/architecture.md`의 소스 트리 안 `EngineOps.luau`
   줄이다 — 여기서 다시 나열하지 않는다.
   같은 "base 소유 + op 주입" 원칙은 2026-08-14 열 번째 세션에 확정.
 - **backend 소유**: `Property`/`Event`/`OnChange`(Reflection·시그널 같은
   엔진 개념 자체가 로직), `InstanceChild`, `Slot`의 실제 부모 조작
-  (재조정 알고리즘은 base `Dispatch/Slot.luau`, 물리 마운트만 backend) —
+  (재조정 알고리즘은 base `Slot/Handler.luau`, 물리 마운트만 backend) —
   이들은 "한 줄 op"으로 줄어들지 않으므로 그대로 backend.
 
 **Tag/Attribute가 쓰는 주입 op**(**⚠️ [2026-08-22] 이건 주입 op *전체
@@ -1000,7 +1008,7 @@ Fallback Handler들도 존재하지 않아**, 위 "매치 실패는 즉시 `erro
 `inst`를 캡처하는 순간 버킷 값이 자기 weak 키를 되참조해 `H-71`의 "100%
 새는" 패턴이 되고, Destroy는 계약상 retract를 안 부르므로 **반응형 바인딩이
 있던 모든 파괴 인스턴스가 영구 잔존**했다(경위와 실측 논증은
-`qa-request/m3-implementation-round12.md`의 `H-229` 절 — 사용자가 Destroy
+`archive/v2-initial-implementation/m3-implementation-round12.md`의 `H-229` 절 — 사용자가 Destroy
 경로를 되물어 드러났다). 해법은 사용자 제안 그대로 — *"bindLifetime이 할 일
 같은데, 아무 타입과도 일치하지 않으면 단순히 GC 릴레이션만 해주는 건
 어때?"*: `Dispatch.process`가 (inst,k) 리스트를 처음 만들 때
@@ -1203,6 +1211,8 @@ retractor 생략의 `2`는 **[2026-08-31 `H-222` (a) 사용자 확정]** —
   | `AttributeGroupHandler` | 자기 체인에선 말단 | 다른 키로 위임 (+ 부기 — `H-39`) |
   | `SlotHandler` | 말단 | 마운트/언마운트 |
   | `RefLeafHandler` | 말단 | `Ref:Set` (+ 부기 — `H-39`) |
+  | `EventHandler` **[2026-09-07 5순회 추가 — 2026-09-03 M10 둘째 단위부터 있던 행]** | 말단 | `Connect`/`Disconnect` |
+  | `OnChangeHandler` **[같은 날 추가]** | 말단 | `GetPropertyChangedSignal` 연결/해제 (+ 배열 위치 부기 — `setOffsetSource(None)`/`setLength(0)`) |
   | `ObserverLeafHandler` / `EffectLeafHandler`(**[2026-09-01 `H-278`]** 옛 결합 `ObserverEffectLeafHandler`가 소유 모듈별 둘로) | 말단 | `bindLifetime` (+ 부기 — `H-39`) |
   | `ProcessedPreRefHandler` / `ProcessedPostRefHandler` | 말단 | 없음(부기만) |
   | `ProcessedModifierHandler` | 말단 | 없음(부기만 — `H-35`) |
@@ -1326,6 +1336,16 @@ retractor 생략의 `2`는 **[2026-08-31 `H-222` (a) 사용자 확정]** —
   같은 결로 UB 취급. 핸들러가 **같은 인덱스로** 자기 자신을 재진입시키는
   버그도 같은 경로로 수렴함(자기 자신과 핸들러가 같으니 (A) 분기를 무한히
   반복 → 스택오버플로).
+- **[2026-09-07 회신 3차, Q5 (a) 사용자 확정] 같은 `(inst, k)`의 간접 재진입도 UB** — 어떤 핸들러의
+  `process`가 돌던 중 그 자리에 묶인 State를 `:Set`하게 만들어(직접이든 Compute/Observer 콜백을 거쳐서든)
+  디스패치가 같은 키를 처리 중인 채로 다시 들어오는 것. 재진입 게이트는 두지 않는다(사용자: *"재진입
+  게이트는 허용 안한다가 내 생각"*). 더 큰 원칙은 `source-state-plan.md` "Compute 순수성" 절 — Compute
+  함수는 그래프를 읽기만 하고 하류로만 내린다.
+- **[2026-09-07 회신 3차, Q18 (c) 사용자 확정] `setLength`의 State 팔 설치 발화 중 throw는 UB** —
+  부기(`lengthList`/`N`/커서)를 쓴 뒤 `len:Observer` 설치·`bindLifetime(anchor, …)`에서 raise하면(잘못된
+  anchor, 설치 발화 recompute 안 사용자 Observer의 throw) 그 자리의 길이 State는 고아로 남는다. 에러로
+  죽은 뒤의 무결성은 보장하지 않는다(사용자: *"에러로 죽은 다음 우린 데이터의 무결이 깨져도 상관이
+  없고"*). 사전 검사(옛 (a))는 `research/deferred-hardening-plan.md`에 후보로.
 - **`State<State<T>>`는 정상 지원 대상** (2026-08-13 다섯 번째 세션
   재정정, 열네 번째 세션에 힌트까지 보강). 원래(같은 날 두 번째 세션)
   `store.key = a`(State), `a:Get() = b`(State)일 때 같은 `StoreBind`
@@ -1365,7 +1385,7 @@ retractor 생략의 `2`는 **[2026-08-31 `H-222` (a) 사용자 확정]** —
 
 **0. [2026-09-06 신설 — 세 번 반복: `H-272`·`H10-2`·`H-330`] 디스패치·발행 깊이에서 raise할 땐 `errorBefore`, 직접 호출 표면에서만 `errorBeforeNearest`.** `process`/retractor/reconcile 안(또는 `Source:Set`의 파동 안)에서 `errorBeforeNearest`를 쓰면 최근접 태그 프레임이 핸들러 자신이라 `Dispatch/init.luau`나 `Source.luau`가 blame된다. 판별: 그 raise가 사용자의 `drive`/`:Set` 줄에서 시작한 스택 안이면 `errorBefore`.
 
-**0-b. [2026-09-06 신설 — 하루에 세 번 반복: `H-338`·`H-342`] 새 브랜드 술어(`isX`)를 모듈 표면에 얹으면 `Dispatch/init.luau`의 `BRAND_PROBES`에도 넣을 것.** 무매치 진단이 그 값을 `typeof`(`table`)로 보고해 "프로바이더 미초기화"로 오도한다 — 목록은 손 복사라 게이트가 없다.
+**0-b. [2026-09-06 신설 — 하루에 세 번 반복: `H-338`·`H-342`] 새 브랜드 술어(`isX`)를 모듈 표면에 얹으면 `Dispatch/init.luau`의 `BRAND_PROBES`에도 넣을 것.** 무매치 진단이 그 값을 `typeof`(`table`)로 보고해 "프로바이더 미초기화"로 오도한다 — 목록은 손 복사라 게이트가 없다. **[2026-09-07]** 목록은 진단 시점에 모듈에서 *이름으로* 찾으므로 프로바이더가 설치한 술어(`isTween` — Tween이 quad-roblox로 이동)도 이름만 있으면 보인다; base가 백엔드 이름을 적어 두는 대신 프로바이더가 자기 프로브를 등록하는 길은 round3 §4 Q27.
 
 **1. 클로저는 early-return해도 체인에서 *소비*된다.**
 `Dispatch.retractFrom`은 저장된 retractor를 호출하고 **항상**
@@ -1505,6 +1525,9 @@ Slot1이 바뀔 때마다 Slot2에 다시 알려줘야 하는 캐스케이드 �
 ```lua
 Dispatch.setLength(ownerKey, i, len: number | State<number>, anchor?, element?)   -- [2026-08-27 9라운드 Q3] 5번째 = 그 자리의 inst|slot
 Dispatch.setOffsetSource(ownerKey, i, offset: Source<number> | None)
+-- [2026-09-07 회신 3차] 도메인·게이트(Q13 (b)·Q15 (a), 사용자 확정): `len`은 **비음수 정수**(상수는 등록 시,
+--   State는 그 길이 State의 Observer 콜백 안(recompute 진입 전 — round3 `H-445`; `contribution`은 읽기만) — 위반은 표면 에러), `offset`은 `Brand.isSource` 또는 `None`
+--   (`checkPosition`의 형제 게이트). `setEmpty(ownerKey, i, anchor?)`는 None/0 쌍 한 본문(Q3 ③).
 Dispatch.getOffsetAt(ownerKey, i): number      -- [2026-08-21 5라운드] 그 자리의 절대 offset
 ```
 **[2026-08-21 5라운드]** `anchor`는 생명주기 앵커(생략 시 `ownerKey`, 자세한
@@ -1529,13 +1552,13 @@ Dispatch.getOffsetAt(ownerKey, i): number      -- [2026-08-21 5라운드] 그 �
   아래 참고), `state<Frame>`처럼 store-bind로 오가는 단일 위치는 그
   store-bind 핸들러가 값이 바뀔 때마다 다시 호출. **호출 책임은 `Slot`
   자신의 `:List`/CRUD가 아니라 그 위치의 체인을 실제로 끝내는 말단
-  Handler(`Dispatch/Slot.luau`)** — **[정정, 2026-08-18 구현 전 QA]**
+  Handler(`Slot/Handler.luau`)** — **[정정, 2026-08-18 구현 전 QA]**
   옛 서술은 "그 위치를 **처음** 매치한 Handler"였는데 부정확했다: 배열
   위치에 `State<Slot>`이 오면 처음 매치하는 건 `StoreBind`(중간 노드)이고,
   중간 노드는 `inst`에 부작용을 가하지 않는다는 계약(아래 "Dispatch 체인"
   절)과 정면으로 어긋난다. 사용자 판정은 *"최종 말단 요소가 이를
   처리하는게 더 올바른것으로 보이는데"* — 재귀가 끝나 실제 값을 받은
-  말단 Handler가 등록한다(`State<Slot>`이면 재귀 끝의 `Dispatch/Slot.luau`,
+  말단 Handler가 등록한다(`State<Slot>`이면 재귀 끝의 `Slot/Handler.luau`,
   빈 자리면 `NilHandler`, `PreRef`/`PostRef` 소진 자리면 각 nop Handler).
   같이 검토 대상이던 *"단순히 모든 핸들러가 `k=number`일 때 처리하도록
   두는"* 안은 채택 안 함 — 그 안이 메우려던 갭(`State<Slot|None>`에서
@@ -1557,13 +1580,13 @@ Dispatch.getOffsetAt(ownerKey, i): number      -- [2026-08-21 5라운드] 그 �
   전체를 다시 계산하는 역할로 남는다. Slot이 매치되는 경우
   이 Source는 그 자리에서 `Slot.Offset` 필드로도 그대로 저장됨(아래
   참고) — 순수 숫자 누적합 계산이라 엔진 지식이 전혀 필요 없어서, 이
-  등록 자체는 `quad-base`(`Dispatch/Slot.luau`)가 함. **[정정,
+  등록 자체는 `quad-base`(`Slot/Handler.luau`)가 함. **[정정,
   2026-08-11 세션] 예전엔 이 Source를 "Handler가 자기 원소(들)의
   `LayoutOrder` 바인딩에 그대로 쓴다"고 서술했었는데 — 폐기.** Slot이
   마운트한 원소에 `LayoutOrder`를 자동으로 덮어쓰면 (a) 사용자가 그
   원소 자신의 프로퍼티로 `LayoutOrder`를 이미 지정해도 조용히 씹히는
   매직이 되고, (b) `LayoutOrder`는 애초에 Roblox 전용 프로퍼티라 그
-  지식이 `Dispatch/Slot.luau`(엔진 무관) 층위로 새는 레이어링 위반이기도
+  지식이 `Slot/Handler.luau`(엔진 무관) 층위로 새는 레이어링 위반이기도
   함. 이제 `Offset`은 `Slot.Offset`으로 공개 노출만 되고, 각 원소의
   `LayoutOrder`(또는 웹의 CSS `order`)를 실제로 계산해 세팅하는 건
   `updateFn`(또는 수동 Slot 사용자)의 몫 — `updateFn`은 `index`를 raw
@@ -1672,7 +1695,7 @@ Dispatch.getOffsetAt(ownerKey, i): number      -- [2026-08-21 5라운드] 그 �
   강참조로 쌓인다"도 근거였으나 그 맵이 weak-key가 되며 그 근거는 사라졌다 —
   남는 근거는 "지속 클로저가 없어 조회할 일이 없다" 하나). 대안 — `Dispatch.drive`가 `type(k) == "number"` 분기에서 일괄 등록 —
   은 아래 *"모든 핸들러가 `k=number`일 때 처리하도록 두는"*에서 **이미 기각된
-  안**이라 다시 열지 않는다. `ROADMAP.md` M5 체크박스에 같은 두 줄을 적었다.
+  안**이라 다시 열지 않는다. `archive/v2-initial-implementation/roadmap.md` M5 체크박스에 같은 두 줄을 적었다.
 
 **해제(그 자리가 더 이상 기여하지 않게 될 때)는 `setOffsetSource(...,None)`
 → `setLength(...,0)` 순서로 (2026-08-13 여섯 번째 세션, 사용자 지적).**
@@ -1791,7 +1814,7 @@ Slot의 자식 개수는 생애주기 내내 바뀐다(그게 Slot의 존재 이
 아니라 **비용**이다(등록마다 `recompute`가 한 번씩 도는 O(N²) 대신
 배치 끝에 O(1)번만) — `RC-1` 해결 논의에서 사용자가 직접 지적한 "이러면
 첫 실행에서 계속 recompute 비용이 쌓임" 문제 그대로. 상세 트레이싱은
-`qa-request/pre-implementation-qa-round3.md`의 "`bk.N`의 수명주기가
+`archive/v2-initial-implementation/pre-implementation-qa-round3.md`의 "`bk.N`의 수명주기가
 명세에 없음" 절.
 
 **`sourceList`에도 `nil`이 아니라 `None`을 쓰는 이유는 기존 배열 파트
@@ -1821,7 +1844,7 @@ Slot의 자식 개수는 생애주기 내내 바뀐다(그게 Slot의 존재 이
 등록을 안전하게 만드는 Blocker 게이팅" 절(바로 아래)이 소스, 여기
 `recompute` 자체의 코드는 안 바뀜(off-by-one 수정 버전 그대로). 바뀐
 건 **언제 호출되는가**뿐 — `setLength`/`setOffsetSource`가 새로 개입한다.
-트레이싱 경위·논의 원문은 `qa-request/pre-implementation-qa-round2.md`의
+트레이싱 경위·논의 원문은 `archive/v2-initial-implementation/pre-implementation-qa-round2.md`의
 "RC-1" 절.
 
 **[정정, 2026-08-11 세션] `sum` 누적과 `offset:Set` 순서가 뒤바뀌어
@@ -1908,6 +1931,17 @@ mutate**하는 게 바로 그 반대 방향 쓰기. "State가 자기 Source에 `
 -- [신설, 2026-08-21 G절] 그 자리의 **절대 offset(0-based)** 을 그때그때 계산해 반환.
 -- 발행 채널(Source) 유무와 무관하게 누구나 부를 수 있다 — nativeInsert의 삽입 위치,
 -- setOffsetSource의 즉시 계산이 둘 다 이걸 쓴다.
+-- [2026-09-07 `H-350`/`H-365`, 1순회 `H-371`로 의사코드 동형화] 베이스 부트스트랩 —
+-- 진입부와 루프 안 재시작(커서가 0으로 내려간 경우) 두 자리가 같은 함수를 부른다.
+-- Init 스코프(`contribution`과 같은 자리) — 호출별 클로저로 두면 recompute마다 할당.
+local function ensureBase(bk, ownerKey)
+    if bk.offsetCacheValidUpTo == 0 then
+        -- 시작점 — 1번 자리의 offset은 이 owner의 베이스 그 자체.
+        bk.offsetCache[1] = if isSlot(ownerKey) then ownerKey.Offset:Get() else 0
+        bk.offsetCacheValidUpTo = 1
+    end
+end
+
 function Dispatch.getOffsetAt(ownerKey, at)
     checkPosition("getOffsetAt", at) -- [2026-09-01 H-280] 게이트 셋째 — 0이면 cache[0](nil)이 number로 반환됐다
     local bk = getBookkeeping(ownerKey)
@@ -1919,11 +1953,7 @@ function Dispatch.getOffsetAt(ownerKey, at)
     -- 처리됨"*).
     -- ⭐⭐ [2026-08-26 재작성, `/code-review high` 4차] 이 함수는 **`offsetCacheValidUpTo`만
     --   만진다 — `bk.offsetSetUpTo`는 건드리지 않는다.** 아래 "두 필드" 절이 소스.
-    if bk.offsetCacheValidUpTo == 0 then
-        -- 시작점 — 1번 자리의 offset은 이 owner의 베이스 그 자체.
-        bk.offsetCache[1] = if isSlot(ownerKey) then ownerKey.Offset:Get() else 0
-        bk.offsetCacheValidUpTo = 1
-    end
+    ensureBase(bk, ownerKey)
     if at <= bk.offsetCacheValidUpTo then
         return bk.offsetCache[at]              -- 유효 구간 — O(1)
     end
@@ -1950,7 +1980,7 @@ function Dispatch.getOffsetAt(ownerKey, at)
             -- 진입부와 같은 ensureBase — 옛 offsetCache[1] 위에 재구축하면 그
             -- owner의 형제 offset이 base 차이만큼 영구히 어긋난다(옛 주석의
             -- "max 1 — M6가 베이스 재독을 넣어야"가 미이행이었던 자리)
-            ensureBase()
+            ensureBase(bk, ownerKey)
             i = bk.offsetCacheValidUpTo
             cur = bk.offsetCache[i]
             continue
@@ -2144,6 +2174,9 @@ local function recompute(ownerKey, bk)
         -- Blocker 게이팅, 해제는 None, spliceArraysDown은 압축), nil이 보이면
         -- 부기가 깨진 것 — 조용히 건너뛰면 위치 하나가 순서 계산에서 빠지는
         -- 추적 어려운 오작동이 된다. 상세는 base/slot-plan.md의 "추가 방어 조치".
+        -- [2026-09-07 7순회 `H-427`] 같은 불변식을 `lengthList[i]`에도 건다 — `setOffsetSource`만
+        -- 부르고 `setLength`를 안 부른 제공자의 구멍이 아래 `contribution`에서 익명 산술 에러로
+        -- 죽어 recomputeBlocker가 켜진 채 남았다(코드 `Bookkeeping.recompute`).
         if offset == nil then
             error("Dispatch.recompute: sourceList[" .. i .. "] is nil — bookkeeping is broken (the contract says None)", 1)
         end
@@ -2361,6 +2394,7 @@ Blocker를 `getBlocker(ownerKey)`로 조회만 한다(만들거나 켜고 끄지
 -- `sourceList[i] is nil` error 몫. 부기를 하나라도 만지기 전에 검사한다.
 function Dispatch.setLength(ownerKey, i, len, anchor, element)
     checkPosition("setLength", i) -- 위 게이트
+    if not isState(len) then checkLengthValue("setLength", len) end -- [2026-09-07 Q15 (a)] 비음수 정수; State 값은 아래 Observer 콜백 머리에서(H-445 — 차단기 창 밖)
     anchor = anchor or ownerKey
     local bk = getBookkeeping(ownerKey)   -- Relate(ownerKey) 기반, lazy 생성
     local blocker = getBlocker(ownerKey)  -- Relate(ownerKey) 기반, lazy 생성(아래 절 참고)
@@ -2487,7 +2521,7 @@ Slot 이 effect 나 다른 요소들을 소유할 수가 없다 … 실제 obser
 때마다 하나씩 채워진다 — 순차 처리 도중에 `recompute`가 돌면 아직 안
 채워진 뒤쪽 position을 `nil`로 읽어 산술 에러가 난다(`Frame{A,B}`처럼
 정적 자식 2개짜리도 재현됨, 트레이싱 상세는
-`qa-request/pre-implementation-qa-round2.md`의 "RC-1" 절).
+`archive/v2-initial-implementation/pre-implementation-qa-round2.md`의 "RC-1" 절).
 
 **[정정, 2026-08-18 구현 전 QA 3라운드] 위 크래시는 `bk.N`이 "배치 시작
 전에 이미 최종 크기로 고정"이라는, 그때 당시의 전제 위에서만 성립한다 —
@@ -2573,6 +2607,7 @@ Slot 이 effect 나 다른 요소들을 소유할 수가 없다 … 실제 obser
 -- 이 함수는 "등록 + (채널이 있으면) 즉시 1회 발행"만 남는다.
 function Dispatch.setOffsetSource(ownerKey, i, source)
     checkPosition("setOffsetSource", i) -- [2026-09-01 H-256 (a)] 아래 검증 게이트 문단
+    if source ~= None and not isSource(source) then error(nearest) end -- [2026-09-07 Q13 (b)] Source | None만
     local bk = getBookkeeping(ownerKey)
     bk.sourceList[i] = source
     if source == None then
@@ -2768,7 +2803,7 @@ quad-web의 해당 Handler는 offset 변경 관측 시 아무것도 안 하는 n
 
 **동적 자식 추가/제거의 유일한 정당 경로는 `Slot` 또는 `state<Frame>`류
 store-bind — 그 외 방식은 UB로 확정(2026-08-10 세션).** `Length`/`Offset`
-카운팅은 그 위치를 담당하는 Handler(`Dispatch/Slot.luau`, store-bind
+카운팅은 그 위치를 담당하는 Handler(`Slot/Handler.luau`, store-bind
 프로퍼티 핸들러)가 `Dispatch.setLength`/`Dispatch.setOffsetSource`를
 호출해줘야만 정합적으로 유지됨 — 이 두 API를 부르지 않고 quad가 관리하는
 부모 Instance에 자식을 끼워 넣는 경로(예: **사용자 코드**가 `newInst.Parent =

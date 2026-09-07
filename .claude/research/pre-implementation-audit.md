@@ -1,7 +1,7 @@
 # 구현 착수 직전 감사 — 모호성 / 지연결정 리스크 / 단순화 후보
 
 **상태**: research — 사용자 상의 필요. 2026-08-06 세션에서 신설. `.claude/base/`
-전체가 "확정"으로 표시돼 있지만, 실제 `ROADMAP.md` M0 착수를 앞두고 구현자
+전체가 "확정"으로 표시돼 있지만, 실제 `archive/v2-initial-implementation/roadmap.md` M0 착수를 앞두고 구현자
 시점에서 다시 크리티컬하게 훑어본 결과. 방법론: `base/` + 근접
 `research/`(tween-plan, ui-shorthand-plan, existing-instance-bind-plan —
 앞의 둘은 이후 `base/`로 승격, 마지막은 2026-08-14에 기각되어 `archive/`)를
@@ -21,7 +21,7 @@
 이미 `.claude/question.md`에 취합된 항목(용어 재검토, M0 스파이크 항목
 자체, Slot 형제 순서 보장 등)은 여기서 제외했다 — 아래는 **전부 새로 발견된
 것**. 부수적으로 이 감사 과정에서 `architecture.md`의 stale한 부분 두 곳
-(온톨로지 요약 절, 소스트리 `Store.luau`/`Ref.luau` 주석)을 발견해 같은
+(온톨로지 요약 절, 소스트리 `Store.luau`/`Ref/init.luau` 주석)을 발견해 같은
 세션에서 바로 고쳤다 — 판단이 필요 없는 순수 문서 동기화라 여기 남기지
 않고 해당 문서에서 직접 정정함.
 
@@ -53,7 +53,7 @@ PropertyHandler가 직접 판별. 상세는 `base/tween-plan.md`(전면
 "Tween의 store-bind 핸들러는 **`k`는 무엇이든 받고 `v`가 Store인 경우를
 잡아내는, 우선순위가 매우 높은 핸들러**"; `architecture.md` 소스트리엔 이
 역할을 하는 quad-roblox 파일이 `Handlers/Tween.luau` 하나뿐(별도 범용
-StoreBind 핸들러 파일 없음); `ROADMAP.md` M11도 Tween을 "높은 우선순위
+StoreBind 핸들러 파일 없음); `archive/v2-initial-implementation/roadmap.md` M11도 Tween을 "높은 우선순위
 store-bind 핸들러"로 서술.
 
 **문제**: 이 문서 전체에서 "v가 store인 값을 구독해 realv로 재귀 process
@@ -65,7 +65,7 @@ store.color }`처럼 애니메이션 없이 그냥 반응형으로 값만 바뀌
 가장 흔한 케이스가 (a) 결국 이름은 "Tween"인 파일을 거쳐가며 "애니메이션
 없음"으로 처리되는 건지, (b) Property/Tag/Attribute 등 각 핸들러가 각자
 `Dispatch/StoreBind.luau`(quad-base, 범용) 유틸을 직접 써서 독립적으로
-구현해야 하는 건지 문서가 정하지 않았다. `ROADMAP.md` M4("첫 end-to-end
+구현해야 하는 건지 문서가 정하지 않았다. `archive/v2-initial-implementation/roadmap.md` M4("첫 end-to-end
 반응형 업데이트")는 Tween 없이(M11보다 훨씬 전에) `Dispatch/StoreBind.luau`
 만으로 "store 값 바꾸면 process가 다시 호출된다"를 검증하게 돼 있어 (a)는
 아닌 것 같지만, 그럼 M11에서 Tween.luau가 실제로 추가될 때 그게 기존
@@ -89,7 +89,7 @@ store.color }`처럼 애니메이션 없이 그냥 반응형으로 값만 바뀌
 여러 단계(A→B→C)로 겹칠 때 자기 자신의 상태와 위임한 핸들러의 상태가
 슬롯 하나를 두고 충돌하는 문제가 있어 기각되고, 대신 Dispatch 자신이
 전체 체인을 배열로 들고 있는 쪽으로 정리됨. 상세는 `base/
-dispatch-core-plan.md` "Dispatch 체인" 절, `ROADMAP.md` M3/M4. 아래는
+dispatch-core-plan.md` "Dispatch 체인" 절, `archive/v2-initial-implementation/roadmap.md` M3/M4. 아래는
 원래 발견 당시 기록.
 
 **위치**: `base/dispatch-core-plan.md` "확정된 디스패치 모델" 절 90-91행 —
@@ -162,7 +162,7 @@ nil-index 크래시 vs 조용한 no-op)가 안 정해져 있음.
 None` 관용구를 필수로 강제 — `None`이 항상 non-nil이라 리터럴 구멍 자체가
 안 생기고, 이미 있는 array-part `None`-스킵 메커니즘(PreRef 논의 중
 같은 세션에서 확정)을 그대로 재사용해 새 코드가 안 늘어남.
-`base/component-composition-plan.md` "필수 관용구" 절, `ROADMAP.md` M0에
+`base/component-composition-plan.md` "필수 관용구" 절, `archive/v2-initial-implementation/roadmap.md` M0에
 반영 완료 — 더 이상 열린 항목 아님, 아래는 원래 발견 당시 기록.
 
 **위치(당시)**: `base/component-composition-plan.md` "최종 결론" 1번 —
@@ -277,12 +277,12 @@ element별 weak-set) — throw 조건을 "Slot 핸들러의 `process`가 같은 
 ### 1-9. `LifetimeHandle` 인터페이스가 M8에 배치돼 있지만 M4/M6이 이미 그걸 필요로 함(로드맵 순서 역전) — [해소됨, 2026-08-07 세 번째 세션]
 
 **[2026-08-07 세 번째 세션 갱신 — 반영 완료.]** 아래 제안대로
-`LifetimeHandle.luau`/`PerInstanceState.luau` 인터페이스가 `ROADMAP.md`
+`LifetimeHandle.luau`/`PerInstanceState.luau` 인터페이스가 `archive/v2-initial-implementation/roadmap.md`
 M2로 이동됐고(**[2026-08-24]** 마일스톤 순서 교체로 반응형 코어 앞머리의
 "공통 기반" 절), M8은 quad-roblox 실제 구현만 담당하도록 분리됨 — 더 이상
 열린 항목 아님, 아래는 원래 발견 당시 기록.
 
-**위치(당시)**: `ROADMAP.md` M8 "Ref" — `"LifetimeHandle 인터페이스 + quad-roblox
+**위치(당시)**: `archive/v2-initial-implementation/roadmap.md` M8 "Ref" — `"LifetimeHandle 인터페이스 + quad-roblox
 실제 구현(Instance 생존 확인)"`.
 
 **문제**: `base/lifecycle-pattern.md`("생명 바인드 유틸"을 State-invalidate
@@ -311,7 +311,7 @@ typefunction.luau`(**[2026-08-15] 통과** — 원래 스파이크가 API 버전
 드리프트로 깨져있던 걸 고침, `audit/type-recursive-issue-with-typeof/
 REPORT.md` 6-1절). 아래는 원래 발견 당시 기록.
 
-**위치**: `ROADMAP.md` M0 vs M2 `"store.key dot-access 타입 추론 확인"`.
+**위치**: `archive/v2-initial-implementation/roadmap.md` M0 vs M2 `"store.key dot-access 타입 추론 확인"`.
 
 **문제**: M0의 정의 자체가 "추론만으로 확정하고 실제 Luau로 부딪혀본 적
 없는 것"을 검증하는 단계다. `base/source-state-plan.md`가 요청한 M0 항목(
@@ -347,7 +347,7 @@ M7의 전제가 Luau 공식 동작대로 성립함. 별도로, 프로퍼티에 A
 아래는 원래 발견 당시 기록.
 
 **위치**: `base/modifier-plan.md` "런타임은 클래스별 코드 없이 base에 딱
-하나만 있으면 됨" 절, `ROADMAP.md` M7.
+하나만 있으면 됨" 절, `archive/v2-initial-implementation/roadmap.md` M7.
 
 **문제**: M7의 핵심 주장("base에 제네릭 `__index` 하나면 충분, FrameModifier
 류는 순전히 정적 타입 체크용")은 `mod:FontSize(14)` → `__index(self,
@@ -418,7 +418,7 @@ State<T>` 조합조차 M0 스파이크 대상(솔버가 죽을 수 있음)으로
 가능하면 타입 차단"이 조용히 "그냥 UB, 런타임 가드 없음"으로 후퇴하는데
 그 fallback도 안 적혀있음.
 
-**제안**: `ROADMAP.md` M0(또는 M7 착수 시점)에 이 케이스를 포함하거나,
+**제안**: `archive/v2-initial-implementation/roadmap.md` M0(또는 M7 착수 시점)에 이 케이스를 포함하거나,
 최소한 `modifier-plan.md`에 "타입 차단이 Luau에서 불가능하면 순수 UB로
 폴백"이라는 명시적 fallback 문장을 추가할 것.
 
@@ -501,7 +501,7 @@ Modifier를 합친다"는 시나리오가 `Overridden`의 가장 그럴듯한 �
 
 ### 2-6. Modifier 필드에 State/Source를 인자로 넘기는 케이스가 세터 표에서 빠짐 — [해소됨, 2026-09-04 M7 단위 ①]
 
-**[2026-09-06 감사 기록]** 구현이 답했다 — `quad-base/src/Modifier.luau`의 setter는 인자가 함수가 아니면(State든 리터럴이든) "리터럴" 분기로 필드를 통째로 교체한다(코드 주석 *"a State literal replaces the whole field"*, round17 `H-309`). 아래는 당시 지적 원문.
+**[2026-09-06 감사 기록]** 구현이 답했다 — `quad-base/src/Dispatch/Modifier/init.luau`의 setter는 인자가 함수가 아니면(State든 리터럴이든) "리터럴" 분기로 필드를 통째로 교체한다(코드 주석 *"a State literal replaces the whole field"*, round17 `H-309`). 아래는 당시 지적 원문.
 
 **위치**: `base/modifier-plan.md` "4-1. 필드가 State일 수도 있음" 표.
 
@@ -545,7 +545,7 @@ Modifier를 합친다"는 시나리오가 `Overridden`의 가장 그럴듯한 �
 정적 타입 안전성(`mod:UICorner(8)`가 `FrameModifier` 타입으로 추론되는
 것)은 "`D` 쪽 '제네릭 생성자 함수 하나 + 정적 별칭 필드' 패턴
 재사용"이라 문서 스스로 밝히듯 quad-roblox의 `D` 타입 생성 계층(M5)에 강하게
-결합돼 있다. 그런데 `ROADMAP.md` M7 체크리스트(flatten-before-dispatch,
+결합돼 있다. 그런데 `archive/v2-initial-implementation/roadmap.md` M7 체크리스트(flatten-before-dispatch,
 `Modifier.Overridden`, `State<Modifier>` 차단)엔 이 클래스별 타입 생성 작업이
 전혀 없고, M5 `D` 체크리스트에도 Modifier 언급이 없음.
 
@@ -688,7 +688,7 @@ Handler"라고만 서술해, 사실상 3개의 거의 동일한 형태(리터럴
   잡았다). 이 감사
   세션 도중 발견해 직접 정정(커밋 `4b839b0`에서 별도로 이미 반영됨을 뒤늦게
   확인 — 같은 문제를 두 세션이 독립적으로 발견한 셈).
-- `architecture.md` 소스트리의 `Store.luau`/`Ref.luau` 주석이 각각 옛
+- `architecture.md` 소스트리의 `Store.luau`/`Ref/init.luau` 주석이 각각 옛
   `__newindex` 모델, 옛 "Ref=CreatedRef 자체" 정의를 그대로 담고 있던 것 —
   이번 세션에서 직접 정정.
 

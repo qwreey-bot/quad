@@ -35,7 +35,9 @@
 	                                 (even a Tween writes `Value` directly —
 	                                 no engine tween, no entry animation)
 	  true                           set before, no active engine tween
-	  { Tween = TweenBase, Value }   an engine tween is running toward Value
+	  { Tween = TweenBase, Value, Source }   an engine tween is running toward Value
+	                                (`Source` = the Tween object that produced it — Q12 identity
+	                                dedup; the field NAME is the implementer's, round3 §6)
 	Order invariant: an active tween is cancelled BEFORE the new value is
 	written (the engine keeps writing the property asynchronously). The
 	override policy consulted is the INCOMING Tween's `Override` (`H-328`):
@@ -54,6 +56,7 @@
 ]]
 
 local QuadTypes = require("../../luau_packages/quad_types")
+local Reflection = require("../Reflection")
 
 local function install(quad: any)
 	local dispatch = quad.Dispatch
@@ -91,34 +94,18 @@ local function install(quad: any)
 		)
 	end
 
-	local function startTween(inst: any, k: string, v: any)
-		local engineTween = getTweenService():Create(inst, buildInfo(v), { [k] = v.Value })
-		engineTween:Play()
-		tweenSlots:SetStrong(inst, k, { Tween = engineTween, Value = v.Value })
-	end
-
 	-- className -> { [propName]: true } (inherited included — one Reflection
-	-- call per class, cached for the module's lifetime)
-	local propsOf: { [string]: { [string]: boolean } } = {}
-
-	local function isPropertyOf(className: string, key: string): boolean
-		local set = propsOf[className]
-		if set == nil then
-			set = {}
-			local descriptors = game:GetService("ReflectionService"):GetPropertiesOfClass(className)
-			for _, d in descriptors :: { any } do
-				-- `H-302`(리뷰 발견, `H-297` (a)의 런타임판): 쓰기 표면만 매치 —
-				-- 읽기 전용(AbsoluteSize 등)은 `Permits.Write` 키 자체가 없다
-				-- (Studio 실측 2026-09-02). 걸러두지 않으면 대입이 h.process
-				-- 한가운데서 엔진 원시 에러를 내고 `H-103` NOOP 마커가 고착된다.
-				if d.Permits ~= nil and d.Permits.Write ~= nil then
-					set[d.Name] = true
-				end
-			end
-			propsOf[className] = set
-		end
-		return set[key] == true
-	end
+	-- call per class, cached for the module's lifetime; `Reflection.luau`
+	-- memoizer, Q3 ④). `game` is read HERE (the getfenv shim seam, header).
+	local isPropertyOf = Reflection.memberSet(function(className: string): { any }
+		return game:GetService("ReflectionService"):GetPropertiesOfClass(className)
+	end, function(d: any): boolean
+		-- `H-302`(리뷰 발견, `H-297` (a)의 런타임판): 쓰기 표면만 매치 —
+		-- 읽기 전용(AbsoluteSize 등)은 `Permits.Write` 키 자체가 없다
+		-- (Studio 실측 2026-09-02). 걸러두지 않으면 대입이 h.process
+		-- 한가운데서 엔진 원시 에러를 내고 `H-103` NOOP 마커가 고착된다.
+		return d.Permits ~= nil and d.Permits.Write ~= nil
+	end)
 
 	dispatch.addHandler({
 		name = "Property",
@@ -132,22 +119,37 @@ local function install(quad: any)
 			end
 			local prev = tweenSlots:GetStrong(inst, k)
 			local tweenIn = isTween(v)
+			if tweenIn and type(prev) == "table" and prev.Source == v then
+				-- Q12 (사용자 결정 2026-09-07): the SAME Tween object re-emitted (Animate's
+				-- Dedup hands the previous Tween back) — the active tween keeps running,
+				-- no cancel + restart (`H-391`). A completed tween is not re-triggered
+				-- either; `Animate{ Dedup = false }` is the re-trigger switch.
+				return Void
+			end
 			if prev == nil then
 				-- branch 1: first set — snap, no animation even for a Tween value
 				inst[k] = if tweenIn then v.Value else v
 				tweenSlots:SetStrong(inst, k, true)
 				return Void
 			end
+			-- 6순회 `H-406` (`H-256` (a) read-then-write, second site): build the NEW
+			-- engine tween before touching the old one — `TweenService:Create` may
+			-- raise on engine-typed options (header), and cancelling first left a
+			-- slot naming a dead tween whose stale target a later `Finish` snapped
+			-- to. The slot is written before `Play` so a raise there leaves at most
+			-- an unplayed tween the slot knows about.
+			local engineTween = if tweenIn then getTweenService():Create(inst, buildInfo(v), { [k] = v.Value }) else nil
 			if type(prev) == "table" then
-				-- branch 3: an engine tween is active — clean it up FIRST
+				-- branch 3: an engine tween is active — clean it up before the new value lands
 				prev.Tween:Cancel()
 				if tweenIn and v.Override == "Finish" then
 					inst[k] = prev.Value -- Finish: snap to the previous target before continuing
 				end
 			end
-			-- branches 2/3 tail: plain → write + `true`; Tween → new engine tween
+			-- branches 2/3 tail: plain → write + `true`; Tween → slot, then play
 			if tweenIn then
-				startTween(inst, k, v)
+				tweenSlots:SetStrong(inst, k, { Tween = engineTween, Value = v.Value, Source = v })
+				engineTween:Play()
 			else
 				inst[k] = v
 				tweenSlots:SetStrong(inst, k, true)

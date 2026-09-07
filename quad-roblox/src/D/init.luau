@@ -4,17 +4,18 @@
 	dump: version-268c7d941ba34c1a (API 1); 재생성 방법은 생성기 헤더.
 	표면 계약: bind-system-plan.md 인스턴스 생성 절(New 커링·①~④ 파이프라인·
 	D는 캐스트 별칭·Parent 제외 H-142), claim-plan §7-12(<Class>Param<E> 공유),
-	round14 H-295~H-298·H-300. 유니언: 스칼라 T | State<T> | Tween<T> | State<Tween<T>> | None (H-326),
-	이벤트 콜백 | State<콜백> | None (None 표현은 H-300 (a) — QuadTypes.None).
+	round14 H-295~H-298·H-300. 유니언: 스칼라 T | TweenData<T> | StateMarker<T | Tween<T>> | None
+	(H-326 → 2026-09-07 마커: State 팔은 공변 StateMarker 하나, typing-limits 8.11),
+	이벤트 콜백 | StateMarker<콜백> | None (None 표현은 H-300 (a) — QuadTypes.None).
 	이벤트 필드의 런타임 핸들러는 Handlers/Event.luau(M10, 2026-09-03 구현됨 —
 	`base/event-plan.md`); M5엔 타입이 먼저 왔다(ROADMAP M5 체크박스의 계약).
 	OnChange(M10, 2026-09-03 역전 — base/onchange-plan.md): 배열부 디스크립터.
 	PropTypes(스코프 전체 프로퍼티 이름 → 타입, 클래스 간 충돌 이름은 any) +
-	OnChangeFn(`K & keyof<PropTypes>` / `index<PropTypes, K>` — 이름 오타·콜백
+	OnChangeFn(`K & keyof<PropTypesRead>` / `index<PropTypesRead, K>` — 읽기 표면(Q19); 이름 오타·콜백
 	타입·무주석 추론까지, luau-test 30) + 클래스별 <Class>OnChange 유니언이 E에
 	합류(클래스 밖 이름은 생성자 자리에서 거부).
 	Modifier(M7 단위 ③, round17): 클래스별 <Class>Modifier(필드 setter — 값은
-	Field<T> = T | Tween<T> | State<T> | State<Tween<T>> | None | 변환 함수(H-327), 자기 타입 반환; 예약 메소드
+	Field<T> = T | Tween<T> | StateMarker<T | Tween<T>> | None | 변환 함수(H-327 → 마커), 자기 타입 반환; 예약 메소드
 	Apply/Peek/Overridden; 이벤트는 제외 — 함수 인자는 변환 함수라 콜백과 겹친다)
 	+ D.Modifier.<Class>() 타입드 생성자(round17 Q3 (a) — 단위 ③엔 quad.Modifier 캐스트 별칭,
 	단위 ④부터 아래 TypedFactory 태그 생성자)
@@ -37,6 +38,7 @@ local QuadTypes = require("../luau_packages/quad_types")
 local Types = require("./types")
 
 type State<T> = QuadTypes.State<T>
+type StateMarker<T> = QuadTypes.StateMarker<T> -- 입력 자리의 State 팔(2026-09-07 마커, typing-limits 8.11)
 type Tween<T> = Types.Tween<T>
 type TweenData<T> = Types.TweenData<T> -- 유니언 멤버용 데이터부(H-326, 8.8절)
 type NewChild = Types.NewChild
@@ -44,86 +46,87 @@ type None = QuadTypes.None
 type MapperDescriptor = QuadTypes.MapperDescriptor
 type MapperRoot = QuadTypes.MapperRoot
 -- Modifier 필드 setter의 값 타입(modifier-plan 4·4-1·10절): 리터럴 T | Tween<T> |
--- State<T> | State<Tween<T>> | None(unsetter) | 변환 함수(old는 '현재 저장된 그대로')
--- — State 형 둘을 각각 나열하는 이유는 H-327(새 솔버 State 불변성, 2026-09-06)
-export type FieldV<T> = T | Tween<T> | State<T> | State<Tween<T>> | None
-export type Field<T> = FieldV<T> | ((old: FieldV<T>?) -> FieldV<T>?)
+-- State(마커, T | Tween<T>를 품음) | None(unsetter) | 변환 함수(old는 '현재 저장된 그대로').
+-- [2026-09-07 마커] 옛 `State<T> | State<Tween<T>>` 두 팔(H-327 — State 불변성)은 공변 마커
+-- `StateMarker<T | Tween<T>>` 하나로; old(출력)만 전체형 `FieldOut<T>`(State 팔 하나 — Q23 (a) 사용자 확정).
+export type FieldV<T> = T | Tween<T> | StateMarker<T | Tween<T>> | None
+export type FieldOut<T> = Types.FieldOut<T> -- 변환 함수 old·Peek 반환(출력, 전체형 — 정의는 types.luau, 전개는 D 밖에서)
+export type Field<T> = FieldV<T> | ((old: FieldOut<T>?) -> FieldV<T>?)
 
-type SHF0 = FieldV<number> | FieldV<UDim> | Field<number | UDim> -- 숏핸드 setter(H-362): 값 팔 멤버별 + 변환 팔 하나
-type PV0 = boolean | State<boolean> | TweenData<boolean> | State<Tween<boolean>> | None -- boolean
-type PV1 = Instance | State<Instance> | TweenData<Instance> | State<Tween<Instance>> | None -- Instance
-type PV2 = number | State<number> | TweenData<number> | State<Tween<number>> | None -- number
-type PV3 = SecurityCapabilities | State<SecurityCapabilities> | TweenData<SecurityCapabilities> | State<Tween<SecurityCapabilities>> | None -- SecurityCapabilities
-type PV4 = Vector3 | State<Vector3> | TweenData<Vector3> | State<Tween<Vector3>> | None -- Vector3
-type PV5 = string | State<string> | TweenData<string> | State<Tween<string>> | None -- string
-type PV6 = LocalizationTable | State<LocalizationTable> | TweenData<LocalizationTable> | State<Tween<LocalizationTable>> | None -- LocalizationTable
-type PV7 = Enum.SelectionBehavior | State<Enum.SelectionBehavior> | TweenData<Enum.SelectionBehavior> | State<Tween<Enum.SelectionBehavior>> | None -- Enum.SelectionBehavior
-type PV8 = UDim2 | State<UDim2> | TweenData<UDim2> | State<Tween<UDim2>> | None -- UDim2
-type PV9 = Vector2 | State<Vector2> | TweenData<Vector2> | State<Tween<Vector2>> | None -- Vector2
-type PV10 = Enum.ZIndexBehavior | State<Enum.ZIndexBehavior> | TweenData<Enum.ZIndexBehavior> | State<Tween<Enum.ZIndexBehavior>> | None -- Enum.ZIndexBehavior
-type PV11 = CFrame | State<CFrame> | TweenData<CFrame> | State<Tween<CFrame>> | None -- CFrame
-type PV12 = Enum.CameraType | State<Enum.CameraType> | TweenData<Enum.CameraType> | State<Tween<Enum.CameraType>> | None -- Enum.CameraType
-type PV13 = Enum.FieldOfViewMode | State<Enum.FieldOfViewMode> | TweenData<Enum.FieldOfViewMode> | State<Tween<Enum.FieldOfViewMode>> | None -- Enum.FieldOfViewMode
-type PV14 = Enum.AutomaticSize | State<Enum.AutomaticSize> | TweenData<Enum.AutomaticSize> | State<Tween<Enum.AutomaticSize>> | None -- Enum.AutomaticSize
-type PV15 = Color3 | State<Color3> | TweenData<Color3> | State<Tween<Color3>> | None -- Color3
-type PV16 = Enum.BorderMode | State<Enum.BorderMode> | TweenData<Enum.BorderMode> | State<Tween<Enum.BorderMode>> | None -- Enum.BorderMode
-type PV17 = Enum.InputSink | State<Enum.InputSink> | TweenData<Enum.InputSink> | State<Tween<Enum.InputSink>> | None -- Enum.InputSink
-type PV18 = GuiObject | State<GuiObject> | TweenData<GuiObject> | State<Tween<GuiObject>> | None -- GuiObject
-type PV19 = Enum.SizeConstraint | State<Enum.SizeConstraint> | TweenData<Enum.SizeConstraint> | State<Tween<Enum.SizeConstraint>> | None -- Enum.SizeConstraint
-type PV20 = Enum.FrameStyle | State<Enum.FrameStyle> | TweenData<Enum.FrameStyle> | State<Tween<Enum.FrameStyle>> | None -- Enum.FrameStyle
-type PV21 = HapticEffect | State<HapticEffect> | TweenData<HapticEffect> | State<Tween<HapticEffect>> | None -- HapticEffect
-type PV22 = Content | State<Content> | TweenData<Content> | State<Tween<Content>> | None -- Content
-type PV23 = Enum.ResamplerMode | State<Enum.ResamplerMode> | TweenData<Enum.ResamplerMode> | State<Tween<Enum.ResamplerMode>> | None -- Enum.ResamplerMode
-type PV24 = Enum.ScaleType | State<Enum.ScaleType> | TweenData<Enum.ScaleType> | State<Tween<Enum.ScaleType>> | None -- Enum.ScaleType
-type PV25 = Rect | State<Rect> | TweenData<Rect> | State<Tween<Rect>> | None -- Rect
-type PV26 = Enum.ButtonStyle | State<Enum.ButtonStyle> | TweenData<Enum.ButtonStyle> | State<Tween<Enum.ButtonStyle>> | None -- Enum.ButtonStyle
-type PV27 = Enum.SafeAreaCompatibility | State<Enum.SafeAreaCompatibility> | TweenData<Enum.SafeAreaCompatibility> | State<Tween<Enum.SafeAreaCompatibility>> | None -- Enum.SafeAreaCompatibility
-type PV28 = Enum.ScreenInsets | State<Enum.ScreenInsets> | TweenData<Enum.ScreenInsets> | State<Tween<Enum.ScreenInsets>> | None -- Enum.ScreenInsets
-type PV29 = Enum.ElasticBehavior | State<Enum.ElasticBehavior> | TweenData<Enum.ElasticBehavior> | State<Tween<Enum.ElasticBehavior>> | None -- Enum.ElasticBehavior
-type PV30 = Enum.ScrollBarInset | State<Enum.ScrollBarInset> | TweenData<Enum.ScrollBarInset> | State<Tween<Enum.ScrollBarInset>> | None -- Enum.ScrollBarInset
-type PV31 = Enum.ScrollingDirection | State<Enum.ScrollingDirection> | TweenData<Enum.ScrollingDirection> | State<Tween<Enum.ScrollingDirection>> | None -- Enum.ScrollingDirection
-type PV32 = Enum.VerticalScrollBarPosition | State<Enum.VerticalScrollBarPosition> | TweenData<Enum.VerticalScrollBarPosition> | State<Tween<Enum.VerticalScrollBarPosition>> | None -- Enum.VerticalScrollBarPosition
-type PV33 = Enum.NormalId | State<Enum.NormalId> | TweenData<Enum.NormalId> | State<Tween<Enum.NormalId>> | None -- Enum.NormalId
-type PV34 = Enum.SurfaceGuiSizingMode | State<Enum.SurfaceGuiSizingMode> | TweenData<Enum.SurfaceGuiSizingMode> | State<Tween<Enum.SurfaceGuiSizingMode>> | None -- Enum.SurfaceGuiSizingMode
-type PV35 = Font | State<Font> | TweenData<Font> | State<Tween<Font>> | None -- Font
-type PV36 = Enum.TextDirection | State<Enum.TextDirection> | TweenData<Enum.TextDirection> | State<Tween<Enum.TextDirection>> | None -- Enum.TextDirection
-type PV37 = Enum.TextTruncate | State<Enum.TextTruncate> | TweenData<Enum.TextTruncate> | State<Tween<Enum.TextTruncate>> | None -- Enum.TextTruncate
-type PV38 = Enum.TextXAlignment | State<Enum.TextXAlignment> | TweenData<Enum.TextXAlignment> | State<Tween<Enum.TextXAlignment>> | None -- Enum.TextXAlignment
-type PV39 = Enum.TextYAlignment | State<Enum.TextYAlignment> | TweenData<Enum.TextYAlignment> | State<Tween<Enum.TextYAlignment>> | None -- Enum.TextYAlignment
-type PV40 = Enum.AspectType | State<Enum.AspectType> | TweenData<Enum.AspectType> | State<Tween<Enum.AspectType>> | None -- Enum.AspectType
-type PV41 = Enum.DominantAxis | State<Enum.DominantAxis> | TweenData<Enum.DominantAxis> | State<Tween<Enum.DominantAxis>> | None -- Enum.DominantAxis
-type PV42 = UDim | State<UDim> | TweenData<UDim> | State<Tween<UDim>> | None -- UDim
-type PV43 = Enum.UIDragDetectorBoundingBehavior | State<Enum.UIDragDetectorBoundingBehavior> | TweenData<Enum.UIDragDetectorBoundingBehavior> | State<Tween<Enum.UIDragDetectorBoundingBehavior>> | None -- Enum.UIDragDetectorBoundingBehavior
-type PV44 = GuiBase2d | State<GuiBase2d> | TweenData<GuiBase2d> | State<Tween<GuiBase2d>> | None -- GuiBase2d
-type PV45 = Enum.UIDragDetectorDragRelativity | State<Enum.UIDragDetectorDragRelativity> | TweenData<Enum.UIDragDetectorDragRelativity> | State<Tween<Enum.UIDragDetectorDragRelativity>> | None -- Enum.UIDragDetectorDragRelativity
-type PV46 = Enum.UIDragDetectorDragSpace | State<Enum.UIDragDetectorDragSpace> | TweenData<Enum.UIDragDetectorDragSpace> | State<Tween<Enum.UIDragDetectorDragSpace>> | None -- Enum.UIDragDetectorDragSpace
-type PV47 = Enum.UIDragDetectorDragStyle | State<Enum.UIDragDetectorDragStyle> | TweenData<Enum.UIDragDetectorDragStyle> | State<Tween<Enum.UIDragDetectorDragStyle>> | None -- Enum.UIDragDetectorDragStyle
-type PV48 = Enum.UIDragDetectorResponseStyle | State<Enum.UIDragDetectorResponseStyle> | TweenData<Enum.UIDragDetectorResponseStyle> | State<Tween<Enum.UIDragDetectorResponseStyle>> | None -- Enum.UIDragDetectorResponseStyle
-type PV49 = Enum.UIDragSpeedAxisMapping | State<Enum.UIDragSpeedAxisMapping> | TweenData<Enum.UIDragSpeedAxisMapping> | State<Tween<Enum.UIDragSpeedAxisMapping>> | None -- Enum.UIDragSpeedAxisMapping
-type PV50 = Enum.UIFlexMode | State<Enum.UIFlexMode> | TweenData<Enum.UIFlexMode> | State<Tween<Enum.UIFlexMode>> | None -- Enum.UIFlexMode
-type PV51 = Enum.ItemLineAlignment | State<Enum.ItemLineAlignment> | TweenData<Enum.ItemLineAlignment> | State<Tween<Enum.ItemLineAlignment>> | None -- Enum.ItemLineAlignment
-type PV52 = ColorSequence | State<ColorSequence> | TweenData<ColorSequence> | State<Tween<ColorSequence>> | None -- ColorSequence
-type PV53 = Enum.GradientTileMode | State<Enum.GradientTileMode> | TweenData<Enum.GradientTileMode> | State<Tween<Enum.GradientTileMode>> | None -- Enum.GradientTileMode
-type PV54 = NumberSequence | State<NumberSequence> | TweenData<NumberSequence> | State<Tween<NumberSequence>> | None -- NumberSequence
-type PV55 = Enum.GradientType | State<Enum.GradientType> | TweenData<Enum.GradientType> | State<Tween<Enum.GradientType>> | None -- Enum.GradientType
-type PV56 = Enum.FillDirection | State<Enum.FillDirection> | TweenData<Enum.FillDirection> | State<Tween<Enum.FillDirection>> | None -- Enum.FillDirection
-type PV57 = Enum.HorizontalAlignment | State<Enum.HorizontalAlignment> | TweenData<Enum.HorizontalAlignment> | State<Tween<Enum.HorizontalAlignment>> | None -- Enum.HorizontalAlignment
-type PV58 = Enum.SortOrder | State<Enum.SortOrder> | TweenData<Enum.SortOrder> | State<Tween<Enum.SortOrder>> | None -- Enum.SortOrder
-type PV59 = Enum.StartCorner | State<Enum.StartCorner> | TweenData<Enum.StartCorner> | State<Tween<Enum.StartCorner>> | None -- Enum.StartCorner
-type PV60 = Enum.VerticalAlignment | State<Enum.VerticalAlignment> | TweenData<Enum.VerticalAlignment> | State<Tween<Enum.VerticalAlignment>> | None -- Enum.VerticalAlignment
-type PV61 = Enum.UIFlexAlignment | State<Enum.UIFlexAlignment> | TweenData<Enum.UIFlexAlignment> | State<Tween<Enum.UIFlexAlignment>> | None -- Enum.UIFlexAlignment
-type PV62 = Enum.EasingDirection | State<Enum.EasingDirection> | TweenData<Enum.EasingDirection> | State<Tween<Enum.EasingDirection>> | None -- Enum.EasingDirection
-type PV63 = Enum.EasingStyle | State<Enum.EasingStyle> | TweenData<Enum.EasingStyle> | State<Tween<Enum.EasingStyle>> | None -- Enum.EasingStyle
-type PV64 = Enum.ApplyStrokeMode | State<Enum.ApplyStrokeMode> | TweenData<Enum.ApplyStrokeMode> | State<Tween<Enum.ApplyStrokeMode>> | None -- Enum.ApplyStrokeMode
-type PV65 = Enum.BorderStrokePosition | State<Enum.BorderStrokePosition> | TweenData<Enum.BorderStrokePosition> | State<Tween<Enum.BorderStrokePosition>> | None -- Enum.BorderStrokePosition
-type PV66 = Enum.LineJoinMode | State<Enum.LineJoinMode> | TweenData<Enum.LineJoinMode> | State<Tween<Enum.LineJoinMode>> | None -- Enum.LineJoinMode
-type PV67 = Enum.StrokeSizingMode | State<Enum.StrokeSizingMode> | TweenData<Enum.StrokeSizingMode> | State<Tween<Enum.StrokeSizingMode>> | None -- Enum.StrokeSizingMode
-type PV68 = Enum.TableMajorAxis | State<Enum.TableMajorAxis> | TweenData<Enum.TableMajorAxis> | State<Tween<Enum.TableMajorAxis>> | None -- Enum.TableMajorAxis
-type PV69 = Enum.RollOffMode | State<Enum.RollOffMode> | TweenData<Enum.RollOffMode> | State<Tween<Enum.RollOffMode>> | None -- Enum.RollOffMode
-type PV70 = Camera | State<Camera> | TweenData<Camera> | State<Tween<Camera>> | None -- Camera
-type PV71 = Enum.ModelStreamingMode | State<Enum.ModelStreamingMode> | TweenData<Enum.ModelStreamingMode> | State<Tween<Enum.ModelStreamingMode>> | None -- Enum.ModelStreamingMode
-type PV72 = BasePart | State<BasePart> | TweenData<BasePart> | State<Tween<BasePart>> | None -- BasePart
-type PV73 = number | UDim | State<number | UDim> | TweenData<number | UDim> | State<Tween<number | UDim>> | State<number> | TweenData<number> | State<Tween<number>> | State<UDim> | TweenData<UDim> | State<Tween<UDim>> | None -- number | UDim
+type PV0 = boolean | TweenData<boolean> | StateMarker<boolean | Tween<boolean>> | None -- boolean
+type PV1 = Instance | TweenData<Instance> | StateMarker<Instance | Tween<Instance>> | None -- Instance
+type PV2 = number | TweenData<number> | StateMarker<number | Tween<number>> | None -- number
+type PV3 = SecurityCapabilities | TweenData<SecurityCapabilities> | StateMarker<SecurityCapabilities | Tween<SecurityCapabilities>> | None -- SecurityCapabilities
+type PV4 = Vector3 | TweenData<Vector3> | StateMarker<Vector3 | Tween<Vector3>> | None -- Vector3
+type PV5 = string | TweenData<string> | StateMarker<string | Tween<string>> | None -- string
+type PV6 = LocalizationTable | TweenData<LocalizationTable> | StateMarker<LocalizationTable | Tween<LocalizationTable>> | None -- LocalizationTable
+type PV7 = Enum.SelectionBehavior | TweenData<Enum.SelectionBehavior> | StateMarker<Enum.SelectionBehavior | Tween<Enum.SelectionBehavior>> | None -- Enum.SelectionBehavior
+type PV8 = UDim2 | TweenData<UDim2> | StateMarker<UDim2 | Tween<UDim2>> | None -- UDim2
+type PV9 = Vector2 | TweenData<Vector2> | StateMarker<Vector2 | Tween<Vector2>> | None -- Vector2
+type PV10 = Enum.ZIndexBehavior | TweenData<Enum.ZIndexBehavior> | StateMarker<Enum.ZIndexBehavior | Tween<Enum.ZIndexBehavior>> | None -- Enum.ZIndexBehavior
+type PV11 = CFrame | TweenData<CFrame> | StateMarker<CFrame | Tween<CFrame>> | None -- CFrame
+type PV12 = Enum.CameraType | TweenData<Enum.CameraType> | StateMarker<Enum.CameraType | Tween<Enum.CameraType>> | None -- Enum.CameraType
+type PV13 = Enum.FieldOfViewMode | TweenData<Enum.FieldOfViewMode> | StateMarker<Enum.FieldOfViewMode | Tween<Enum.FieldOfViewMode>> | None -- Enum.FieldOfViewMode
+type PV14 = Enum.AutomaticSize | TweenData<Enum.AutomaticSize> | StateMarker<Enum.AutomaticSize | Tween<Enum.AutomaticSize>> | None -- Enum.AutomaticSize
+type PV15 = Color3 | TweenData<Color3> | StateMarker<Color3 | Tween<Color3>> | None -- Color3
+type PV16 = Enum.BorderMode | TweenData<Enum.BorderMode> | StateMarker<Enum.BorderMode | Tween<Enum.BorderMode>> | None -- Enum.BorderMode
+type PV17 = Enum.InputSink | TweenData<Enum.InputSink> | StateMarker<Enum.InputSink | Tween<Enum.InputSink>> | None -- Enum.InputSink
+type PV18 = GuiObject | TweenData<GuiObject> | StateMarker<GuiObject | Tween<GuiObject>> | None -- GuiObject
+type PV19 = Enum.SizeConstraint | TweenData<Enum.SizeConstraint> | StateMarker<Enum.SizeConstraint | Tween<Enum.SizeConstraint>> | None -- Enum.SizeConstraint
+type PV20 = Enum.FrameStyle | TweenData<Enum.FrameStyle> | StateMarker<Enum.FrameStyle | Tween<Enum.FrameStyle>> | None -- Enum.FrameStyle
+type PV21 = HapticEffect | TweenData<HapticEffect> | StateMarker<HapticEffect | Tween<HapticEffect>> | None -- HapticEffect
+type PV22 = Content | TweenData<Content> | StateMarker<Content | Tween<Content>> | None -- Content
+type PV23 = Enum.ResamplerMode | TweenData<Enum.ResamplerMode> | StateMarker<Enum.ResamplerMode | Tween<Enum.ResamplerMode>> | None -- Enum.ResamplerMode
+type PV24 = Enum.ScaleType | TweenData<Enum.ScaleType> | StateMarker<Enum.ScaleType | Tween<Enum.ScaleType>> | None -- Enum.ScaleType
+type PV25 = Rect | TweenData<Rect> | StateMarker<Rect | Tween<Rect>> | None -- Rect
+type PV26 = Enum.ButtonStyle | TweenData<Enum.ButtonStyle> | StateMarker<Enum.ButtonStyle | Tween<Enum.ButtonStyle>> | None -- Enum.ButtonStyle
+type PV27 = Enum.SafeAreaCompatibility | TweenData<Enum.SafeAreaCompatibility> | StateMarker<Enum.SafeAreaCompatibility | Tween<Enum.SafeAreaCompatibility>> | None -- Enum.SafeAreaCompatibility
+type PV28 = Enum.ScreenInsets | TweenData<Enum.ScreenInsets> | StateMarker<Enum.ScreenInsets | Tween<Enum.ScreenInsets>> | None -- Enum.ScreenInsets
+type PV29 = Enum.ElasticBehavior | TweenData<Enum.ElasticBehavior> | StateMarker<Enum.ElasticBehavior | Tween<Enum.ElasticBehavior>> | None -- Enum.ElasticBehavior
+type PV30 = Enum.ScrollBarInset | TweenData<Enum.ScrollBarInset> | StateMarker<Enum.ScrollBarInset | Tween<Enum.ScrollBarInset>> | None -- Enum.ScrollBarInset
+type PV31 = Enum.ScrollingDirection | TweenData<Enum.ScrollingDirection> | StateMarker<Enum.ScrollingDirection | Tween<Enum.ScrollingDirection>> | None -- Enum.ScrollingDirection
+type PV32 = Enum.VerticalScrollBarPosition | TweenData<Enum.VerticalScrollBarPosition> | StateMarker<Enum.VerticalScrollBarPosition | Tween<Enum.VerticalScrollBarPosition>> | None -- Enum.VerticalScrollBarPosition
+type PV33 = Enum.NormalId | TweenData<Enum.NormalId> | StateMarker<Enum.NormalId | Tween<Enum.NormalId>> | None -- Enum.NormalId
+type PV34 = Enum.SurfaceGuiSizingMode | TweenData<Enum.SurfaceGuiSizingMode> | StateMarker<Enum.SurfaceGuiSizingMode | Tween<Enum.SurfaceGuiSizingMode>> | None -- Enum.SurfaceGuiSizingMode
+type PV35 = Font | TweenData<Font> | StateMarker<Font | Tween<Font>> | None -- Font
+type PV36 = Enum.TextDirection | TweenData<Enum.TextDirection> | StateMarker<Enum.TextDirection | Tween<Enum.TextDirection>> | None -- Enum.TextDirection
+type PV37 = Enum.TextTruncate | TweenData<Enum.TextTruncate> | StateMarker<Enum.TextTruncate | Tween<Enum.TextTruncate>> | None -- Enum.TextTruncate
+type PV38 = Enum.TextXAlignment | TweenData<Enum.TextXAlignment> | StateMarker<Enum.TextXAlignment | Tween<Enum.TextXAlignment>> | None -- Enum.TextXAlignment
+type PV39 = Enum.TextYAlignment | TweenData<Enum.TextYAlignment> | StateMarker<Enum.TextYAlignment | Tween<Enum.TextYAlignment>> | None -- Enum.TextYAlignment
+type PV40 = Enum.AspectType | TweenData<Enum.AspectType> | StateMarker<Enum.AspectType | Tween<Enum.AspectType>> | None -- Enum.AspectType
+type PV41 = Enum.DominantAxis | TweenData<Enum.DominantAxis> | StateMarker<Enum.DominantAxis | Tween<Enum.DominantAxis>> | None -- Enum.DominantAxis
+type PV42 = UDim | TweenData<UDim> | StateMarker<UDim | Tween<UDim>> | None -- UDim
+type PV43 = Enum.UIDragDetectorBoundingBehavior | TweenData<Enum.UIDragDetectorBoundingBehavior> | StateMarker<Enum.UIDragDetectorBoundingBehavior | Tween<Enum.UIDragDetectorBoundingBehavior>> | None -- Enum.UIDragDetectorBoundingBehavior
+type PV44 = GuiBase2d | TweenData<GuiBase2d> | StateMarker<GuiBase2d | Tween<GuiBase2d>> | None -- GuiBase2d
+type PV45 = Enum.UIDragDetectorDragRelativity | TweenData<Enum.UIDragDetectorDragRelativity> | StateMarker<Enum.UIDragDetectorDragRelativity | Tween<Enum.UIDragDetectorDragRelativity>> | None -- Enum.UIDragDetectorDragRelativity
+type PV46 = Enum.UIDragDetectorDragSpace | TweenData<Enum.UIDragDetectorDragSpace> | StateMarker<Enum.UIDragDetectorDragSpace | Tween<Enum.UIDragDetectorDragSpace>> | None -- Enum.UIDragDetectorDragSpace
+type PV47 = Enum.UIDragDetectorDragStyle | TweenData<Enum.UIDragDetectorDragStyle> | StateMarker<Enum.UIDragDetectorDragStyle | Tween<Enum.UIDragDetectorDragStyle>> | None -- Enum.UIDragDetectorDragStyle
+type PV48 = Enum.UIDragDetectorResponseStyle | TweenData<Enum.UIDragDetectorResponseStyle> | StateMarker<Enum.UIDragDetectorResponseStyle | Tween<Enum.UIDragDetectorResponseStyle>> | None -- Enum.UIDragDetectorResponseStyle
+type PV49 = Enum.UIDragSpeedAxisMapping | TweenData<Enum.UIDragSpeedAxisMapping> | StateMarker<Enum.UIDragSpeedAxisMapping | Tween<Enum.UIDragSpeedAxisMapping>> | None -- Enum.UIDragSpeedAxisMapping
+type PV50 = Enum.UIFlexMode | TweenData<Enum.UIFlexMode> | StateMarker<Enum.UIFlexMode | Tween<Enum.UIFlexMode>> | None -- Enum.UIFlexMode
+type PV51 = Enum.ItemLineAlignment | TweenData<Enum.ItemLineAlignment> | StateMarker<Enum.ItemLineAlignment | Tween<Enum.ItemLineAlignment>> | None -- Enum.ItemLineAlignment
+type PV52 = ColorSequence | TweenData<ColorSequence> | StateMarker<ColorSequence | Tween<ColorSequence>> | None -- ColorSequence
+type PV53 = Enum.GradientTileMode | TweenData<Enum.GradientTileMode> | StateMarker<Enum.GradientTileMode | Tween<Enum.GradientTileMode>> | None -- Enum.GradientTileMode
+type PV54 = NumberSequence | TweenData<NumberSequence> | StateMarker<NumberSequence | Tween<NumberSequence>> | None -- NumberSequence
+type PV55 = Enum.GradientType | TweenData<Enum.GradientType> | StateMarker<Enum.GradientType | Tween<Enum.GradientType>> | None -- Enum.GradientType
+type PV56 = Enum.FillDirection | TweenData<Enum.FillDirection> | StateMarker<Enum.FillDirection | Tween<Enum.FillDirection>> | None -- Enum.FillDirection
+type PV57 = Enum.HorizontalAlignment | TweenData<Enum.HorizontalAlignment> | StateMarker<Enum.HorizontalAlignment | Tween<Enum.HorizontalAlignment>> | None -- Enum.HorizontalAlignment
+type PV58 = Enum.SortOrder | TweenData<Enum.SortOrder> | StateMarker<Enum.SortOrder | Tween<Enum.SortOrder>> | None -- Enum.SortOrder
+type PV59 = Enum.StartCorner | TweenData<Enum.StartCorner> | StateMarker<Enum.StartCorner | Tween<Enum.StartCorner>> | None -- Enum.StartCorner
+type PV60 = Enum.VerticalAlignment | TweenData<Enum.VerticalAlignment> | StateMarker<Enum.VerticalAlignment | Tween<Enum.VerticalAlignment>> | None -- Enum.VerticalAlignment
+type PV61 = Enum.UIFlexAlignment | TweenData<Enum.UIFlexAlignment> | StateMarker<Enum.UIFlexAlignment | Tween<Enum.UIFlexAlignment>> | None -- Enum.UIFlexAlignment
+type PV62 = Enum.EasingDirection | TweenData<Enum.EasingDirection> | StateMarker<Enum.EasingDirection | Tween<Enum.EasingDirection>> | None -- Enum.EasingDirection
+type PV63 = Enum.EasingStyle | TweenData<Enum.EasingStyle> | StateMarker<Enum.EasingStyle | Tween<Enum.EasingStyle>> | None -- Enum.EasingStyle
+type PV64 = Enum.ApplyStrokeMode | TweenData<Enum.ApplyStrokeMode> | StateMarker<Enum.ApplyStrokeMode | Tween<Enum.ApplyStrokeMode>> | None -- Enum.ApplyStrokeMode
+type PV65 = Enum.BorderStrokePosition | TweenData<Enum.BorderStrokePosition> | StateMarker<Enum.BorderStrokePosition | Tween<Enum.BorderStrokePosition>> | None -- Enum.BorderStrokePosition
+type PV66 = Enum.LineJoinMode | TweenData<Enum.LineJoinMode> | StateMarker<Enum.LineJoinMode | Tween<Enum.LineJoinMode>> | None -- Enum.LineJoinMode
+type PV67 = Enum.StrokeSizingMode | TweenData<Enum.StrokeSizingMode> | StateMarker<Enum.StrokeSizingMode | Tween<Enum.StrokeSizingMode>> | None -- Enum.StrokeSizingMode
+type PV68 = Enum.TableMajorAxis | TweenData<Enum.TableMajorAxis> | StateMarker<Enum.TableMajorAxis | Tween<Enum.TableMajorAxis>> | None -- Enum.TableMajorAxis
+type PV69 = Enum.RollOffMode | TweenData<Enum.RollOffMode> | StateMarker<Enum.RollOffMode | Tween<Enum.RollOffMode>> | None -- Enum.RollOffMode
+type PV70 = Camera | TweenData<Camera> | StateMarker<Camera | Tween<Camera>> | None -- Camera
+type PV71 = Enum.ModelStreamingMode | TweenData<Enum.ModelStreamingMode> | StateMarker<Enum.ModelStreamingMode | Tween<Enum.ModelStreamingMode>> | None -- Enum.ModelStreamingMode
+type PV72 = BasePart | TweenData<BasePart> | StateMarker<BasePart | Tween<BasePart>> | None -- BasePart
+type PV73 = number | UDim | TweenData<number | UDim> | StateMarker<number | UDim | Tween<number | UDim>> | None -- number | UDim
 
 export type BillboardGuiParam<E> = {
 	[number]: E,
@@ -156,16 +159,16 @@ export type BillboardGuiParam<E> = {
 	StudsOffset: PV4?,
 	StudsOffsetWorldSpace: PV4?,
 	ZIndexBehavior: PV10?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type CameraParam<E> = {
@@ -185,16 +188,16 @@ export type CameraParam<E> = {
 	Name: PV5?,
 	Sandboxed: PV0?,
 	VRTiltAndRollEnabled: PV0?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	InterpolationFinished: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InterpolationFinished: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type CanvasGroupParam<E> = {
@@ -241,32 +244,32 @@ export type CanvasGroupParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type FolderParam<E> = {
@@ -275,15 +278,15 @@ export type FolderParam<E> = {
 	Capabilities: PV3?,
 	Name: PV5?,
 	Sandboxed: PV0?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type FrameParam<E> = {
@@ -329,32 +332,32 @@ export type FrameParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type ImageButtonParam<E> = {
@@ -373,9 +376,9 @@ export type ImageButtonParam<E> = {
 	Capabilities: PV3?,
 	ClipsDescendants: PV0?,
 	HoverHapticEffect: PV21?,
-	HoverImage: PV22?,
+	HoverImage: PV5?,
 	HoverImageContent: PV22?,
-	Image: PV22?,
+	Image: PV5?,
 	ImageColor3: PV15?,
 	ImageContent: PV22?,
 	ImageRectOffset: PV9?,
@@ -392,7 +395,7 @@ export type ImageButtonParam<E> = {
 	NextSelectionUp: PV18?,
 	Position: PV8?,
 	PressHapticEffect: PV21?,
-	PressedImage: PV22?,
+	PressedImage: PV5?,
 	PressedImageContent: PV22?,
 	ResampleMode: PV23?,
 	RootLocalizationTable: PV6?,
@@ -420,40 +423,40 @@ export type ImageButtonParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	Activated: (((inputObject: InputObject, clickCount: number) -> ()) | State<(inputObject: InputObject, clickCount: number) -> ()> | None)?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	MouseButton1Click: ((() -> ()) | State<() -> ()> | None)?,
-	MouseButton1Down: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseButton1Up: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseButton2Click: ((() -> ()) | State<() -> ()> | None)?,
-	MouseButton2Down: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseButton2Up: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	SecondaryActivated: (((inputObject: InputObject) -> ()) | State<(inputObject: InputObject) -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	Activated: (((inputObject: InputObject, clickCount: number) -> ()) | StateMarker<(inputObject: InputObject, clickCount: number) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	MouseButton1Click: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	MouseButton1Down: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseButton1Up: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseButton2Click: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	MouseButton2Down: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseButton2Up: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	SecondaryActivated: (((inputObject: InputObject) -> ()) | StateMarker<(inputObject: InputObject) -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type ImageLabelParam<E> = {
@@ -470,7 +473,7 @@ export type ImageLabelParam<E> = {
 	BorderSizePixel: PV2?,
 	Capabilities: PV3?,
 	ClipsDescendants: PV0?,
-	Image: PV22?,
+	Image: PV5?,
 	ImageColor3: PV15?,
 	ImageContent: PV22?,
 	ImageRectOffset: PV9?,
@@ -509,32 +512,32 @@ export type ImageLabelParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type ScreenGuiParam<E> = {
@@ -558,16 +561,16 @@ export type ScreenGuiParam<E> = {
 	SelectionBehaviorUp: PV7?,
 	SelectionGroup: PV0?,
 	ZIndexBehavior: PV10?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type ScrollingFrameParam<E> = {
@@ -583,7 +586,7 @@ export type ScrollingFrameParam<E> = {
 	BorderColor3: PV15?,
 	BorderMode: PV16?,
 	BorderSizePixel: PV2?,
-	BottomImage: PV22?,
+	BottomImage: PV5?,
 	BottomImageContent: PV22?,
 	CanvasPosition: PV9?,
 	CanvasSize: PV8?,
@@ -594,7 +597,7 @@ export type ScrollingFrameParam<E> = {
 	InputSink: PV17?,
 	Interactable: PV0?,
 	LayoutOrder: PV2?,
-	MidImage: PV22?,
+	MidImage: PV5?,
 	MidImageContent: PV22?,
 	Name: PV5?,
 	NextSelectionDown: PV18?,
@@ -620,7 +623,7 @@ export type ScrollingFrameParam<E> = {
 	SelectionOrder: PV2?,
 	Size: PV8?,
 	SizeConstraint: PV19?,
-	TopImage: PV22?,
+	TopImage: PV5?,
 	TopImageContent: PV22?,
 	VerticalScrollBarInset: PV30?,
 	VerticalScrollBarPosition: PV32?,
@@ -630,32 +633,32 @@ export type ScrollingFrameParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type SurfaceGuiParam<E> = {
@@ -687,16 +690,16 @@ export type SurfaceGuiParam<E> = {
 	ToolPunchThroughDistance: PV2?,
 	ZIndexBehavior: PV10?,
 	ZOffset: PV2?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type TextBoxParam<E> = {
@@ -766,35 +769,35 @@ export type TextBoxParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	FocusLost: (((enterPressed: boolean, inputThatCausedFocusLoss: InputObject) -> ()) | State<(enterPressed: boolean, inputThatCausedFocusLoss: InputObject) -> ()> | None)?,
-	Focused: ((() -> ()) | State<() -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	ReturnPressedFromOnScreenKeyboard: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	FocusLost: (((enterPressed: boolean, inputThatCausedFocusLoss: InputObject) -> ()) | StateMarker<(enterPressed: boolean, inputThatCausedFocusLoss: InputObject) -> ()> | None)?,
+	Focused: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	ReturnPressedFromOnScreenKeyboard: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type TextButtonParam<E> = {
@@ -862,40 +865,40 @@ export type TextButtonParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	Activated: (((inputObject: InputObject, clickCount: number) -> ()) | State<(inputObject: InputObject, clickCount: number) -> ()> | None)?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	MouseButton1Click: ((() -> ()) | State<() -> ()> | None)?,
-	MouseButton1Down: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseButton1Up: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseButton2Click: ((() -> ()) | State<() -> ()> | None)?,
-	MouseButton2Down: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseButton2Up: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	SecondaryActivated: (((inputObject: InputObject) -> ()) | State<(inputObject: InputObject) -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	Activated: (((inputObject: InputObject, clickCount: number) -> ()) | StateMarker<(inputObject: InputObject, clickCount: number) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	MouseButton1Click: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	MouseButton1Down: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseButton1Up: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseButton2Click: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	MouseButton2Down: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseButton2Up: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	SecondaryActivated: (((inputObject: InputObject) -> ()) | StateMarker<(inputObject: InputObject) -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type TextLabelParam<E> = {
@@ -957,32 +960,32 @@ export type TextLabelParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type UIAspectRatioConstraintParam<E> = {
@@ -994,15 +997,15 @@ export type UIAspectRatioConstraintParam<E> = {
 	DominantAxis: PV41?,
 	Name: PV5?,
 	Sandboxed: PV0?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UICornerParam<E> = {
@@ -1016,26 +1019,26 @@ export type UICornerParam<E> = {
 	Sandboxed: PV0?,
 	TopLeftRadius: PV42?,
 	TopRightRadius: PV42?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIDragDetectorParam<E> = {
 	[number]: E,
-	ActivatedCursorIcon: PV22?,
+	ActivatedCursorIcon: PV5?,
 	ActivatedCursorIconContent: PV22?,
 	Archivable: PV0?,
 	BoundingBehavior: PV43?,
 	BoundingUI: PV44?,
 	Capabilities: PV3?,
-	CursorIcon: PV22?,
+	CursorIcon: PV5?,
 	CursorIconContent: PV22?,
 	DragAxis: PV9?,
 	DragRelativity: PV45?,
@@ -1055,18 +1058,18 @@ export type UIDragDetectorParam<E> = {
 	SelectionModeDragSpeed: PV8?,
 	SelectionModeRotateSpeed: PV2?,
 	UIDragSpeedAxisMapping: PV49?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	DragContinue: (((inputPosition: Vector2) -> ()) | State<(inputPosition: Vector2) -> ()> | None)?,
-	DragEnd: (((inputPosition: Vector2) -> ()) | State<(inputPosition: Vector2) -> ()> | None)?,
-	DragStart: (((inputPosition: Vector2) -> ()) | State<(inputPosition: Vector2) -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	DragContinue: (((inputPosition: Vector2) -> ()) | StateMarker<(inputPosition: Vector2) -> ()> | None)?,
+	DragEnd: (((inputPosition: Vector2) -> ()) | StateMarker<(inputPosition: Vector2) -> ()> | None)?,
+	DragStart: (((inputPosition: Vector2) -> ()) | StateMarker<(inputPosition: Vector2) -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIFlexItemParam<E> = {
@@ -1079,15 +1082,15 @@ export type UIFlexItemParam<E> = {
 	Name: PV5?,
 	Sandboxed: PV0?,
 	ShrinkRatio: PV2?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIGradientParam<E> = {
@@ -1104,15 +1107,15 @@ export type UIGradientParam<E> = {
 	TileMode: PV53?,
 	Transparency: PV54?,
 	Type: PV55?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIGridLayoutParam<E> = {
@@ -1129,15 +1132,15 @@ export type UIGridLayoutParam<E> = {
 	SortOrder: PV58?,
 	StartCorner: PV59?,
 	VerticalAlignment: PV60?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIListLayoutParam<E> = {
@@ -1155,15 +1158,15 @@ export type UIListLayoutParam<E> = {
 	VerticalAlignment: PV60?,
 	VerticalFlex: PV61?,
 	Wraps: PV0?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIPaddingParam<E> = {
@@ -1176,15 +1179,15 @@ export type UIPaddingParam<E> = {
 	PaddingRight: PV42?,
 	PaddingTop: PV42?,
 	Sandboxed: PV0?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIPageLayoutParam<E> = {
@@ -1206,18 +1209,18 @@ export type UIPageLayoutParam<E> = {
 	TouchInputEnabled: PV0?,
 	TweenTime: PV2?,
 	VerticalAlignment: PV60?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	PageEnter: (((page: Instance) -> ()) | State<(page: Instance) -> ()> | None)?,
-	PageLeave: (((page: Instance) -> ()) | State<(page: Instance) -> ()> | None)?,
-	Stopped: (((currentPage: Instance) -> ()) | State<(currentPage: Instance) -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	PageEnter: (((page: Instance) -> ()) | StateMarker<(page: Instance) -> ()> | None)?,
+	PageLeave: (((page: Instance) -> ()) | StateMarker<(page: Instance) -> ()> | None)?,
+	Stopped: (((currentPage: Instance) -> ()) | StateMarker<(currentPage: Instance) -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIScaleParam<E> = {
@@ -1227,15 +1230,15 @@ export type UIScaleParam<E> = {
 	Name: PV5?,
 	Sandboxed: PV0?,
 	Scale: PV2?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIShadowParam<E> = {
@@ -1253,15 +1256,15 @@ export type UIShadowParam<E> = {
 	Spread: PV8?,
 	Transparency: PV2?,
 	ZIndex: PV2?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UISizeConstraintParam<E> = {
@@ -1272,15 +1275,15 @@ export type UISizeConstraintParam<E> = {
 	MinSize: PV9?,
 	Name: PV5?,
 	Sandboxed: PV0?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UIStrokeParam<E> = {
@@ -1299,15 +1302,15 @@ export type UIStrokeParam<E> = {
 	Thickness: PV2?,
 	Transparency: PV2?,
 	ZIndex: PV2?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UITableLayoutParam<E> = {
@@ -1324,15 +1327,15 @@ export type UITableLayoutParam<E> = {
 	Sandboxed: PV0?,
 	SortOrder: PV58?,
 	VerticalAlignment: PV60?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type UITextSizeConstraintParam<E> = {
@@ -1343,15 +1346,15 @@ export type UITextSizeConstraintParam<E> = {
 	MinTextSize: PV2?,
 	Name: PV5?,
 	Sandboxed: PV0?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
 export type VideoFrameParam<E> = {
@@ -1396,7 +1399,7 @@ export type VideoFrameParam<E> = {
 	Size: PV8?,
 	SizeConstraint: PV19?,
 	TimePosition: PV2?,
-	Video: PV22?,
+	Video: PV5?,
 	VideoContent: PV22?,
 	Visible: PV0?,
 	Volume: PV2?,
@@ -1405,37 +1408,37 @@ export type VideoFrameParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	DidLoop: (((video: string) -> ()) | State<(video: string) -> ()> | None)?,
-	Ended: (((video: string) -> ()) | State<(video: string) -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	Loaded: (((video: string) -> ()) | State<(video: string) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	Paused: (((video: string) -> ()) | State<(video: string) -> ()> | None)?,
-	Played: (((video: string) -> ()) | State<(video: string) -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	DidLoop: (((video: string) -> ()) | StateMarker<(video: string) -> ()> | None)?,
+	Ended: (((video: string) -> ()) | StateMarker<(video: string) -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	Loaded: (((video: string) -> ()) | StateMarker<(video: string) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	Paused: (((video: string) -> ()) | StateMarker<(video: string) -> ()> | None)?,
+	Played: (((video: string) -> ()) | StateMarker<(video: string) -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type ViewportFrameParam<E> = {
@@ -1486,32 +1489,32 @@ export type ViewportFrameParam<E> = {
 	UIPadding: PV42?, -- 숏핸드(H-336)
 	UIPaddingOffset: PV2?, -- 숏핸드(H-336)
 	UIScale: PV2?, -- 숏핸드(H-336)
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	InputBegan: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputChanged: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	InputEnded: (((input: InputObject) -> ()) | State<(input: InputObject) -> ()> | None)?,
-	MouseEnter: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseLeave: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseMoved: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelBackward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	MouseWheelForward: (((x: number, y: number) -> ()) | State<(x: number, y: number) -> ()> | None)?,
-	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | State<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
-	SelectionGained: ((() -> ()) | State<() -> ()> | None)?,
-	SelectionLost: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
-	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
-	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | State<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
-	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | State<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
-	TouchTap: (((touchPositions: { any }) -> ()) | State<(touchPositions: { any }) -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	InputBegan: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputChanged: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	InputEnded: (((input: InputObject) -> ()) | StateMarker<(input: InputObject) -> ()> | None)?,
+	MouseEnter: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseLeave: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseMoved: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelBackward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	MouseWheelForward: (((x: number, y: number) -> ()) | StateMarker<(x: number, y: number) -> ()> | None)?,
+	SelectionChanged: (((amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()) | StateMarker<(amISelected: boolean, previousSelection: GuiObject, newSelection: GuiObject) -> ()> | None)?,
+	SelectionGained: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	SelectionLost: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	TouchLongPress: (((touchPositions: { any }, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPan: (((touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, totalTranslation: Vector2, velocity: Vector2, state: Enum.UserInputState) -> ()> | None)?,
+	TouchPinch: (((touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, scale: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchRotate: (((touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()) | StateMarker<(touchPositions: { any }, rotation: number, velocity: number, state: Enum.UserInputState) -> ()> | None)?,
+	TouchSwipe: (((swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()) | StateMarker<(swipeDirection: Enum.SwipeDirection, numberOfTouches: number) -> ()> | None)?,
+	TouchTap: (((touchPositions: { any }) -> ()) | StateMarker<(touchPositions: { any }) -> ()> | None)?,
 }
 
 export type WorldModelParam<E> = {
@@ -1524,20 +1527,20 @@ export type WorldModelParam<E> = {
 	Sandboxed: PV0?,
 	UseWorkspaceCollisionGroups: PV0?,
 	WorldPivot: PV11?,
-	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | State<(child: Instance, parent: Instance) -> ()> | None)?,
-	AttributeChanged: (((attribute: string) -> ()) | State<(attribute: string) -> ()> | None)?,
-	Changed: (((property: string) -> ()) | State<(property: string) -> ()> | None)?,
-	ChildAdded: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	ChildRemoved: (((child: Instance) -> ()) | State<(child: Instance) -> ()> | None)?,
-	DescendantAdded: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	DescendantRemoving: (((descendant: Instance) -> ()) | State<(descendant: Instance) -> ()> | None)?,
-	Destroying: ((() -> ()) | State<() -> ()> | None)?,
-	StyledPropertiesChanged: ((() -> ()) | State<() -> ()> | None)?,
+	AncestryChanged: (((child: Instance, parent: Instance) -> ()) | StateMarker<(child: Instance, parent: Instance) -> ()> | None)?,
+	AttributeChanged: (((attribute: string) -> ()) | StateMarker<(attribute: string) -> ()> | None)?,
+	Changed: (((property: string) -> ()) | StateMarker<(property: string) -> ()> | None)?,
+	ChildAdded: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	ChildRemoved: (((child: Instance) -> ()) | StateMarker<(child: Instance) -> ()> | None)?,
+	DescendantAdded: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	DescendantRemoving: (((descendant: Instance) -> ()) | StateMarker<(descendant: Instance) -> ()> | None)?,
+	Destroying: ((() -> ()) | StateMarker<() -> ()> | None)?,
+	StyledPropertiesChanged: ((() -> ()) | StateMarker<() -> ()> | None)?,
 }
 
--- OnChange — PropTypes(D 스코프 전체 프로퍼티 이름 → 타입; 클래스 간 충돌은 any)
+-- PropTypes(D 스코프 전체 쓰기 프로퍼티 이름 → 타입; 클래스 간 충돌은 any)
 export type PropTypes = {
-	ActivatedCursorIcon: Content,
+	ActivatedCursorIcon: string,
 	ActivatedCursorIconContent: Content,
 	Active: boolean,
 	Adornee: Instance,
@@ -1561,7 +1564,7 @@ export type PropTypes = {
 	BorderOffset: UDim,
 	BorderSizePixel: number,
 	BorderStrokePosition: Enum.BorderStrokePosition,
-	BottomImage: Content,
+	BottomImage: string,
 	BottomImageContent: Content,
 	BottomLeftRadius: UDim,
 	BottomRightRadius: UDim,
@@ -1583,7 +1586,7 @@ export type PropTypes = {
 	Color: any,
 	CornerRadius: UDim,
 	CurrentCamera: Camera,
-	CursorIcon: Content,
+	CursorIcon: string,
 	CursorIconContent: Content,
 	CursorPosition: number,
 	DiagonalFieldOfView: number,
@@ -1622,10 +1625,10 @@ export type PropTypes = {
 	HorizontalFlex: Enum.UIFlexAlignment,
 	HorizontalScrollBarInset: Enum.ScrollBarInset,
 	HoverHapticEffect: HapticEffect,
-	HoverImage: Content,
+	HoverImage: string,
 	HoverImageContent: Content,
 	IgnoreGuiInset: boolean,
-	Image: Content,
+	Image: string,
 	ImageColor3: Color3,
 	ImageContent: Content,
 	ImageRectOffset: Vector2,
@@ -1650,7 +1653,7 @@ export type PropTypes = {
 	MaxSize: Vector2,
 	MaxTextSize: number,
 	MaxVisibleGraphemes: number,
-	MidImage: Content,
+	MidImage: string,
 	MidImageContent: Content,
 	MinDragAngle: number,
 	MinDragTranslation: UDim2,
@@ -1678,7 +1681,7 @@ export type PropTypes = {
 	Playing: boolean,
 	Position: UDim2,
 	PressHapticEffect: HapticEffect,
-	PressedImage: Content,
+	PressedImage: string,
 	PressedImageContent: Content,
 	PrimaryPart: BasePart,
 	ReferenceUIInstance: GuiObject,
@@ -1748,7 +1751,7 @@ export type PropTypes = {
 	TileSize: UDim2,
 	TimePosition: number,
 	ToolPunchThroughDistance: number,
-	TopImage: Content,
+	TopImage: string,
 	TopImageContent: Content,
 	TopLeftRadius: UDim,
 	TopRightRadius: UDim,
@@ -1763,7 +1766,7 @@ export type PropTypes = {
 	VerticalFlex: Enum.UIFlexAlignment,
 	VerticalScrollBarInset: Enum.ScrollBarInset,
 	VerticalScrollBarPosition: Enum.VerticalScrollBarPosition,
-	Video: Content,
+	Video: string,
 	VideoContent: Content,
 	Visible: boolean,
 	Volume: number,
@@ -1773,8 +1776,267 @@ export type PropTypes = {
 	ZIndexBehavior: Enum.ZIndexBehavior,
 	ZOffset: number,
 }
-export type OnChangeDescriptor<K> = { Name: K, Callback: (index<PropTypes, K>) -> () }
-export type OnChangeFn = <K>(name: K & keyof<PropTypes>, fn: (index<PropTypes, K>) -> ()) -> OnChangeDescriptor<K>
+-- OnChange — PropTypesRead(쓰기 표면 + ReadOnly 프로퍼티; AbsoluteSize/AbsolutePosition/TextBounds…, Q19)
+export type PropTypesRead = {
+	AbsoluteCanvasSize: Vector2,
+	AbsoluteCellCount: Vector2,
+	AbsoluteCellSize: Vector2,
+	AbsoluteContentSize: Vector2,
+	AbsolutePosition: Vector2,
+	AbsoluteRotation: number,
+	AbsoluteSize: Vector2,
+	AbsoluteWindowSize: Vector2,
+	ActivatedCursorIcon: string,
+	ActivatedCursorIconContent: Content,
+	Active: boolean,
+	Adornee: Instance,
+	AlwaysOnTop: boolean,
+	Ambient: Color3,
+	AnchorPoint: Vector2,
+	Animated: boolean,
+	ApplyStrokeMode: Enum.ApplyStrokeMode,
+	Archivable: boolean,
+	AspectRatio: number,
+	AspectType: Enum.AspectType,
+	AutoButtonColor: boolean,
+	AutoLocalize: boolean,
+	AutomaticCanvasSize: Enum.AutomaticSize,
+	AutomaticSize: Enum.AutomaticSize,
+	BackgroundColor3: Color3,
+	BackgroundTransparency: number,
+	BlurRadius: UDim,
+	BorderColor3: Color3,
+	BorderMode: Enum.BorderMode,
+	BorderOffset: UDim,
+	BorderSizePixel: number,
+	BorderStrokePosition: Enum.BorderStrokePosition,
+	BottomImage: string,
+	BottomImageContent: Content,
+	BottomLeftRadius: UDim,
+	BottomRightRadius: UDim,
+	BoundingBehavior: Enum.UIDragDetectorBoundingBehavior,
+	BoundingUI: GuiBase2d,
+	Brightness: number,
+	CFrame: CFrame,
+	CameraSubject: Instance,
+	CameraType: Enum.CameraType,
+	CanvasPosition: Vector2,
+	CanvasSize: any,
+	Capabilities: SecurityCapabilities,
+	CellPadding: UDim2,
+	CellSize: UDim2,
+	Circular: boolean,
+	ClassName: string,
+	ClearTextOnFocus: boolean,
+	ClipToDeviceSafeArea: boolean,
+	ClipsDescendants: boolean,
+	Color: any,
+	ContentText: string,
+	CornerRadius: UDim,
+	CurrentCamera: Camera,
+	CurrentDistance: number,
+	CurrentPage: GuiObject,
+	CursorIcon: string,
+	CursorIconContent: Content,
+	CursorPosition: number,
+	DiagonalFieldOfView: number,
+	DisplayOrder: number,
+	DistanceStep: number,
+	DominantAxis: Enum.DominantAxis,
+	DragAxis: Vector2,
+	DragRelativity: Enum.UIDragDetectorDragRelativity,
+	DragRotation: number,
+	DragSpace: Enum.UIDragDetectorDragSpace,
+	DragStyle: Enum.UIDragDetectorDragStyle,
+	DragUDim2: UDim2,
+	EasingDirection: Enum.EasingDirection,
+	EasingStyle: Enum.EasingStyle,
+	ElasticBehavior: Enum.ElasticBehavior,
+	Enabled: boolean,
+	ExtentsOffset: Vector3,
+	ExtentsOffsetWorldSpace: Vector3,
+	Face: Enum.NormalId,
+	FieldOfView: number,
+	FieldOfViewMode: Enum.FieldOfViewMode,
+	FillDirection: Enum.FillDirection,
+	FillDirectionMaxCells: number,
+	FillEmptySpaceColumns: boolean,
+	FillEmptySpaceRows: boolean,
+	FlexMode: Enum.UIFlexMode,
+	Focus: CFrame,
+	FontFace: Font,
+	GamepadInputEnabled: boolean,
+	GroupColor3: Color3,
+	GroupTransparency: number,
+	GrowRatio: number,
+	GuiState: Enum.GuiState,
+	HeadLocked: boolean,
+	HeadScale: number,
+	HorizontalAlignment: Enum.HorizontalAlignment,
+	HorizontalFlex: Enum.UIFlexAlignment,
+	HorizontalScrollBarInset: Enum.ScrollBarInset,
+	HoverHapticEffect: HapticEffect,
+	HoverImage: string,
+	HoverImageContent: Content,
+	IgnoreGuiInset: boolean,
+	Image: string,
+	ImageColor3: Color3,
+	ImageContent: Content,
+	ImageRectOffset: Vector2,
+	ImageRectSize: Vector2,
+	ImageTransparency: number,
+	InputSink: Enum.InputSink,
+	Inset: boolean,
+	Interactable: boolean,
+	IsLoaded: boolean,
+	ItemLineAlignment: Enum.ItemLineAlignment,
+	LayoutOrder: number,
+	LightColor: Color3,
+	LightDirection: Vector3,
+	LightInfluence: number,
+	LineHeight: number,
+	LineJoinMode: Enum.LineJoinMode,
+	Looped: boolean,
+	MajorAxis: Enum.TableMajorAxis,
+	MaxAxisFieldOfView: number,
+	MaxDistance: number,
+	MaxDragAngle: number,
+	MaxDragTranslation: UDim2,
+	MaxSize: Vector2,
+	MaxTextSize: number,
+	MaxVisibleGraphemes: number,
+	MidImage: string,
+	MidImageContent: Content,
+	MinDragAngle: number,
+	MinDragTranslation: UDim2,
+	MinSize: Vector2,
+	MinTextSize: number,
+	Modal: boolean,
+	ModelStreamingMode: Enum.ModelStreamingMode,
+	MultiLine: boolean,
+	Name: string,
+	NearPlaneZ: number,
+	NextSelectionDown: GuiObject,
+	NextSelectionLeft: GuiObject,
+	NextSelectionRight: GuiObject,
+	NextSelectionUp: GuiObject,
+	Offset: any,
+	OpenTypeFeatures: string,
+	OpenTypeFeaturesError: string,
+	Padding: any,
+	PaddingBottom: UDim,
+	PaddingLeft: UDim,
+	PaddingRight: UDim,
+	PaddingTop: UDim,
+	PixelsPerStud: number,
+	PlaceholderColor3: Color3,
+	PlaceholderText: string,
+	PlayerToHideFrom: Instance,
+	Playing: boolean,
+	Position: UDim2,
+	PressHapticEffect: HapticEffect,
+	PressedImage: string,
+	PressedImageContent: Content,
+	PrimaryPart: BasePart,
+	ReferenceUIInstance: GuiObject,
+	ResampleMode: Enum.ResamplerMode,
+	ResetOnSpawn: boolean,
+	Resolution: Vector2,
+	ResponseStyle: Enum.UIDragDetectorResponseStyle,
+	RichText: boolean,
+	RollOffMaxDistance: number,
+	RollOffMinDistance: number,
+	RollOffMode: Enum.RollOffMode,
+	RootLocalizationTable: LocalizationTable,
+	Rotation: number,
+	SafeAreaCompatibility: Enum.SafeAreaCompatibility,
+	Sandboxed: boolean,
+	Scale: number,
+	ScaleType: Enum.ScaleType,
+	ScreenInsets: Enum.ScreenInsets,
+	ScrollBarImageColor3: Color3,
+	ScrollBarImageTransparency: number,
+	ScrollBarThickness: number,
+	ScrollWheelInputEnabled: boolean,
+	ScrollingDirection: Enum.ScrollingDirection,
+	ScrollingEnabled: boolean,
+	Selectable: boolean,
+	Selected: boolean,
+	SelectionBehaviorDown: Enum.SelectionBehavior,
+	SelectionBehaviorLeft: Enum.SelectionBehavior,
+	SelectionBehaviorRight: Enum.SelectionBehavior,
+	SelectionBehaviorUp: Enum.SelectionBehavior,
+	SelectionGroup: boolean,
+	SelectionImageObject: GuiObject,
+	SelectionModeDragSpeed: UDim2,
+	SelectionModeRotateSpeed: number,
+	SelectionOrder: number,
+	SelectionStart: number,
+	ShowBehindParent: boolean,
+	ShowNativeInput: boolean,
+	ShrinkRatio: number,
+	Size: UDim2,
+	SizeConstraint: Enum.SizeConstraint,
+	SizeOffset: Vector2,
+	SizingMode: Enum.SurfaceGuiSizingMode,
+	SliceCenter: Rect,
+	SliceScale: number,
+	SortOrder: Enum.SortOrder,
+	Spread: UDim2,
+	StartCorner: Enum.StartCorner,
+	StrokeSizingMode: Enum.StrokeSizingMode,
+	StudsOffset: Vector3,
+	StudsOffsetWorldSpace: Vector3,
+	Style: any,
+	Text: string,
+	TextBounds: Vector2,
+	TextColor3: Color3,
+	TextDirection: Enum.TextDirection,
+	TextEditable: boolean,
+	TextFits: boolean,
+	TextScaled: boolean,
+	TextSize: number,
+	TextStrokeColor3: Color3,
+	TextStrokeTransparency: number,
+	TextTransparency: number,
+	TextTruncate: Enum.TextTruncate,
+	TextWrapped: boolean,
+	TextXAlignment: Enum.TextXAlignment,
+	TextYAlignment: Enum.TextYAlignment,
+	Thickness: number,
+	TileMode: Enum.GradientTileMode,
+	TileSize: UDim2,
+	TimeLength: number,
+	TimePosition: number,
+	ToolPunchThroughDistance: number,
+	TopImage: string,
+	TopImageContent: Content,
+	TopLeftRadius: UDim,
+	TopRightRadius: UDim,
+	TouchInputEnabled: boolean,
+	Transparency: any,
+	TweenTime: number,
+	Type: Enum.GradientType,
+	UIDragSpeedAxisMapping: Enum.UIDragSpeedAxisMapping,
+	UseWorkspaceCollisionGroups: boolean,
+	VRTiltAndRollEnabled: boolean,
+	VerticalAlignment: Enum.VerticalAlignment,
+	VerticalFlex: Enum.UIFlexAlignment,
+	VerticalScrollBarInset: Enum.ScrollBarInset,
+	VerticalScrollBarPosition: Enum.VerticalScrollBarPosition,
+	Video: string,
+	VideoContent: Content,
+	ViewportSize: Vector2,
+	Visible: boolean,
+	Volume: number,
+	WorldPivot: CFrame,
+	Wraps: boolean,
+	ZIndex: number,
+	ZIndexBehavior: Enum.ZIndexBehavior,
+	ZOffset: number,
+}
+export type OnChangeDescriptor<K> = { Name: K, Callback: (index<PropTypesRead, K>) -> () }
+export type OnChangeFn = <K>(name: K & keyof<PropTypesRead>, fn: (index<PropTypesRead, K>) -> ()) -> OnChangeDescriptor<K>
 
 export type BillboardGuiOnChange =
 	{ Name: "Active", Callback: (boolean) -> () }
@@ -1806,9 +2068,14 @@ export type BillboardGuiOnChange =
 	| 	{ Name: "StudsOffset", Callback: (Vector3) -> () }
 	| 	{ Name: "StudsOffsetWorldSpace", Callback: (Vector3) -> () }
 	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "CurrentDistance", Callback: (number) -> () }
 export type BillboardGuiModifier = {
 	read __quadModifier: "BillboardGui", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: BillboardGuiModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: BillboardGuiModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: BillboardGuiModifier, ...any) -> any,
 	As: <T>(self: BillboardGuiModifier, name: string?) -> T, -- 무검사(11절)
@@ -1845,7 +2112,7 @@ export type BillboardGuiModifier = {
 }
 export type IntoBillboardGui = { AsBillboardGui: (self: any) -> BillboardGuiModifier }
 export type BillboardGuiRefMarker = { read __quadRefAccepts: (BillboardGui) -> () }
-export type BillboardGuiElem = NewChild | BillboardGuiOnChange | State<BillboardGuiOnChange> | { read __quadModifier: "BillboardGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" } | BillboardGuiRefMarker | State<BillboardGuiRefMarker>
+export type BillboardGuiElem = NewChild | BillboardGuiOnChange | StateMarker<BillboardGuiOnChange> | { read __quadModifier: "BillboardGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" } | BillboardGuiRefMarker | StateMarker<BillboardGuiRefMarker>
 export type BillboardGuiMapperElem = BillboardGuiElem | MapperDescriptor
 
 export type CameraOnChange =
@@ -1864,9 +2131,12 @@ export type CameraOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "VRTiltAndRollEnabled", Callback: (boolean) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "NearPlaneZ", Callback: (number) -> () }
+	| 	{ Name: "ViewportSize", Callback: (Vector2) -> () }
 export type CameraModifier = {
 	read __quadModifier: "Camera", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: CameraModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: CameraModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: CameraModifier, ...any) -> any,
 	As: <T>(self: CameraModifier, name: string?) -> T, -- 무검사(11절)
@@ -1889,7 +2159,7 @@ export type CameraModifier = {
 }
 export type IntoCamera = { AsCamera: (self: any) -> CameraModifier }
 export type CameraRefMarker = { read __quadRefAccepts: (Camera) -> () }
-export type CameraElem = NewChild | CameraOnChange | State<CameraOnChange> | { read __quadModifier: "Camera" | "PVInstance" | "Instance" } | CameraRefMarker | State<CameraRefMarker>
+export type CameraElem = NewChild | CameraOnChange | StateMarker<CameraOnChange> | { read __quadModifier: "Camera" | "PVInstance" | "Instance" } | CameraRefMarker | StateMarker<CameraRefMarker>
 export type CameraMapperElem = CameraElem | MapperDescriptor
 
 export type CanvasGroupOnChange =
@@ -1931,9 +2201,14 @@ export type CanvasGroupOnChange =
 	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
 export type CanvasGroupModifier = {
 	read __quadModifier: "CanvasGroup", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: CanvasGroupModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: CanvasGroupModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: CanvasGroupModifier, ...any) -> any,
 	As: <T>(self: CanvasGroupModifier, name: string?) -> T, -- 무검사(11절)
@@ -1976,14 +2251,14 @@ export type CanvasGroupModifier = {
 	SizeConstraint: (self: CanvasGroupModifier, value: Field<Enum.SizeConstraint>) -> CanvasGroupModifier,
 	Visible: (self: CanvasGroupModifier, value: Field<boolean>) -> CanvasGroupModifier,
 	ZIndex: (self: CanvasGroupModifier, value: Field<number>) -> CanvasGroupModifier,
-	UICorner: (self: CanvasGroupModifier, value: SHF0) -> CanvasGroupModifier, -- 숏핸드(H-336)
-	UIPadding: (self: CanvasGroupModifier, value: Field<UDim>) -> CanvasGroupModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: CanvasGroupModifier, value: Field<number>) -> CanvasGroupModifier, -- 숏핸드(H-336)
-	UIScale: (self: CanvasGroupModifier, value: Field<number>) -> CanvasGroupModifier, -- 숏핸드(H-336)
+	UICorner: (self: CanvasGroupModifier, value: Field<number | UDim>) -> CanvasGroupModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: CanvasGroupModifier, value: Field<UDim>) -> CanvasGroupModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: CanvasGroupModifier, value: Field<number>) -> CanvasGroupModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: CanvasGroupModifier, value: Field<number>) -> CanvasGroupModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoCanvasGroup = { AsCanvasGroup: (self: any) -> CanvasGroupModifier }
 export type CanvasGroupRefMarker = { read __quadRefAccepts: (CanvasGroup) -> () }
-export type CanvasGroupElem = NewChild | CanvasGroupOnChange | State<CanvasGroupOnChange> | { read __quadModifier: "CanvasGroup" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | CanvasGroupRefMarker | State<CanvasGroupRefMarker>
+export type CanvasGroupElem = NewChild | CanvasGroupOnChange | StateMarker<CanvasGroupOnChange> | { read __quadModifier: "CanvasGroup" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | CanvasGroupRefMarker | StateMarker<CanvasGroupRefMarker>
 export type CanvasGroupMapperElem = CanvasGroupElem | MapperDescriptor
 
 export type FolderOnChange =
@@ -1991,9 +2266,10 @@ export type FolderOnChange =
 	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type FolderModifier = {
 	read __quadModifier: "Folder", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: FolderModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: FolderModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: FolderModifier, ...any) -> any,
 	As: <T>(self: FolderModifier, name: string?) -> T, -- 무검사(11절)
@@ -2005,7 +2281,7 @@ export type FolderModifier = {
 }
 export type IntoFolder = { AsFolder: (self: any) -> FolderModifier }
 export type FolderRefMarker = { read __quadRefAccepts: (Folder) -> () }
-export type FolderElem = NewChild | FolderOnChange | State<FolderOnChange> | { read __quadModifier: "Folder" | "Instance" } | FolderRefMarker | State<FolderRefMarker>
+export type FolderElem = NewChild | FolderOnChange | StateMarker<FolderOnChange> | { read __quadModifier: "Folder" | "Instance" } | FolderRefMarker | StateMarker<FolderRefMarker>
 export type FolderMapperElem = FolderElem | MapperDescriptor
 
 export type FrameOnChange =
@@ -2046,9 +2322,14 @@ export type FrameOnChange =
 	| 	{ Name: "Style", Callback: (Enum.FrameStyle) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
 export type FrameModifier = {
 	read __quadModifier: "Frame", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: FrameModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: FrameModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: FrameModifier, ...any) -> any,
 	As: <T>(self: FrameModifier, name: string?) -> T, -- 무검사(11절)
@@ -2090,19 +2371,19 @@ export type FrameModifier = {
 	Style: (self: FrameModifier, value: Field<Enum.FrameStyle>) -> FrameModifier,
 	Visible: (self: FrameModifier, value: Field<boolean>) -> FrameModifier,
 	ZIndex: (self: FrameModifier, value: Field<number>) -> FrameModifier,
-	UICorner: (self: FrameModifier, value: SHF0) -> FrameModifier, -- 숏핸드(H-336)
-	UIPadding: (self: FrameModifier, value: Field<UDim>) -> FrameModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: FrameModifier, value: Field<number>) -> FrameModifier, -- 숏핸드(H-336)
-	UIScale: (self: FrameModifier, value: Field<number>) -> FrameModifier, -- 숏핸드(H-336)
+	UICorner: (self: FrameModifier, value: Field<number | UDim>) -> FrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: FrameModifier, value: Field<UDim>) -> FrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: FrameModifier, value: Field<number>) -> FrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: FrameModifier, value: Field<number>) -> FrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoFrame = { AsFrame: (self: any) -> FrameModifier }
 export type FrameRefMarker = { read __quadRefAccepts: (Frame) -> () }
-export type FrameElem = NewChild | FrameOnChange | State<FrameOnChange> | { read __quadModifier: "Frame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | FrameRefMarker | State<FrameRefMarker>
+export type FrameElem = NewChild | FrameOnChange | StateMarker<FrameOnChange> | { read __quadModifier: "Frame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | FrameRefMarker | StateMarker<FrameRefMarker>
 export type FrameMapperElem = FrameElem | MapperDescriptor
 
 export type GuiBaseModifier = {
 	read __quadModifier: "GuiBase", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: GuiBaseModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: GuiBaseModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: GuiBaseModifier, ...any) -> any,
 	As: <T>(self: GuiBaseModifier, name: string?) -> T, -- 무검사(11절)
@@ -2135,7 +2416,7 @@ export type IntoGuiBase = { AsGuiBase: (self: any) -> GuiBaseModifier }
 
 export type GuiBase2dModifier = {
 	read __quadModifier: "GuiBase2d", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: GuiBase2dModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: GuiBase2dModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: GuiBase2dModifier, ...any) -> any,
 	As: <T>(self: GuiBase2dModifier, name: string?) -> T, -- 무검사(11절)
@@ -2174,7 +2455,7 @@ export type IntoGuiBase2d = { AsGuiBase2d: (self: any) -> GuiBase2dModifier }
 
 export type GuiButtonModifier = {
 	read __quadModifier: "GuiButton", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: GuiButtonModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: GuiButtonModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: GuiButtonModifier, ...any) -> any,
 	As: <T>(self: GuiButtonModifier, name: string?) -> T, -- 무검사(11절)
@@ -2223,16 +2504,16 @@ export type GuiButtonModifier = {
 	Style: (self: GuiButtonModifier, value: Field<Enum.ButtonStyle>) -> GuiButtonModifier,
 	Visible: (self: GuiButtonModifier, value: Field<boolean>) -> GuiButtonModifier,
 	ZIndex: (self: GuiButtonModifier, value: Field<number>) -> GuiButtonModifier,
-	UICorner: (self: GuiButtonModifier, value: SHF0) -> GuiButtonModifier, -- 숏핸드(H-336)
-	UIPadding: (self: GuiButtonModifier, value: Field<UDim>) -> GuiButtonModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: GuiButtonModifier, value: Field<number>) -> GuiButtonModifier, -- 숏핸드(H-336)
-	UIScale: (self: GuiButtonModifier, value: Field<number>) -> GuiButtonModifier, -- 숏핸드(H-336)
+	UICorner: (self: GuiButtonModifier, value: Field<number | UDim>) -> GuiButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: GuiButtonModifier, value: Field<UDim>) -> GuiButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: GuiButtonModifier, value: Field<number>) -> GuiButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: GuiButtonModifier, value: Field<number>) -> GuiButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoGuiButton = { AsGuiButton: (self: any) -> GuiButtonModifier }
 
 export type GuiLabelModifier = {
 	read __quadModifier: "GuiLabel", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: GuiLabelModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: GuiLabelModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: GuiLabelModifier, ...any) -> any,
 	As: <T>(self: GuiLabelModifier, name: string?) -> T, -- 무검사(11절)
@@ -2275,16 +2556,16 @@ export type GuiLabelModifier = {
 	SizeConstraint: (self: GuiLabelModifier, value: Field<Enum.SizeConstraint>) -> GuiLabelModifier,
 	Visible: (self: GuiLabelModifier, value: Field<boolean>) -> GuiLabelModifier,
 	ZIndex: (self: GuiLabelModifier, value: Field<number>) -> GuiLabelModifier,
-	UICorner: (self: GuiLabelModifier, value: SHF0) -> GuiLabelModifier, -- 숏핸드(H-336)
-	UIPadding: (self: GuiLabelModifier, value: Field<UDim>) -> GuiLabelModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: GuiLabelModifier, value: Field<number>) -> GuiLabelModifier, -- 숏핸드(H-336)
-	UIScale: (self: GuiLabelModifier, value: Field<number>) -> GuiLabelModifier, -- 숏핸드(H-336)
+	UICorner: (self: GuiLabelModifier, value: Field<number | UDim>) -> GuiLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: GuiLabelModifier, value: Field<UDim>) -> GuiLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: GuiLabelModifier, value: Field<number>) -> GuiLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: GuiLabelModifier, value: Field<number>) -> GuiLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoGuiLabel = { AsGuiLabel: (self: any) -> GuiLabelModifier }
 
 export type GuiObjectModifier = {
 	read __quadModifier: "GuiObject", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: GuiObjectModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: GuiObjectModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: GuiObjectModifier, ...any) -> any,
 	As: <T>(self: GuiObjectModifier, name: string?) -> T, -- 무검사(11절)
@@ -2337,10 +2618,10 @@ export type GuiObjectModifier = {
 	SizeConstraint: (self: GuiObjectModifier, value: Field<Enum.SizeConstraint>) -> GuiObjectModifier,
 	Visible: (self: GuiObjectModifier, value: Field<boolean>) -> GuiObjectModifier,
 	ZIndex: (self: GuiObjectModifier, value: Field<number>) -> GuiObjectModifier,
-	UICorner: (self: GuiObjectModifier, value: SHF0) -> GuiObjectModifier, -- 숏핸드(H-336)
-	UIPadding: (self: GuiObjectModifier, value: Field<UDim>) -> GuiObjectModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: GuiObjectModifier, value: Field<number>) -> GuiObjectModifier, -- 숏핸드(H-336)
-	UIScale: (self: GuiObjectModifier, value: Field<number>) -> GuiObjectModifier, -- 숏핸드(H-336)
+	UICorner: (self: GuiObjectModifier, value: Field<number | UDim>) -> GuiObjectModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: GuiObjectModifier, value: Field<UDim>) -> GuiObjectModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: GuiObjectModifier, value: Field<number>) -> GuiObjectModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: GuiObjectModifier, value: Field<number>) -> GuiObjectModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoGuiObject = { AsGuiObject: (self: any) -> GuiObjectModifier }
 
@@ -2359,9 +2640,9 @@ export type ImageButtonOnChange =
 	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
 	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
 	| 	{ Name: "HoverHapticEffect", Callback: (HapticEffect) -> () }
-	| 	{ Name: "HoverImage", Callback: (Content) -> () }
+	| 	{ Name: "HoverImage", Callback: (string) -> () }
 	| 	{ Name: "HoverImageContent", Callback: (Content) -> () }
-	| 	{ Name: "Image", Callback: (Content) -> () }
+	| 	{ Name: "Image", Callback: (string) -> () }
 	| 	{ Name: "ImageColor3", Callback: (Color3) -> () }
 	| 	{ Name: "ImageContent", Callback: (Content) -> () }
 	| 	{ Name: "ImageRectOffset", Callback: (Vector2) -> () }
@@ -2378,7 +2659,7 @@ export type ImageButtonOnChange =
 	| 	{ Name: "NextSelectionUp", Callback: (GuiObject) -> () }
 	| 	{ Name: "Position", Callback: (UDim2) -> () }
 	| 	{ Name: "PressHapticEffect", Callback: (HapticEffect) -> () }
-	| 	{ Name: "PressedImage", Callback: (Content) -> () }
+	| 	{ Name: "PressedImage", Callback: (string) -> () }
 	| 	{ Name: "PressedImageContent", Callback: (Content) -> () }
 	| 	{ Name: "ResampleMode", Callback: (Enum.ResamplerMode) -> () }
 	| 	{ Name: "RootLocalizationTable", Callback: (LocalizationTable) -> () }
@@ -2402,9 +2683,15 @@ export type ImageButtonOnChange =
 	| 	{ Name: "TileSize", Callback: (UDim2) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
+	| 	{ Name: "IsLoaded", Callback: (boolean) -> () }
 export type ImageButtonModifier = {
 	read __quadModifier: "ImageButton", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: ImageButtonModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: ImageButtonModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ImageButtonModifier, ...any) -> any,
 	As: <T>(self: ImageButtonModifier, name: string?) -> T, -- 무검사(11절)
@@ -2423,9 +2710,9 @@ export type ImageButtonModifier = {
 	Capabilities: (self: ImageButtonModifier, value: Field<SecurityCapabilities>) -> ImageButtonModifier,
 	ClipsDescendants: (self: ImageButtonModifier, value: Field<boolean>) -> ImageButtonModifier,
 	HoverHapticEffect: (self: ImageButtonModifier, value: Field<HapticEffect>) -> ImageButtonModifier,
-	HoverImage: (self: ImageButtonModifier, value: Field<Content>) -> ImageButtonModifier,
+	HoverImage: (self: ImageButtonModifier, value: Field<string>) -> ImageButtonModifier,
 	HoverImageContent: (self: ImageButtonModifier, value: Field<Content>) -> ImageButtonModifier,
-	Image: (self: ImageButtonModifier, value: Field<Content>) -> ImageButtonModifier,
+	Image: (self: ImageButtonModifier, value: Field<string>) -> ImageButtonModifier,
 	ImageColor3: (self: ImageButtonModifier, value: Field<Color3>) -> ImageButtonModifier,
 	ImageContent: (self: ImageButtonModifier, value: Field<Content>) -> ImageButtonModifier,
 	ImageRectOffset: (self: ImageButtonModifier, value: Field<Vector2>) -> ImageButtonModifier,
@@ -2442,7 +2729,7 @@ export type ImageButtonModifier = {
 	NextSelectionUp: (self: ImageButtonModifier, value: Field<GuiObject>) -> ImageButtonModifier,
 	Position: (self: ImageButtonModifier, value: Field<UDim2>) -> ImageButtonModifier,
 	PressHapticEffect: (self: ImageButtonModifier, value: Field<HapticEffect>) -> ImageButtonModifier,
-	PressedImage: (self: ImageButtonModifier, value: Field<Content>) -> ImageButtonModifier,
+	PressedImage: (self: ImageButtonModifier, value: Field<string>) -> ImageButtonModifier,
 	PressedImageContent: (self: ImageButtonModifier, value: Field<Content>) -> ImageButtonModifier,
 	ResampleMode: (self: ImageButtonModifier, value: Field<Enum.ResamplerMode>) -> ImageButtonModifier,
 	RootLocalizationTable: (self: ImageButtonModifier, value: Field<LocalizationTable>) -> ImageButtonModifier,
@@ -2466,14 +2753,14 @@ export type ImageButtonModifier = {
 	TileSize: (self: ImageButtonModifier, value: Field<UDim2>) -> ImageButtonModifier,
 	Visible: (self: ImageButtonModifier, value: Field<boolean>) -> ImageButtonModifier,
 	ZIndex: (self: ImageButtonModifier, value: Field<number>) -> ImageButtonModifier,
-	UICorner: (self: ImageButtonModifier, value: SHF0) -> ImageButtonModifier, -- 숏핸드(H-336)
-	UIPadding: (self: ImageButtonModifier, value: Field<UDim>) -> ImageButtonModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: ImageButtonModifier, value: Field<number>) -> ImageButtonModifier, -- 숏핸드(H-336)
-	UIScale: (self: ImageButtonModifier, value: Field<number>) -> ImageButtonModifier, -- 숏핸드(H-336)
+	UICorner: (self: ImageButtonModifier, value: Field<number | UDim>) -> ImageButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: ImageButtonModifier, value: Field<UDim>) -> ImageButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: ImageButtonModifier, value: Field<number>) -> ImageButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: ImageButtonModifier, value: Field<number>) -> ImageButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoImageButton = { AsImageButton: (self: any) -> ImageButtonModifier }
 export type ImageButtonRefMarker = { read __quadRefAccepts: (ImageButton) -> () }
-export type ImageButtonElem = NewChild | ImageButtonOnChange | State<ImageButtonOnChange> | { read __quadModifier: "ImageButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ImageButtonRefMarker | State<ImageButtonRefMarker>
+export type ImageButtonElem = NewChild | ImageButtonOnChange | StateMarker<ImageButtonOnChange> | { read __quadModifier: "ImageButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ImageButtonRefMarker | StateMarker<ImageButtonRefMarker>
 export type ImageButtonMapperElem = ImageButtonElem | MapperDescriptor
 
 export type ImageLabelOnChange =
@@ -2489,7 +2776,7 @@ export type ImageLabelOnChange =
 	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
 	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
 	| 	{ Name: "ClipsDescendants", Callback: (boolean) -> () }
-	| 	{ Name: "Image", Callback: (Content) -> () }
+	| 	{ Name: "Image", Callback: (string) -> () }
 	| 	{ Name: "ImageColor3", Callback: (Color3) -> () }
 	| 	{ Name: "ImageContent", Callback: (Content) -> () }
 	| 	{ Name: "ImageRectOffset", Callback: (Vector2) -> () }
@@ -2524,9 +2811,15 @@ export type ImageLabelOnChange =
 	| 	{ Name: "TileSize", Callback: (UDim2) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
+	| 	{ Name: "IsLoaded", Callback: (boolean) -> () }
 export type ImageLabelModifier = {
 	read __quadModifier: "ImageLabel", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: ImageLabelModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: ImageLabelModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ImageLabelModifier, ...any) -> any,
 	As: <T>(self: ImageLabelModifier, name: string?) -> T, -- 무검사(11절)
@@ -2543,7 +2836,7 @@ export type ImageLabelModifier = {
 	BorderSizePixel: (self: ImageLabelModifier, value: Field<number>) -> ImageLabelModifier,
 	Capabilities: (self: ImageLabelModifier, value: Field<SecurityCapabilities>) -> ImageLabelModifier,
 	ClipsDescendants: (self: ImageLabelModifier, value: Field<boolean>) -> ImageLabelModifier,
-	Image: (self: ImageLabelModifier, value: Field<Content>) -> ImageLabelModifier,
+	Image: (self: ImageLabelModifier, value: Field<string>) -> ImageLabelModifier,
 	ImageColor3: (self: ImageLabelModifier, value: Field<Color3>) -> ImageLabelModifier,
 	ImageContent: (self: ImageLabelModifier, value: Field<Content>) -> ImageLabelModifier,
 	ImageRectOffset: (self: ImageLabelModifier, value: Field<Vector2>) -> ImageLabelModifier,
@@ -2578,19 +2871,19 @@ export type ImageLabelModifier = {
 	TileSize: (self: ImageLabelModifier, value: Field<UDim2>) -> ImageLabelModifier,
 	Visible: (self: ImageLabelModifier, value: Field<boolean>) -> ImageLabelModifier,
 	ZIndex: (self: ImageLabelModifier, value: Field<number>) -> ImageLabelModifier,
-	UICorner: (self: ImageLabelModifier, value: SHF0) -> ImageLabelModifier, -- 숏핸드(H-336)
-	UIPadding: (self: ImageLabelModifier, value: Field<UDim>) -> ImageLabelModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: ImageLabelModifier, value: Field<number>) -> ImageLabelModifier, -- 숏핸드(H-336)
-	UIScale: (self: ImageLabelModifier, value: Field<number>) -> ImageLabelModifier, -- 숏핸드(H-336)
+	UICorner: (self: ImageLabelModifier, value: Field<number | UDim>) -> ImageLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: ImageLabelModifier, value: Field<UDim>) -> ImageLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: ImageLabelModifier, value: Field<number>) -> ImageLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: ImageLabelModifier, value: Field<number>) -> ImageLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoImageLabel = { AsImageLabel: (self: any) -> ImageLabelModifier }
 export type ImageLabelRefMarker = { read __quadRefAccepts: (ImageLabel) -> () }
-export type ImageLabelElem = NewChild | ImageLabelOnChange | State<ImageLabelOnChange> | { read __quadModifier: "ImageLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ImageLabelRefMarker | State<ImageLabelRefMarker>
+export type ImageLabelElem = NewChild | ImageLabelOnChange | StateMarker<ImageLabelOnChange> | { read __quadModifier: "ImageLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ImageLabelRefMarker | StateMarker<ImageLabelRefMarker>
 export type ImageLabelMapperElem = ImageLabelElem | MapperDescriptor
 
 export type InstanceModifier = {
 	read __quadModifier: "Instance", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: InstanceModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: InstanceModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: InstanceModifier, ...any) -> any,
 	As: <T>(self: InstanceModifier, name: string?) -> T, -- 무검사(11절)
@@ -2650,7 +2943,7 @@ export type IntoInstance = { AsInstance: (self: any) -> InstanceModifier }
 
 export type LayerCollectorModifier = {
 	read __quadModifier: "LayerCollector", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: LayerCollectorModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: LayerCollectorModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: LayerCollectorModifier, ...any) -> any,
 	As: <T>(self: LayerCollectorModifier, name: string?) -> T, -- 무검사(11절)
@@ -2678,7 +2971,7 @@ export type IntoLayerCollector = { AsLayerCollector: (self: any) -> LayerCollect
 
 export type ModelModifier = {
 	read __quadModifier: "Model", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: ModelModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: ModelModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ModelModifier, ...any) -> any,
 	As: <T>(self: ModelModifier, name: string?) -> T, -- 무검사(11절)
@@ -2697,7 +2990,7 @@ export type IntoModel = { AsModel: (self: any) -> ModelModifier }
 
 export type PVInstanceModifier = {
 	read __quadModifier: "PVInstance", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: PVInstanceModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: PVInstanceModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: PVInstanceModifier, ...any) -> any,
 	As: <T>(self: PVInstanceModifier, name: string?) -> T, -- 무검사(11절)
@@ -2733,9 +3026,13 @@ export type ScreenGuiOnChange =
 	| 	{ Name: "SelectionBehaviorUp", Callback: (Enum.SelectionBehavior) -> () }
 	| 	{ Name: "SelectionGroup", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type ScreenGuiModifier = {
 	read __quadModifier: "ScreenGui", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: ScreenGuiModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: ScreenGuiModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ScreenGuiModifier, ...any) -> any,
 	As: <T>(self: ScreenGuiModifier, name: string?) -> T, -- 무검사(11절)
@@ -2762,7 +3059,7 @@ export type ScreenGuiModifier = {
 }
 export type IntoScreenGui = { AsScreenGui: (self: any) -> ScreenGuiModifier }
 export type ScreenGuiRefMarker = { read __quadRefAccepts: (ScreenGui) -> () }
-export type ScreenGuiElem = NewChild | ScreenGuiOnChange | State<ScreenGuiOnChange> | { read __quadModifier: "ScreenGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" } | ScreenGuiRefMarker | State<ScreenGuiRefMarker>
+export type ScreenGuiElem = NewChild | ScreenGuiOnChange | StateMarker<ScreenGuiOnChange> | { read __quadModifier: "ScreenGui" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" } | ScreenGuiRefMarker | StateMarker<ScreenGuiRefMarker>
 export type ScreenGuiMapperElem = ScreenGuiElem | MapperDescriptor
 
 export type ScrollingFrameOnChange =
@@ -2777,7 +3074,7 @@ export type ScrollingFrameOnChange =
 	| 	{ Name: "BorderColor3", Callback: (Color3) -> () }
 	| 	{ Name: "BorderMode", Callback: (Enum.BorderMode) -> () }
 	| 	{ Name: "BorderSizePixel", Callback: (number) -> () }
-	| 	{ Name: "BottomImage", Callback: (Content) -> () }
+	| 	{ Name: "BottomImage", Callback: (string) -> () }
 	| 	{ Name: "BottomImageContent", Callback: (Content) -> () }
 	| 	{ Name: "CanvasPosition", Callback: (Vector2) -> () }
 	| 	{ Name: "CanvasSize", Callback: (UDim2) -> () }
@@ -2788,7 +3085,7 @@ export type ScrollingFrameOnChange =
 	| 	{ Name: "InputSink", Callback: (Enum.InputSink) -> () }
 	| 	{ Name: "Interactable", Callback: (boolean) -> () }
 	| 	{ Name: "LayoutOrder", Callback: (number) -> () }
-	| 	{ Name: "MidImage", Callback: (Content) -> () }
+	| 	{ Name: "MidImage", Callback: (string) -> () }
 	| 	{ Name: "MidImageContent", Callback: (Content) -> () }
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "NextSelectionDown", Callback: (GuiObject) -> () }
@@ -2814,15 +3111,22 @@ export type ScrollingFrameOnChange =
 	| 	{ Name: "SelectionOrder", Callback: (number) -> () }
 	| 	{ Name: "Size", Callback: (UDim2) -> () }
 	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
-	| 	{ Name: "TopImage", Callback: (Content) -> () }
+	| 	{ Name: "TopImage", Callback: (string) -> () }
 	| 	{ Name: "TopImageContent", Callback: (Content) -> () }
 	| 	{ Name: "VerticalScrollBarInset", Callback: (Enum.ScrollBarInset) -> () }
 	| 	{ Name: "VerticalScrollBarPosition", Callback: (Enum.VerticalScrollBarPosition) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteCanvasSize", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteWindowSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
 export type ScrollingFrameModifier = {
 	read __quadModifier: "ScrollingFrame", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: ScrollingFrameModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: ScrollingFrameModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ScrollingFrameModifier, ...any) -> any,
 	As: <T>(self: ScrollingFrameModifier, name: string?) -> T, -- 무검사(11절)
@@ -2838,7 +3142,7 @@ export type ScrollingFrameModifier = {
 	BorderColor3: (self: ScrollingFrameModifier, value: Field<Color3>) -> ScrollingFrameModifier,
 	BorderMode: (self: ScrollingFrameModifier, value: Field<Enum.BorderMode>) -> ScrollingFrameModifier,
 	BorderSizePixel: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier,
-	BottomImage: (self: ScrollingFrameModifier, value: Field<Content>) -> ScrollingFrameModifier,
+	BottomImage: (self: ScrollingFrameModifier, value: Field<string>) -> ScrollingFrameModifier,
 	BottomImageContent: (self: ScrollingFrameModifier, value: Field<Content>) -> ScrollingFrameModifier,
 	CanvasPosition: (self: ScrollingFrameModifier, value: Field<Vector2>) -> ScrollingFrameModifier,
 	CanvasSize: (self: ScrollingFrameModifier, value: Field<UDim2>) -> ScrollingFrameModifier,
@@ -2849,7 +3153,7 @@ export type ScrollingFrameModifier = {
 	InputSink: (self: ScrollingFrameModifier, value: Field<Enum.InputSink>) -> ScrollingFrameModifier,
 	Interactable: (self: ScrollingFrameModifier, value: Field<boolean>) -> ScrollingFrameModifier,
 	LayoutOrder: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier,
-	MidImage: (self: ScrollingFrameModifier, value: Field<Content>) -> ScrollingFrameModifier,
+	MidImage: (self: ScrollingFrameModifier, value: Field<string>) -> ScrollingFrameModifier,
 	MidImageContent: (self: ScrollingFrameModifier, value: Field<Content>) -> ScrollingFrameModifier,
 	Name: (self: ScrollingFrameModifier, value: Field<string>) -> ScrollingFrameModifier,
 	NextSelectionDown: (self: ScrollingFrameModifier, value: Field<GuiObject>) -> ScrollingFrameModifier,
@@ -2875,20 +3179,20 @@ export type ScrollingFrameModifier = {
 	SelectionOrder: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier,
 	Size: (self: ScrollingFrameModifier, value: Field<UDim2>) -> ScrollingFrameModifier,
 	SizeConstraint: (self: ScrollingFrameModifier, value: Field<Enum.SizeConstraint>) -> ScrollingFrameModifier,
-	TopImage: (self: ScrollingFrameModifier, value: Field<Content>) -> ScrollingFrameModifier,
+	TopImage: (self: ScrollingFrameModifier, value: Field<string>) -> ScrollingFrameModifier,
 	TopImageContent: (self: ScrollingFrameModifier, value: Field<Content>) -> ScrollingFrameModifier,
 	VerticalScrollBarInset: (self: ScrollingFrameModifier, value: Field<Enum.ScrollBarInset>) -> ScrollingFrameModifier,
 	VerticalScrollBarPosition: (self: ScrollingFrameModifier, value: Field<Enum.VerticalScrollBarPosition>) -> ScrollingFrameModifier,
 	Visible: (self: ScrollingFrameModifier, value: Field<boolean>) -> ScrollingFrameModifier,
 	ZIndex: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier,
-	UICorner: (self: ScrollingFrameModifier, value: SHF0) -> ScrollingFrameModifier, -- 숏핸드(H-336)
-	UIPadding: (self: ScrollingFrameModifier, value: Field<UDim>) -> ScrollingFrameModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier, -- 숏핸드(H-336)
-	UIScale: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier, -- 숏핸드(H-336)
+	UICorner: (self: ScrollingFrameModifier, value: Field<number | UDim>) -> ScrollingFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: ScrollingFrameModifier, value: Field<UDim>) -> ScrollingFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: ScrollingFrameModifier, value: Field<number>) -> ScrollingFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoScrollingFrame = { AsScrollingFrame: (self: any) -> ScrollingFrameModifier }
 export type ScrollingFrameRefMarker = { read __quadRefAccepts: (ScrollingFrame) -> () }
-export type ScrollingFrameElem = NewChild | ScrollingFrameOnChange | State<ScrollingFrameOnChange> | { read __quadModifier: "ScrollingFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ScrollingFrameRefMarker | State<ScrollingFrameRefMarker>
+export type ScrollingFrameElem = NewChild | ScrollingFrameOnChange | StateMarker<ScrollingFrameOnChange> | { read __quadModifier: "ScrollingFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ScrollingFrameRefMarker | StateMarker<ScrollingFrameRefMarker>
 export type ScrollingFrameMapperElem = ScrollingFrameElem | MapperDescriptor
 
 export type SurfaceGuiOnChange =
@@ -2919,9 +3223,13 @@ export type SurfaceGuiOnChange =
 	| 	{ Name: "ToolPunchThroughDistance", Callback: (number) -> () }
 	| 	{ Name: "ZIndexBehavior", Callback: (Enum.ZIndexBehavior) -> () }
 	| 	{ Name: "ZOffset", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type SurfaceGuiModifier = {
 	read __quadModifier: "SurfaceGui", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: SurfaceGuiModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: SurfaceGuiModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: SurfaceGuiModifier, ...any) -> any,
 	As: <T>(self: SurfaceGuiModifier, name: string?) -> T, -- 무검사(11절)
@@ -2956,12 +3264,12 @@ export type SurfaceGuiModifier = {
 }
 export type IntoSurfaceGui = { AsSurfaceGui: (self: any) -> SurfaceGuiModifier }
 export type SurfaceGuiRefMarker = { read __quadRefAccepts: (SurfaceGui) -> () }
-export type SurfaceGuiElem = NewChild | SurfaceGuiOnChange | State<SurfaceGuiOnChange> | { read __quadModifier: "SurfaceGui" | "SurfaceGuiBase" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" } | SurfaceGuiRefMarker | State<SurfaceGuiRefMarker>
+export type SurfaceGuiElem = NewChild | SurfaceGuiOnChange | StateMarker<SurfaceGuiOnChange> | { read __quadModifier: "SurfaceGui" | "SurfaceGuiBase" | "LayerCollector" | "GuiBase2d" | "GuiBase" | "Instance" } | SurfaceGuiRefMarker | StateMarker<SurfaceGuiRefMarker>
 export type SurfaceGuiMapperElem = SurfaceGuiElem | MapperDescriptor
 
 export type SurfaceGuiBaseModifier = {
 	read __quadModifier: "SurfaceGuiBase", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: SurfaceGuiBaseModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: SurfaceGuiBaseModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: SurfaceGuiBaseModifier, ...any) -> any,
 	As: <T>(self: SurfaceGuiBaseModifier, name: string?) -> T, -- 무검사(11절)
@@ -3049,9 +3357,18 @@ export type TextBoxOnChange =
 	| 	{ Name: "TextYAlignment", Callback: (Enum.TextYAlignment) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "ContentText", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
+	| 	{ Name: "OpenTypeFeaturesError", Callback: (string) -> () }
+	| 	{ Name: "TextBounds", Callback: (Vector2) -> () }
+	| 	{ Name: "TextFits", Callback: (boolean) -> () }
 export type TextBoxModifier = {
 	read __quadModifier: "TextBox", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: TextBoxModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: TextBoxModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: TextBoxModifier, ...any) -> any,
 	As: <T>(self: TextBoxModifier, name: string?) -> T, -- 무검사(11절)
@@ -3117,14 +3434,14 @@ export type TextBoxModifier = {
 	TextYAlignment: (self: TextBoxModifier, value: Field<Enum.TextYAlignment>) -> TextBoxModifier,
 	Visible: (self: TextBoxModifier, value: Field<boolean>) -> TextBoxModifier,
 	ZIndex: (self: TextBoxModifier, value: Field<number>) -> TextBoxModifier,
-	UICorner: (self: TextBoxModifier, value: SHF0) -> TextBoxModifier, -- 숏핸드(H-336)
-	UIPadding: (self: TextBoxModifier, value: Field<UDim>) -> TextBoxModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: TextBoxModifier, value: Field<number>) -> TextBoxModifier, -- 숏핸드(H-336)
-	UIScale: (self: TextBoxModifier, value: Field<number>) -> TextBoxModifier, -- 숏핸드(H-336)
+	UICorner: (self: TextBoxModifier, value: Field<number | UDim>) -> TextBoxModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: TextBoxModifier, value: Field<UDim>) -> TextBoxModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: TextBoxModifier, value: Field<number>) -> TextBoxModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: TextBoxModifier, value: Field<number>) -> TextBoxModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoTextBox = { AsTextBox: (self: any) -> TextBoxModifier }
 export type TextBoxRefMarker = { read __quadRefAccepts: (TextBox) -> () }
-export type TextBoxElem = NewChild | TextBoxOnChange | State<TextBoxOnChange> | { read __quadModifier: "TextBox" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | TextBoxRefMarker | State<TextBoxRefMarker>
+export type TextBoxElem = NewChild | TextBoxOnChange | StateMarker<TextBoxOnChange> | { read __quadModifier: "TextBox" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | TextBoxRefMarker | StateMarker<TextBoxRefMarker>
 export type TextBoxMapperElem = TextBoxElem | MapperDescriptor
 
 export type TextButtonOnChange =
@@ -3187,9 +3504,18 @@ export type TextButtonOnChange =
 	| 	{ Name: "TextYAlignment", Callback: (Enum.TextYAlignment) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "ContentText", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
+	| 	{ Name: "OpenTypeFeaturesError", Callback: (string) -> () }
+	| 	{ Name: "TextBounds", Callback: (Vector2) -> () }
+	| 	{ Name: "TextFits", Callback: (boolean) -> () }
 export type TextButtonModifier = {
 	read __quadModifier: "TextButton", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: TextButtonModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: TextButtonModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: TextButtonModifier, ...any) -> any,
 	As: <T>(self: TextButtonModifier, name: string?) -> T, -- 무검사(11절)
@@ -3253,14 +3579,14 @@ export type TextButtonModifier = {
 	TextYAlignment: (self: TextButtonModifier, value: Field<Enum.TextYAlignment>) -> TextButtonModifier,
 	Visible: (self: TextButtonModifier, value: Field<boolean>) -> TextButtonModifier,
 	ZIndex: (self: TextButtonModifier, value: Field<number>) -> TextButtonModifier,
-	UICorner: (self: TextButtonModifier, value: SHF0) -> TextButtonModifier, -- 숏핸드(H-336)
-	UIPadding: (self: TextButtonModifier, value: Field<UDim>) -> TextButtonModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: TextButtonModifier, value: Field<number>) -> TextButtonModifier, -- 숏핸드(H-336)
-	UIScale: (self: TextButtonModifier, value: Field<number>) -> TextButtonModifier, -- 숏핸드(H-336)
+	UICorner: (self: TextButtonModifier, value: Field<number | UDim>) -> TextButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: TextButtonModifier, value: Field<UDim>) -> TextButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: TextButtonModifier, value: Field<number>) -> TextButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: TextButtonModifier, value: Field<number>) -> TextButtonModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoTextButton = { AsTextButton: (self: any) -> TextButtonModifier }
 export type TextButtonRefMarker = { read __quadRefAccepts: (TextButton) -> () }
-export type TextButtonElem = NewChild | TextButtonOnChange | State<TextButtonOnChange> | { read __quadModifier: "TextButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | TextButtonRefMarker | State<TextButtonRefMarker>
+export type TextButtonElem = NewChild | TextButtonOnChange | StateMarker<TextButtonOnChange> | { read __quadModifier: "TextButton" | "GuiButton" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | TextButtonRefMarker | StateMarker<TextButtonRefMarker>
 export type TextButtonMapperElem = TextButtonElem | MapperDescriptor
 
 export type TextLabelOnChange =
@@ -3317,9 +3643,18 @@ export type TextLabelOnChange =
 	| 	{ Name: "TextYAlignment", Callback: (Enum.TextYAlignment) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "ContentText", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
+	| 	{ Name: "OpenTypeFeaturesError", Callback: (string) -> () }
+	| 	{ Name: "TextBounds", Callback: (Vector2) -> () }
+	| 	{ Name: "TextFits", Callback: (boolean) -> () }
 export type TextLabelModifier = {
 	read __quadModifier: "TextLabel", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: TextLabelModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: TextLabelModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: TextLabelModifier, ...any) -> any,
 	As: <T>(self: TextLabelModifier, name: string?) -> T, -- 무검사(11절)
@@ -3377,14 +3712,14 @@ export type TextLabelModifier = {
 	TextYAlignment: (self: TextLabelModifier, value: Field<Enum.TextYAlignment>) -> TextLabelModifier,
 	Visible: (self: TextLabelModifier, value: Field<boolean>) -> TextLabelModifier,
 	ZIndex: (self: TextLabelModifier, value: Field<number>) -> TextLabelModifier,
-	UICorner: (self: TextLabelModifier, value: SHF0) -> TextLabelModifier, -- 숏핸드(H-336)
-	UIPadding: (self: TextLabelModifier, value: Field<UDim>) -> TextLabelModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: TextLabelModifier, value: Field<number>) -> TextLabelModifier, -- 숏핸드(H-336)
-	UIScale: (self: TextLabelModifier, value: Field<number>) -> TextLabelModifier, -- 숏핸드(H-336)
+	UICorner: (self: TextLabelModifier, value: Field<number | UDim>) -> TextLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: TextLabelModifier, value: Field<UDim>) -> TextLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: TextLabelModifier, value: Field<number>) -> TextLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: TextLabelModifier, value: Field<number>) -> TextLabelModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoTextLabel = { AsTextLabel: (self: any) -> TextLabelModifier }
 export type TextLabelRefMarker = { read __quadRefAccepts: (TextLabel) -> () }
-export type TextLabelElem = NewChild | TextLabelOnChange | State<TextLabelOnChange> | { read __quadModifier: "TextLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | TextLabelRefMarker | State<TextLabelRefMarker>
+export type TextLabelElem = NewChild | TextLabelOnChange | StateMarker<TextLabelOnChange> | { read __quadModifier: "TextLabel" | "GuiLabel" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | TextLabelRefMarker | StateMarker<TextLabelRefMarker>
 export type TextLabelMapperElem = TextLabelElem | MapperDescriptor
 
 export type UIAspectRatioConstraintOnChange =
@@ -3395,9 +3730,10 @@ export type UIAspectRatioConstraintOnChange =
 	| 	{ Name: "DominantAxis", Callback: (Enum.DominantAxis) -> () }
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIAspectRatioConstraintModifier = {
 	read __quadModifier: "UIAspectRatioConstraint", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIAspectRatioConstraintModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIAspectRatioConstraintModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIAspectRatioConstraintModifier, ...any) -> any,
 	As: <T>(self: UIAspectRatioConstraintModifier, name: string?) -> T, -- 무검사(11절)
@@ -3412,12 +3748,12 @@ export type UIAspectRatioConstraintModifier = {
 }
 export type IntoUIAspectRatioConstraint = { AsUIAspectRatioConstraint: (self: any) -> UIAspectRatioConstraintModifier }
 export type UIAspectRatioConstraintRefMarker = { read __quadRefAccepts: (UIAspectRatioConstraint) -> () }
-export type UIAspectRatioConstraintElem = NewChild | UIAspectRatioConstraintOnChange | State<UIAspectRatioConstraintOnChange> | { read __quadModifier: "UIAspectRatioConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" } | UIAspectRatioConstraintRefMarker | State<UIAspectRatioConstraintRefMarker>
+export type UIAspectRatioConstraintElem = NewChild | UIAspectRatioConstraintOnChange | StateMarker<UIAspectRatioConstraintOnChange> | { read __quadModifier: "UIAspectRatioConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" } | UIAspectRatioConstraintRefMarker | StateMarker<UIAspectRatioConstraintRefMarker>
 export type UIAspectRatioConstraintMapperElem = UIAspectRatioConstraintElem | MapperDescriptor
 
 export type UIBaseModifier = {
 	read __quadModifier: "UIBase", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIBaseModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIBaseModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIBaseModifier, ...any) -> any,
 	As: <T>(self: UIBaseModifier, name: string?) -> T, -- 무검사(11절)
@@ -3450,7 +3786,7 @@ export type IntoUIBase = { AsUIBase: (self: any) -> UIBaseModifier }
 
 export type UIComponentModifier = {
 	read __quadModifier: "UIComponent", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIComponentModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIComponentModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIComponentModifier, ...any) -> any,
 	As: <T>(self: UIComponentModifier, name: string?) -> T, -- 무검사(11절)
@@ -3482,7 +3818,7 @@ export type IntoUIComponent = { AsUIComponent: (self: any) -> UIComponentModifie
 
 export type UIConstraintModifier = {
 	read __quadModifier: "UIConstraint", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIConstraintModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIConstraintModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIConstraintModifier, ...any) -> any,
 	As: <T>(self: UIConstraintModifier, name: string?) -> T, -- 무검사(11절)
@@ -3507,9 +3843,10 @@ export type UICornerOnChange =
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "TopLeftRadius", Callback: (UDim) -> () }
 	| 	{ Name: "TopRightRadius", Callback: (UDim) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UICornerModifier = {
 	read __quadModifier: "UICorner", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UICornerModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UICornerModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UICornerModifier, ...any) -> any,
 	As: <T>(self: UICornerModifier, name: string?) -> T, -- 무검사(11절)
@@ -3526,17 +3863,17 @@ export type UICornerModifier = {
 }
 export type IntoUICorner = { AsUICorner: (self: any) -> UICornerModifier }
 export type UICornerRefMarker = { read __quadRefAccepts: (UICorner) -> () }
-export type UICornerElem = NewChild | UICornerOnChange | State<UICornerOnChange> | { read __quadModifier: "UICorner" | "UIComponent" | "UIBase" | "Instance" } | UICornerRefMarker | State<UICornerRefMarker>
+export type UICornerElem = NewChild | UICornerOnChange | StateMarker<UICornerOnChange> | { read __quadModifier: "UICorner" | "UIComponent" | "UIBase" | "Instance" } | UICornerRefMarker | StateMarker<UICornerRefMarker>
 export type UICornerMapperElem = UICornerElem | MapperDescriptor
 
 export type UIDragDetectorOnChange =
-	{ Name: "ActivatedCursorIcon", Callback: (Content) -> () }
+	{ Name: "ActivatedCursorIcon", Callback: (string) -> () }
 	| 	{ Name: "ActivatedCursorIconContent", Callback: (Content) -> () }
 	| 	{ Name: "Archivable", Callback: (boolean) -> () }
 	| 	{ Name: "BoundingBehavior", Callback: (Enum.UIDragDetectorBoundingBehavior) -> () }
 	| 	{ Name: "BoundingUI", Callback: (GuiBase2d) -> () }
 	| 	{ Name: "Capabilities", Callback: (SecurityCapabilities) -> () }
-	| 	{ Name: "CursorIcon", Callback: (Content) -> () }
+	| 	{ Name: "CursorIcon", Callback: (string) -> () }
 	| 	{ Name: "CursorIconContent", Callback: (Content) -> () }
 	| 	{ Name: "DragAxis", Callback: (Vector2) -> () }
 	| 	{ Name: "DragRelativity", Callback: (Enum.UIDragDetectorDragRelativity) -> () }
@@ -3556,20 +3893,21 @@ export type UIDragDetectorOnChange =
 	| 	{ Name: "SelectionModeDragSpeed", Callback: (UDim2) -> () }
 	| 	{ Name: "SelectionModeRotateSpeed", Callback: (number) -> () }
 	| 	{ Name: "UIDragSpeedAxisMapping", Callback: (Enum.UIDragSpeedAxisMapping) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIDragDetectorModifier = {
 	read __quadModifier: "UIDragDetector", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIDragDetectorModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIDragDetectorModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIDragDetectorModifier, ...any) -> any,
 	As: <T>(self: UIDragDetectorModifier, name: string?) -> T, -- 무검사(11절)
 	AsUIDragDetector: (self: UIDragDetectorModifier) -> UIDragDetectorModifier, -- 항등(Into<UIDragDetector> 구현)
-	ActivatedCursorIcon: (self: UIDragDetectorModifier, value: Field<Content>) -> UIDragDetectorModifier,
+	ActivatedCursorIcon: (self: UIDragDetectorModifier, value: Field<string>) -> UIDragDetectorModifier,
 	ActivatedCursorIconContent: (self: UIDragDetectorModifier, value: Field<Content>) -> UIDragDetectorModifier,
 	Archivable: (self: UIDragDetectorModifier, value: Field<boolean>) -> UIDragDetectorModifier,
 	BoundingBehavior: (self: UIDragDetectorModifier, value: Field<Enum.UIDragDetectorBoundingBehavior>) -> UIDragDetectorModifier,
 	BoundingUI: (self: UIDragDetectorModifier, value: Field<GuiBase2d>) -> UIDragDetectorModifier,
 	Capabilities: (self: UIDragDetectorModifier, value: Field<SecurityCapabilities>) -> UIDragDetectorModifier,
-	CursorIcon: (self: UIDragDetectorModifier, value: Field<Content>) -> UIDragDetectorModifier,
+	CursorIcon: (self: UIDragDetectorModifier, value: Field<string>) -> UIDragDetectorModifier,
 	CursorIconContent: (self: UIDragDetectorModifier, value: Field<Content>) -> UIDragDetectorModifier,
 	DragAxis: (self: UIDragDetectorModifier, value: Field<Vector2>) -> UIDragDetectorModifier,
 	DragRelativity: (self: UIDragDetectorModifier, value: Field<Enum.UIDragDetectorDragRelativity>) -> UIDragDetectorModifier,
@@ -3592,7 +3930,7 @@ export type UIDragDetectorModifier = {
 }
 export type IntoUIDragDetector = { AsUIDragDetector: (self: any) -> UIDragDetectorModifier }
 export type UIDragDetectorRefMarker = { read __quadRefAccepts: (UIDragDetector) -> () }
-export type UIDragDetectorElem = NewChild | UIDragDetectorOnChange | State<UIDragDetectorOnChange> | { read __quadModifier: "UIDragDetector" | "UIComponent" | "UIBase" | "Instance" } | UIDragDetectorRefMarker | State<UIDragDetectorRefMarker>
+export type UIDragDetectorElem = NewChild | UIDragDetectorOnChange | StateMarker<UIDragDetectorOnChange> | { read __quadModifier: "UIDragDetector" | "UIComponent" | "UIBase" | "Instance" } | UIDragDetectorRefMarker | StateMarker<UIDragDetectorRefMarker>
 export type UIDragDetectorMapperElem = UIDragDetectorElem | MapperDescriptor
 
 export type UIFlexItemOnChange =
@@ -3604,9 +3942,10 @@ export type UIFlexItemOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "ShrinkRatio", Callback: (number) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIFlexItemModifier = {
 	read __quadModifier: "UIFlexItem", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIFlexItemModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIFlexItemModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIFlexItemModifier, ...any) -> any,
 	As: <T>(self: UIFlexItemModifier, name: string?) -> T, -- 무검사(11절)
@@ -3622,7 +3961,7 @@ export type UIFlexItemModifier = {
 }
 export type IntoUIFlexItem = { AsUIFlexItem: (self: any) -> UIFlexItemModifier }
 export type UIFlexItemRefMarker = { read __quadRefAccepts: (UIFlexItem) -> () }
-export type UIFlexItemElem = NewChild | UIFlexItemOnChange | State<UIFlexItemOnChange> | { read __quadModifier: "UIFlexItem" | "UIComponent" | "UIBase" | "Instance" } | UIFlexItemRefMarker | State<UIFlexItemRefMarker>
+export type UIFlexItemElem = NewChild | UIFlexItemOnChange | StateMarker<UIFlexItemOnChange> | { read __quadModifier: "UIFlexItem" | "UIComponent" | "UIBase" | "Instance" } | UIFlexItemRefMarker | StateMarker<UIFlexItemRefMarker>
 export type UIFlexItemMapperElem = UIFlexItemElem | MapperDescriptor
 
 export type UIGradientOnChange =
@@ -3638,9 +3977,10 @@ export type UIGradientOnChange =
 	| 	{ Name: "TileMode", Callback: (Enum.GradientTileMode) -> () }
 	| 	{ Name: "Transparency", Callback: (NumberSequence) -> () }
 	| 	{ Name: "Type", Callback: (Enum.GradientType) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIGradientModifier = {
 	read __quadModifier: "UIGradient", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIGradientModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIGradientModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIGradientModifier, ...any) -> any,
 	As: <T>(self: UIGradientModifier, name: string?) -> T, -- 무검사(11절)
@@ -3660,7 +4000,7 @@ export type UIGradientModifier = {
 }
 export type IntoUIGradient = { AsUIGradient: (self: any) -> UIGradientModifier }
 export type UIGradientRefMarker = { read __quadRefAccepts: (UIGradient) -> () }
-export type UIGradientElem = NewChild | UIGradientOnChange | State<UIGradientOnChange> | { read __quadModifier: "UIGradient" | "UIComponent" | "UIBase" | "Instance" } | UIGradientRefMarker | State<UIGradientRefMarker>
+export type UIGradientElem = NewChild | UIGradientOnChange | StateMarker<UIGradientOnChange> | { read __quadModifier: "UIGradient" | "UIComponent" | "UIBase" | "Instance" } | UIGradientRefMarker | StateMarker<UIGradientRefMarker>
 export type UIGradientMapperElem = UIGradientElem | MapperDescriptor
 
 export type UIGridLayoutOnChange =
@@ -3676,9 +4016,13 @@ export type UIGridLayoutOnChange =
 	| 	{ Name: "SortOrder", Callback: (Enum.SortOrder) -> () }
 	| 	{ Name: "StartCorner", Callback: (Enum.StartCorner) -> () }
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+	| 	{ Name: "AbsoluteCellCount", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteCellSize", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteContentSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIGridLayoutModifier = {
 	read __quadModifier: "UIGridLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIGridLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIGridLayoutModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIGridLayoutModifier, ...any) -> any,
 	As: <T>(self: UIGridLayoutModifier, name: string?) -> T, -- 무검사(11절)
@@ -3698,12 +4042,12 @@ export type UIGridLayoutModifier = {
 }
 export type IntoUIGridLayout = { AsUIGridLayout: (self: any) -> UIGridLayoutModifier }
 export type UIGridLayoutRefMarker = { read __quadRefAccepts: (UIGridLayout) -> () }
-export type UIGridLayoutElem = NewChild | UIGridLayoutOnChange | State<UIGridLayoutOnChange> | { read __quadModifier: "UIGridLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UIGridLayoutRefMarker | State<UIGridLayoutRefMarker>
+export type UIGridLayoutElem = NewChild | UIGridLayoutOnChange | StateMarker<UIGridLayoutOnChange> | { read __quadModifier: "UIGridLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UIGridLayoutRefMarker | StateMarker<UIGridLayoutRefMarker>
 export type UIGridLayoutMapperElem = UIGridLayoutElem | MapperDescriptor
 
 export type UIGridStyleLayoutModifier = {
 	read __quadModifier: "UIGridStyleLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIGridStyleLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIGridStyleLayoutModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIGridStyleLayoutModifier, ...any) -> any,
 	As: <T>(self: UIGridStyleLayoutModifier, name: string?) -> T, -- 무검사(11절)
@@ -3725,7 +4069,7 @@ export type IntoUIGridStyleLayout = { AsUIGridStyleLayout: (self: any) -> UIGrid
 
 export type UILayoutModifier = {
 	read __quadModifier: "UILayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UILayoutModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UILayoutModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UILayoutModifier, ...any) -> any,
 	As: <T>(self: UILayoutModifier, name: string?) -> T, -- 무검사(11절)
@@ -3756,9 +4100,11 @@ export type UIListLayoutOnChange =
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
 	| 	{ Name: "VerticalFlex", Callback: (Enum.UIFlexAlignment) -> () }
 	| 	{ Name: "Wraps", Callback: (boolean) -> () }
+	| 	{ Name: "AbsoluteContentSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIListLayoutModifier = {
 	read __quadModifier: "UIListLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIListLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIListLayoutModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIListLayoutModifier, ...any) -> any,
 	As: <T>(self: UIListLayoutModifier, name: string?) -> T, -- 무검사(11절)
@@ -3779,7 +4125,7 @@ export type UIListLayoutModifier = {
 }
 export type IntoUIListLayout = { AsUIListLayout: (self: any) -> UIListLayoutModifier }
 export type UIListLayoutRefMarker = { read __quadRefAccepts: (UIListLayout) -> () }
-export type UIListLayoutElem = NewChild | UIListLayoutOnChange | State<UIListLayoutOnChange> | { read __quadModifier: "UIListLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UIListLayoutRefMarker | State<UIListLayoutRefMarker>
+export type UIListLayoutElem = NewChild | UIListLayoutOnChange | StateMarker<UIListLayoutOnChange> | { read __quadModifier: "UIListLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UIListLayoutRefMarker | StateMarker<UIListLayoutRefMarker>
 export type UIListLayoutMapperElem = UIListLayoutElem | MapperDescriptor
 
 export type UIPaddingOnChange =
@@ -3791,9 +4137,10 @@ export type UIPaddingOnChange =
 	| 	{ Name: "PaddingRight", Callback: (UDim) -> () }
 	| 	{ Name: "PaddingTop", Callback: (UDim) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIPaddingModifier = {
 	read __quadModifier: "UIPadding", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIPaddingModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIPaddingModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIPaddingModifier, ...any) -> any,
 	As: <T>(self: UIPaddingModifier, name: string?) -> T, -- 무검사(11절)
@@ -3809,7 +4156,7 @@ export type UIPaddingModifier = {
 }
 export type IntoUIPadding = { AsUIPadding: (self: any) -> UIPaddingModifier }
 export type UIPaddingRefMarker = { read __quadRefAccepts: (UIPadding) -> () }
-export type UIPaddingElem = NewChild | UIPaddingOnChange | State<UIPaddingOnChange> | { read __quadModifier: "UIPadding" | "UIComponent" | "UIBase" | "Instance" } | UIPaddingRefMarker | State<UIPaddingRefMarker>
+export type UIPaddingElem = NewChild | UIPaddingOnChange | StateMarker<UIPaddingOnChange> | { read __quadModifier: "UIPadding" | "UIComponent" | "UIBase" | "Instance" } | UIPaddingRefMarker | StateMarker<UIPaddingRefMarker>
 export type UIPaddingMapperElem = UIPaddingElem | MapperDescriptor
 
 export type UIPageLayoutOnChange =
@@ -3830,9 +4177,12 @@ export type UIPageLayoutOnChange =
 	| 	{ Name: "TouchInputEnabled", Callback: (boolean) -> () }
 	| 	{ Name: "TweenTime", Callback: (number) -> () }
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+	| 	{ Name: "AbsoluteContentSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "CurrentPage", Callback: (GuiObject) -> () }
 export type UIPageLayoutModifier = {
 	read __quadModifier: "UIPageLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIPageLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIPageLayoutModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIPageLayoutModifier, ...any) -> any,
 	As: <T>(self: UIPageLayoutModifier, name: string?) -> T, -- 무검사(11절)
@@ -3857,7 +4207,7 @@ export type UIPageLayoutModifier = {
 }
 export type IntoUIPageLayout = { AsUIPageLayout: (self: any) -> UIPageLayoutModifier }
 export type UIPageLayoutRefMarker = { read __quadRefAccepts: (UIPageLayout) -> () }
-export type UIPageLayoutElem = NewChild | UIPageLayoutOnChange | State<UIPageLayoutOnChange> | { read __quadModifier: "UIPageLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UIPageLayoutRefMarker | State<UIPageLayoutRefMarker>
+export type UIPageLayoutElem = NewChild | UIPageLayoutOnChange | StateMarker<UIPageLayoutOnChange> | { read __quadModifier: "UIPageLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UIPageLayoutRefMarker | StateMarker<UIPageLayoutRefMarker>
 export type UIPageLayoutMapperElem = UIPageLayoutElem | MapperDescriptor
 
 export type UIScaleOnChange =
@@ -3866,9 +4216,10 @@ export type UIScaleOnChange =
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "Scale", Callback: (number) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIScaleModifier = {
 	read __quadModifier: "UIScale", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIScaleModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIScaleModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIScaleModifier, ...any) -> any,
 	As: <T>(self: UIScaleModifier, name: string?) -> T, -- 무검사(11절)
@@ -3881,7 +4232,7 @@ export type UIScaleModifier = {
 }
 export type IntoUIScale = { AsUIScale: (self: any) -> UIScaleModifier }
 export type UIScaleRefMarker = { read __quadRefAccepts: (UIScale) -> () }
-export type UIScaleElem = NewChild | UIScaleOnChange | State<UIScaleOnChange> | { read __quadModifier: "UIScale" | "UIComponent" | "UIBase" | "Instance" } | UIScaleRefMarker | State<UIScaleRefMarker>
+export type UIScaleElem = NewChild | UIScaleOnChange | StateMarker<UIScaleOnChange> | { read __quadModifier: "UIScale" | "UIComponent" | "UIBase" | "Instance" } | UIScaleRefMarker | StateMarker<UIScaleRefMarker>
 export type UIScaleMapperElem = UIScaleElem | MapperDescriptor
 
 export type UIShadowOnChange =
@@ -3898,9 +4249,10 @@ export type UIShadowOnChange =
 	| 	{ Name: "Spread", Callback: (UDim2) -> () }
 	| 	{ Name: "Transparency", Callback: (number) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIShadowModifier = {
 	read __quadModifier: "UIShadow", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIShadowModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIShadowModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIShadowModifier, ...any) -> any,
 	As: <T>(self: UIShadowModifier, name: string?) -> T, -- 무검사(11절)
@@ -3921,7 +4273,7 @@ export type UIShadowModifier = {
 }
 export type IntoUIShadow = { AsUIShadow: (self: any) -> UIShadowModifier }
 export type UIShadowRefMarker = { read __quadRefAccepts: (UIShadow) -> () }
-export type UIShadowElem = NewChild | UIShadowOnChange | State<UIShadowOnChange> | { read __quadModifier: "UIShadow" | "UIComponent" | "UIBase" | "Instance" } | UIShadowRefMarker | State<UIShadowRefMarker>
+export type UIShadowElem = NewChild | UIShadowOnChange | StateMarker<UIShadowOnChange> | { read __quadModifier: "UIShadow" | "UIComponent" | "UIBase" | "Instance" } | UIShadowRefMarker | StateMarker<UIShadowRefMarker>
 export type UIShadowMapperElem = UIShadowElem | MapperDescriptor
 
 export type UISizeConstraintOnChange =
@@ -3931,9 +4283,10 @@ export type UISizeConstraintOnChange =
 	| 	{ Name: "MinSize", Callback: (Vector2) -> () }
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UISizeConstraintModifier = {
 	read __quadModifier: "UISizeConstraint", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UISizeConstraintModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UISizeConstraintModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UISizeConstraintModifier, ...any) -> any,
 	As: <T>(self: UISizeConstraintModifier, name: string?) -> T, -- 무검사(11절)
@@ -3947,7 +4300,7 @@ export type UISizeConstraintModifier = {
 }
 export type IntoUISizeConstraint = { AsUISizeConstraint: (self: any) -> UISizeConstraintModifier }
 export type UISizeConstraintRefMarker = { read __quadRefAccepts: (UISizeConstraint) -> () }
-export type UISizeConstraintElem = NewChild | UISizeConstraintOnChange | State<UISizeConstraintOnChange> | { read __quadModifier: "UISizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" } | UISizeConstraintRefMarker | State<UISizeConstraintRefMarker>
+export type UISizeConstraintElem = NewChild | UISizeConstraintOnChange | StateMarker<UISizeConstraintOnChange> | { read __quadModifier: "UISizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" } | UISizeConstraintRefMarker | StateMarker<UISizeConstraintRefMarker>
 export type UISizeConstraintMapperElem = UISizeConstraintElem | MapperDescriptor
 
 export type UIStrokeOnChange =
@@ -3965,9 +4318,10 @@ export type UIStrokeOnChange =
 	| 	{ Name: "Thickness", Callback: (number) -> () }
 	| 	{ Name: "Transparency", Callback: (number) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UIStrokeModifier = {
 	read __quadModifier: "UIStroke", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UIStrokeModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UIStrokeModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UIStrokeModifier, ...any) -> any,
 	As: <T>(self: UIStrokeModifier, name: string?) -> T, -- 무검사(11절)
@@ -3989,7 +4343,7 @@ export type UIStrokeModifier = {
 }
 export type IntoUIStroke = { AsUIStroke: (self: any) -> UIStrokeModifier }
 export type UIStrokeRefMarker = { read __quadRefAccepts: (UIStroke) -> () }
-export type UIStrokeElem = NewChild | UIStrokeOnChange | State<UIStrokeOnChange> | { read __quadModifier: "UIStroke" | "UIComponent" | "UIBase" | "Instance" } | UIStrokeRefMarker | State<UIStrokeRefMarker>
+export type UIStrokeElem = NewChild | UIStrokeOnChange | StateMarker<UIStrokeOnChange> | { read __quadModifier: "UIStroke" | "UIComponent" | "UIBase" | "Instance" } | UIStrokeRefMarker | StateMarker<UIStrokeRefMarker>
 export type UIStrokeMapperElem = UIStrokeElem | MapperDescriptor
 
 export type UITableLayoutOnChange =
@@ -4005,9 +4359,11 @@ export type UITableLayoutOnChange =
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "SortOrder", Callback: (Enum.SortOrder) -> () }
 	| 	{ Name: "VerticalAlignment", Callback: (Enum.VerticalAlignment) -> () }
+	| 	{ Name: "AbsoluteContentSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UITableLayoutModifier = {
 	read __quadModifier: "UITableLayout", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UITableLayoutModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UITableLayoutModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UITableLayoutModifier, ...any) -> any,
 	As: <T>(self: UITableLayoutModifier, name: string?) -> T, -- 무검사(11절)
@@ -4027,7 +4383,7 @@ export type UITableLayoutModifier = {
 }
 export type IntoUITableLayout = { AsUITableLayout: (self: any) -> UITableLayoutModifier }
 export type UITableLayoutRefMarker = { read __quadRefAccepts: (UITableLayout) -> () }
-export type UITableLayoutElem = NewChild | UITableLayoutOnChange | State<UITableLayoutOnChange> | { read __quadModifier: "UITableLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UITableLayoutRefMarker | State<UITableLayoutRefMarker>
+export type UITableLayoutElem = NewChild | UITableLayoutOnChange | StateMarker<UITableLayoutOnChange> | { read __quadModifier: "UITableLayout" | "UIGridStyleLayout" | "UILayout" | "UIComponent" | "UIBase" | "Instance" } | UITableLayoutRefMarker | StateMarker<UITableLayoutRefMarker>
 export type UITableLayoutMapperElem = UITableLayoutElem | MapperDescriptor
 
 export type UITextSizeConstraintOnChange =
@@ -4037,9 +4393,10 @@ export type UITextSizeConstraintOnChange =
 	| 	{ Name: "MinTextSize", Callback: (number) -> () }
 	| 	{ Name: "Name", Callback: (string) -> () }
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type UITextSizeConstraintModifier = {
 	read __quadModifier: "UITextSizeConstraint", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: UITextSizeConstraintModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: UITextSizeConstraintModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: UITextSizeConstraintModifier, ...any) -> any,
 	As: <T>(self: UITextSizeConstraintModifier, name: string?) -> T, -- 무검사(11절)
@@ -4053,7 +4410,7 @@ export type UITextSizeConstraintModifier = {
 }
 export type IntoUITextSizeConstraint = { AsUITextSizeConstraint: (self: any) -> UITextSizeConstraintModifier }
 export type UITextSizeConstraintRefMarker = { read __quadRefAccepts: (UITextSizeConstraint) -> () }
-export type UITextSizeConstraintElem = NewChild | UITextSizeConstraintOnChange | State<UITextSizeConstraintOnChange> | { read __quadModifier: "UITextSizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" } | UITextSizeConstraintRefMarker | State<UITextSizeConstraintRefMarker>
+export type UITextSizeConstraintElem = NewChild | UITextSizeConstraintOnChange | StateMarker<UITextSizeConstraintOnChange> | { read __quadModifier: "UITextSizeConstraint" | "UIConstraint" | "UIComponent" | "UIBase" | "Instance" } | UITextSizeConstraintRefMarker | StateMarker<UITextSizeConstraintRefMarker>
 export type UITextSizeConstraintMapperElem = UITextSizeConstraintElem | MapperDescriptor
 
 export type VideoFrameOnChange =
@@ -4097,14 +4454,22 @@ export type VideoFrameOnChange =
 	| 	{ Name: "Size", Callback: (UDim2) -> () }
 	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
 	| 	{ Name: "TimePosition", Callback: (number) -> () }
-	| 	{ Name: "Video", Callback: (Content) -> () }
+	| 	{ Name: "Video", Callback: (string) -> () }
 	| 	{ Name: "VideoContent", Callback: (Content) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "Volume", Callback: (number) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
+	| 	{ Name: "IsLoaded", Callback: (boolean) -> () }
+	| 	{ Name: "Resolution", Callback: (Vector2) -> () }
+	| 	{ Name: "TimeLength", Callback: (number) -> () }
 export type VideoFrameModifier = {
 	read __quadModifier: "VideoFrame", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: VideoFrameModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: VideoFrameModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: VideoFrameModifier, ...any) -> any,
 	As: <T>(self: VideoFrameModifier, name: string?) -> T, -- 무검사(11절)
@@ -4149,19 +4514,19 @@ export type VideoFrameModifier = {
 	Size: (self: VideoFrameModifier, value: Field<UDim2>) -> VideoFrameModifier,
 	SizeConstraint: (self: VideoFrameModifier, value: Field<Enum.SizeConstraint>) -> VideoFrameModifier,
 	TimePosition: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier,
-	Video: (self: VideoFrameModifier, value: Field<Content>) -> VideoFrameModifier,
+	Video: (self: VideoFrameModifier, value: Field<string>) -> VideoFrameModifier,
 	VideoContent: (self: VideoFrameModifier, value: Field<Content>) -> VideoFrameModifier,
 	Visible: (self: VideoFrameModifier, value: Field<boolean>) -> VideoFrameModifier,
 	Volume: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier,
 	ZIndex: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier,
-	UICorner: (self: VideoFrameModifier, value: SHF0) -> VideoFrameModifier, -- 숏핸드(H-336)
-	UIPadding: (self: VideoFrameModifier, value: Field<UDim>) -> VideoFrameModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier, -- 숏핸드(H-336)
-	UIScale: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier, -- 숏핸드(H-336)
+	UICorner: (self: VideoFrameModifier, value: Field<number | UDim>) -> VideoFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: VideoFrameModifier, value: Field<UDim>) -> VideoFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: VideoFrameModifier, value: Field<number>) -> VideoFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoVideoFrame = { AsVideoFrame: (self: any) -> VideoFrameModifier }
 export type VideoFrameRefMarker = { read __quadRefAccepts: (VideoFrame) -> () }
-export type VideoFrameElem = NewChild | VideoFrameOnChange | State<VideoFrameOnChange> | { read __quadModifier: "VideoFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | VideoFrameRefMarker | State<VideoFrameRefMarker>
+export type VideoFrameElem = NewChild | VideoFrameOnChange | StateMarker<VideoFrameOnChange> | { read __quadModifier: "VideoFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | VideoFrameRefMarker | StateMarker<VideoFrameRefMarker>
 export type VideoFrameMapperElem = VideoFrameElem | MapperDescriptor
 
 export type ViewportFrameOnChange =
@@ -4207,9 +4572,14 @@ export type ViewportFrameOnChange =
 	| 	{ Name: "SizeConstraint", Callback: (Enum.SizeConstraint) -> () }
 	| 	{ Name: "Visible", Callback: (boolean) -> () }
 	| 	{ Name: "ZIndex", Callback: (number) -> () }
+	| 	{ Name: "AbsolutePosition", Callback: (Vector2) -> () }
+	| 	{ Name: "AbsoluteRotation", Callback: (number) -> () }
+	| 	{ Name: "AbsoluteSize", Callback: (Vector2) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
+	| 	{ Name: "GuiState", Callback: (Enum.GuiState) -> () }
 export type ViewportFrameModifier = {
 	read __quadModifier: "ViewportFrame", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: ViewportFrameModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: ViewportFrameModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: ViewportFrameModifier, ...any) -> any,
 	As: <T>(self: ViewportFrameModifier, name: string?) -> T, -- 무검사(11절)
@@ -4256,14 +4626,14 @@ export type ViewportFrameModifier = {
 	SizeConstraint: (self: ViewportFrameModifier, value: Field<Enum.SizeConstraint>) -> ViewportFrameModifier,
 	Visible: (self: ViewportFrameModifier, value: Field<boolean>) -> ViewportFrameModifier,
 	ZIndex: (self: ViewportFrameModifier, value: Field<number>) -> ViewportFrameModifier,
-	UICorner: (self: ViewportFrameModifier, value: SHF0) -> ViewportFrameModifier, -- 숏핸드(H-336)
-	UIPadding: (self: ViewportFrameModifier, value: Field<UDim>) -> ViewportFrameModifier, -- 숏핸드(H-336)
-	UIPaddingOffset: (self: ViewportFrameModifier, value: Field<number>) -> ViewportFrameModifier, -- 숏핸드(H-336)
-	UIScale: (self: ViewportFrameModifier, value: Field<number>) -> ViewportFrameModifier, -- 숏핸드(H-336)
+	UICorner: (self: ViewportFrameModifier, value: Field<number | UDim>) -> ViewportFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPadding: (self: ViewportFrameModifier, value: Field<UDim>) -> ViewportFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIPaddingOffset: (self: ViewportFrameModifier, value: Field<number>) -> ViewportFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
+	UIScale: (self: ViewportFrameModifier, value: Field<number>) -> ViewportFrameModifier, -- 숏핸드(H-336; 유니언 T도 마커 한 벌)
 }
 export type IntoViewportFrame = { AsViewportFrame: (self: any) -> ViewportFrameModifier }
 export type ViewportFrameRefMarker = { read __quadRefAccepts: (ViewportFrame) -> () }
-export type ViewportFrameElem = NewChild | ViewportFrameOnChange | State<ViewportFrameOnChange> | { read __quadModifier: "ViewportFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ViewportFrameRefMarker | State<ViewportFrameRefMarker>
+export type ViewportFrameElem = NewChild | ViewportFrameOnChange | StateMarker<ViewportFrameOnChange> | { read __quadModifier: "ViewportFrame" | "GuiObject" | "GuiBase2d" | "GuiBase" | "Instance" } | ViewportFrameRefMarker | StateMarker<ViewportFrameRefMarker>
 export type ViewportFrameMapperElem = ViewportFrameElem | MapperDescriptor
 
 export type WorldModelOnChange =
@@ -4275,9 +4645,10 @@ export type WorldModelOnChange =
 	| 	{ Name: "Sandboxed", Callback: (boolean) -> () }
 	| 	{ Name: "UseWorkspaceCollisionGroups", Callback: (boolean) -> () }
 	| 	{ Name: "WorldPivot", Callback: (CFrame) -> () }
+	| 	{ Name: "ClassName", Callback: (string) -> () }
 export type WorldModelModifier = {
 	read __quadModifier: "WorldModel", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: WorldModelModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: WorldModelModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: WorldModelModifier, ...any) -> any,
 	As: <T>(self: WorldModelModifier, name: string?) -> T, -- 무검사(11절)
@@ -4293,12 +4664,12 @@ export type WorldModelModifier = {
 }
 export type IntoWorldModel = { AsWorldModel: (self: any) -> WorldModelModifier }
 export type WorldModelRefMarker = { read __quadRefAccepts: (WorldModel) -> () }
-export type WorldModelElem = NewChild | WorldModelOnChange | State<WorldModelOnChange> | { read __quadModifier: "WorldModel" | "WorldRoot" | "Model" | "PVInstance" | "Instance" } | WorldModelRefMarker | State<WorldModelRefMarker>
+export type WorldModelElem = NewChild | WorldModelOnChange | StateMarker<WorldModelOnChange> | { read __quadModifier: "WorldModel" | "WorldRoot" | "Model" | "PVInstance" | "Instance" } | WorldModelRefMarker | StateMarker<WorldModelRefMarker>
 export type WorldModelMapperElem = WorldModelElem | MapperDescriptor
 
 export type WorldRootModifier = {
 	read __quadModifier: "WorldRoot", -- 클래스 태그(H-300 관례) — 런타임 값의 태그와 같은 리터럴
-	Peek: <T>(self: WorldRootModifier, key: string) -> T | State<T> | None | nil,
+	Peek: <T>(self: WorldRootModifier, key: string) -> FieldOut<T>?, -- 저장된 그대로(Q24 후속: old와 같은 타입)
 	Apply: <U>(self: any, factory: (any) -> U) -> U, -- any: 8.9절(재귀 필드 이름 충돌)
 	Overridden: (self: WorldRootModifier, ...any) -> any,
 	As: <T>(self: WorldRootModifier, name: string?) -> T, -- 무검사(11절)

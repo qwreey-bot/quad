@@ -1,17 +1,23 @@
 --[[
-	Brand — instance brands, one weak-key set per brand.
+	Brand — quad-base's brand INSTANCES and `isX` predicates.
 	`.claude/base/brand-plan.md` "구현 — 인스턴스 브랜드" / "`isX` wrapper" sections,
 	as-is.
 
-	`Brand()` makes one brand object holding a weak-key member set; a value
-	registers itself into the brand(s) it belongs to (multi-tagging is the
-	point — `Source` is both `SourceBrand` and `EpochBrand`). There is no
-	reverse lookup (`Brand.get(x) -> tag` was reversed, see
-	`archive/brand-shared-registry-reversed.md`).
+	The factory `Brand()` itself lives in quad-types since 2026-09-07 (user
+	decision — a nominal-typing helper with no other behaviour, like an enum;
+	`QuadTypes.Brand`): every package makes its own instances from it, so a
+	backend (quad-roblox's `TweenBrand`, a future quad-spring's `SpringBrand`)
+	needs no quad-base to brand its values. Semantics unchanged: one weak-key
+	member set per brand, a value registers itself into the brand(s) it
+	belongs to (multi-tagging is the point — `Source` is both `SourceBrand`
+	and `EpochBrand`), no reverse lookup (`Brand.get(x) -> tag` was reversed,
+	see `archive/brand-shared-registry-reversed.md`).
 
-	Every brand instance lives in this leaf file (M2 first-unit plan,
-	`qa-request/m2-implementation-round11-brief.md` §6): `EpochBrand`
-	is shared by `Source`/`Ref`/`GateNode`, so keeping the instances per type
+	Every quad-base brand instance lives in this leaf file (M2 first-unit plan,
+	`archive/v2-initial-implementation/m2-implementation-round11-brief.md` §6): `EpochBrand`
+	is shared by `Source`/`Ref` (NOT `GateNode` — a GateNode is a State, no
+	`Revision`; registering it here would make `EpochMap:Update` never fire —
+	`State.luau` header; 5순회 correction), so keeping the instances per type
 	module would force a circular require. Each *type* still registers only
 	into its own brand at its own construction sites; subtype relations are
 	expressed once, in the predicate (`isState`/`isRef` below), never by
@@ -24,32 +30,19 @@
 	case here — `isNone` is `v == None` and lives with `None.luau` (M3).
 ]]
 
-export type Brand = {
-	register: (self: Brand, x: any) -> (),
-	is: (self: Brand, x: any) -> boolean,
-}
+local QuadTypes = require("../luau_packages/quad_types")
 
-local function Brand(): Brand
-	local members = setmetatable({}, { __mode = "k" }) :: { [any]: true }
-	return {
-		register = function(_self: Brand, x: any)
-			members[x] = true
-		end,
-		is = function(_self: Brand, x: any): boolean
-			return members[x] == true
-		end,
-	}
-end
+export type Brand = QuadTypes.Brand
+local Brand = QuadTypes.Brand
 
--- Each type owns exactly one brand. The full list is declared here even for
--- types that arrive in later milestones (`Tag`/`Attribute`/`Tween`/`Slot`)
--- so that the set of brands has one source; their `is*` predicates are added
--- with the type.
+-- Each type owns exactly one brand. The full quad-base list is declared here
+-- so that the set of base brands has one source; their `is*` predicates are
+-- added with the type. Backend value types brand themselves in their own
+-- package (`Tween` → quad-roblox `Brand.luau`, 2026-09-07).
 local ObserverBrand = Brand()
 local EffectBrand = Brand()
 local TagBrand = Brand()
 local AttributeBrand = Brand()
-local TweenBrand = Brand()
 local BlockerBrand = Brand()
 local StateBrand = Brand()
 local SourceBrand = Brand()
@@ -92,9 +85,6 @@ end
 local function isMapperDescriptor(x: any): boolean
 	return MapperBrand:is(x)
 end
-local function isTween(x: any): boolean -- M11 단위 ① (round19)
-	return TweenBrand:is(x)
-end
 local function isTag(x: any): boolean
 	return TagBrand:is(x)
 end
@@ -103,6 +93,20 @@ local function isAttribute(x: any): boolean
 end
 local function isAttributeKey(x: any): boolean
 	return AttributeKeyBrand:is(x)
+end
+-- `H-403` (사용자 지시 2026-09-07): lived in 옛 `Slot.luau` (now `Slot/init.luau`) alone while every sibling
+-- predicate lives here — moved so the set has one home (`slot-plan.md`: "`isSlot`은
+-- `Brand`의"). `Slot/init.luau` re-exposes it on the module like before.
+local function isSlot(x: any): boolean
+	return SlotBrand:is(x)
+end
+-- 3순회 `H-377`: the quad values that are frozen PLAIN tables — no metatable,
+-- branded only here. Every `getmetatable(x) == nil` "plain table" gate
+-- (Attribute/Modifier/Tag/Store — grep `isPlainBranded` for the current set)
+-- must exclude them by brand, so the list lives once (a shared pure predicate —
+-- conventions "하나의 무언가가 두 일을 하고 있지 않은지 유의한다" allows exactly that).
+local function isPlainBranded(x: any): boolean
+	return isAttributeKey(x) or isMapperDescriptor(x)
 end
 
 -- Subtype relations: the more specific predicate is defined first and the
@@ -133,7 +137,6 @@ return {
 	EffectBrand = EffectBrand,
 	TagBrand = TagBrand,
 	AttributeBrand = AttributeBrand,
-	TweenBrand = TweenBrand,
 	BlockerBrand = BlockerBrand,
 	StateBrand = StateBrand,
 	SourceBrand = SourceBrand,
@@ -158,7 +161,8 @@ return {
 	isPreRef = isPreRef,
 	isPostRef = isPostRef,
 	isTag = isTag,
-	isTween = isTween,
 	isAttribute = isAttribute,
 	isAttributeKey = isAttributeKey,
+	isSlot = isSlot,
+	isPlainBranded = isPlainBranded,
 }

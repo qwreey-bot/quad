@@ -73,6 +73,9 @@ local function install(quad: any)
 
 	-- (1) private predicate shared by both public entry points ((3))
 	local function isBoundAlive(value: any): boolean
+		if value == nil then
+			return false -- round3 `H-444` (G-14): `canExecute(nil)`/`canBound(nil)` died in Relate
+		end
 		-- (a) inst-scoped path: the gcconn copy bindLifetime left on the value
 		local gcconn = BindData:GetWeak(value, "gcconn")
 		if gcconn ~= nil and gcconn.Connected then
@@ -94,13 +97,22 @@ local function install(quad: any)
 	end
 
 	local function bindLifetime(inst: any, value: any)
+		if inst == nil then
+			Err.errorBefore("bindLifetime: inst must not be nil", SURFACE) -- round3 `H-447`: its own message, not "Claim it first"
+		end
+		if value == nil then
+			Err.errorBefore("bindLifetime: value must not be nil", SURFACE) -- `H-447`: used to die at `gchold[nil]`
+		end
 		local gchold = InstData:GetWeak(inst, "gchold")
 		if gchold == nil then
 			-- `H-290`: consequence of (0) — every quad-owned Instance is claimed
 			-- at creation, so an unclaimed inst here means the caller handed us
 			-- an Instance quad does not own. Lazy-claiming would reopen the
 			-- userdata-identity hole, so fail fast instead.
-			Err.errorBefore("bindLifetime: Instance is not claimed by quad (create it via quad, or Claim it first)", SURFACE)
+			-- round1 Q20 (사용자 확정 2026-09-07): a destroyed quad Instance and a foreign one look the
+			-- same here (Parent is nil at creation and right after Clone, so no ancestry test can tell
+			-- them apart — tried and retracted earlier); one message names both
+			Err.errorBefore("bindLifetime: Instance is not claimed by quad — it was not created or claimed through quad, or it has already been destroyed (a destroyed Instance cannot be reused)", SURFACE)
 		end
 		if not canBound(value) then
 			-- Only report which path holds the value. Never index `.Subscribed`
@@ -109,9 +121,13 @@ local function install(quad: any)
 			if isGlobal then
 				isGlobal = value.Subscribed == true
 			end
+			-- 5순회 `H-395`: say WHICH Instance holds it — the same handle at two
+			-- positions of one Instance (`D.Frame { eff, eff }`) is not "another"
+			local sameInst = BindData:GetWeak(value, "gchold") == gchold
 			Err.errorBefore(
 				if isGlobal
 					then "bindLifetime: value is already subscribed"
+					elseif sameInst then "bindLifetime: value is already bound to this Instance (the same handle at two positions?)"
 					else "bindLifetime: value is already bound to another Instance",
 				SURFACE
 			)
@@ -137,6 +153,9 @@ local function install(quad: any)
 	end
 
 	local function unbindLifetime(value: any)
+		if value == nil then
+			return -- header contract: no-op if unbound (round3 `H-444`)
+		end
 		-- symmetric teardown — never calls cleanup, never detaches Ref
 		-- callbacks or inner Observers (lifecycle-pattern (1))
 		if isEffect(value) then

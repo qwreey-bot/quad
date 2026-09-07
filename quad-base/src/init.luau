@@ -18,8 +18,8 @@ local Err = require("@self/ErrorNamespace")
 local Brand = require("@self/Brand")
 local RefModule = require("@self/Ref") -- M8 단위 ②부터 { Ref, Init } — Init이 leaf 핸들러·가드 등록(H-278)
 local Ref = RefModule.Ref
-local PreRef = require("@self/PreRef") -- M8 단위 ①
-local PostRef = require("@self/PostRef")
+local PreRef = require("@self/Ref/PreRef") -- M8 단위 ①
+local PostRef = require("@self/Ref/PostRef")
 local Void = require("@self/Void")
 local QuadTypes = require("./luau_packages/quad_types")
 local InitDebug = require("@self/Debug")
@@ -35,10 +35,9 @@ local InitClaim = require("@self/Claim")
 local SlotInit = require("@self/Slot") -- M6(탐사 구현 편입)
 local None = require("@self/Dispatch/None").None
 local TagModule = require("@self/Tag")
-local AttributeKeyModule = require("@self/AttributeKey")
+local AttributeKeyModule = require("@self/Attribute/Key")
 local AttributeModule = require("@self/Attribute")
-local ModifierModule = require("@self/Modifier") -- M7 단위 ①(값 런타임 — 핸들러는 단위 ②)
-local TweenModule = require("@self/Tween") -- M11 단위 ①(값 타입만 — 소비는 quad-roblox Property 핸들러)
+local ModifierModule = require("@self/Dispatch/Modifier") -- M7 단위 ①(값 런타임 — 핸들러는 단위 ②)
 
 type Quad = QuadTypes.Quad
 
@@ -79,8 +78,8 @@ local function New(): Quad
 		isPreRef = Brand.isPreRef,
 		isPostRef = Brand.isPostRef,
 		isMapperDescriptor = Brand.isMapperDescriptor, -- M5 단위 ④(Claim)
+		isSlot = Brand.isSlot, -- `H-403` (was installed by Slot.Init — still is, same function)
 		isTag = Brand.isTag, -- M10 (round16)
-		isTween = Brand.isTween, -- M11 단위 ①
 		isAttribute = Brand.isAttribute,
 		isAttributeKey = Brand.isAttributeKey,
 		-- M10 값 네임스페이스 — 리터럴 모양이 곧 `Quad` 타입이라 여기 직접
@@ -89,7 +88,6 @@ local function New(): Quad
 		-- setmetatable<A,B> 타입 표기로 리터럴 `:: Quad`를 그대로 통과한다 —
 		-- fork의 잠정 `:: any` 캐스트는 통합에서 제거(typing-limits 8.6절)
 		Tag = TagModule.Tag,
-		Tween = TweenModule.Tween, -- M11 단위 ① — 핸들러 없음(dispatch 참가자 아님)
 		Modifier = ModifierModule.Modifier,
 		Attribute = AttributeModule.Attribute,
 		AttributeKey = AttributeKeyModule.AttributeKey,

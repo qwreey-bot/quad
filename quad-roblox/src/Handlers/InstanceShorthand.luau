@@ -34,11 +34,10 @@
 	the engine's own error (`H-103` NOOP-marker caveat).
 
 	Hash keys ⇒ no Length/Offset bookkeeping (`H-39` is array-only).
-	Validation raises use `errorBefore` (dispatch depth — checklist 0번).
+	No validation raises of its own since Q17 (2026-09-07) — see the process body.
 ]]
 
 local QuadTypes = require("../../luau_packages/quad_types")
-local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 
 local PADDING_PROPS = { "PaddingLeft", "PaddingRight", "PaddingTop", "PaddingBottom" }
 
@@ -58,18 +57,17 @@ local function numberOrUDim(v: any): any
 	return v
 end
 
-local TABLE: { [string]: { class: string, childName: string, props: { string }, wrap: (any) -> any, numberOnly: boolean } } = {
-	UICorner = { class = "UICorner", childName = "_quad_round", props = { "CornerRadius" }, wrap = numberOrUDim, numberOnly = false },
-	UIPadding = { class = "UIPadding", childName = "_quad_padding", props = PADDING_PROPS, wrap = identity, numberOnly = false },
-	UIPaddingOffset = { class = "UIPadding", childName = "_quad_padding", props = PADDING_PROPS, wrap = offsetUDim, numberOnly = true },
-	UIScale = { class = "UIScale", childName = "_quad_scale", props = { "Scale" }, wrap = identity, numberOnly = true },
+local TABLE: { [string]: { class: string, childName: string, props: { string }, wrap: (any) -> any } } = {
+	UICorner = { class = "UICorner", childName = "_quad_round", props = { "CornerRadius" }, wrap = numberOrUDim },
+	UIPadding = { class = "UIPadding", childName = "_quad_padding", props = PADDING_PROPS, wrap = identity },
+	UIPaddingOffset = { class = "UIPadding", childName = "_quad_padding", props = PADDING_PROPS, wrap = offsetUDim },
+	UIScale = { class = "UIScale", childName = "_quad_scale", props = { "Scale" }, wrap = identity },
 }
 
 local function install(quad: any)
 	local dispatch = quad.Dispatch
 	local Void = quad.Void
 	local isTween = quad.isTween
-	local Err = quad.errorNamespace
 
 	-- (inst, childName) -> managed child (weak-keyed by inst)
 	local managed = quad.Relate()
@@ -113,15 +111,16 @@ local function install(quad: any)
 				return Void
 			end
 			local tweenIn = isTween(v)
-			local raw = if tweenIn then v.Value else v
-			if entry.numberOnly and type(raw) ~= "number" then
-				Err.errorBefore(`{k}: expected a number, got {typeof(raw)}`, SURFACE)
-			end
-			local child = ensureManagedChild(inst, entry)
+			-- Q17 (a) (사용자 결정 2026-09-07): no value gate here — the type surface is the first
+			-- defense; a wrong value raises where it is first used (`UDim.new` inside `offsetUDim`
+			-- for UIPaddingOffset, or the delegated property write for the others — `numberOnly`
+			-- was an unapproved fifth field, `H-402`). round3 `H-449`: the wrap runs BEFORE the
+			-- managed child is created, so such a raise leaves no half-made child behind.
 			-- Tween stays a Tween — only `.Value` is wrapped (`UI-8`, `Tween:Mapped`)
 			-- identity wrap (UIPadding/UIScale): pass the Tween through — `Mapped`
 			-- would clone+re-validate+re-freeze an identical value per emit (2차 리뷰)
 			local mapped = if entry.wrap == identity then v elseif tweenIn then v:Mapped(entry.wrap) else entry.wrap(v)
+			local child = ensureManagedChild(inst, entry)
 			for _, prop in entry.props do
 				dispatch.process(child, prop, mapped, 1) -- new chain per (child, prop), index 1
 			end

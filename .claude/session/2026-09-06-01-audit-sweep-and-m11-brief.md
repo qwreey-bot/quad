@@ -56,7 +56,7 @@
 
 ## 4. M11 규약 문항지
 
-`qa-request/m11-implementation-round19-brief.md` 신설(round19, `H-323`부터).
+`archive/v2-initial-implementation/m11-implementation-round19-brief.md` 신설(round19, `H-323`부터).
 §0 일곱 문항 전부 권고 (a)로 착수(위 2번 결정). 새 표면이 걸리는 자리는
 Q3(quad-types `Tween<T>`의 자리)·Q4(센티널 형태)인데, 둘 다 정본이 이미
 "둘 중 하나"로 열어 둔 것을 코퍼스 관례(엔진 무관 quad-types / frozen
@@ -185,7 +185,7 @@ tween-plan 본문 문장·dispatch-core `None` 캐비엇 M11 줄·머리말 3층
 - **재실행 결과**: R3 5건 → R2 3건 → R1 4건(핵심 불변식 정본 일치, 전부 LOW). 메인이 직접
   실측으로 가른 것: `H-353`(유니언 PV가 State를 거부 — luau-lsp 재현 후 생성기 정정),
   Attribute "누수"(순수 Luau 약참조 키 테이블도 동일 32 B/cycle, 주기 GC면 0 — 기각),
-  `H-354`(strict Slot 생성 관용구는 캐스트뿐). 원장 `qa-request/handover-review-2026-09-07.md`
+  `H-354`(strict Slot 생성 관용구는 캐스트뿐). 원장 `qa-request/post-implementation-review-round1.md`
   `H-344`~`H-356`, CLI 49/49.
 - 교훈(규약 후보는 아님 — 한 번 관측): 백그라운드 리뷰가 많이 떠 있을 때 `/compact`는 위험하다.
   결과가 필요한 리뷰는 끝난 뒤 compact하거나, 최소한 트랜스크립트가 남는다는 걸 알고 추출로
@@ -205,3 +205,59 @@ tween-plan 본문 문장·dispatch-core `None` 캐비엇 M11 줄·머리말 3층
   될것 같아"* → **0순회**(`/code-review high`, 반영분 diff 중심): 10건 전부 ① — 그중 `H-362`/`H-363`은
   새벽의 `H-353` 생성기 변경이 만든 회귀(변환 람다 문맥 타이핑·`TweenData` 전체 유니언 팔 소실)라
   "수정분이 새 결함을 만든다"의 실례. 원장 §6, 세 번째 커밋.
+- **1순회**(02:30 KST 타이머 기상, `/code-review high` 오늘 커밋 셋 diff 중심): 8건 전부 ① — HIGH `H-368`
+  Attribute plain 가드가 브랜드(메타테이블 아님)를 못 봐 `AttributeKey`·함수 값이 펼쳐짐(브랜드 둘 제외 +
+  함수 값 거부 — 리뷰어의 "교차 패키지 술어" ②는 함수 검사가 OnChange 디스크립터까지 잡아 불필요),
+  MEDIUM `H-369` gen-d 게이트 정규식 `re.M` 누락(`State`의 `Compute`/`Observer`/`Gate`/`Apply` 미수확 — 잠복),
+  `H-370` LifetimeHandle 스텁 깊이를 슬롯별로(`canBound`/`canExecute`는 nearest), 정본 동형화 셋
+  (`H-371`/`H-372`/spec 헤더)·인덱스 둘. 원장 §7, 네 번째 커밋. 새 문항 0.
+- **2순회**(opus general-purpose 전체 트리, 축 A~D): 4건 — ① `H-373` 조합 불가 엔진 op 셋(`isInst`/
+  `nativeClaim`/`nativeFindChild`)의 미설치 스텁 부재(맨 `Quad.New()`에서 nil-call이 quad 내부를 blame),
+  `H-374` mock 프로바이더가 `nativeClaim`/`nativeFindChild`를 안 심어 자기 인용 계약(`H-305` (d′)) 위반,
+  `H-375` `wrapElement` 게이트 깊이를 호출부별로(콜백 안 직접 CRUD가 `:Set` 줄을 blame하던 것); ②
+  `H-376` native* 조합 폴백 약속이 코드에 없음 → §4 **Q6**(권고 (a) 약속 철회). GC 축은 실재현으로 섬
+  계약 성립 확인. 원장 §8, 다섯 번째 커밋.
+- **3순회**(`/code-review high` 전체 트리, 마지막): 마지막 메시지가 중간 상태(검증자 1 잔여)여서 같은
+  에이전트를 재개해 최종 목록을 받음(새 리뷰 아님 — 규약). 8건: ① HIGH `H-377` Modifier `isPlainFieldTable`의
+  브랜드 구멍(`Modifier(AttributeKey)`가 `Name` 필드로 병합돼 조용히 rename — 술어를 `Brand.isPlainBranded`로
+  공유), MED `H-378` 스텁 nearest 회귀(자기 태그 스텁이라 nearest = quad 내부 — `errorBefore` 복원), MED `H-380`
+  Tag 이름 리스트가 `ipairs` 전용이라 Tag/Source/해시가 빈 목록으로 통과(`{string}` 배열 검증), LOW `H-381`
+  gen-d 수확을 depth-0 스캐너로(파라미터 이름 오탐 제거), 정정 셋; ② `H-379` `Animate` nil/None 팔 없음(Q8)·
+  Q7 스텁 무태그 여부. 원장 §9, 여섯 번째 커밋. **야간 순회 종료** — 매 순회가 직전 수정분의 회귀를 잡았다.
+- **4순회**(주간, 사용자 *"세션 한도 비어서 다시 순회 해도 돼. batch 아직 작아서 더 쌓고 있어볼래?"*): 사용자가
+  `/tasks`의 fable 팬아웃을 규약 위반으로 지적 → 메인이 **묻지 않고 `TaskStop`**(파인더 10·14만 토큰 소실 —
+  사용자: *"멈추는것도 유저 물어보고 해야하는데"*, 메모리+규약에 교훈) → 사용자 선택으로 같은 포크 재개 →
+  인자로 검증자·후속 서브에이전트를 `model: "opus"`로 지정하니 실제로 opus로 뜸(규약의 "지정 못 한다"
+  정정, 커밋 `dd830e3`). 사용자 판정: 문제는 `high`가 아니라 fable 팬아웃, 근거는 맥락 분리 불가. 결과 10건 —
+  ① `H-384` `_assertBindable` 최외곽(태그된 `bindLifetime` 뒤 nearest), `H-385` `Single` 게이트 blame, `H-386`
+  `Slot(initial)` 컨테이너 게이트, `H-388` gen-d 주석 제거 공유·depth 검사, `H-389` Tag 잔여(생성자 문자열만),
+  `H-390` 묶음(Store 게이트·`gatedRecompute` 호이스팅 등); ② Q9 Slot 좀비(정본 단언 미구현), Q10 `AddPlugin`
+  락 우회, Q11 setter 키, Q12 Tween 동일값. 원장 §10, 일곱 번째 커밋.
+- **5순회**(인자로 파인더 6·검증자 5 전부 opus — 규약 첫 적용): 10 + 표 8. ① HIGH `H-392` `setOffsetSource`가
+  쓰기 뒤 읽어 잘못된 인자가 owner의 오프셋 산술을 영구 동결(읽기 → 쓰기), `H-393` Detach 분기 `releaseOwner`,
+  `H-395` 같은-inst 이중 바인드 메시지, `H-396`/메시지 둘/`H-397`(diff 회귀 넷 포함), 문서 여섯; ② Q13~Q17 +
+  Q7 둘째(`_assertBindable` 방향 — 4순회 `H-384`가 재진입 가드 규약과 충돌, 정본에 보류 배너). 원장 §11, 여덟 번째
+  커밋. 이어서 문서 재편(사용자 결정: 끝난 라운드 44개 + ROADMAP M0~M11 → `archive/v2-initial-implementation/`,
+  원장 → `qa-request/post-implementation-review-round1.md`).
+- **사용자 지시·실측 셋**: `H-403` `isSlot`을 Brand로(*"다른것과 일치하게"*), `H-404` 전역 `function` 슈거 실측 →
+  test.sh에 `GlobalUsedAsLocal` 게이트(전수 대조 0건), 그 검증 중 `H-405` — 4순회부터 다섯 커밋 동안 test.sh exit 1을
+  "ALL PASS" 개수로 가린 메인 절차 오류(conventions 명문화). **문서 재편**(사용자 결정: 44개 + ROADMAP 본문 →
+  `archive/v2-initial-implementation/`, 원장 → `post-implementation-review-round1.md`, 커밋 `707af80`).
+- **6순회**(파인더 6·검증자 2 opus, 포크가 F6 대기로 두 번 중간 종료 → 재개): ① `H-406` Property 트윈 분기의
+  Cancel-뒤-Create raise(Create 선행·슬롯 선기록), `H-407` SlotHandler 파괴 값 pre-pass, `H-408` `H-397` 회귀(nearest가
+  형제 표면 경유로 내부 blame + C-6 진단 가로챔 → outermost·두 원인 문구·`bk.N`), `H-409`~`H-412`, 메시지 셋, 재편
+  잔여 스윕(무인용 ROADMAP 포인터 등); ② Q18 `setLength` mutate-then-throw, Q19 `PropTypes` 읽기 표면, Q20 destroyed
+  inst 바인드 메시지, Q7 셋째. 원장 §12. **사용자 의견 여덟**(Slot 분할·Tween 위치·Tag 생성자·배치·Dispatch 폴더·
+  Ref/·Attribute/·Attr) → opus 사실 조사 → `research/source-layout-plan.md` + `question.md`.
+- **Gemini 외부 리뷰 검증**(사용자 반입, *"진짜 실존 문제인지 확인하고 가져올래?"*): G-01 빈 태그 이름(+`AttributeKey("")`)·
+  G-06 `Claim`의 `inst` 무검사(실 백엔드 raw VM 에러)·G-07 `drive` 비테이블 props 셋 실존 → `H-417`~`H-419` 게이트;
+  분석·건전성 증명 열둘은 원장 §13에 기록. 원문 파일은 qa-request에 보존.
+- **7순회**(파인더 6·검증자 4 opus, "기다리지 말고 미완 표시" 지시로 포크가 한 메시지 마감): HIGH `H-420` 생성기가
+  `ContentId`(defs에선 `string` 별칭)를 `Content` 클래스로 매핑해 `Image` 등 10슬롯이 asset id 문자열을 strict에서
+  거부 — defs의 문자열 별칭 집합으로 매핑, 원본 덤프 재정규화(타입 변경 10, 프로퍼티 증감 0); `H-421` Attribute
+  그룹/슈거 빈 이름, `H-422` 모듈 스코프 전역 함수는 lint조차 없음 → 정규식 게이트(`H-404` 범위 정정), `H-423`
+  gen-d `check` 모드를 test.sh에, `H-424` `parent_of` 호이스팅(`H-412`가 한 칸 옮긴 것), `H-425` Claim props 게이트를
+  `nativeClaim` 앞에, `H-426` Ref `normal` 대기자, `H-427` 범위 메시지 조건화 + recompute `lengthList` 불변식,
+  `H-428` `index<>` 연산자 한계(typing-limits 8.10), `H-429` mock 동일값 발화 헤지 + HUMAN_TODO 13; ② Q21 툴체인.
+  원장 §14. 매 순회의 회귀 관측은 이번에도(`H-424`·`H-427`·`H-421`·`H-425` — 직전 두 커밋의 후속).
+

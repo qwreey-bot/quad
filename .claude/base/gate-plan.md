@@ -529,7 +529,7 @@ end
 똑같게, 중간 state 랑 똑같게, emit 받을때에만 epoch 맵을 업데이트 하면 돼. 계약
 추가로 끝나는 일로 보여"*. 막는 갈래(캐치업이 dep 노드의 `emitEpochMap`을 보게
 하기 / value-hold 재개방)는 둘 다 기각 — 전자는 `EpochMap` 계약 변경, 후자는
-`base/debounce-throttle-plan.md` 4절이 철회한 (B). 발견 원문은 `qa-request/pre-implementation-handtrace-round10.md` `H-151`.
+`base/debounce-throttle-plan.md` 4절이 철회한 (B). 발견 원문은 `archive/v2-initial-implementation/pre-implementation-handtrace-round10.md` `H-151`.
 
 ## 관련 문서
 
@@ -538,4 +538,4 @@ end
   `Gate` 일반화를 처음 권고한 자리, 그리고 정책 쪽 설계 전량.
 - `base/dispatch-core-plan.md` — "배치 등록을 안전하게 만드는 Blocker 게이팅"
   절이 M3가 실제로 요구하는 표면.
-- `ROADMAP.md` M2/M3.
+- `archive/v2-initial-implementation/roadmap.md` M2/M3.

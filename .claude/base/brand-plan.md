@@ -36,6 +36,16 @@ Store인가/Tag인가" 판별, 또는 PropertyHandler의 `process` 내부에서
 
 ## ⭐ 구현 — 인스턴스 브랜드, 브랜드마다 자기 weak 집합 하나 (2026-08-21 확정)
 
+**⭐ [2026-09-07 사용자 결정 — 팩토리의 자리] `Brand()` 팩토리는 `quad-types`에 산다
+(`QuadTypes.Brand`, 런타임 값), 브랜드 *인스턴스*와 `isX` 술어는 패키지마다 자기 `Brand.luau`가
+만든다** — quad-base(`State`/`Slot`/`Tag`/… 전부), quad-roblox(`TweenBrand`/`isTween`, Tween과
+함께 이동), 장래 quad-spring(`SpringBrand`). 사용자 원문: *"Brand 에 대한 구현은 types 로 빼고싶어.
+실제로 타이핑을 하는데 있어서 필요한 요소이고, 노미널타이핑을 돕는다 이외의 동작이 없어서 enum 과
+비슷하게 특수 런타임 객체로 types 안에 실어두는게 좋아보여. 실제로 20줄도 되지 않거든 … quad-spring
+같은 곳에서도 SpringBrand 를 만들려면 선재로 미리 처놔야하는 것으로 보여"*. quad-types의 "런타임
+로직 0" 서술(`quad-types-plan.md`)은 이 팩토리 하나만큼 예외다. 아래 의미론(weak 집합·자기 등록·
+다중 태깅·역조회 없음·무의존)은 그대로이고, 아래 코드 블록의 `TweenBrand`는 이제 quad-roblox 것.
+
 **`Brand()`가 브랜드 객체 하나를 만든다.** 그 객체가 weak-key 집합 하나를
 들고, 값은 **자기가 속한 브랜드에 스스로 등록**한다.
 
@@ -162,7 +172,7 @@ end
 - **`isPreRef(x)`가 가장 구체적인 항등 체크**(`PreRefBrand:is(x)`),
   **`isRef(x)`는 그 위에 `RefBrand:is(x)`를 OR로 얹은 상위 개념** — 즉
   **`isRef(preRefInstance)`는 `true`.**
-- **`(v=Ref)` children 배열 leaf 매치 핸들러(M8 — `H-278`로 `Ref.luau` 소유)는
+- **`(v=Ref)` children 배열 leaf 매치 핸들러(M8 — `H-278`로 `Ref/init.luau` 소유)는
   이제 `isHandlable`을 `isRef(v) and not isPreRef(v) and not isPostRef(v)`로
   명시적으로 좁혀야 함**(**[2026-08-14 아홉 번째 세션]** `PostRef` 확정으로
   제외 항이 하나 늘어남) — 예전처럼 `isRef` 자체가 배타적이라 저절로

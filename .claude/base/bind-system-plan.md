@@ -216,7 +216,7 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
 찍는 값 유니언의 정본.** 생성기(`scripts/gen-d.py`)가 이 정의로 찍고, 여기가
 소스다:
 
-- **스칼라 프로퍼티**: `(T | State<T> | TweenData<T> | State<Tween<T>> | None)?` — **[2026-09-06 M11 단위 ① `H-326` 정정]** 옛 `(T | State<T> | Tween<T> | None)?`엔 `State<Tween<T>>`(`Animate`/`:Compute`의 반환)가 빠져 있었고, 새 솔버 `State` 불변성 때문에 State 멤버 둘을 각각 나열한다(생성기는 타입별 별칭 `PVn`, 바깥 Tween은 데이터부 — `tween-plan.md` "타입 대수" 절). `Tween<T>`은
+- **스칼라 프로퍼티**: `(T | TweenData<T> | StateMarker<T | Tween<T>> | None)?` — **[2026-09-07 마커 — 사용자 결정]** State 팔은 공변 마커 하나(`typing-limits.md` 8.11; 옛 `State<T> | State<Tween<T>>` 둘·유니언 T의 멤버별 팔 `H-353`은 소멸). 이벤트 슬롯도 `콜백 | StateMarker<콜백> | None`. **[2026-09-06 M11 단위 ① `H-326` 정정]** 옛 `(T | State<T> | Tween<T> | None)?`엔 `State<Tween<T>>`(`Animate`/`:Compute`의 반환)가 빠져 있었고, 새 솔버 `State` 불변성 때문에 State 멤버 둘을 각각 나열한다(생성기는 타입별 별칭 `PVn`, 바깥 Tween은 데이터부 — `tween-plan.md` "타입 대수" 절). `Tween<T>`은
   PropertyHandler가 소비하는 값-레벨 래퍼(`tween-plan.md`; 타입은
   `quad-roblox/src/types.luau`, 런타임은 M11 — 탐사자가 M9 오기를 잡음). 모든 프로퍼티에 균일하게
   허용한다(트윈 가능 여부는 엔진 몫 — 타입으로 안 가른다).
@@ -226,8 +226,8 @@ D.Frame = New<<Frame>> "Frame" :: (({ ...타입명시 }) -> Frame)
   유니언**이고, **이후 마일스톤이 자기 핸들러가 도착할 때 유니언을
   확장한다**(확장 규칙 — M6 Slot, M8 `Ref`/`PreRef`/`PostRef`; **[2026-09-07 M6 확장
   실행 — `H-351`, 핸드오버 리뷰]** `Slot<Instance>` 합류(fork 슬라이스가 이 팔을
-  실행하지 않아 strict에서 children Slot이 막혀 있었다 — `qa-request/handover-review-2026-09-07.md`;
-  `State<Slot<…>>` 팔·`Observer`/`EffectHandle` 팔은 그 원장 §4 Q1·Q2); **[2026-09-03
+  실행하지 않아 strict에서 children Slot이 막혀 있었다 — `qa-request/post-implementation-review-round1.md`;
+  `State<Slot<…>>` 팔은 **[2026-09-07 마커 — 사용자 결정]** 마커로 닫힘 — `StateMarker<(Instance | SlotMarker<Instance> | Tag | Attribute | None)?>` 한 팔이 `State<Frame>`·`State<Instance?>`·`State<Slot<Frame>>`·`State<Tag>`·`State<Attribute>`를 전부 받는다(`typing-limits.md` 8.11, 원장 §16); **[2026-09-07 Q2 (a) 사용자 확정]** `Observer`/`EffectHandle` 팔 합류, `H-355`); **[2026-09-03
   M10 확장 실행]** `Tag | State<Tag> | Attribute | State<Attribute>` 합류 —
   타입드 스칼라 슈가는 `Attribute`를 돌려주므로 같은 멤버, `H10-15`. `OnChange`
   디스크립터는 여기가 아니라 클래스별 생성 별칭 `<Class>Elem`에 들어간다 —
@@ -356,7 +356,7 @@ function Dispatch.drive(inst, flattened)   -- [2026-09-04] 첫 줄이 `flatten(f
 end
 ```
 
-**이 의사코드를 쓰면서 드러난 것**(결정은 `qa-request/pre-implementation-handtrace-round9-followup.md`의
+**이 의사코드를 쓰면서 드러난 것**(결정은 `archive/v2-initial-implementation/pre-implementation-handtrace-round9-followup.md`의
 `H-139` 절 — 여기선 목록만):
 - **배치를 닫는 자리** — 처음엔 *"어디에도 안 적혀 있다"*고 보고 해시 파트
   앞에서 닫는 모양으로 썼는데, **틀렸다**(감사 1라운드가 잡음):
@@ -380,15 +380,15 @@ end
   자식을 받는 쪽 — `InstanceChildHandler`(정적 자식, `H-134`)와 Slot의
   `native*` 주입 op — 만 한다.
   - **타입**: `D` 생성기가 각 클래스의 props 타입에서 `Parent`를 **제외**한다
-    (`ROADMAP.md` M5 `D/init.luau` 체크박스) — **그리고 `FrameModifier`류
-    메소드 목록에서도**(`ROADMAP.md` M7; **[2026-08-27 `/code-review`]** 두
+    (`archive/v2-initial-implementation/roadmap.md` M5 `D/init.luau` 체크박스) — **그리고 `FrameModifier`류
+    메소드 목록에서도**(`archive/v2-initial-implementation/roadmap.md` M7; **[2026-08-27 `/code-review`]** 두
     목록이 같은 API 덤프에서 따로 생성되는데 한쪽만 빼면
     `Modifier():Parent(x)`가 타입을 통과하고 `flatten`이 해시 파트로 merge한다 —
     `PreRef`/`PostRef`를 Modifier 타입으로 차단하는 것과 같은 자리). 범위 밖 클래스의 `New<<X>> "X"`는
     `any`라 타입으로 못 막고 아래 런타임 가드가 잡는다.
   - **런타임**: 새 메커니즘 없이 기존 계약으로 — `PropertyHandler.isHandlable`이
     `"Parent"`를 거부하면 그 키에 매치되는 핸들러가 없어 `Dispatch.process`의
-    *"매치 핸들러 없음 → 즉시 error"* 계약(`ROADMAP.md` M3)에 걸린다. (이
+    *"매치 핸들러 없음 → 즉시 error"* 계약(`archive/v2-initial-implementation/roadmap.md` M3)에 걸린다. (이
     배선은 사용자 확정이 아니라 **규칙을 기존 계약에 얹은 제 선택**이다 —
     `H-142` 처방 후보 (a)/(b)/(c)가 전부 새 메커니즘이라 정하지 않았던 것을
     "키 금지"로 바꾸니 필요한 코드가 이 거부 한 줄뿐이다. 다른 모양이 낫다면

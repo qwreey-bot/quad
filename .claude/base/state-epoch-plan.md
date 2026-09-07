@@ -8,7 +8,7 @@
 둘로 컴포지션하는 State 본체 통합이 전부 한 마일스톤 안이다.
 **[2026-08-24 재확정]** 2026-08-22엔 `GateNode`가 디스패치 쪽에 있어서
 `EpochMap`/`Epoch`만 그리 앞당겨져 **둘로 갈려 있었는데**, 마일스톤 순서
-교체(`ROADMAP.md`의 M2 배너)로 `GateNode`가 반응형으로 돌아오면서 그 분리
+교체(`archive/v2-initial-implementation/roadmap.md`의 M2 배너)로 `GateNode`가 반응형으로 돌아오면서 그 분리
 자체가 없어졌다.
 
 **⚠️ 이 문서는 `base/source-state-plan.md`의 "전파 모델 확정" 절을 대체하는
@@ -21,8 +21,8 @@
 §8은 구현 시 확인할 것.
 
 **히스토리**: 구현 전 QA 5라운드(`SS-2`/`SS-3`)에서 나왔고, 회신 원문은
-`qa-request/pre-implementation-qa-round5-response.md`, 여러 라운드의 정정
-경위는 `qa-request/pre-implementation-qa-round5-followup.md`의 M·N절이 소스.
+`archive/v2-initial-implementation/pre-implementation-qa-round5-response.md`, 여러 라운드의 정정
+경위는 `archive/v2-initial-implementation/pre-implementation-qa-round5-followup.md`의 M·N절이 소스.
 `Epoch`/`EpochMap`으로 일반화한 마지막 라운드의 근거 기록은
 `reference/epoch-brand-composition.md`.
 

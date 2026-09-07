@@ -358,7 +358,7 @@ quad의 전파 모델은 `base/source-state-plan.md`의 "전파 모델 확정" �
 푸는가" 절 신설 + `Observer` 절 상호 참조), `base/architecture.md`,
 `base/blocker-plan.md`("전파를 지연시키는 유일한 요소"로 위치 명문화),
 `reference/comparison-fusion-vide.md`,
-`research/framework-comparison-findings.md`, `ROADMAP.md` M0 체크리스트,
+`research/framework-comparison-findings.md`, `archive/v2-initial-implementation/roadmap.md` M0 체크리스트,
 스파이크 `05-store-state-diamond-propagation.luau`(옛 모델을 통과 상태로
 검증 중이었음 → `rewrite-required/`), `audit/luau-test-first-run-2026-08-13.md`.
 
@@ -641,7 +641,7 @@ clearTimeout(handle: Timeout): ()
   놨었는데, 정작 이 문서가 추가하는 `setTimeout`/`clearTimeout` 자신이 그
   개수를 늘리는 쪽이라 자기모순이었다. 주입 op 전체 목록의 소스는
   `base/architecture.md`의 `EngineOps.luau` 줄. **주의**: `native*` 계층은
-  이 관례의 예외로, 미주입이 에러가 아니라 **조합 폴백**이다). 순수 Luau엔 `task`도 이벤트 루프도 없어 base가 "적당한 기본값"을
+  이 관례의 예외로, 미주입이 에러가 아니라 **조합 폴백**이다 — **[2026-09-07 Q6]** 그 폴백 약속은 철회됐고 지금은 여섯도 미주입이면 에러, `slot-plan.md`). 순수 Luau엔 `task`도 이벤트 루프도 없어 base가 "적당한 기본값"을
   만들어낼 수 없음.
 - **`Debounce`/`Throttle` 둘 다 이 배선이 있어야 동작함** — 스로틀도
   trailing 발화가 "창 끝에 다시 처리"라 태스크가 필수. 배선 안 된
@@ -1242,7 +1242,7 @@ additional-primitives-plan.md`가 원래 "안 만들어도 된다"고 판단했�
 맨 뒤로 미뤄도 됨(다른 기능이 이걸 의존하지 않고, 없어도 다른 기능이 안
 막힘).
 
-**의존성**: State 코어(`ROADMAP.md` M2) + 백엔드 주입 표면(`setTimeout`/
+**의존성**: State 코어(`archive/v2-initial-implementation/roadmap.md` M2) + 백엔드 주입 표면(`setTimeout`/
 `clearTimeout`) + `Blocker`(gated state) + `Ref`. **[2026-08-22 정정]**
 **[2026-08-24 재정리]** 각각 **M2**(State 코어 · 게이트 · `Blocker`) /
 **M8**(`Ref`)에서 확정되는 것들이라 그 이후 언제든 얹을 수 있다. 2026-08-22엔

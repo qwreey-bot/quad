@@ -38,8 +38,9 @@
 	catches it statically first, D/init.luau).
 
 	Typing lives in the GENERATED file: `PropTypes` (property name → type
-	across the D scope), `OnChangeFn = <K>(name: K & keyof<PropTypes>,
-	fn: (index<PropTypes, K>) -> ()) -> …` — `RobloxExtension.OnChange`
+	across the D scope — the READ surface `PropTypesRead` since Q19, 2026-09-07),
+	`OnChangeFn = <K>(name: K & keyof<PropTypesRead>,
+	fn: (index<PropTypesRead, K>) -> ()) -> …` — `RobloxExtension.OnChange`
 	carries that type over this untyped runtime (luau-test `30`).
 ]]
 
@@ -60,8 +61,9 @@ local function isOnChange(x: any): boolean
 end
 
 local function OnChange(name: string, fn: (any) -> ()): OnChangeDescriptor
-	if type(name) ~= "string" then
-		errNS.errorBeforeNearest("OnChange: property name must be a string", SURFACE)
+	if type(name) ~= "string" or name == "" then
+		-- round3 `H-440` (외부 리뷰 G-10, `H-417` 짝): "" reached `GetPropertyChangedSignal` at dispatch depth
+		errNS.errorBeforeNearest("OnChange: property name must be a non-empty string", SURFACE)
 	end
 	if type(fn) ~= "function" then
 		errNS.errorBeforeNearest(`OnChange("{name}"): callback must be a function`, SURFACE)
@@ -73,7 +75,6 @@ end
 
 local function install(quad: any)
 	local dispatch = quad.Dispatch
-	local None = quad.None
 	if errNS == nil then
 		errNS = quad.errorNamespace
 		errNS.setFuncLevel(OnChange, SURFACE) -- `H-238`: public factory tagged
@@ -87,8 +88,7 @@ local function install(quad: any)
 		priority = dispatch.HANDLER_PRIORITY_NORMAL,
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
 			-- `H-39`: terminal — no physical element, so the pair is None/0
-			dispatch.setOffsetSource(inst, k, None)
-			dispatch.setLength(inst, k, 0, inst)
+			dispatch.setEmpty(inst, k, inst)
 
 			local name = v.Name
 			local callback = v.Callback :: (any) -> ()

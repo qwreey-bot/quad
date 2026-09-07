@@ -47,7 +47,10 @@
   바운딩 해준다만 만족해도 해결돼."* 즉 계약은 **"프로퍼티 셋 이전에
   바운딩된다"** 하나이고, 그 따름정리가 초기값 발화다 — props에 그 프로퍼티가
   없으면 당연히 발화 없음, 파생 프로퍼티(`AbsolutePosition` 등)가 그 자리에서
-  계산돼 있다는 보장도 없음. 콜백이 초기값을 걸러야 하면 사용자가 `==`로
+  계산돼 있다는 보장도 없음, **[2026-09-07 7순회 `H-429` 셋째 헤지]** props의 값이
+  엔진 기본값과 같으면(`Frame { Visible = true }`) 엔진이 동일값 대입에 시그널을 안
+  쏘므로 발화 없음이 정상(mock은 무조건 쏘므로 CLI와 갈린다 — `HUMAN_TODO.md` 13번
+  실측으로 확정할 것). 콜백이 초기값을 걸러야 하면 사용자가 `==`로
   거른다(사용자: *"== 비교가 엄청 싸서 그 안에서 dedup 하면 되는 부분"*) —
   quad가 초기값을 억제하지 않는다.
 - **핸들러(`"OnChange"`, NORMAL)**: `type(k) == "number"` ∧ 디스크립터
@@ -82,17 +85,23 @@
    덤프 기준). 클래스 간 타입이 다른 이름(`Style`/`CanvasSize`/`Color`/
    `Offset`/`Transparency`/`Padding`)은 **`any`** — `index<>`가 유니언을 주면
    주석 콜백이 반공변으로 거부되기 때문(실측).
-2. **`OnChangeFn = <K>(name: K & keyof<PropTypes>, fn: (index<PropTypes, K>) -> ()) -> OnChangeDescriptor<K>`**
+   **[2026-09-07 회신 3차 Q19 (a) 사용자 확정]** OnChange는 **읽기 표면 `PropTypesRead`**(쓰기 프로퍼티 + ReadOnly 프로퍼티 — AbsoluteSize/AbsolutePosition/TextBounds 등 — 개수의 소스는 `quad-roblox/dump/api-surface.json`의 `readProps`, 여기 세지 않는다)를 쓴다 — 쓰기 표면 `PropTypes`로는 관측의 주 대상이 strict에서 거부됐다(`H-414`). `<Class>OnChange` 유니언도 같은 표면.
+2. **`OnChangeFn = <K>(name: K & keyof<PropTypesRead>, fn: (index<PropTypesRead, K>) -> ()) -> OnChangeDescriptor<K>`**
    — `RobloxExtension.OnChange`가 이 타입(런타임 팩토리는 무타입). 이름
    오타(`keyof`)와 콜백 파라미터 타입 불일치(`index<>`)를 **호출 자리**에서
    잡고, **무주석 콜백의 파라미터를 추론**한다(`function(v) … end`의 `v`가
    `UDim2`) — `typing-limits.md`가 실측한 "제네릭 콜백 인자에 컨텍스트 타입이
    안 흐른다"의 예외로, `index<>`가 파라미터 타입을 직접 만들어 주기 때문.
+   **[2026-09-07 7순회 `H-428` 정정]** 그 추론은 **검사·멤버 접근 방향에만** 흐른다 —
+   무주석 `v`에 **연산자**를 쓰면(`v + 1`) `index<PropTypesRead, K>`가 줄어들기 전에 연산자
+   제약이 풀려 `unknown`으로 실패한다(실측). 연산자를 쓰는 콜백은 파라미터에 주석을
+   달 것(`typing-limits.md` 8.10).
 3. **클래스별 `<Class>OnChange` 유니언**(`{ Name: "Position", Callback:
    (UDim2) -> () } | …`)이 `D.<Class>`/`D.Mapper.<Class>`의 `E`에 합류
    (클래스당 별칭 `<Class>Elem = NewChild | <Class>OnChange |
-   State<<Class>OnChange> | { read __quadModifier: "<Class>" | … } |
-   <Class>RefMarker | State<<Class>RefMarker>` — 넷째 멤버는 **[2026-09-04 M7
+   StateMarker<<Class>OnChange> | { read __quadModifier: "<Class>" | … } |
+   <Class>RefMarker | StateMarker<<Class>RefMarker>` — State 팔 둘은 **[2026-09-07 마커]**
+   공변 `StateMarker`(옛 `State<…>` 전체형, `typing-limits.md` 8.11; 아래 캐비엇 (a)), 넷째 멤버는 **[2026-09-04 M7
    단위 ④]** 클래스 태그 마커(자기 + 조상 체인, `modifier-plan.md` 11절), 마지막
    둘은 **[2026-09-04 M8 단위 ③]** 반공변 팬텀 마커 `{ read __quadRefAccepts:
    (<Class>) -> () }`(`ref-plan.md` "children 자리의 타입" 절, round18 `H-321`),
@@ -100,7 +109,7 @@
    밖 이름**은 생성자 자리에서 거부된다(진단에 "too complex" 잡음이 함께 붙지만
    에러 자체는 난다).
 
-캐비엇 둘: (a) `State<T>`는 `Set` 파라미터 때문에 **불변**이라
+캐비엇 둘: (a) **[2026-09-07 마커 — 사용자 결정]** **닫힘** — `<Class>Elem`의 State 팔이 공변 마커 `StateMarker<FrameOnChange>`가 돼(`typing-limits.md` 8.11) 캐스트 없이 든다; 아래는 옛 서술. `State<T>`는 `Set` 파라미터 때문에 **불변**이라
 `q.Source(OnChange(...))`는 `State<FrameOnChange>`에 안 맞는다 — 클래스
 유니언으로 캐스트해 만든다(`q.Source(OnChange(...) :: FrameOnChange)`;
 반응형 자식 `q.Source(frame)` vs `State<Instance>`도 같은 규칙, 선행 한계).

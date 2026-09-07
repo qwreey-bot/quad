@@ -41,8 +41,8 @@ local Err = require("./ErrorNamespace")
 local InitBookkeeping = require("./Bookkeeping")
 local NoneModule = require("@self/None")
 local StoreBindModule = require("@self/StoreBind")
-local ProcessedModifierModule = require("@self/Modifier") -- M7 단위 ②
-local flatten = require("./Modifier").flatten -- M7 단위 ② — drive의 첫 pre-pass(round17 Q4 (a))
+local ProcessedModifierModule = require("@self/Modifier/Handler") -- M7 단위 ②
+local flatten = require("@self/Modifier").flatten -- M7 단위 ② — drive의 첫 pre-pass(round17 Q4 (a))
 local RefPrePass = require("@self/Ref") -- M8 단위 ② — (a) PreRef/PostRef pre-pass + (c) postRefList
 
 local QuadTypes = require("../luau_packages/quad_types")
@@ -77,6 +77,11 @@ local SURFACE = QuadTypes.ERROR_LEVEL_SURFACE
 -- to typeof (the `type(predicate) == "function"` guard hides omissions).
 local BRAND_PROBES = {
 	"isMapperDescriptor", -- M5 Claim (핸드오버 리뷰 `H-346` — 체크리스트 0-b의 마지막 누락)
+	-- [2026-09-07] `Tween` moved to quad-roblox (with `isTween`); the probe is a NAME looked
+	-- up on the module at diagnostic time, so the provider-installed predicate is found
+	-- without base requiring anything. Base still spelling a backend name here is the
+	-- last trace of the old placement — provider-registered probes are round3 §4 Q27
+	-- (TODO(Q27); a future quad-spring brand would report `value: table` until then).
 	"isTween", -- M11 (round19 리뷰 — 빠지면 Tween이 `value: table`로 보고된다)
 	"isTag", -- M10 (2차 리뷰 `H-342` — 같은 결함 클래스 넷)
 	"isAttributeKey", -- most-specific-first: 키 객체가 그룹보다 먼저
@@ -230,8 +235,10 @@ local function Init(module: any)
 			slot.retractor = NOOP -- consumed; no double call while h.process recurses
 			local retractor = h.process(inst, k, v, index)
 			if retractor == nil then
-				-- provider-contract violation — nearest surface's caller (`H-222`)
-				Err.errorBeforeNearest(noRetractorMessage(h, k, index), SURFACE)
+				-- provider-contract violation (`H-222`) — OUTERMOST: this fires at
+				-- dispatch depth so nearest blamed `init.luau` itself (6순회 `H-409`,
+				-- the sibling `noMatchMessage` already uses errorBefore)
+				Err.errorBefore(noRetractorMessage(h, k, index), SURFACE)
 			end
 			slot.retractor = retractor
 		else
@@ -244,7 +251,7 @@ local function Init(module: any)
 			list[index] = { handler = h, retractor = NOOP }
 			local retractor = h.process(inst, k, v, index)
 			if retractor == nil then
-				Err.errorBeforeNearest(noRetractorMessage(h, k, index), SURFACE)
+				Err.errorBefore(noRetractorMessage(h, k, index), SURFACE) -- `H-409`
 			end
 			list[index] = { handler = h, retractor = retractor }
 		end
@@ -302,6 +309,15 @@ local function Init(module: any)
 	local bookkeeping = module._bookkeeping
 
 	local function drive(inst: any, flattened: { [any]: any })
+		-- `H-419` (외부 리뷰 G-07): a non-table props value used to die inside
+		-- `flatten` (`#input` / `next` — VM error blaming Dispatch/Modifier/init.luau); strict
+		-- typing is the first defense, this is the untyped-caller one
+		if type(flattened) ~= "table" then
+			Err.errorBefore(`Dispatch.drive: props must be a table (got {typeof(flattened)})`, SURFACE)
+		end
+		if inst == nil then
+			Err.errorBefore("Dispatch.drive: inst must not be nil", SURFACE) -- round3 `H-442` (G-12): died in Relate with `table index is nil`
+		end
 		-- Pipeline stages ⓪ + (b) + ⓪' (M3 unit 2 wired the batch gating; the
 		-- (a) PreRef/PostRef pre-pass and (c) postRefList join in M8 — between
 		-- the gate opening and this loop / after it, respectively).
@@ -362,6 +378,7 @@ local function Init(module: any)
 		drive = drive,
 		setLength = bookkeeping.setLength,
 		setOffsetSource = bookkeeping.setOffsetSource,
+		setEmpty = bookkeeping.setEmpty,
 		getOffsetAt = bookkeeping.getOffsetAt,
 		getBlocker = bookkeeping.getBlocker,
 		getBookkeeping = bookkeeping.getBookkeeping,

@@ -271,12 +271,53 @@ do
 end
 
 print()
+print("=== 12b. 5순회 H-393 — Detach된 Owned=false 요소 Slot을 settle이 nil로 버릴 때 소유권을 먼저 놓는다(죽은 owner가 영구히 남던 것) ===")
+do
+	local show, drop = q.Source(true), q.Source(false)
+	local data = q.Source({ { id = "x" } })
+	local sub = Slot()
+	sub:List(q.Source({ { id = "a" } }), function(item, _i, _o, prev)
+		if item == q.KeyGone then return nil end
+		if prev then return prev end
+		local f = Instance.new("Frame"); f.Name = item.id; return f
+	end, function(item) return item.id end, { Owned = false })
+	local outer = Slot()
+	outer:List(data, function(item, _i, _o, prev)
+		if item == q.KeyGone then return q.Detach end
+		if not show:Get() then return q.Detach end
+		if drop:Get() then return nil end -- settle drops the detached prev → releaseElement(wasDetached)
+		return prev or sub
+	end, function(item) return item.id end)
+	local parent = Instance.new("Folder")
+	dispatch.drive(parent, { outer })
+	assert(childCount(parent) == 1, "sub mounted through outer")
+	show:Set(false); data:Set({ { id = "x" } }) -- Detach
+	drop:Set(true); show:Set(true); data:Set({ { id = "x" } }) -- key back, updateFn returns nil → dropped
+	assert(childCount(parent) == 0, "dropped")
+	-- sub is Owned=false: it survives its parent — and must be mountable again
+	local other = Slot()
+	other:Add(sub)
+	dispatch.drive(Instance.new("Folder"), { other })
+	assert(other:Get(1) == sub, "the surviving Owned=false Slot remounts elsewhere (owner released)")
+	print("PASS")
+end
+
+print()
 print("=== 13. :List 상호배타 가드 — CRUD 후 :List, :List 후 CRUD 금지 ===")
 do
 	local s1 = Slot(); s1:Add(Instance.new("Frame"))
 	assert(not pcall(function() s1:List(q.Source({}), function() end) end), "no :List after manual CRUD")
 	local s2 = Slot(); s2:List(q.Source({}), function() end)
 	assert(not pcall(function() s2:Add(Instance.new("Frame")) end), "no manual CRUD after :List")
+	-- 4순회 `H-385`: the same gates through the `:Single` sugar blame the user's
+	-- `:Single(...)` line, not Single's delegation to `:List` inside Slot/List.luau
+	local _, errS1 = pcall(function() s1:Single(q.Source(nil)) end)
+	assert(string.find(tostring(errS1), ":List/:Single on a manual Slot", 1, true) ~= nil, "Single after CRUD is the same gate, and the message names both entries: " .. tostring(errS1))
+	mock.assertBlamesUser(errS1, "spec.slot.luau", "Single-after-CRUD blame")
+	local s3 = Slot(); s3:Single(q.Source(nil))
+	local _, errS2 = pcall(function() s3:Single(q.Source(nil)) end)
+	assert(string.find(tostring(errS2), "already has :List/:Single installed", 1, true) ~= nil, "Single twice is the same gate: " .. tostring(errS2))
+	mock.assertBlamesUser(errS2, "spec.slot.luau", "Single-twice blame")
 	print("PASS")
 end
 
@@ -687,6 +728,39 @@ do
 	-- (d) `Slot{bad}` blames the user's line, not the constructor's Add call
 	local _, err = pcall(function() return Slot({ 123 }) end)
 	mock.assertBlamesUser(err, "spec.slot.luau", "constructor element error blames the caller (H-238)")
+	-- (e) 2순회 `H-375`: the element-type gate raised by a direct CRUD call made
+	-- INSIDE a reactive callback blames the CRUD line, not the `:Set` that ran
+	-- the callback (nearest, like the sibling "appears twice" check) — the
+	-- reconcile-depth path (`settle`) keeps outermost blame (1절 위 drive 단언)
+	local src = q.Source(0)
+	local s2 = Slot({})
+	local lineAdd = 0
+	local okN, errN = pcall(function()
+		-- the Observer's initial run happens under THIS call, not under a `:Set`
+		local o = src:Observer(function()
+			lineAdd = (debug.info(1, "l") :: number) + 1
+			s2:Add(nil)
+		end)
+		o:Subscribe()
+	end)
+	assert(not okN and string.find(tostring(errN), "nil/None cannot be an element", 1, true) ~= nil, "gate fired: " .. tostring(errN))
+	assert(string.find(tostring(errN), `spec.slot.luau:{lineAdd}:`, 1, true) ~= nil, "nested direct CRUD blames its own line, not the Subscribe/Set that ran the callback: " .. tostring(errN))
+	print("PASS")
+end
+
+print()
+print("=== 22b. 4순회 H-386 — Slot(initial)의 컨테이너 모양 게이트: 잊은 {}·quad 값·해시 테이블이 요소 0개로 통과해 :List를 잠그던 것 ===")
+do
+	local frame = Instance.new("Frame")
+	for label, bad in { bareElement = frame, slotValue = Slot(), tagValue = q.Tag("x"), source = q.Source(1), hash = { gamma = frame }, str = "s", zeroKey = { [0] = frame }, fracKey = { [1.5] = frame } } :: { [string]: any } do
+		local ok, err = pcall(function() return Slot(bad) end)
+		assert(not ok and string.find(tostring(err), "initial elements must be", 1, true) ~= nil, label .. " rejected at construction: " .. tostring(err))
+		mock.assertBlamesUser(err, "spec.slot.luau", label .. " blame")
+	end
+	-- positive: a real array (and an empty one) — and a nil hole stays UB (ipairs stops), not an error
+	assert(Slot({}):Get(1) == nil and Slot({ frame }):Get(1) == frame, "arrays still construct")
+	local holed = Slot({ Instance.new("Frame"), nil, Instance.new("Frame") })
+	assert(holed:Get(1) ~= nil and holed:Get(2) == nil, "nil hole: ipairs stops (slot-plan UB), no gate")
 	print("PASS")
 end
 
@@ -728,6 +802,50 @@ do
 	assert(p:Extract(2, Instance.new("Frame")) == st, "Extract(i, new) returns the State")
 	q.dispose(h)
 	assert(mock.isDestroyed(h), "the wrapper let go of h (dispose allowed)")
+	print("PASS")
+end
+
+print("=== 24. 회신 3차(2026-09-07) — Q9 (b) 마운트 대상이 quad 밖에서 Destroy된 Slot은 죽은 것(메시지가 그렇게 말한다), Q14 (a) destroySlotTree가 Owned=false 자식의 소유권을 놓는다, G-11 List 인자 게이트 ===")
+do
+	-- Q9: zombie — the two messages name the cause
+	local frame = mock.Instance.new("Frame")
+	local s = q.Slot()
+	s:Add(mock.Instance.new("Frame"))
+	q.Dispatch.drive(frame, { s })
+	frame:Destroy()
+	local okD, errD = pcall(function() q.dispose(s) end)
+	assert(not okD and string.find(tostring(errD), "destroyed outside quad", 1, true) ~= nil, "dispose names the destroyed-owner case: " .. tostring(errD))
+	local okA, errA = pcall(function() q.Slot():Add(s) end)
+	assert(not okA and string.find(tostring(errA), "cannot be reused after its parent is destroyed", 1, true) ~= nil, "Add names the destroyed-owner case: " .. tostring(errA))
+	-- Q14: an Owned=false child Slot survives its parent's destruction AND is free again
+	local parent = q.Slot()
+	local child = q.Slot()
+	child:List({ 1 }, function(_item, _index, _offset, _prev)
+		return mock.Instance.new("Frame")
+	end, nil, { Owned = false })
+	parent:Add(child)
+	local host = mock.Instance.new("Frame")
+	local holder = q.Source(parent :: any)
+	q.Dispatch.drive(host, { holder })
+	holder:Set(nil) -- unmount (retract)
+	q.dispose(parent) -- destroySlotTree(parent): child is Owned=false → unmount-only, must be released
+	assert(not child._destroyed, "Owned=false child survives (S-07 / slot-plan)")
+	q.Slot():Add(child) -- used to raise "already mounted elsewhere" (dead elementOwner)
+	-- G-11: List argument gates blame the caller, not Slot/List.luau
+	local okL, errL = pcall(function() q.Slot():List(nil :: any, function() end) end)
+	assert(not okL and string.find(tostring(errL), "data must be a plain array", 1, true) ~= nil, "nil data: " .. tostring(errL))
+	mock.assertBlamesUser(errL, "spec.slot.luau", "List nil data blame")
+	local okF, errF = pcall(function() q.Slot():List({}, "x" :: any) end)
+	assert(not okF and string.find(tostring(errF), "updateFn must be a function", 1, true) ~= nil, "non-function updateFn: " .. tostring(errF))
+	mock.assertBlamesUser(errF, "spec.slot.luau", "List updateFn blame")
+	-- round3 `H-446`: the same gates on Single's updateFn, List's keyFn, and branded "data"
+	local okS, errS = pcall(function() q.Slot():Single(nil, 42 :: any) end)
+	assert(not okS and string.find(tostring(errS), "Slot:Single: updateFn must be a function", 1, true) ~= nil, "Single updateFn: " .. tostring(errS))
+	mock.assertBlamesUser(errS, "spec.slot.luau", "Single updateFn blame")
+	local okK, errK = pcall(function() q.Slot():List({}, function() end, "id" :: any) end)
+	assert(not okK and string.find(tostring(errK), "keyFn must be a function", 1, true) ~= nil, "keyFn: " .. tostring(errK))
+	local okN, errN = pcall(function() q.Slot():List(q.None :: any, function() end) end)
+	assert(not okN and string.find(tostring(errN), "plain array", 1, true) ~= nil, "None is not an array: " .. tostring(errN))
 	print("PASS")
 end
 

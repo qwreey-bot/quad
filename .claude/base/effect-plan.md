@@ -311,7 +311,11 @@ end
 --   이 훅을 먼저 묻는다 — 가드가 거부해도 반쯤 묶인 핸들(묶였는데 `Destroying`
 --   연결 없음)이 남지 않는다. `H-147` (A)의 가드는 `_bindDestroying` 첫 줄에서
 --   여기로 이동했다(그쪽의 유일한 호출자인 `bindLifetime`이 이미 물었으므로).
---   level 3: 이 메소드와 `bindLifetime`을 지나 사용자 호출부. Observer도 같은
+--   level 3: 이 메소드와 `bindLifetime`을 지나 사용자 호출부(**[2026-09-07 회신 3차
+--   Q7 둘째 (a) 사용자 확정]** `errorBefore`(최외곽) 유지 — 태그된 `bindLifetime` 뒤에선
+--   어느 방향도 완전하지 않지만 outermost가 오용 콜백을 돌린 사용자 호출을 찍는다;
+--   이 줄의 옛 "level 3"은 nearest 의미였다. Compute가 Modifier를 돌려준 에러도 같은
+--   방향(Q7 셋째)). Observer도 같은
 --   이름의 훅을 가진다(`H-183` — 자기 `_running`을 본다). 값이 훅을 안 가지면
 --   (평범한 클로저 등) `bindLifetime`은 물을 것이 없다.
 function EffectHandle:_assertBindable()
@@ -604,7 +608,7 @@ source-state-plan.md`의 "동적 경로 가드" 절 참고.)
 **⚠️ [2026-08-24] 이 가드를 실제로 `Dispatch.addHandler`로 등록하는 것은
 M3(디스패치)다.** `HANDLER_PRIORITY_FALLBACK` 상수도 `Dispatch.addHandler`도
 M3에서 처음 생기므로, M2(반응형 코어)에서 본체를 짤 때는 **핸들러 정의만
-준비해두고 등록 호출은 미룬다** — `ROADMAP.md` M3의 "Observer/Effect 동적
+준비해두고 등록 호출은 미룬다** — `archive/v2-initial-implementation/roadmap.md` M3의 "Observer/Effect 동적
 경로 가드 등록" 체크박스가 그 자리다(2026-08-24 마일스톤 순서 교체의 산물,
 M2가 M3에 개념상 지던 유일한 의존이라 이쪽으로 미뤄졌다).
 **[2026-08-31 M3 단위 4] 그 등록은 완료됐다**(`spec.leaf.luau` 6이 메시지·
@@ -1054,7 +1058,7 @@ Effect의 의존성이 될 방법이 아예 없다.** 사용자 제기: *"Effect
 **[2026-08-25 정정]** 억제 수단이 내부 플래그에서 **사적 `Blocker`**로
 바뀌었으므로 선행은 `Blocker`의 기본 메커니즘(`On`/`Off`/`IsOn`/
 `OffWithoutEmit`)이다 — 그건 `GateNode`/`:Policy`와 무관하게 독립 완결이라
-`Gate`보다 뒤일 필요는 여전히 없다(`ROADMAP.md` M2의 그 각주).
+`Gate`보다 뒤일 필요는 여전히 없다(`archive/v2-initial-implementation/roadmap.md` M2의 그 각주).
 
 ## 해결됨 — Effect/Observer 관계 (2026-08-07 여섯 번째 세션, 이전 미해결 절 대체)
 

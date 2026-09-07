@@ -266,6 +266,16 @@ do
 			not ok2 and string.find(tostring(err2), "positive integer", 1, true) ~= nil,
 			`setOffsetSource rejects {tostring(bad)}: {tostring(err2)}`
 		)
+		-- round3 `H-434`: setEmpty는 Dispatch 표면(H-242 태그)이라 자기 앞에서 검증한다 — 안쪽 setOffsetSource가
+		-- 던지면 nearest+1이 setEmpty 본문(quad 내부)을 blame했다
+		local ok4, err4 = pcall(function()
+			q.Dispatch.setEmpty(owner, bad :: any)
+		end)
+		assert(
+			not ok4 and string.find(tostring(err4), "setEmpty: position must be a positive integer", 1, true) ~= nil,
+			`setEmpty rejects {tostring(bad)}: {tostring(err4)}`
+		)
+		mock.assertBlamesUser(err4, "spec.lengthoffset.luau", "setEmpty gate blame")
 	end
 	-- 오염이 전혀 안 남았는지 — 검증이 부기 변형 전에 있다
 	local bk = q.Dispatch.getBookkeeping(owner)
@@ -320,6 +330,75 @@ do
 	assert(src3:Get() == 9, `position 3 follows: 7 + len2(2) (got {src3:Get()})`)
 	local bk = q.Dispatch.getBookkeeping(inst)
 	assert(bk.offsetSetUpTo == 3 and not bk.recomputeBlocker:IsOn(), "the pass completed cleanly (no frozen blocker)")
+	print("PASS")
+end
+
+print()
+print()
+print("=== 11. 5순회 H-392/H-397 — setOffsetSource는 부기를 만지기 전에 source를 읽는다(H-256 (a)); getOffsetAt은 N+1 너머를 사용자 입력 에러로 ===")
+do
+	local q = newQuad()
+	local inst = Instance.new("Frame")
+	local okBad = pcall(function()
+		q.Dispatch.setOffsetSource(inst, 1, {} :: any) -- not a Source and not None
+	end)
+	assert(not okBad, "a non-Source offset target errors")
+	-- bookkeeping untouched — before H-392 `sourceList[1]` held the bad table and
+	-- the next setLength died inside recomputeBlocker:On(), freezing the owner
+	assert((q :: any)._bookkeeping.getBookkeeping(inst).sourceList[1] == nil, "nothing was written before the read raised")
+	q.Dispatch.setOffsetSource(inst, 1, q.None)
+	q.Dispatch.setLength(inst, 1, 5)
+	assert(q.Dispatch.getOffsetAt(inst, 2) == 5, "offset arithmetic works after the rejected call")
+	local s = q.Source(-1)
+	q.Dispatch.setOffsetSource(inst, 1, s)
+	assert(s:Get() == 0, "a real Source still gets its offset")
+	-- N+1 is the last legal query; past it is user input, blamed here — not "bookkeeping is broken"
+	assert(q.Dispatch.getOffsetAt(inst, 2) == 5, "N+1 legal")
+	local okFar, errFar = pcall(function()
+		q.Dispatch.getOffsetAt(inst, 3)
+	end)
+	assert(not okFar and string.find(tostring(errFar), "past N+1", 1, true) ~= nil and string.find(tostring(errFar), "H-39", 1, true) ~= nil, "past N+1 names both causes (range / missing registration): " .. tostring(errFar))
+	-- 6순회 `H-408`: the same range fault through the sibling surface `setOffsetSource`
+	-- blames the caller too (nearest used to land on Bookkeeping.luau itself)
+	local okVia, errVia = pcall(function()
+		q.Dispatch.setOffsetSource(inst, 5, q.Source(0))
+	end)
+	assert(not okVia and string.find(tostring(errVia), "past N+1", 1, true) ~= nil, "setOffsetSource past N+1 errors with the range message: " .. tostring(errVia))
+	mock.assertBlamesUser(errVia, "spec.lengthoffset.luau", "range error via setOffsetSource blames the caller")
+	mock.assertBlamesUser(errFar, "spec.lengthoffset.luau", "getOffsetAt range blame")
+	print("PASS")
+end
+
+print("=== 12. 회신 3차(2026-09-07) — Q13 (b) setOffsetSource의 source 게이트(Source | None), Q15 (a) setLength 길이 도메인: 상수는 등록 시, State는 읽을 때(비음수 정수) ===")
+do
+	local q = newQuad()
+	local inst = mock.Instance.new("Frame")
+	local okS, errS = pcall(function()
+		q.Dispatch.setOffsetSource(inst, 1, { Get = function() return 0 end } :: any)
+	end)
+	assert(not okS and string.find(tostring(errS), "source must be a Source<number> or None", 1, true) ~= nil, "plain table rejected: " .. tostring(errS))
+	mock.assertBlamesUser(errS, "spec.lengthoffset.luau", "setOffsetSource gate blame")
+	for _, bad in { -1, 1.5, "3" } :: { any } do
+		local ok, err = pcall(function()
+			q.Dispatch.setLength(inst, 1, bad)
+		end)
+		assert(not ok and string.find(tostring(err), "length must be a non-negative integer", 1, true) ~= nil, `setLength rejects {tostring(bad)}: {tostring(err)}`)
+		mock.assertBlamesUser(err, "spec.lengthoffset.luau", "setLength domain blame")
+	end
+	q.Dispatch.setOffsetSource(inst, 1, q.None)
+	q.Dispatch.setLength(inst, 1, 0) -- zero is legal
+	local len = q.Source(2)
+	q.Dispatch.setOffsetSource(inst, 2, q.None)
+	q.Dispatch.setLength(inst, 2, len)
+	assert(q.Dispatch.getOffsetAt(inst, 3) == 2, "State length contributes")
+	local okR, errR = pcall(function()
+		len:Set(-4) -- the length observer validates BEFORE recomputing (round3 `H-445`)
+	end)
+	assert(not okR and string.find(tostring(errR), "length must be a non-negative integer", 1, true) ~= nil, "State length checked in its observer: " .. tostring(errR))
+	mock.assertBlamesUser(errR, "spec.lengthoffset.luau", "State length blame is the :Set line")
+	-- `H-445`: the throw happened outside the recomputeBlocker window — the owner is NOT frozen
+	len:Set(3)
+	assert(q.Dispatch.getOffsetAt(inst, 3) == 3, "offsets keep flowing after the rejected value")
 	print("PASS")
 end
 

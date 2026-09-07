@@ -102,7 +102,7 @@ StoreBind가 State/Source 레이어를 전부 풀어낸 뒤의 값(그리고 이
 **`Tween<T>`의 정확한 필드 목록은 아래 "확정: `Tween{...}` 최종 모양" 절
 참고.**
 
-### 3-상태 저장 — `{Tween, Value} | true | nil` (릴레이션 슬롯 하나로 `hasBeenSet` 통합)
+### 3-상태 저장 — `{Tween, Value, Source} | true | nil` (릴레이션 슬롯 하나로 `hasBeenSet` 통합)
 
 **[2026-09-06 구현됨 — M11 단위 ②, round19]** `Handlers/Property.luau`의 `process`가
 아래 분기 1~3 그대로다(슬롯은 install 스코프의 `quad.Relate()`, 키는 프로퍼티 이름).
@@ -118,7 +118,7 @@ plain 값이 오면 Cancel과 같다). Studio 6/6(`audit/m11-unit2-studio-2026-0
   (첫 세팅).
 - **`true`** — 최소 한 번 세팅된 적 있음(직전 값이 plain이었든 `Tween<T>`
   였든 무관), 지금은 활성 엔진 Tween 없음.
-- **`{Tween: TweenBase, Value: T}` 테이블** — 지금 애니메이션이 진행 중, 새
+- **`{Tween: TweenBase, Value: T, Source: Tween<T>}` 테이블**(**[2026-09-07 Q12]** 셋째 필드 `Source`는 그 트윈을 만든 Tween 객체 — 같은 객체가 재발행되면 신원으로 접는다; 필드 이름은 메인이 붙임, round3 §6) — 지금 애니메이션이 진행 중, 새
   값을 처리하기 전에 먼저 정리해야 함. **2026-08-12 세션에서 정정**: 처음엔
   엔진 `TweenBase` 인스턴스 하나만 저장하면 된다고 봤으나, 아래 "확정:
   `Tween{...}` 최종 모양" 절의 `Tween.Finish` override 옵션(트윈을 목표값으로
@@ -139,8 +139,8 @@ plain 값이 오면 Cancel과 같다). Studio 6/6(`audit/m11-unit2-studio-2026-0
    - `realv`가 plain 값 → 즉시 세팅, 슬롯은 `true` 유지.
    - `realv`가 `Tween<T>` → 이제 정상적으로 애니메이션 시작(현재 인스턴스
      프로퍼티 값에서 자연스럽게 출발), 슬롯에 새
-     `{Tween=<새 엔진 객체>, Value=realv.Value}` 저장.
-3. **`prev`가 `{Tween, Value}` 테이블(활성 트윈 있음)**:
+     `{Tween=<새 엔진 객체>, Value=realv.Value, Source=realv}` 저장.
+3. **`prev`가 `{Tween, Value, Source}` 테이블(활성 트윈 있음)**:
    - **먼저 override 정책(기본 `Tween.Cancel`, 아래 절)에 따라 이전 트윈을
      정리 — 반드시 그 정리가 끝난 뒤에 새 값을 세팅한다.** 순서가 뒤바뀌면
      이전 트윈의 다음 인터폴레이션 프레임이 방금 세팅한 값을 덮어쓸
@@ -152,7 +152,7 @@ plain 값이 오면 Cancel과 같다). Studio 6/6(`audit/m11-unit2-studio-2026-0
      들고 있던 값 사용) — 이후 아래는 이 스냅된 값 위에서 이어감.
    - 정리 후: `realv`가 plain 값이면 즉시 덮어쓰기 + 슬롯 `true`. `realv`가
      `Tween<T>`면 (정리 결과 값에서) 새 트윈 시작 + 슬롯을 새
-     `{Tween=<새 엔진 객체>, Value=realv.Value}`로 갱신.
+     `{Tween=<새 엔진 객체>, Value=realv.Value, Source=realv}`로 갱신.
    - Tween→plain 전환은 두 옵션 모두 "정리 후 즉시 덮어쓰기"로 수렴 —
      별도 5번째 옵션 불필요로 확정(2026-08-12 세션).
 
@@ -181,7 +181,7 @@ no-op이라 실질적 동작이 없음, 일반 프로퍼티는 애초에 "unset"
 
 ### 타입 대수: `T' = T | Tween<T>` — Modifier/State/Source에 새 타입 기계 불필요
 
-**[2026-09-06 실측 정정 — M11 단위 ① `H-326`/`H-327`]** 이 절의
+**[2026-09-06 실측 정정 — M11 단위 ① `H-326`/`H-327`]** **[2026-09-07 마커 — 사용자 결정]** 이 절의 한 멤버 모양은 **마커로 되살아났다** — 실물 `PVn = T | TweenData<T> | StateMarker<T | Tween<T>> | None`, setter `FieldV<T> = T | Tween<T> | StateMarker<T | Tween<T>> | None`(`typing-limits.md` 8.11; 정직한 `State<T | Tween<T>>`도 든다). 아래 "각각 나열"은 그 사이의 우회. 이 절의
 `State<T | Tween<T>>` 한 멤버 모양은 새 솔버에서 성립하지 않는다 — `State<X>`가
 불변이라 plain `State<T>`가 그 자리에 못 들어간다. 실물(생성 `D` 슬롯 유니언·
 Modifier setter `Field<T>`)은 **`State<T>`와 `State<Tween<T>>`를 각각 나열**한다
@@ -217,6 +217,15 @@ State<T | Tween<T>>`가 나옴~~ **[2026-09-06 정정]** 실물은 위 배너대
 "too complex"고, 제네릭 factory는 `:Apply`의 인자 자리에 못 들어간다(실측 넷은
 `types.luau` 주석·원장). `CanAnimate = false`의 plain 반환은 그대로다.
 
+**[2026-09-07 회신 3차 — 사용자 확정 셋]** (Q8 (a)) `Animate`의 Compute는 `nil`/`None`을 **그대로 통과**시킨다 —
+Property 핸들러의 skip-defense / NoneHandler가 해제를 맡는다(옛 코드는 `Tween{ Value = None }`으로 엔진에
+닿았다, `H-379`). (Q12) **`Dedup` 옵션**(`boolean | State<boolean>`, 기본 `true`): 목표 값과 옵션 전부가 이전
+Tween과 같으면 **이전 Tween 객체를 그대로** 돌려주고, Property 핸들러는 같은 Tween 객체의 재발행을 신원
+비교로 접어 활성 트윈을 건드리지 않는다(`H-391`의 취소+재시작 소멸). 완료된 트윈도 같은 목표로는 재트리거되지
+않으므로 "펄스"가 필요하면 `Dedup = false`. 사용자: *"Animate 자체가 이전 Tween 값 비교와 이전 Tween 을 그대로
+리턴하여 dedup 될 수 있다고 봄. Dedup: boolean 형태 하나를 놓고"*. (Q16 (b)) `Tween.validate`가 `Value`에
+State를 거부한다 — 아래 "`Tween{...}`의 모든 필드는 plain 값만 받음" 절의 불변식을 생성 시점에 집행.
+
 **동기**: `Tween{Value=..., Style=..., ...}`을 매번 손으로 `:Compute` 안에서
 조립하는 건, 값(`Value`)만 바뀔 뿐 옵션(`Style`/`Time`/`Override`...)은
 거의 고정인 흔한 케이스에서 번거로움. `Animate`는 이 흔한 케이스만 감싸는
@@ -248,8 +257,9 @@ end
 -- — 이 구현 그대로 유효. base/typing-limits.md 참고.
 local function Animate(info)
   return function(self)
-    return self:Compute(function(selfH)
+    return self:Compute(function(selfH, previous)
       local v = selfH:Get()
+      if v == nil or v == None then return v end   -- Q8 (a): 해제는 하류(skip-defense/NoneHandler) 몫
 
       local canAnimate = resolve(info.CanAnimate)
       if canAnimate == nil then
@@ -270,6 +280,8 @@ local function Animate(info)
         DelayTime = resolve(info.DelayTime),
         Override = resolve(info.Override),
       }
+      -- Q12: 같은 목표·옵션이면 이전 Tween 객체 그대로(Property 핸들러가 신원으로 접는다)
+      -- 실물은 opts 테이블을 먼저 만들고 previous와 대조한다(Animate.luau `sameTween`)
     end)
   end
 end
@@ -373,9 +385,10 @@ end)
 `:Apply`로 붙이는 factory는 항상 `State`를 반환해야 한다는 불변식.)
 
 **base 프리미티브 아님 — 여전히 quad-roblox 유틸**(아래 "패키지 경계"
-절) — `Tween<T>` 값 타입만 base(`quad-base/Tween.luau`, `isTween`은
-**[2026-08-28]** 다른 술어와 같이 `Brand.luau`)에 있고, `Animate`는 이미 있는 `:Compute`/`Tween{...}`/`isState`를 조합한
-quad-roblox 레벨 편의 함수라 base 계약에 영향 없음.
+절) — ~~`Tween<T>` 값 타입만 base(옛 `quad-base/Tween.luau`, `isTween`은
+**[2026-08-28]** 다른 술어와 같이 `Brand.luau`)에 있고~~ **[2026-09-07 정정]** `Tween` 값·브랜드·타입도 이제 quad-roblox다
+("패키지 경계" 절 배너) — `Animate`는 같은 패키지의 `:Compute`/`Tween{...}`/`isState`를 조합한
+편의 함수라 base 계약에 영향 없음(이 문장은 그때도 지금도 참).
 
 ## 초기 진입 애니메이션(`initValue`) — **에이전트 작업 범위 제외로 확정, 사용자가 직접 처리**
 
@@ -396,9 +409,35 @@ quad-roblox 레벨 편의 함수라 base 계약에 영향 없음.
 
 ## 패키지 경계 — `Tag`가 이미 밟은 것과 같은 분리 (2026-08-10 세션 확정)
 
-- **quad-base**: `Tween.luau` — 값 타입(`Tween(opts)` 팩토리)만. 엔진 무관.
+**⭐ [2026-09-07 사용자 결정 — 역전] `Tween`은 통째로 quad-roblox의 값이다.** 옛 서술(아래
+취소선)은 "값 타입은 엔진 무관이라 base"였는데, 옵션 어휘(`Time`/`Style`/`Direction`/
+`RepeatCount`/`Reverses`/`DelayTime`)는 Roblox `TweenInfo.new`의 인자를 이름으로 푼 것이라
+어휘 자체가 엔진 지식이고(`research/source-layout-plan.md` 2절 사실 확인), 사용자 논거는 셋 —
+*"Tween 자체가 워낙 엔진의 지식인지라, 엔진 자체로 옮기고 싶어"*, *"이미 Animate 가 온전히
+roblox 에 있다는 점으로 미루어 볼 때, 슈거의 실 구현체인 Tween 도 quad-roblox 에 있지 말아야할
+이유가 없어"*, *"웹은 Transition 으로 이름도 다른데다가 … 한 css 프롭에 다른 프롭의 애니메이션을
+담는거라 완전 다름. 공개 표면을 같이 두는 이점이 적어보여 — 웹은 Value 의 필요 부터 없거든"*.
+그 계획의 절충안 (c)(엔진 어휘 검증만 이동)는 채택되지 않았다 — 사용자: *"전부 엔진 어휘가
+되어야한다는 생각"*. 지금 배치:
+
+- **quad-roblox**: `Tween.luau`(`install(module)` — 값 팩토리·검증·`Mapped`, `q.Tween`/`q.isTween`은
+  `RobloxExtension`으로 실리고 모듈에도 직접 놓인다 — 형제 설치자와 base 진단 프로브가 본다),
+  `Brand.luau`(`TweenBrand`·`isTween` — 브랜드 팩토리는 quad-types, `base/brand-plan.md`),
+  `types.luau`(`Tween<T>`/`TweenData<T>`/`TweenOptions<T>`/`TweenOverride`/`TweenConstructor` 정본 —
+  엔진 타입 필드가 **정밀**하다: `Info: TweenInfo?`, `Style: Enum.EasingStyle?`, `Direction:
+  Enum.EasingDirection?`; quad-types 시절 `any`였고 round19 Q3 (a)의 정밀 별칭은 `State<X>` 불변성
+  `H-326`에 막혔었는데 정의가 하나뿐이면 그 불일치가 없다), `Handlers/Property.luau`(`isTween`
+  분기 + 3-상태 슬롯 + override 정책), `Animate.luau`. 테스트도 `quad-roblox/test/spec.tween.luau`.
+- **quad-types**: Tween이라는 이름이 없다. `FieldOut<X> = X | State<X> | None`만 두고 백엔드가
+  `X = T | Tween<T>`를 넣는다(quad-roblox `types.luau` `FieldOut<T>`, 생성 D가 재별칭 — 전개형은
+  이동 전과 같다).
+- **quad-base**: Tween을 모른다. 유일한 흔적은 `Dispatch/init.luau` `BRAND_PROBES`의 문자열
+  `"isTween"` — 진단 시점에 모듈에서 이름으로 찾는 목록이라 require 없이 프로바이더 설치분을
+  본다. 프로바이더가 자기 프로브를 등록하는 길은 round3 §4 **Q27**(열림).
+
+~~- **quad-base**: `Tween.luau` — 값 타입(`Tween(opts)` 팩토리)만. 엔진 무관.
   **[2026-08-28]** `TweenBrand` 인스턴스와 `isTween` 술어는 다른 브랜드와 같이
-  `Brand.luau`에 산다(`base/architecture.md` 소스 트리) — 이 파일은 거기 등록만.
+  `Brand.luau`에 산다 — 이 파일은 거기 등록만.~~
 - **quad-roblox**: `Handlers/Property.luau`(기존 프로퍼티 세팅 로직에
   `isTween` 분기 + 3-상태 릴레이션 저장 + override 정책 추가) +
   `Animate.luau`(편의 콤비네이터, 신규).
@@ -454,7 +493,7 @@ DelayTime: number?        -- default 0
 값을 사용자 데이터와 구분해야 하는 자리(`None`/`Detach`/`KeyGone`/`Processed*`)에만 남는다.
 
 **[2026-09-06 `H-328`]** 정책의 **주체는 활성 트윈 위에 새로 들어오는 값의
-`Override`**다 — 슬롯(`{ Tween, Value }`)엔 정책이 없다. plain 값이 들어오면
+`Override`**다 — 슬롯(`{ Tween, Value, Source }`)엔 정책이 없다. plain 값이 들어오면
 정책이 없어 `Cancel`과 같다(아래 "Tween→plain 전환" 수렴). 구현 배너는 "3-상태
 저장" 절.
 
@@ -471,7 +510,7 @@ API가 없음(`:Play`/`:Pause`/`:Cancel`뿐, 인스턴스 재사용 불가) — 
   동작과 일치.
 - **`Tween.Finish`** — 이전 트윈을 **목표값(`Value`)으로 스냅**시킨 뒤 그
   자리에서 새 트윈을 시작(기존 "끝점 이동 후 재시작"에 해당). 목표값은
-  로블록스 API로 역산 불가능하므로 릴레이션 슬롯에 `{Tween, Value}`로
+  로블록스 API로 역산 불가능하므로 릴레이션 슬롯에 `{Tween, Value, Source}`로
   같이 저장해뒀던 `Value`를 사용(위 "3-상태 저장" 절 참고).
 
 필드 이름은 `Override`(기존 문서에서 계속 써온 "override 정책" 용어와
@@ -575,9 +614,11 @@ Completed 이벤트를 구독해 3-상태 릴레이션 슬롯을 `true`로 되�
 거기서 트윈이 시작되면 툭 튀어 보인다"는 문제인데 — 이건 이미 **"첫 세팅"
 분기**(위 "3-상태 저장" 절의 `prev == nil` 케이스, 애니메이션 없이 즉시
 세팅)가 처리하는 문제지, 자연완료와는 무관하다. 자연완료 상태는 반대로
-**유저가 원한 목표값에 정확히 도달한 상태**이므로, 그 상태를 나타내는
-북키핑(`{Tween, Value}`)을 안 지우고 남겨둬도 다음에 이 `(inst,k)`가 다시
-process될 때 위 "3-상태 저장"의 `prev`가 `{Tween, Value}` 테이블 분기를
+**유저가 원한 목표값에 정확히 도달한 상태**(**[2026-09-07 4순회 캐비엇]**
+`TweenInfo`의 `Reverses = true`면 정지값은 *시작값*이다 — 그래서 `Finish`가
+`prev.Value`(목표값)로 스냅하는 것이고, 코드는 이 절의 축자 구현)이므로, 그 상태를 나타내는
+북키핑(`{Tween, Value, Source}`)을 안 지우고 남겨둬도 다음에 이 `(inst,k)`가 다시
+process될 때 위 "3-상태 저장"의 `prev`가 `{Tween, Value, Source}` 테이블 분기를
 타는 것뿐 — override 정책(`Cancel`/`Finish`)이 정확히 이 케이스를 위해
 이미 정의돼 있어 별다른 부작용이 없다. 게다가 `Value`는 항상 lerp 가능한
 프리미티브(number/UDim/Vector 등, 테이블 aliasing 걱정이 있는 타입이

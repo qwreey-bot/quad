@@ -504,7 +504,7 @@ gc되긴 하지만.)"*
 - **⭐ [2026-08-26 보강, 8라운드 `H-110`] 말단 핸들도 마찬가지다.**
   파생 노드만 적어두면 **Observer가 우연에 남는다** — 이 절이 바로 위에서
   금지한 그 우연이다. 확정 결정의 소스인
-  `qa-request/pre-implementation-handtrace-round7-followup.md` 🅚 절도
+  `archive/v2-initial-implementation/pre-implementation-handtrace-round7-followup.md` 🅚 절도
   *"핸들이 `_hold`로 상류를 잡는다"*라고 핸들까지 포함해 적었는데 반영이
   파생 노드로 좁혀졌었다. 실제 자리:
   - **Observer** → `observer._state`(생성 시 강참조). 전파 루프가 이 필드를
@@ -568,11 +568,11 @@ lazy State 핸들로 통일, 아래 "`:With`/`:Compute` — self 인자도 lazy 
 Set하면 결합된 파생값이 두 번 재계산/재대입된다"는 문제(즉시 pull하는
 store-bind 소비자 기준)는 안 풀림 — 이건 별도 확정 프리미티브
 `base/blocker-plan.md`가 다룸(**[2026-08-24 재확정]** "State 개발과 같은
-마일스톤, `ROADMAP.md` M2에서 함께 구현"이 맞다 — 2026-08-22엔 `Blocker.luau`가
+마일스톤, `archive/v2-initial-implementation/roadmap.md` M2에서 함께 구현"이 맞다 — 2026-08-22엔 `Blocker.luau`가
 디스패치 쪽으로 앞당겨져 갈라져 있었으나 마일스톤 순서 교체로 되돌아왔다.
 다만 바닥부터 짜는 게 아니라 공용 `GateNode`(`base/gate-plan.md`) 위의
 정책이라는 점은 그대로 — 마일스톤 소속의 소스는 `blocker-plan.md`의 정정
-배너와 `ROADMAP.md` M2). lexical `Batch(fn)`으로 풀려던
+배너와 `archive/v2-initial-implementation/roadmap.md` M2). lexical `Batch(fn)`으로 풀려던
 초기 시도는 코루틴 yield 위에서 구조적으로 위험해 기각됨 —
 `archive/batch-rejected.md` 참고.
 
@@ -1300,7 +1300,7 @@ retract/Destroy되면 자동으로 정리됨.
 **⚠️ [2026-08-24] 이 가드를 실제로 `Dispatch.addHandler`로 등록하는 것은
 M3(디스패치)다.** `HANDLER_PRIORITY_FALLBACK` 상수도 `Dispatch.addHandler`도
 M3에서 처음 생기므로, M2(반응형 코어)에서 본체를 짤 때는 **핸들러 정의만
-준비해두고 등록 호출은 미룬다** — `ROADMAP.md` M3의 "Observer/Effect 동적
+준비해두고 등록 호출은 미룬다** — `archive/v2-initial-implementation/roadmap.md` M3의 "Observer/Effect 동적
 경로 가드 등록" 체크박스가 그 자리다(2026-08-24 마일스톤 순서 교체의 산물,
 M2가 M3에 개념상 지던 유일한 의존이라 이쪽으로 미뤄졌다).
 **[2026-08-31 M3 단위 4] 그 등록은 완료됐다**(`spec.leaf.luau` 6·7이 메시지·
@@ -1314,7 +1314,7 @@ override 의미론 실측, 해당 체크박스는 `[x]`) — **[2026-09-01 `H-27
 전용 `Handler` 등록: `{ priority = HANDLER_PRIORITY_FALLBACK,
 isHandlable = function(inst,k,v) return isObserver(v) end, process =
 function(inst,k,v) Err.errorBefore(`Observer binding should be array
-index item, but got {typeof(k)}`, SURFACE) end }`(**[2026-09-06 리뷰]** 옛 `Ref/Observer` 접두 제거 — Ref 가드는 `Ref.luau`가 따로)(**[2026-08-31 단위 4]**
+index item, but got {typeof(k)}`, SURFACE) end }`(**[2026-09-06 리뷰]** 옛 `Ref/Observer` 접두 제거 — Ref 가드는 `Ref/init.luau`가 따로)(**[2026-08-31 단위 4]**
 error 발화는 `H-231` 워커의 최외곽 스캔 — 매치 실패와 같은 논증으로
 `drive`를 뚫고 사용자 진입점을 blame한다, `Observer.luau`의
 `registerDispatchHandlers` 주석.
@@ -1332,11 +1332,11 @@ got typeof k 처럼 알려줄 필요는 있는듯"*. 근거는 **메시지에 `k
 평범한 우선순위로 등록된 다른 Handler가 있으면 그쪽이 이기는" 자리이기
 때문(`base/dispatch-core-plan.md`의 "base가 소유하는 핸들러와 주입되는
 엔진 op" 절) —
-**[2026-09-07 정정 — 핸드오버 리뷰 `H-361`, 문항]** quad-roblox의 `PropertyHandler`(NORMAL, 키만
+**[2026-09-07 정정 — 핸드오버 리뷰 `H-361`, 문항 → 회신 3차 Q4 (a) 사용자 확정: 그대로, 타입이 1차 방어]** quad-roblox의 `PropertyHandler`(NORMAL, 키만
 검사)가 **실프로퍼티 키**를 먼저 가져가므로 `Frame { BackgroundTransparency = state:Observer(fn) }`은
 이 가드가 아니라 엔진의 "number expected, got table"로 죽는다(`H-103` NOOP 마커 잔존) — 비프로퍼티
 키에서만 이 가드가 발화한다. 타입이 1차 방어(strict는 `PVn`이 거부). 처리는
-`qa-request/handover-review-2026-09-07.md` §4 Q4. 아래 원문은 M2 시점 서술: 지금은 아무도 그 자리를 안 가져가서 항상 이 가드가 에러를 내지만, 이
+`qa-request/post-implementation-review-round1.md` §4 Q4. 아래 원문은 M2 시점 서술: 지금은 아무도 그 자리를 안 가져가서 항상 이 가드가 에러를 내지만, 이
 Handler를 만드는 게 목적이 아니라 "지금은 확정된 기능이 없다"는 default를
 base가 값싸게 제공하는 것뿐. (**이 가드가 없던 이전엔** 확정된 "매치
 실패는 즉시 error" 규칙에 의해 결과적으로 똑같이 에러가 났었음 — 이
@@ -1892,3 +1892,31 @@ Observable/Observer)을 조사한 결과, 두 지점에서 기존 확정과 실�
 - **이형 다중 trailing deps를 제네릭 팩 하나로 좁힐 수 있는지** — 위
   "trailing deps를 `fn`에 lazy positional 인자로도 노출" 절의 실측 항목
   (`luau-test`의 `15-...`, 현재 스파이크 재작성 필요 상태).
+
+## `StateMarker<T>` — 입력 자리의 State 타입 (2026-09-07, 사용자 결정)
+
+**결정**: `State<T>`는 `Set(T)`/`Get(): T` 때문에 새 솔버에서 **불변**이라 `State<Frame>`이
+`State<Instance>` 자리에, `State<number>`가 `State<number | UDim>` 자리에 못 들어갔다. 값을 *받는*
+자리(children·생성 D 슬롯·Modifier setter·Slot 요소·`AttributeSugar`·`Animate` 옵션)는 이제 읽기 전용
+팬텀 필드만 든 마커 `StateMarker<T> = { read __quadState: true, read __quadStateValue: T }`를 요구하고,
+`StateData<T>` 자신이 그 두 필드를 가져 실제 State가 폭 서브타이핑으로 든다(공변). 메소드가 필요한
+자리(출력·`self`·`Peek` 반환·변환 함수 `old`)는 전체형 그대로. 사용자 논거(2026-09-07): *"'입력받는
+곳'에 대해서는 마커 필드와 내부 구조 T하나만 보존하는 마커 타입을 써도 되지 않나 … 구조적으로
+확장된 타입은 잘 받기 때문에 … 진짜 State<T>의 method 같은건 유저가 쓰는 부분에 있어서 들어갈 뿐"*.
+런타임은 `Impl.__quadState = true`(H-300 "타입이 약속하면 값에도"), `__quadStateValue`는 순수 팬텀 —
+**어떤 코드도 읽지 않는다**(판정은 `Brand.isState`). **[2026-09-07 사용자 확정]** 순수 팬텀 허용 — *"런타임 값에 없는 팬텀 괜찮아. 실제로 그래도 되는 부분은, 값이 싸다면 그래도 좋아"*(값을 둘 수 있고 싸면 두고, 못 두면 팬텀으로 둔다 — H-300의 "값에도"는 원칙이지 필수가 아니다). 실측·결과·규칙 표는 `typing-limits.md` 8.11,
+결정 경위는 `qa-request/post-implementation-review-round1.md` §16·`session/2026-09-07-02-state-marker-covariance.md`.
+
+## Compute 순수성 — 부작용은 읽기 전용, 값은 하류로만 (2026-09-07 회신 3차, 사용자 제안·메인 동의)
+
+**원칙**: `:Compute`/`:With`에 넘기는 함수는 **순수 계산 함수**다 — deps를 읽고 값을 돌려줄 뿐,
+어떤 Source도 `:Set`하지 않는다(상류든 형제든 같은 키든). 그 안에서의 `:Set`은 **UB**이고 quad는
+재진입 게이트를 두지 않는다. Observer/Effect 콜백은 반대로 부작용이 본업이라 이 규칙 밖이다(다른
+Source를 `:Set`하는 것이 정상 패턴). 사용자 원문: *"compute 안에서 상위를 set 하는 그런 경우를 다
+막는편이 맞을지도 … compute 의 부작용은 readonly 이고 하류로 내리기만 한다를 크게 잡아두면, 많은양의
+에러/버그 가능성을 선재 방어 할 수 있다고 보는데"*, *"재진입 게이트는 허용 안한다가 내 생각이긴 해"*.
+메인 동의(같은 날): 이 코퍼스의 반응형 모델은 pull(lazy `_recompute` + epoch)이라 Compute 안의 `:Set`은
+같은 recompute 안에서 epoch를 앞당겨 "갱신인데 stale"·이중 발화·`invalidAfter`류 꼬임을 만들고 원인 추적이
+어렵다 — 원칙으로 잡아두는 것이 맞다. `dispatch-core-plan.md`의 같은 키 재진입 UB(Q5)는 이 원칙의 디스패치
+쪽 특수 사례. **싸게 붙일 수 있는 가드**(모듈 스코프 "recomputing" 깊이 카운터 + `Source:Set`의 한 비교
+등)는 `research/deferred-hardening-plan.md`에 후보로 두고 실측 뒤 결정한다 — 지금은 문서 규칙만.

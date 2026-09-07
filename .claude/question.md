@@ -16,7 +16,7 @@
 
 **[2026-08-28] 10라운드 §4 문항 7건과 그 반영분의 후속(`H-158`~`H-164` — `EmitReceive`·
 `Observer:_catchUp` 포함)까지 사용자와 대화형으로 전량 결정·반영됐습니다**(소스는
-`qa-request/pre-implementation-handtrace-round10-followup.md`). 같은 날 마지막으로
+`archive/v2-initial-implementation/pre-implementation-handtrace-round10-followup.md`). 같은 날 마지막으로
 남아 있던 **`Claim` 갈래 여덟도 전량 확정**돼 `research/`에서 `base/claim-plan.md`로
 승격됐습니다(결정 기록은 그 §7, 원문은 `session/2026-08-28-02-claim-promotion.md`,
 해소 요지는 `archive/question-resolved.md`의 "`Claim` 갈래" 절). **M2 착수를 막는
@@ -29,7 +29,7 @@
 착수를 막는 항목이 하나도 없습니다.** 발견 17건(`H-107`~`H-123`)의 결정
 문항 Q1~Q10을 사용자와 대화형으로 전부 처리하고 `base/`에 반영했습니다 —
 **결정의 소스는
-`qa-request/pre-implementation-handtrace-round8-followup.md`**(발견 원문은
+`archive/v2-initial-implementation/pre-implementation-handtrace-round8-followup.md`**(발견 원문은
 `-round8.md`, 개수·개별 항목은 여기서 세지 않음). 7라운드 확정 중 뒤집힌
 것은 없고, 고쳐진 건 전부 **7라운드가 `base/`에 내려앉을 때 생긴
 누락·충돌**입니다. 아래 blockquote는 8라운드 이전(2026-08-25) 시점
@@ -38,7 +38,7 @@
 > **[2026-08-25] M2(반응형 코어) 착수를 막는 항목이 하나도 없습니다.**
 > 2026-08-24에 이 절로 올라왔던 둘이 7라운드 손 트레이싱 후속에서 같이
 > 닫혔습니다 — 결정과 근거는
-> `qa-request/pre-implementation-handtrace-round7-followup.md`가 소스.
+> `archive/v2-initial-implementation/pre-implementation-handtrace-round7-followup.md`가 소스.
 >
 > - **중간 State GC 미검증** → **닫힘.** 사용자 확정: *"단순히, 각 state
 >   들이 상위 State|Source 를 홀드하는 `_hold` 를 놓는것으로 바로
@@ -59,7 +59,7 @@
 > **[2026-08-24] M2/M3 마일스톤 경계 문제도 닫혀 있습니다** — 사용자가
 > **(a) 순서 교체**(반응형이 M2, 디스패치가 M3)를 선택해 전량 반영됐습니다.
 > 결정과 근거는 `archive/question-resolved.md`의 "마일스톤 경계" 절, 새
-> 마일스톤 구성은 `ROADMAP.md`의 M2 배너.
+> 마일스톤 구성은 `archive/v2-initial-implementation/roadmap.md`의 M2 배너.
 
 > **M0 착수를 막던 항목이 전부 해소됐습니다.** `0-Y`(`:Compute(fn)`의
 > lazy 핸들 계약)는 열세 번째 세션에, `0-Z`(Attribute 이름 소유권)와
@@ -164,11 +164,25 @@
 
 ## 2. 낮은 우선순위 — 열려 있지만 급하지 않음
 
-- **[2026-09-07 신설] 핸드오버 전체 코드 리뷰 문항 셋** — `qa-request/handover-review-2026-09-07.md`
-  §4가 소스: Q1 `NewChild`에 `State<Slot<Instance>>` 팔(권고 (b) 안 넣음) / Q2 `Observer`/`EffectHandle`
-  팔(권고 (a)) / Q3 코드 품질 제안 묶음 `H-356`(항목별 반영·보류 권고 그 표에) / **Q4** 실프로퍼티
-  키의 핸들 오용 진단(`H-361`, 권고 그대로) / **Q5** 같은 키 간접 재디스패치를 UB로 명시(권고 문서).
-  결정이 코드를 막지 않는다 — 전부 타입 표면·정리·문서 항목.
+- **[2026-09-07] 핸드오버 전체 코드 리뷰 문항(round1 §4)** — Q1~Q21 **전부 닫힘**(회신 1~4차; 상태는 그 표의 각 행). 여기 남은 것 없음.
+
+- **[2026-09-07 신설] 구현 뒤 리뷰 round3 문항 — 남은 둘(§8 리뷰)** — `qa-request/post-implementation-review-round3.md`
+  §4가 소스(Q22~Q24는 회신 4차로 닫힘). **Q25** 숏핸드 키(`UICorner`/`UIPaddingOffset`)에서는 Q12 dedup이 안 선다 —
+  핸들러가 Tween을 자식 값으로 바꾸며 매번 새 객체를 만들어 "같은 객체"로 못 접는다. 권고 (a) 핸들러 안에 (inst, 키)별
+  "원본 → 변환" 한 쌍 캐시. **Q26** 트윈 슬롯이 첫 스냅 뒤엔 dedup 정보가 없어 첫 같은-값 재발행이 의미 없는 엔진 트윈을
+  만들고, None으로 껐다 같은 Tween으로 다시 켜면 아무것도 안 쓴다. 권고 (a) 첫 스냅도 `{ Value, Source }` 저장 + 재설치
+  때 값 확인(3-상태 표 → 4-상태). **사후 확인 하나**: Q12 반영에서 Property 슬롯의 셋째 필드 이름 `Source`는 메인이 붙였다.
+
+- **[2026-09-07 신설, 같은 날 밤 회신 반영] 소스 구조 재편** — `research/source-layout-plan.md`가 소스(각 절
+  머리 `[결정]` 줄 + 9절 상태). 회신으로 닫힌 것: 1절 Slot 분할·3절 Tag 유니언·4절 패밀리 접기(5·6·7절 포함)·
+  2절 Tween(권고 (c) 대신 **통째 이동 (b)**)·10-1 Brand→quad-types·10-2 마커 전면화·10-3 quad-types 재배치.
+  **아직 사용자 몫**: (1) 8절 `Attribute` → `Attr` 축약 — 회신에 없음(취향 결정, 폴더 이동 단위에 같이 하면
+  가장 쌈). (2) 10-4 `...Param`을 prop 모음에서 조립하는 타입 함수 / 정적 굽기 — 메인 판단은 그 절: 타입
+  함수 조립은 `typing-limits.md` §0의 "타입 함수는 진단까지만" 확정과 충돌하므로 §5·§6 함정을 스파이크로
+  먼저 재야 하고, 그 전에 교집합 별칭으로 중복 텍스트를 줄이는 쪽이 싸다 — §0 예외를 열 것인지 결정 필요.
+  (3) round3 §4 **Q27** 프로바이더 브랜드 진단 프로브 등록(`BRAND_PROBES`의 `"isTween"` 문자열 잔재 — 권고 (a)
+  등록 op); round3 §9 **Q28** Tag 자기 참조 리스트의 처분(권고 (a) UB 선언)·**Q29** Slot 내부 표 `S`의 타입(권고 (a) any 유지). (4) 사후 확인: 10-2의 필드·별칭 이름(`__quadAttribute`/`__quadObserver`/`__quadEffect`,
+  `<Type>Marker`)은 기존 패턴을 따른 메인 작명.
 
 - **[2026-09-06 신설] 컴포넌트 경계 flatten 슈거 스캐폴딩 — `research/component-flatten-sugar-plan.md` 2절의 "정해야 할 것" 일곱(단위·State 취급·`rest` 형태·배열부 분리 범위·되꽂기 표기·경계 필드 이름 Q2·패키지).** 사용자가 "나중에 보고 답할게"라 한 항목. 구현은 순수 슈거라 코어를 막지 않는다.
 - **`Operator` 콤비네이터 슈가 네임스페이스 이름+포함 범위(2026-08-12 신설,
@@ -229,7 +243,7 @@
   Instance를 동적 배열 원소로 받을 수 있는지, retract 시 어떻게 다루는지.
   **Slot 코어 구현(M6) 시점에 확인** — `research/v1-compat-plan.md` 7-3.
   **[2026-09-03 현황 — 확인 시점 도래]** Slot 코어가 fork 편입으로
-  존재한다(`quad-base/src/Slot.luau`). 현 구현의 사실: 요소 판정은
+  존재한다(`quad-base/src/Slot/init.luau`). 현 구현의 사실: 요소 판정은
   주입 술어 `isInst`뿐이라 **foreign Instance도 요소로 받아들여지고**
   물리 op(`nativeInsert` 등)·`elementOwner` Relate 키잉까지는 돌지만,
   실물 Roblox에선 **claim 안 된 userdata의 동일성 구멍**(`H-293`/

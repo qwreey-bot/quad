@@ -6,13 +6,49 @@
 
 
 00. **⭐⭐⭐ [2026-09-06 기준] 마일스톤 M0~M11 전부 완료 — 열린 마일스톤 없음.**
-   진행의 소스는 루트 `ROADMAP.md`(상단 배너), 결정 이력은 `session-summary.md`,
-   각 마일스톤의 규약·발견 원장은 `qa-request/mN-implementation-roundNN(-brief).md`
-   (round11~21). 종결 기록은 여기 쌓지 않는다 — 이 파일 규약(맨 위) 그대로.
+   진행의 소스는 루트 `ROADMAP.md`(상단 배너·완료 표), 결정 이력은 `session-summary.md`,
+   각 마일스톤의 규약·발견 원장은 **[2026-09-07 재편]** `archive/v2-initial-implementation/`
+   (`mN-implementation-roundNN(-brief).md`, round11~21 + pre-implementation 1~10 + 옛 ROADMAP
+   본문 `roadmap.md`). 종결 기록은 여기 쌓지 않는다 — 이 파일 규약(맨 위) 그대로.
    **지금 사용자 몫**(답을 주면 반영한다):
-   - **[2026-09-07]** `qa-request/handover-review-2026-09-07.md` §4 Q1~Q5(핸드오버 전체
+   - **[2026-09-07]** `qa-request/post-implementation-review-round1.md` §4 Q1~Q17(핸드오버 전체
      코드 리뷰 — `NewChild` 팔 둘·품질 제안 묶음 `H-356`·Property 핸들 오용 진단·같은 키
-     재진입 UB 명시). §1·§5의 ① 갈래(`H-344`~`H-360`)는 반영·커밋됨(CLI 49/49).
+     재진입 UB 명시·**Q6** native* 조합 폴백 약속 철회·**Q7** 미설치 스텁 무태그 여부·**Q8**
+     `Animate` nil/None 통과 팔·**Q9** 부모 Destroy 뒤 Slot 좀비(유일한 동작 결함 문항)·**Q10**
+     `AddPlugin` 락 우회·**Q11** Modifier setter 키·**Q12** Tween 동일값 재발행·**Q13~Q17**(5순회 —
+     `setOffsetSource` 게이트·`destroySlotTree` `releaseOwner`·`setLength` 도메인·`Tween.validate` State·
+     `numberOnly`)·**Q7 둘째** `_assertBindable` 방향). §1·§5~§11의 ① 갈래(`H-344`~`H-402`; 야간 0~3 +
+     주간 4·5순회)는 반영·커밋됨(CLI 49/49) — 순회는 사용자 지시로 계속(batch 쌓는 중). §12에 `H-403`(`isSlot` → Brand)·`H-404`(전역
+     게이트)·`H-405`(exit code)·6순회 `H-406`~`H-416`(Property 트윈 Create 선행·SlotHandler 파괴 값
+     pre-pass·`getOffsetAt` 범위 에러 복원 등; **Q18~Q20·Q7 셋째** 추가), §13 Gemini 검증(`H-417`~`H-419`),
+     §14 7순회 `H-420`~`H-430`(**HIGH** 생성기 `ContentId`→`Content` 오매핑으로 `Image` 등 10슬롯이 문자열을
+     거부하던 것 — 재정규화·재생성; gen-d `check`·모듈 스코프 전역 게이트가 test.sh에; **Q21** 툴체인 핀·selene).
+     **§15 사용자 회신 1차(2026-09-07 오후)** — Q2 (a) 반영(`NewChild`에 `Observer`/`EffectHandle`), Q3 ②③④⑤⑥⑦
+     반영(`NotInstalled.luau`·`Dispatch.setEmpty`·`Reflection.luau`·`addProcessedHandler`·`assertMutable`·gen-d
+     소스 읽기)·①⑧⑨ 보류(ROADMAP 백로그 최적화 후보 목록). 라운드 번호 1부터(round2 = Gemini). **§16 회신 2차 — Q1
+     닫힘: 입력 자리의 State/Slot 팔을 공변 마커로**(`StateMarker`/`SlotMarker`, quad-types·gen-d·`NewChild`·spec; `PV73`
+     11팔 → 4팔, 타입 검사 4.96s → 3.41s, `LuauSolverConstraintLimit` 제거; `typing-limits.md` 8.11). 순수 팬텀 필드
+     `__quadStateValue`/`__quadSlotValue`는 사용자 확정(*"런타임 값에 없는 팬텀 괜찮아 … 값이 싸다면 그래도 좋아"*).
+     **round3**(`qa-request/post-implementation-review-round3.md`, 마커 커밋 리뷰): ① `H-431`(NewChild State 팔에
+     Observer/EffectHandle — `State<Observer?>` 종료 관용구)·`H-433`~`H-439` 반영, ② **Q22**(Slot 공변 + 가변 출력)·**Q23**
+     (`FieldOut` 모양)·**Q24**(승인 범위 — 이름·팔 모양·플래그).
+     **회신 3차(2026-09-07 저녁, 대화형)**: Q4~Q19·Q7 둘째·셋째 전부 닫힘(round3 §6 — Animate `Dedup`·nil/None 통과, Slot 좀비
+     메시지+UB, `releaseOwner`, setter 키·`setOffsetSource`·`setLength` 게이트, `numberOnly` 제거, `PropTypesRead`, Compute 순수성
+     원칙); Gemini 4차 → round4 파일·`H-440`~`H-444` 반영; `research/deferred-hardening-plan.md` 신설. **회신 4차**: Q6(약속 철회+백로그)·Q20(메시지 확장)·Q21(luau 핀·selene 폐기)·Q22(그대로)·Q23(FieldOut 한 팔) 닫힘(round3 §7).
+     Q24도 설명 뒤 (a) 확정(+`Peek` 반환을 `FieldOut<T>?`로 통일).
+     회신 3차 묶음 리뷰(round3 §8, `H-445`~`H-452` 반영 — `H-445`는 Q15 검사가 차단기 창 안에서 던져 owner를 동결시키던 회귀).
+     **[2026-09-07 밤] 구조 재편 회신 반영 완료**(`session/2026-09-07-04-source-layout-reply.md`, 결정은
+     `research/source-layout-plan.md` 각 절 `[결정]`·9절 상태·10절): Tag 유니언, **Brand→quad-types**, **Tween→quad-roblox
+     통째**(`typing-limits.md` 8.12 부수 발견), 마커 전면화 + quad-types 재배치, 패밀리 폴더(`Ref/`·`Attribute/`·
+     `Dispatch/Modifier/`·`Slot/`), `doc-check.py` `.luau` 경로 검사. 외부 모델 감사 진입점 `qa-request/external-review-entry.md`.
+     **남은 사용자 몫: Q25(숏핸드 dedup)·Q26(트윈 슬롯 첫 스냅)·Q27(프로바이더 브랜드 프로브 등록) — round3 §4; Q28(Tag 자기 참조 리스트)·Q29(Slot 내부 표 `S` 타입) — round3 §9; 구조
+     재편 8절 `Attr` 축약(미답)·10-4 D 정적 굽기(§0 타입 함수 예외 여부); 사후 확인(마커 필드·별칭 이름, Property 슬롯
+     `Source`); flatten 슈거 일곱.** 다음 순회는 round3 §10·`H-463`부터(이동 뒤 순회는 §9로 끝). 문항은 앞으로 평문 한 문단으로(사용자: 기호·압축 서술이 읽기 어려움).
+   - **[2026-09-07]** Gemini 외부 리뷰(`qa-request/post-implementation-review-round2.md`, G-01~G-09·S-01~S-06)는
+     메인이 판정해 원장 **§13**에 반영 — 실존 셋(`H-417`~`H-419`) 반영·커밋, 나머지는 확인 기록. 사용자 몫 없음
+     (G-03/G-09는 기존 Q18/Q3 ⑨에 논거만 추가).
+   - **[2026-09-07 밤 반영]** 소스 구조 재편 — `research/source-layout-plan.md`(`question.md` 2절). 여덟 중 일곱 +
+     후속 셋 반영, 남은 건 8절 `Attr` 축약과 10-4(사용자 문항).
    - `research/component-flatten-sugar-plan.md` 2절 "정해야 할 것" 일곱(컴포넌트 경계
      flatten 슈거 — round21 Q2·`H-340`의 후속, 백로그; `question.md` 2절).
    - 백로그 착수 순서(ROADMAP 백로그 절 — `quad-mock`/`quad-debug`/문서 사이트/
@@ -20,7 +56,7 @@
      `fastscroll`/`spring`/`quad-roblox-types`).
    **다음 세션이 먼저 볼 것**: `conventions.md` 2026-09-06 항목(백그라운드 에이전트
    종료 판정 — 알림 `status: completed`가 종료, 본문 "대기 중" 무시), `HUMAN_TODO.md`
-   12번(Studio 재시작 뒤 rojo 플러그인 Connect), `qa-request/m11-implementation-round19.md`
+   12번(Studio 재시작 뒤 rojo 플러그인 Connect), `archive/v2-initial-implementation/m11-implementation-round19.md`
    §4(열린 문항 0·확인 항목 0 — `H-343`으로 전부 닫힘).
    **직전 구간 요약**(원문 `session/2026-09-06-01-audit-sweep-and-m11-brief.md` 1~13절):
    감사 스윕 6라운드 → fable 탐사(치명 0) → M11(Tween 세 단위) → M10 잔여

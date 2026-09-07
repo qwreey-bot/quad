@@ -1,7 +1,7 @@
 --[[
 	Dispatch core contract — `.claude/base/dispatch-core-plan.md` "Dispatch 체인" /
 	"핸들러 계약" / "우선순위 동률/매치 실패 처리", scoped by
-	`.claude/qa-request/m3-implementation-round12-brief.md` §6 (unit 1).
+	`.claude/archive/v2-initial-implementation/m3-implementation-round12-brief.md` §6 (unit 1).
 	Test handlers are spec-local (no real handlers exist yet); `inst` is a mock
 	Instance — `H-229` anchors every chain via bindLifetime, so dispatch needs a
 	claimable inst.
@@ -453,6 +453,47 @@ do
 	q.Dispatch.process(inst, k2, "w", 1) -- same handler, (A)
 	q.Dispatch.retractFrom(inst, k2, 1) -- pure retract → released
 	q.Dispatch.process(inst, k2, "v", 1) -- fresh list again — must not error
+	print("PASS")
+end
+
+print()
+print()
+print("=== 16. H-419 (외부 리뷰 G-07) — drive의 props가 테이블이 아니면 표면 에러(flatten 안 VM 에러가 Dispatch/Modifier/init.luau를 blame하던 것) ===")
+do
+	local q = newQuad()
+	-- 7순회: `{ nil, … }` skipped the nil case under ipairs — spell the three cases out
+	for _, thunk in { function() q.Dispatch.drive(mock.Instance.new("Frame"), nil :: any) end, function() q.Dispatch.drive(mock.Instance.new("Frame"), "x" :: any) end, function() q.Dispatch.drive(mock.Instance.new("Frame"), 5 :: any) end } do
+		local ok, err = pcall(thunk :: any)
+		assert(not ok and string.find(tostring(err), "props must be a table", 1, true) ~= nil, "non-table props rejected: " .. tostring(err))
+		mock.assertBlamesUser(err, "spec.dispatch.luau", "drive props blame")
+	end
+	print("PASS")
+end
+
+print("=== 17. round3 H-442 (외부 리뷰 G-12) — drive(nil, props)는 표면 에러(Relate의 `table index is nil` 대신), 사용자 줄 blame ===")
+do
+	local q = newQuad()
+	local ok, err = pcall(function()
+		q.Dispatch.drive(nil, { mock.Instance.new("Frame") })
+	end)
+	assert(not ok and string.find(tostring(err), "inst must not be nil", 1, true) ~= nil, "nil inst rejected: " .. tostring(err))
+	mock.assertBlamesUser(err, "spec.dispatch.luau", "drive nil inst blame")
+	print("PASS")
+end
+
+print("=== 18. round3 H-452 (Q7 셋째 (a), H-416 재현) — 디스패치가 lazy Compute를 처음 강제해 Modifier가 나오면 blame은 사용자 drive 줄(outermost), StoreBind 내부가 아니다 ===")
+do
+	local q = newQuad()
+	local inst = mock.Instance.new("Frame")
+	local s = q.Source(1)
+	local d = s:Compute(function()
+		return q.Modifier({})
+	end)
+	local ok, err = pcall(function()
+		q.Dispatch.drive(inst, { Name = d })
+	end)
+	assert(not ok and string.find(tostring(err), "cannot hold Modifiers", 1, true) ~= nil, "Compute-returned Modifier rejected via dispatch: " .. tostring(err))
+	mock.assertBlamesUser(err, "spec.dispatch.luau", "outermost — the drive line, not StoreBind.luau")
 	print("PASS")
 end
 

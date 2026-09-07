@@ -28,6 +28,7 @@ do
 	end)
 	assert(#calls == 1 and calls[1].target == s and calls[1].self == o and calls[1].from == nil, "install fire: (state, observer, nil)")
 	assert(quad.isObserver(o) and not quad.isState(o) and not quad.isEpoch(o), "brand")
+	assert((o :: any).__quadObserver == true, "ObserverMarker field readable (H-300, 2026-09-07 마커 전면화)")
 	assert((o :: any)._state == s, "observer holds its State strongly")
 	assert((s :: any)._subs[o] == true, "joined the subscriber set after the install fire")
 	assert((o :: any)._rerunRequired == false, "install fire lowered the hold flag")
@@ -296,6 +297,21 @@ do
 		s4:Set(2)
 	end)
 	assert(not okAfter and fires == 3, "firing itself is not gated by the flag (next Set still runs fn)")
+	print("PASS")
+end
+
+print()
+print()
+print("=== 4순회 H-384 — fn 안에서 자기 자신을 drive로 바인드하려는 오용(H-147 (A)) — blame은 사용자의 Observer 생성 줄 (process → bindLifetime → _assertBindable, 최외곽) ===")
+do
+	local inst = mock.Instance.new("Frame")
+	local ok, err = pcall(function()
+		quad.Source(1):Observer(function(_, self)
+			quad.Dispatch.drive(inst, { self })
+		end)
+	end)
+	assert(not ok and string.find(tostring(err), "cannot bind an Observer from inside its own fn", 1, true) ~= nil, "guard fires: " .. tostring(err))
+	mock.assertBlamesUser(err, "spec.observer.luau", "drive-depth _assertBindable blames the user, not Observer.luau")
 	print("PASS")
 end
 

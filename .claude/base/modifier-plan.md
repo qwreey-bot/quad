@@ -41,12 +41,12 @@ cascade 문제가 그대로 오는데, 이건 이미 확정된 "Store 바인드 
 
 ### flatten의 정확한 형태 — in-place 뮤테이션 + `ProcessedModifier` 소진 (2026-08-20 구현 전 QA 4라운드 `M-2` 확정)
 
-> **[2026-09-04 구현됨 — M7 단위 ②, round17 `H-311`]** `quad-base/src/Modifier.luau`의
-> `flatten`(아래 의사코드 1:1) + `Dispatch/Modifier.luau`의 `ProcessedModifierHandler`
+> **[2026-09-04 구현됨 — M7 단위 ②, round17 `H-311`]** `quad-base/src/Dispatch/Modifier/init.luau`의
+> `flatten`(아래 의사코드 1:1) + `Dispatch/Modifier/Handler.luau`의 `ProcessedModifierHandler`
 > (`H-35` 의사코드 1:1, HIGH 우선순위 — None 쌍과 같이 InitDispatch가 등록).
 > **호출 주체는 `Dispatch.drive`의 첫 pre-pass**(round17 §0 Q4 (a), 사용자 확정) —
 > `New`의 ③은 사라졌고 `Claim`은 같은 경로로 자동 봉합됐다(`bind-system-plan.md`
-> 파이프라인 의사코드 정정). `ProcessedModifier`는 `Modifier.luau` export(내부 —
+> 파이프라인 의사코드 정정). `ProcessedModifier`는 `Dispatch/Modifier/init.luau` export(내부 —
 > 최상위 재노출 없음, 아래 "공개 표면 위치" 항목대로). spec은
 > `quad-base/test/spec.flatten.luau`, Studio 실측 `audit/m7-unit2-studio-2026-09-04.md`.
 
@@ -119,7 +119,7 @@ end
   있는 반면 이쪽엔 없었다. 게다가 **색인 두 곳에서도 빠져 있었다** —
   `base/dispatch-core-plan.md`의 Length/Offset 등록 책임 열거와 말단 핸들러
   부작용 표, 그리고 `base/architecture.md`의 `Dispatch/` 파일트리
-  (`Modifier.luau` 항목이 flatten/체이닝만 적고 자기가 만드는 센티널의
+  (`Dispatch/Modifier/init.luau` 항목이 flatten/체이닝만 적고 자기가 만드는 센티널의
   핸들러를 언급 안 함). `Modifier`가 하나라도 든 `Frame{...}` 호출은 **전부**
   이 핸들러를 거치므로, 이 문서를 안 읽고 색인만 보고 구현하면 존재 자체를
   놓친다. 셋 다 반영했다.
@@ -198,7 +198,7 @@ Lua 테이블 리터럴은 배열 파트/해시 파트 사이에 소스 텍스�
     Modifier. 같은 `Overridden`에서 `other`의 값을 **이긴 뒤**, 디스패치 단계의
     `NoneHandler`가 실제로 지운다.
   - `:Peek(key)`도 이 둘을 구별해서 돌려준다(`nil` vs `None`) — 위
-    "`:Peek`의 반환 타입" 항목이 `T | State<T> | None | nil`인 이유가 정확히
+    "`:Peek<<T>>(key)`" 항목의 반환이 `None`과 `nil`을 따로 갖는 이유가 정확히
     이것. 구현은 이미 이렇게 되겠지만 **문서화에서 이 구분을 반드시 짚을 것**.
 - **`{ TextColor3 = None, mod }`도, `mod:TextColor3(None)`도 둘 다 지원.**
   Modifier setter/Overridden/인라인 props 테이블은 `None`을 그냥 평범한 raw
@@ -210,7 +210,7 @@ Lua 테이블 리터럴은 배열 파트/해시 파트 사이에 소스 텍스�
   없음(2026-08-07 여덟 번째 세션 확정) — setter로 받으면 "특정 필드만 지우는
   재사용 가능한 modifier 조각"(9-1번의 스타일 프리셋 opt-out 시나리오)도
   공짜로 됨.
-- **`:Peek<<T>>(key)`의 반환 타입이 `T | State<T> | None | nil`로 확장됨** —
+- **`:Peek<<T>>(key)`의 반환 타입이 `T | State<T> | None | nil`로 확장됨** — **[2026-09-07 회신 4차 Q24 후속, 사용자 질문 *"FieldOut<T> 는 그럼 Peek 에도 사용되는걸까?"*]** 지금은 `FieldOut<T>?`(quad-types 정의 `FieldOut<X> = X | State<X> | None`에 백엔드가 자기 값 대수를 넣는다 — 캐비엇 `H-459`: 프로바이더 아래에서도 base `Modifier()`의 `Peek`는 quad-types 정의라 `Peek<<UDim2>>`엔 Tween 팔이 없다, 그 필드가 Tween을 품으면 `Peek<<UDim2 | Tween<UDim2>>>`(T = 값 대수 전부); 생성 `<Class>Modifier`의 `Peek`는 D의 `FieldOut`을 쓴다 — quad-roblox `types.luau`가 `X = T | Tween<T>`로 별칭, 전개형 `T | Tween<T> | State<T | Tween<T>> | None`; **[2026-09-07 Tween 이동]** base는 Tween을 모르므로 이 분해가 됐다) — 변환 함수의 `old`와 같은 "저장된 그대로" 값이라 한 타입을 쓴다(옛 유니언엔 Tween 팔이 없어 저장된 Tween이 T로 보였다). `nil` = 필드 없음, `None` = 명시 해제 구분은 그대로 —
   `Peek`은 raw 저장값을 그대로 읽으므로(9번 절 "현재 저장된 그대로 넘김"
   원칙) `None`을 다른 값처럼 있는 그대로 돌려줌. "필드가 아예 안 채워짐"
   (`nil`)과 "명시적으로 지워짐"(`None`)은 raw 계층에서 계속 구별됨.
@@ -267,10 +267,12 @@ mutable하게 구현하면 같은 modifier 레퍼런스를 공유하는 형제 �
 `Modifier({})`와 같다.
 원문: *"(default1 = {}, Modifier, { k=v }) 형태로 받게 … 뒤로 갈 수록 높은
 우선순위의 override 처럼 … 초기 붙이는건 비용이 싸지고, 약간 슈거처럼
-작동"*. **사용자 인용이 승인한 것은 모양과 병합 순서까지다.** 아래 검증 규칙은
+작동"*. **사용자 인용이 승인한 것은 모양과 병합 순서까지다.** **[2026-09-07 회신 3차 Q11 (a) 사용자 확정]** 제네릭 setter(`m.X(...)`의 `__index`)도 같은 키 규칙 — **문자열 키만** setter가 되고 비문자열 키(`m[AttributeKey]`)는 즉시 에러(`__index`가 SURFACE 태그를 받아 사용자 줄 blame); 거꾸로 생성자도 setter 경로가 만들 수 없는 키(`As%u` 캐스트 접두·예약 메소드명·빈 문자열)를 거부한다(round3 `H-448`). AttributeKey/디스크립터는 props 테이블에 직접(`Frame { [key] = value }`) — 두 생성 경로가 조용히 갈리지 않게(`H-387`). 아래 검증 규칙은
 **에이전트 추가**(round17 `H-310` 행, 뒤집기 가능): 필드 테이블은 메타테이블 없는
 plain 테이블만(Source/State/Ref/None 등 quad 객체를 넘기면 내부 필드가 merge되는
-사고를 막는다 — 리뷰 발견), 키는 문자열만, 값은 setter와 같은 핸들러 계층 검사,
+사고를 막는다 — 리뷰 발견; **[2026-09-07 3순회 `H-377`]** 브랜드는 메타테이블이 아니라
+메타테이블 없는 quad 값 — `AttributeKey`(`Name`이 필드로 병합돼 조용히 rename)·
+`MapperDescriptor` — 은 `Brand.isPlainBranded`로 따로 거부, Attribute·Tag와 공유), 키는 문자열만, 값은 setter와 같은 핸들러 계층 검사,
 **함수 값은 거부**(setter는 함수를 변환으로 읽으므로 raw 저장하면 두 생성
 경로가 조용히 갈린다 — 변환은 `mod:Field(fn)`으로), 비테이블 인자는 error.
 타입은 `(...(Modifier | { [string]: any })) -> Modifier`(클래스별 필드 테이블
@@ -763,15 +765,15 @@ Modifier 인자를 받으면 `Overridden`과 같은 병합을 한다(사용자: 
 `Overridden(...: any): any`류로 느슨하게 열어 정적 체크를 포기 — 이건 임시
 처치로 명시하고, M7 실제 구현
 시점에 실 테스트 결과에 따라 다시 좁히는 걸 목표로 로드맵에 남김
-(`ROADMAP.md` M7). **[2026-09-04 M7 착수 회신, round17 §0 Q5 — 같은 날 단위 ④로
+(`archive/v2-initial-implementation/roadmap.md` M7). **[2026-09-04 M7 착수 회신, round17 §0 Q5 — 같은 날 단위 ④로
 번복됨: 조상 클래스 Modifier 타입이 M7 안에서 생성됐다, 11절]** 당시엔 상위 클래스
 Modifier 타입 자체의 **생성**을 M7 밖 후순위로 확정했었다 — 사용자: *"상위 클래스에
 대해서 생성하는건 있을 필요가 있긴한 부분 … 다만 지금 당장 할 필요가 있냐
 하면 그건 아닐 수 있어"*(`TextButton`/`TextLabel`이 공유하는 `Boldify`류
 프리셋의 타입 자리). 그때 이 절의 한계를 넘는 메커니즘도 같이 결정한다
-(`ROADMAP.md` M7 후순위 항목).
+(`archive/v2-initial-implementation/roadmap.md` M7 후순위 항목).
 
-**`:Peek<<T>>(key): T | State<T> | None | nil`** — Modifier 필드를 확정하지
+**`:Peek<<T>>(key): FieldOut<T>?`**(**[2026-09-07 Q24 후속]** 옛 `T | State<T> | None | nil` — Tween 팔이 빠져 있었다) — Modifier 필드를 확정하지
 않고 그대로 읽는 접근자. 이름을 `Get`이 아니라 `Peek`로 정한 이유: 이
 프로젝트 전역에서 `State:Get()`은 "확정한다"(pull + recompute + 최종값
 반환)는 의미로 이미 자리잡았는데, Modifier의 읽기는 정반대(들고 있는
@@ -808,7 +810,7 @@ Source도 같이 잡아줌 — **[2026-08-07 여덟 번째 세션 정정] `isSou
 
 ### 10. `Tween<T>`와의 타입 합성 — `T' = T | Tween<T>` 치환만으로 해결 (2026-08-10 세션)
 
-**[2026-09-06 실측 정정 — M11 단위 ① `H-327`]** 아래 "자동으로 `T | Tween<T> |
+**[2026-09-06 실측 정정 — M11 단위 ① `H-327`]** **[2026-09-07 마커 — 사용자 결정]** 실물은 다시 한 팔이다 — `FieldV<T> = T | Tween<T> | StateMarker<T | Tween<T>> | None`(입력, 공변 마커), 변환 함수의 `old`만 전체형 `FieldOut<T>`; `typing-limits.md` 8.11. 아래 정정문의 "각각 나열"은 그 사이의 우회였다. 아래 "자동으로 `T | Tween<T> |
 State<T | Tween<T>>`가 나옴"은 새 솔버에서 성립하지 않는다 — `State<X>`가
 불변이라 그 모양의 setter는 plain `State<T>`를 거부했다(strict 실측, M7 spec은
 캐스트로 우회해 못 봤음). 실물 `Field<T> = T | Tween<T> | State<T> | State<Tween<T>>

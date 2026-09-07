@@ -32,6 +32,7 @@ do
 	end)
 	assert(not okK, "AttributeKey validates")
 	mock.assertBlamesUser(errK, "spec.attribute.luau", "AttributeKey blame")
+	assert(not pcall(function() q.AttributeKey("") end), "an empty attribute name is rejected (`H-417`)")
 	local okM, errM = pcall(function()
 		q.Attribute.Merged(7)
 	end)
@@ -53,6 +54,28 @@ do
 		q.Attribute(q.Ref(1))
 	end)
 	assert(not okR and string.find(tostring(errR), "plain tables", 1, true) ~= nil, "a Ref (metatable) is not flattened field by field: " .. tostring(errR))
+	-- 1순회 `H-368`: brands are not metatables — the metatable-less quad values
+	-- (AttributeKey — a frozen `{ Name }`) were still flattened into `{ Name = "…" }`
+	local okK, errK = pcall(function()
+		q.Attribute(q.AttributeKey("Selected"))
+	end)
+	assert(not okK and string.find(tostring(errK), "plain tables", 1, true) ~= nil, "an AttributeKey (brand, no metatable) is not a plain table: " .. tostring(errK))
+	mock.assertBlamesUser(errK, "spec.attribute.luau", "AttributeKey-arg blame")
+	-- function values: the engine cannot store one — raise at construction, not
+	-- inside setAttribute at dispatch depth (quad-roblox's OnChange descriptor
+	-- `{ Name, Callback }` lands here too)
+	local okF, errF = pcall(function()
+		q.Attribute({ Foo = function() end })
+	end)
+	assert(not okF and string.find(tostring(errF), 'attribute "Foo" cannot be a function', 1, true) ~= nil, "function value rejected: " .. tostring(errF))
+	mock.assertBlamesUser(errF, "spec.attribute.luau", "function-value blame")
+	-- 7순회 `H-421`: the empty-name gate covers the group constructor and the scalar sugar too
+	assert(not pcall(function() q.Attribute({ [""] = 5 }) end), "group: empty attribute name rejected")
+	assert(not pcall(function() q.NumberAttribute("", 5) end), "sugar: empty attribute name rejected")
+	-- positive control — raw + State + None still flow
+	local ok = q.Attribute({ A = 1, B = q.Source("x"), C = q.None })
+	assert((ok :: any).__quadAttribute == true, "AttributeMarker field readable (H-300, 2026-09-07 마커 전면화)")
+	assert(ok:NameMap().A == 1, "raw/State/None values are untouched")
 end
 
 print("=== 2. 단일 키 왕복 — 무조건 set, store-bind, None → nil 삭제 ===")

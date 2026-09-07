@@ -96,7 +96,7 @@ local function Init(module: any)
 	-- lazily). Physical-inst owners keep the weak Relate + gchold anchor path.
 	-- The header predicted this branch "when M6 lands" — this is that.
 	local function getBookkeeping(ownerKey: any): any
-		if Brand.SlotBrand:is(ownerKey) then
+		if Brand.isSlot(ownerKey) then
 			local bk = ownerKey._bk
 			if bk == nil then
 				bk = newBk()
@@ -114,9 +114,22 @@ local function Init(module: any)
 	end
 
 
+	-- Q15 (a) (사용자 결정 2026-09-07): the length domain is the non-negative integers — a
+	-- negative/fractional length used to flow into `nativeInsert(target, 음수)` silently and a
+	-- non-number State value died in recompute's arithmetic with the blocker locked (`H-394`).
+	-- Constants are checked at registration; a State's value is checked in ITS OBSERVER, which
+	-- runs before gatedRecompute — round3 `H-445`: checking inside `contribution` threw inside
+	-- the recomputeBlocker On/Off window and left the owner frozen for good (the very failure
+	-- `checkPosition`'s header says to keep out of the window).
+	local function checkLengthValue(fnName: string, n: any)
+		if type(n) ~= "number" or n % 1 ~= 0 or n < 0 then
+			Err.errorBeforeNearest(`quad.Dispatch.{fnName}: length must be a non-negative integer (got {tostring(n)})`, SURFACE)
+		end
+	end
+
 	local function contribution(bk: any, i: number): number
 		local v = bk.lengthList[i]
-		return if Brand.isState(v) then v:Get() else v
+		return if Brand.isState(v) then v:Get() else v -- validated by the observer (`H-445`), never here
 	end
 
 	-- Absolute offset (0-based count) of position `at` — single function with
@@ -139,7 +152,7 @@ local function Init(module: any)
 	-- (0순회 `H-365`: a per-call closure was allocated N times per recompute).
 	local function ensureBase(bk: any, ownerKey: any)
 		if bk.offsetCacheValidUpTo == 0 then
-			bk.offsetCache[1] = if Brand.SlotBrand:is(ownerKey) then ownerKey.Offset:Get() else 0
+			bk.offsetCache[1] = if Brand.isSlot(ownerKey) then ownerKey.Offset:Get() else 0
 			bk.offsetCacheValidUpTo = 1
 		end
 	end
@@ -155,9 +168,24 @@ local function Init(module: any)
 		local cur = bk.offsetCache[i]
 		while i < at do
 			if bk.lengthList[i] == nil then
-				-- `H-106`: without this the C-6 diagnosis is bypassed and an
-				-- anonymous arithmetic error fires first. Internal invariant.
-				error(`Dispatch.getOffsetAt: lengthList[{i}] is nil — bookkeeping is broken`, 1)
+				-- 5순회 `H-397` / 6순회 `H-408`: a missing position has TWO causes and
+				-- this line cannot tell them apart — a query past N+1 (user input) or
+				-- a leaf handler that skipped its `H-39` registration (a hole that,
+				-- because registration is ascending, also looks like a tail). Say
+				-- both. Outermost blame: this runs under the sibling surface
+				-- `setOffsetSource` and at dispatch depth (materialize), where
+				-- nearest landed on `Bookkeeping.luau` itself (`H-378` lesson).
+				-- `bk.N` is the max registered position by contract (grows in
+				-- setLength, shifts in splice, reset with the list).
+				local last = bk.N or 0
+				-- 7순회 `H-427`: name the range cause only when the query IS past N+1 —
+				-- with a hole below N the range clause called a legal query illegal
+				Err.errorBefore(
+					if at > last + 1
+						then `Dispatch.getOffsetAt: position {at} is past N+1 (N = {last}, at most {last + 1} may be queried) — or a leaf handler skipped its position registration (H-39): position {i} is not registered`
+						else `Dispatch.getOffsetAt: position {at} needs positions 1..{at - 1} registered but {i} is not — a leaf handler skipped its position registration (H-39)`,
+					SURFACE
+				)
 			end
 			cur += contribution(bk, i) -- ← a State length's Get can run user code
 			if bk.offsetCacheValidUpTo < i then
@@ -227,6 +255,12 @@ local function Init(module: any)
 			end
 			-- `H-244`: same single coercion as getOffsetAt's cache fill — two
 			-- inline copies would drift when the coercion gains a case (M6).
+			-- 7순회 `H-427`: C-6's sibling — a `lengthList` hole (a provider that called
+			-- setOffsetSource without setLength) died as an anonymous arithmetic error
+			-- inside recomputeBlocker:On, freezing the owner. Internal invariant.
+			if bk.lengthList[i] == nil then
+				error(`Dispatch.recompute: lengthList[{i}] is nil — bookkeeping is broken (setOffsetSource without setLength?)`, 1)
+			end
 			sum += contribution(bk, i)
 			-- `H-240` check ② — contribution's own Get window; the possibly
 			-- stale += above is discarded by the rewind's prefix restore.
@@ -241,7 +275,7 @@ local function Init(module: any)
 		-- with no user-code window in between (`H-240`).
 		bk.offsetSetUpTo = bk.N or 0
 		bk.recomputeBlocker:OffWithoutEmit()
-		if Brand.SlotBrand:is(ownerKey) and ownerKey.Length:Get() ~= sum then
+		if Brand.isSlot(ownerKey) and ownerKey.Length:Get() ~= sum then
 			ownerKey.Length:Set(sum) -- Length carries no base — length is position-free
 		end
 	end
@@ -253,8 +287,27 @@ local function Init(module: any)
 	-- for the position (`H-141`/Q3): the persistent closure captures it and
 	-- looks the current index up in bk.indexOfElement instead of freezing `i`;
 	-- constant-length slots omit it.
+	-- Init-scope (4순회 `H-390`, the `H-365` family): a per-call closure was built
+	-- for every constant-length element too (N per mount) and thrown away after one
+	-- call. Current position by element lookup, not captured index (`H-102`).
+	local function gatedRecompute(bk: any, blocker: any, ownerKey: any, element: any, i: number)
+		local cur = if element ~= nil then bk.indexOfElement[element] else i
+		bk.offsetCacheValidUpTo = math.min(bk.offsetCacheValidUpTo, cur)
+		bk.offsetSetUpTo = math.min(bk.offsetSetUpTo, cur)
+		if blocker:IsOn() then
+			return -- batch registration in progress
+		end
+		if bk.recomputeBlocker:IsOn() then
+			return -- recompute reentry — the outer pass's rewind picks it up
+		end
+		recompute(ownerKey, bk)
+	end
+
 	local function setLength(ownerKey: any, i: number, len: any, anchor: any?, element: any?)
 		checkPosition("setLength", i)
+		if not Brand.isState(len) then
+			checkLengthValue("setLength", len) -- a State's value is checked where it is read (contribution)
+		end
 		anchor = anchor or ownerKey
 		local bk = getBookkeeping(ownerKey)
 		local blocker = getBlocker(ownerKey)
@@ -275,26 +328,15 @@ local function Init(module: any)
 		bk.offsetCacheValidUpTo = math.min(bk.offsetCacheValidUpTo, i)
 		bk.offsetSetUpTo = math.min(bk.offsetSetUpTo, i)
 
-		local function gatedRecompute()
-			-- current position by element lookup, not captured index (`H-102`)
-			local cur = if element ~= nil then bk.indexOfElement[element] else i
-			bk.offsetCacheValidUpTo = math.min(bk.offsetCacheValidUpTo, cur)
-			bk.offsetSetUpTo = math.min(bk.offsetSetUpTo, cur)
-			if blocker:IsOn() then
-				return -- batch registration in progress
-			end
-			if bk.recomputeBlocker:IsOn() then
-				return -- recompute reentry — the outer pass's rewind picks it up
-			end
-			recompute(ownerKey, bk)
-		end
-
 		if Brand.isState(len) then
-			local observer = len:Observer(gatedRecompute) -- immediate first run is gated too
+			local observer = len:Observer(function()
+				checkLengthValue("setLength", len:Get()) -- `H-445`: outside the blocker window; nearest = the `:Set` line
+				gatedRecompute(bk, blocker, ownerKey, element, i)
+			end) -- immediate first run is gated too
 			module.bindLifetime(anchor, observer) -- physical target's lifetime, not :Subscribe()
 			bk.observers[i] = observer
 		else
-			gatedRecompute() -- constants go through the same gate
+			gatedRecompute(bk, blocker, ownerKey, element, i) -- constants go through the same gate, no closure (4순회 `H-390`)
 		end
 	end
 
@@ -304,15 +346,45 @@ local function Init(module: any)
 	-- lengthList's answer); pull the number via getOffsetAt when needed.
 	local function setOffsetSource(ownerKey: any, i: number, source: any)
 		checkPosition("setOffsetSource", i)
+		if source ~= None and not Brand.isSource(source) then
+			-- Q13 (b) (사용자 결정 2026-09-07): `checkPosition`'s sibling — a wrong `source` used to
+			-- die at `:Get()` with a Bookkeeping.luau line
+			Err.errorBeforeNearest(`quad.Dispatch.setOffsetSource: source must be a Source<number> or None (got {typeof(source)})`, SURFACE)
+		end
 		local bk = getBookkeeping(ownerKey)
-		bk.sourceList[i] = source
 		if source == None then
+			bk.sourceList[i] = None
 			return
 		end
+		-- 5순회 `H-392`: read the source BEFORE writing bookkeeping — a wrong
+		-- `source` (a plain table, say) used to raise on `:Get()` with
+		-- `sourceList[i]` already written, and the next unrelated `setLength`
+		-- then died inside `recomputeBlocker:On()`, freezing this owner's offset
+		-- arithmetic for good (`dispatch-core-plan.md` `H-256` (a): "부기를 하나라도
+		-- 만지기 전에 검사한다"). A type gate on `source` itself is §4 Q13.
 		local offset = getOffsetAt(ownerKey, i)
-		if source:Get() ~= offset then
+		local current = source:Get()
+		bk.sourceList[i] = source
+		if current ~= offset then
 			source:Set(offset)
 		end
+	end
+
+	-- The terminal "empty slot" registration every nop/leaf handler does:
+	-- offsetSource FIRST, then length 0 — the release-order contract (`H-39`,
+	-- setLength ends in gatedRecompute). One body so the order cannot drift
+	-- between the terminal sites; on the Dispatch surface (not a quad-base
+	-- module helper) so quad-roblox handlers (`OnChange`, `InstanceChild`)
+	-- reach it too — post-implementation review Q3 ③, user-approved name
+	-- (2026-09-07: "setEmpty 같은걸 넣어도 큰 문제는 없어보이겠다"). `anchor`
+	-- is setLength's 4th argument (`inst`, `H-35`); NilHandler passes none.
+	local function setEmpty(ownerKey: any, i: number, anchor: any?)
+		-- [round3 `H-434`] validate HERE: this function sits on the Dispatch table, so the
+		-- `H-242` loop tags it SURFACE — if the inner (also tagged) setOffsetSource raised,
+		-- nearest+1 would be this body, not the handler that called setEmpty.
+		checkPosition("setEmpty", i)
+		setOffsetSource(ownerKey, i, None)
+		setLength(ownerKey, i, 0, anchor)
 	end
 
 	module._bookkeeping = {
@@ -322,6 +394,7 @@ local function Init(module: any)
 		recompute = recompute,
 		setLength = setLength,
 		setOffsetSource = setOffsetSource,
+		setEmpty = setEmpty,
 	}
 end
 

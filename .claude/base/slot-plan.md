@@ -27,11 +27,11 @@ additional-primitives-plan.md`가 다루던 키 기반 동적 컬렉션 재조�
 ## base/roblox 패키지 경계 (2026-08-04, 5차 라운드 확정)
 
 Slot의 add/remove/clear 재조정 로직(추상 자식 참조 기준 — "이 자리에 뭐가
-있어야 하는가"를 결정하는 순수 로직)은 `quad-base/src/Dispatch/Slot.luau`가
+있어야 하는가"를 결정하는 순수 로직)은 `quad-base/src/Slot/Handler.luau`가
 소유. 실제 트리 조작(Instance `Parent` 설정/`Destroy`)은 백엔드 몫 — 다른 모든
 인터페이스/구현 분리와 동일한 패턴(`base/architecture.md`의 소스 트리 참고).
-**⚠️ [2026-09-03 정정, round15 `H6-14`]** 여기 한때 그 몫이 *"`quad-roblox/src/
-Handlers/Slot.luau`가 그 위에서 적용/해제"*라 적혀 있었다 — 그건 2026-08-21의
+**⚠️ [2026-09-03 정정, round15 `H6-14`]** 여기 한때 그 몫이 *"quad-roblox의
+`Handlers/Slot.luau`가 그 위에서 적용/해제"*라 적혀 있었다(그런 파일은 없다 — 옛 표기 인용) — 그건 2026-08-21의
 `native*` 주입 op 계층(아래 그 절) **이전** 표기다. 지금 백엔드 절반은
 **`quad-roblox/src/EngineOps.luau`의 `native*` 여섯 그 자체**이고(SlotHandler는
 base, 물리 조작은 주입 op), 별도 `Handlers/Slot.luau` 파일은 **없다**(M5 단위
@@ -43,7 +43,7 @@ unmount(`Remove`) 둘이 아니라 **reposition(`Move`/`Swap`)까지 셋** —
 계약만 base가 강제**하고, quad-roblox가 이걸 `SetSiblingIndex`로 구현할지
 (`LayoutOrder` 기반 정렬이라) 사실상 no-op으로 둘지는 구현 선택.
 
-**[2026-08-09 일곱 번째 세션 보강]** `Dispatch/Slot.luau`의 mount 훅
+**[2026-08-09 일곱 번째 세션 보강]** `Slot/Handler.luau`의 mount 훅
 (`process(inst,k,self,index)`)은 `Dispatch.setLength(inst,i,self.Length)` 호출과
 같은 자리에서 `self._listed`면 `activateList(self,inst)`도 트리거해야 함 —
 `:List`의 `data:Observer(fn)` 구독을 Slot 마운트 시점까지 lazy하게 미루는
@@ -89,7 +89,7 @@ base는 여전히 `T`가 뭔지 모른다 — **아는 건 백엔드고 base는 
     **후** 블록 첫 리프의 절대 offset"이다** — 리프 배열을 `_elements`처럼
     splice(뺀 뒤 넣기)한 결과 좌표. `fromOffset`은 이동 전 값. 그래서 아래로
     옮길 땐(`from < to`) `getOffsetAt(to) + #leaves(to) - #moving`, 위로는
-    `getOffsetAt(to)`다(`Slot.luau` `rawMove`가 계산). `nativeSwap`의 두 offset은
+    `getOffsetAt(to)`다(`Slot/Raw.luau` `rawMove`가 계산). `nativeSwap`의 두 offset은
     둘 다 교환 **전** 값이다 — **[2026-09-03 `H6-20` (a), 사용자 확정]** 두
     블록의 리프 수가 다르면 사이 요소가 그 차만큼 밀리므로 "사이 고정"이
     아니다(아래 그 항목). Roblox/mock은 무시하므로
@@ -131,7 +131,7 @@ base는 여전히 `T`가 뭔지 모른다 — **아는 건 백엔드고 base는 
 - **`nativeInsert`를 흡수하지 않은 이유**: `nativeExtract(target, offset, {}, elements)`로
   표현은 되지만, **최빈 경로**(리스트 최초 채우기·단건 `Add`)가 "0개를 빼는 extract"라는
   모양이 되고 `DocumentFragment`류 일괄 삽입 최적화도 그 안에 숨는다.
-- **기본 구현(조합 폴백) — 미주입이 에러가 아니다.** `addTag`/`setAttribute`가
+- **기본 구현(조합 폴백) — 미주입이 에러가 아니다.** **[2026-09-07 회신 4차 — 사용자 확정]** **이 약속은 철회 — 지금 코드의 사실은 "여섯 전부 필수, 미주입이면 안내 스텁 에러"**(`LifetimeHandle.luau` 스텁, `H-373`/`H-376`; in-tree 백엔드 둘은 여섯을 전부 심는다). 조합 기본 구현 자체는 **백로그**(ROADMAP) — 사용자: *"잠정적으로 볼 땐, 있는게 맞다이고, 지금 필요하지 않고 없어도 치명적이지 않을 뿐임"*. 아래 조합 공식은 그때의 설계 재료로 남긴다. `addTag`/`setAttribute`가
   "미주입이면 명확한 에러"인 것과 갈린다: 이쪽은 조합으로 항상 정의되기 때문이다.
   `nativeRemove` = `nativeExtract` + `nativeDispose` 반복, `nativeMove` =
   `nativeExtract` + `nativeInsert`, `nativeSwap` = `nativeMove` 2회. 백엔드는
@@ -612,7 +612,7 @@ error가 맞음**.
 예외를 뒀다(위 그 함수의 정의). **플래그 없이 "같은 owner면 통과"로
 완화하면 안 된다** — 이 절이 애초에 막으려던 `Slot { a, a }`가 다시
 새어나간다. 나머지 논증(top-level은 `claimOwnerAt`으로 구분)은 그대로
-유효하다. 경위는 `qa-request/pre-implementation-qa-round4-followup.md`의
+유효하다. 경위는 `archive/v2-initial-implementation/pre-implementation-qa-round4-followup.md`의
 `I-1`.
 
 반대로 top-level은 store 재발행마다 같은 Slot으로
@@ -692,14 +692,9 @@ top-level만 `claimOwnerAt`으로 spurious 재발행을 구분함.
 비결정적으로 터짐. top-level Slot 자신의 반납은 `SlotHandler.process`가
 반환한 클로저가 담당(층위 분리는 `unbindLifetime`과 동일한 원칙).
 
-**[재정정, 2026-08-20 구현 전 QA 4라운드 `C-4`] 단, `destroySlotTree`는 이
-규칙의 대상이 아니다 — 명시적 `releaseOwner`를 도로 뺀다.** 2026-08-13
-감사가 같은 근거로 `destroySlotTree`에도 넣었었는데, 사용자 판정으로
-되돌림: *"Destroy 된 요소는 다른곳에 원래 마운트 못하는게 보통 엔진
-정상이고, 또, 릴리즈 안 되어 다른곳에 마운트 막혀도 상관 없고, 그게 정상
-동작일 수 있어보임."*
+**[2026-09-07 회신 3차 Q14 (a) — 사용자 확정] `destroySlotTree`도 이 규칙의 대상이다 — 두 루프가 요소마다 `releaseOwner`를 부른다.** 옛 C-4 면제(2026-08-20, "요소가 어차피 죽는다")는 `Owned = false` 자식 Slot(언마운트만 하고 살아남는 분기)엔 성립하지 않아 죽은 `elementOwner`가 영구히 남았다(`H-393`; 파괴되는 요소엔 영향 없음 — 약참조 장부). **[철회된 근거 — 2026-08-20 `C-4`, 기록만]** 그때는 2026-08-13 감사가 넣은 `releaseOwner`를 사용자 판정으로 되돌렸다: *"Destroy 된 요소는 다른곳에 원래 마운트 못하는게 보통 엔진 정상이고, 또, 릴리즈 안 되어 다른곳에 마운트 막혀도 상관 없고, 그게 정상 동작일 수 있어보임."* — 파괴되는 요소엔 지금도 맞는 말이고, 살아남는 자식엔 틀렸던 것.
 
-- **막히는 게 정상이다** — 파괴된 요소를 다른 곳에 다시 넣으려는 코드는 그
+- **[철회된 근거의 논거, 파괴되는 요소에 한해 유효]** **막히는 게 정상이다** — 파괴된 요소를 다른 곳에 다시 넣으려는 코드는 그
   자체로 버그다. "비결정적으로 실패"의 반대는 "성공"이 아니라 **"항상
   실패"**이고, 그게 더 나은 동작이다. 명시적 반납은 오히려 그 버그를
   통과시켜 죽은 Instance를 엉뚱한 데서 터지게 만든다.
@@ -793,7 +788,7 @@ Slot의 좀비 배열이 조용히 자란다(아래 "파괴된 Slot은 재사용
 자리)는 실제로 **요소 유니온 `T | State<T> | Slot<T>`**다 — 반응형 raw 요소는
 언래핑된 원래 `State`가, 중첩은 `Slot` 자신이 돌아온다(아래 "래핑/언래핑은 Slot
 전체에 걸린 연산이다" 절). quad-types의 `SlotElement<T>`가 그 표기이고 표는
-축약이다 — 타입 표면을 표에 맞춰 `T?`로 되돌리지 말 것.
+축약이다 — 타입 표면을 표에 맞춰 `T?`로 되돌리지 말 것. **[2026-09-07 마커 — 사용자 결정]** 그 유니언은 역할별로 둘이다 — 입력(`Add`/`Replace`/`Splice`/`IndexOf`/생성자)은 `SlotElement<T> = T | StateMarker<T> | SlotMarker<T>`(공변 — `Slot<Frame>`·`State<Frame>`이 `Slot<Instance>`에 든다), 출력(`Get`/`Extract`/`ExtractAll`/`Splice` 반환·`prev`)은 전체형 `SlotItem<T> = T | State<T> | Slot<T>`(`typing-limits.md` 8.11).
 | `IndexOf` | `Slot:IndexOf(element): number?` | O(n) | element의 현재 인덱스 역조회(멤버 아니면 `nil`) — 레퍼런스만 있고 인덱스가 없을 때 다른 CRUD와 연결하는 다리 |
 
 - **`Add`가 삽입된 인덱스를 반환하는 이유(2026-08-10 세션 확정)** —
@@ -1397,7 +1392,7 @@ GC-native 원칙(`lifecycle-pattern.md`)을 `:List`라는 구체적 지점에 �
 **구독 시점은 `:List()` 호출이 아니라 Slot 마운트 시점 — lazy `bindLifetime`
 (2026-08-09 일곱 번째 세션, 아래 "구독 시점" 절 참고).** `:List()`는 설정만
 저장하고 반환, 실제 `data:Observer(fn)` 구독과 최초 `reconcile`은 Slot
-자신이 마운트되는 순간(`Dispatch/Slot.luau`의 `process(inst,k,self,index)`)에
+자신이 마운트되는 순간(`Slot/Handler.luau`의 `process(inst,k,self,index)`)에
 `activateList`가 수행 — `Dispatch.setLength`가 이미 쓰고 있는 것과 같은
 패턴(마운트 시점까지 미뤘다가 그 자리에서 `bindLifetime`).
 
@@ -1449,7 +1444,7 @@ function Slot:List(data, updateFn, keyFn, opts)
     return self
 end
 
--- Dispatch/Slot.luau의 process(inst,k,self,index)가 마운트 시점에 1회 호출
+-- Slot/Handler.luau의 process(inst,k,self,index)가 마운트 시점에 1회 호출
 -- (self._mounted=true/self._mountedInst=inst, self.Offset 세팅과 같은 자리)
 -- [리네이밍, 2026-08-21] 2번째 인자는 `inst`였으나 `physicalTarget`으로 통일 —
 -- 옆 함수들(materializeSlotTree/mountSlotTree/attachSlot)이 쓰는 이름과 같은
@@ -2013,11 +2008,11 @@ updateFn(item: T | KeyGone, index, offset, prev, ud)
   `None`도 여러 곳(Slot 요소, Attribute, offsetSource)에서 쓰이는
   sentinel이지만 공개 표면은 패키지 최상위(`quad-base/src/init.luau`
   재노출)이고 실제 정의는 관련 로직 옆(`Dispatch/None.luau`)에 있다.
-  `Detach`도 같은 패턴 — **정의는 Slot 관련 파일(`Slot.luau` 또는
-  `Dispatch/Slot.luau`) 옆에 두고, `init.luau`에서 최상위로 재노출**한다.
+  `Detach`도 같은 패턴 — **정의는 Slot 관련 파일(`Slot/init.luau` 또는
+  `Slot/Handler.luau`) 옆에 두고, `init.luau`에서 최상위로 재노출**한다.
   지금은 `:List` reconcile 한 곳에서만 쓰이지만 `None`도 처음엔 그렇게
   시작해 이후 재사용됐으므로 최상위에 두는 게 자연스럽다. **[2026-09-03
-  M6 편입으로 확정]** `Detach`/`KeyGone`은 `quad-base/src/Slot.luau`에
+  M6 편입으로 확정]** `Detach`/`KeyGone`은 `quad-base/src/Slot/init.luau`에
   정의되고 `SlotInit(module)`(RunInit 경유)이 `module.Detach`/`module.KeyGone`
   으로 부착한다 — `init.luau` 정적 require 재노출("None처럼")이 아니라
   Init 부착이라는 점만 이 문장의 상정과 다르고, "최상위 재노출"의 실질
@@ -2107,7 +2102,7 @@ Slot:Single(state, updateFn?, opts?)
 **해법 — `Dispatch.setLength`가 이미 쓰고 있는 패턴 그대로 재사용**: 새
 메커니즘 발명 아님. `:List()`는 `data`/`updateFn`/`keyFn`만 저장하고 반환,
 실제 `data:Observer(fn)` 구독 + 최초 `reconcile`은 Slot 컨테이너 자신이
-마운트되는 순간(`Dispatch/Slot.luau`의 `process(inst,k,self,index)` — 위
+마운트되는 순간(`Slot/Handler.luau`의 `process(inst,k,self,index)` — 위
 "`isMounted` 이중 추적 분리" 절이 이미 `self._mounted`를 세팅하는 바로 그
 지점)에 `activateList(self, physicalTarget)`가 수행(**[리네이밍,
 2026-08-21]** 2번째 인자 이름은 `inst`였으나 owner 키가 Slot일 수도 있는
@@ -2371,10 +2366,10 @@ weak 키로 받음) — **Slot 자신을 owner 키로 재사용하면 최상위 
 무해하다(부모는 객체를 구독해뒀다가 나중에 값이 바뀌면 정상 반응).
 `setOffsetSource → setLength` 순서 자체(왜 `setOffsetSource`가 먼저여야
 하는지)는 안 바뀜 — 상세 트레이싱은
-`qa-request/pre-implementation-qa-round3.md`의 `RC-3`/`RC-4` 절.
+`archive/v2-initial-implementation/pre-implementation-qa-round3.md`의 `RC-3`/`RC-4` 절.
 
 ```lua
--- quad-base, Slot.luau
+-- quad-base, Slot/init.luau
 -- [전면 재작성, 2026-08-21 구현 전 QA 4라운드 확정] 옛 단일 `attachSlot`을
 -- **비공개 재귀 둘 + 얇은 공개 진입점**으로 분해. 공개 표면(이름/시그니처/
 -- 호출부 셋)은 하나도 안 바뀐다 — 쪼갠 건 함수가 아니라 **재귀**다.
@@ -2610,9 +2605,9 @@ end
 여기 있던 ⚠️ 항목(배치 밖 단독 재마운트 시 부모 `recompute`가 아직 안 굳은
 `slot.Length`로 한 번 헛도는 것)은 `setLength`가 `materializeSlotTree` 끝으로
 가면서 **처음부터 최종값**이 되어 발생 경로가 없어졌다. 트레이싱 원문은
-`qa-request/pre-implementation-qa-round3.md`의 "확인만 하고 새 결함 없음" 절.
+`archive/v2-initial-implementation/pre-implementation-qa-round3.md`의 "확인만 하고 새 결함 없음" 절.
 
-**최상위 마운트(`Dispatch/Slot.luau`)는 이제 이 함수 호출 한 줄:**
+**최상위 마운트(`Slot/Handler.luau`)는 이제 이 함수 호출 한 줄:**
 ```lua
 -- process(inst, k, slotValue, index)
 attachSlot(slotValue, inst, inst, k)   -- ownerKey = 물리 inst 자신
@@ -2729,9 +2724,10 @@ local function destroySlotTree(slot)
         return
     end
     for i, element in ipairs(slot._elements) do
-        -- [재정정, 2026-08-20 구현 전 QA 4라운드 `C-4`] 여기서 releaseOwner를
-        -- 명시적으로 부르지 **않는다** — 2026-08-13 감사가 넣었던 것을 되돌림.
-        -- 근거는 아래 "소유권 반납은 GC에 맡기면 안 됨" 절의 재정정 참고.
+        -- [2026-09-07 회신 3차 Q14 (a)] releaseOwner를 부른다 — C-4 면제(2026-08-20, "요소가
+        -- 어차피 죽는다")는 Owned=false 자식 Slot(언마운트만 하고 살아남는 위 분기)엔
+        -- 불성립이라 철회. `_detached` 루프도 같다. 파괴되는 요소엔 영향 없음(약참조 장부).
+        releaseOwner(element, slot)
         if isSlot(element) then
             destroySlotTree(element)   -- 재귀는 "파괴"에만, choreography 없음
         else
@@ -3012,7 +3008,7 @@ end
 -- 위 의사코드 셋의 꼬리 7줄과 4곳의 게이트 복붙이 그 함수들이다. 분리가
 -- "의도적"이었던 건 **축(머리)**이지 꼬리가 아니었고, 사용자 조건(*"개발 문서와
 -- 주석만 충분하고 흐름을 인간이 읽기 좋다면"*)대로 코드 주석이 축을 먼저
--- 말한다. `Slot.luau`가 소스.
+-- 말한다. `Slot/init.luau`가 소스.
 
 -- [신설, 2026-08-21 5라운드 `C-1`] rawAdd — 이 문서에서 가장 많이 참조되는데
 -- 정의가 없어서 `_mounted` 분기가 다른 함수 주석에만 흩어져 있었다. 새 결정은
@@ -3670,19 +3666,24 @@ Frame {
   일어난 요소만 살아남는다.
 - **그래서 `state<Frame>`에서 값을 빼내 재사용하려면 조상이 살아있는 동안
   꺼내야 한다** — 조상이 이미 죽은 뒤에 `state:Get()`으로 얻은 값은 **이미
-  죽은 Instance**다. 그 값에 다시 마운트를 시도하면 `bindLifetime`/`canExecute`
-  게이트에 걸린다(바로 아래 "부수 효과" 문단이 서술하는 그 경로).
+  죽은 Instance**다. 그 값에 다시 마운트를 시도하는 것은 UB다(**[2026-09-07 Q9 (b)]** 요소 단위
+  게이트는 없다 — 바로 아래 "부수 효과" 문단의 배너).
 - 같은 이유로 `_detached`가 들고 있던 요소도 조상이 죽으면 같이 죽는다 —
   detach는 `Parent = nil`이므로 **조상 트리에서 이미 빠져 있어** 이 경우엔
   해당 없음(그쪽 정리는 `_detachCleanup`이 담당).
 
 **부수 효과 — 이미 파괴된 대상에 재마운트하려는 시도가 자연히 막힘.**
-Slot이 마운트될 때 **자기 하위 요소들까지 `bindLifetime`으로 물리 target에
-묶고, 실제 동작 전에 `canExecute`를 확인**하도록 하면(`base/lifecycle-pattern.md`),
-"nested로 마운트해둔 뒤 물리 Instance를 Destroy하고, 그 다음 Slot을 뽑아
-다른 데 쓰려는" 경로가 별도 방어 로직 없이 걸러짐 — 이미 있는
-`bindLifetime`/`canExecute` 게이트를 한 층 더 촘촘히 적용하는 것뿐,
-새 메커니즘이 아님.
+**[2026-09-07 회신 3차 Q9 (b) — 사용자 확정, 아래 문단 철회]** 요소 단위 `bindLifetime` + `canExecute` 게이트는
+구현된 적이 없고 만들지도 않는다(`H-382`). **UB로 확정**: 마운트 대상 Instance를 quad 밖에서(`inst:Destroy()`)
+파괴하면 그 Slot(과 요소)은 그 Instance와 함께 죽은 것이다 — Instance와 동형(사용자: *"이미 Instance 같은
+경우에도 dispose 를 상위 소유자가 했으면 하위가 할 수 없음. 상위가 dispose 하기 전에 뽑아야지 다른곳에 쓸 수
+있는건 당연하고, Instance 와 같은 동형으로 두어도 되는 부분"*). `dispose`·`Add`의 "아직 마운트됨" 메시지가
+이 경우를 함께 말한다(*"… If the owner was destroyed outside quad, the value went with it — extract it before
+destroying"*). 시체 요소를 다른 Slot에 다시 넣는 반대 방향도 같은 UB.
+~~Slot이 마운트될 때 자기 하위 요소들까지 `bindLifetime`으로 물리 target에 묶고, 실제 동작 전에
+`canExecute`를 확인하도록 하면 "nested로 마운트해둔 뒤 물리 Instance를 Destroy하고, 그 다음 Slot을 뽑아
+다른 데 쓰려는" 경로가 별도 방어 로직 없이 걸러진다 — 새 메커니즘이 아니다.~~ (철회된 설계 — 구현된 적
+없음, 위 배너.)
 
 **`Set`으로 덮어쓰기 *전에* 이전 값을 직접 `Destroy()`하는 건 UB.**
 `state<Frame>`에서 `frame:Destroy()`를 먼저 하고 `Set(other)`을 부르는

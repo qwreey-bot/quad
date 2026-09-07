@@ -28,6 +28,7 @@ do
 		assert(quad.isEffect(self), "fn receives the handle")
 	end, s, r, s) -- duplicate dep is ignored
 	assert(runs == 1, "installed once on creation, before any binding (force)")
+	assert((e :: any).__quadEffect == true, "EffectHandleMarker field readable (H-300, 2026-09-07 마커 전면화)")
 	assert(quad.isEffect(e) and not quad.isObserver(e), "brand")
 	local depCount = 0
 	for _ in pairs((e :: any)._deps) do
@@ -334,6 +335,21 @@ do
 	assert(quad.canBound(C), "nothing was committed — not half-bound")
 	quad.bindLifetime(inst2, C)
 	assert(quad.canExecute(C), "binds cleanly afterwards")
+	print("PASS")
+end
+
+print()
+print()
+print("=== 4순회 H-384 — fn 안에서 자기 자신을 drive로 바인드하려는 오용(H-147 (A)) — blame은 사용자의 Effect 생성 줄 (fn은 생성 시 즉시 돈다; drive → process → bindLifetime → _assertBindable, 최외곽) ===")
+do
+	local inner = mock.Instance.new("Frame")
+	local ok, err = pcall(function()
+		Effect(function(self)
+			quad.Dispatch.drive(inner, { self })
+		end)
+	end)
+	assert(not ok and string.find(tostring(err), "cannot bind an Effect from inside its own fn", 1, true) ~= nil, "guard fires: " .. tostring(err))
+	mock.assertBlamesUser(err, "spec.effect.luau", "drive-depth _assertBindable blames the user, not Effect.luau")
 	print("PASS")
 end
 

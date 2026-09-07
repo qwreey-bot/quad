@@ -1,6 +1,6 @@
 # M6 잔여 마감 — Studio 실기기 실측 (2026-09-03)
 
-**무엇을**: `qa-request/m6-implementation-round15.md` "이 fork 슬라이스 밖" 절의
+**무엇을**: `archive/v2-initial-implementation/m6-implementation-round15.md` "이 fork 슬라이스 밖" 절의
 마지막 항목 — *"실기기 검증: Deferred 시그널 배달(`H-291`)이 `_detachCleanup`/
 leaf 사망 타이밍에 주는 영향, userdata 동일성. mock은 동기라 이 축을 못 본다"*
 — 와 같은 날 구현한 공개 CRUD 다섯의 실물 Instance 회귀.
@@ -52,7 +52,7 @@ Deferred 일반론의 한 사례 — 새 발견 아님. userdata 동일성은 `H
 
 ## 2. 회신 반영 재실측 (같은 날 — `H6-9` (b)·`H6-12` (b))
 
-같은 관용구로 새 `Slot.luau`(싱크 확인: `markMountedTree` 존재) 재실행.
+같은 관용구로 새 `Slot/Tree.luau`(싱크 확인: `markMountedTree` 존재) 재실행.
 
 | 시나리오 | 단언 | 결과 |
 |---|---|---|

@@ -424,6 +424,11 @@ local function installNative(quad: any)
 			end
 		end
 	end
+	-- 2순회 `H-374`: the real provider's `nativeFindChild(inst, key)` is
+	-- `inst:FindFirstChild(key)` (quad-roblox EngineOps) — same here
+	local function nativeFindChild(inst: any, key: any): any?
+		return inst:FindFirstChild(key)
+	end
 	local function nativeMove(_target: any, _fromOffset: number, _elements: { any }, _toOffset: number) end
 	local function nativeSwap(_target: any, _oa: number, _ea: { any }, _ob: number, _eb: { any }) end
 	local function nativeDispose(element: any)
@@ -437,11 +442,12 @@ local function installNative(quad: any)
 	quad.nativeExtract = nativeExtract
 	quad.nativeRemove = nativeRemove
 	quad.nativeMove = nativeMove
+	quad.nativeFindChild = nativeFindChild
 	quad.nativeSwap = nativeSwap
 	quad.nativeDispose = nativeDispose
 	quad.isInst = isInst
 
-	for _, fn in { nativeInsert, nativeExtract, nativeRemove, nativeMove, nativeSwap, nativeDispose, isInst } :: { any } do
+	for _, fn in { nativeInsert, nativeExtract, nativeRemove, nativeMove, nativeSwap, nativeDispose, nativeFindChild, isInst } :: { any } do
 		Err.setFuncLevel(fn, QuadTypes.ERROR_LEVEL_SURFACE)
 	end
 end
@@ -530,6 +536,9 @@ local function mockProvider(quad: any): { [any]: any }
 
 	-- 비공개 — canBound/canExecute가 공유하는 실제 판정.
 	local function isBoundAlive(value: any): boolean
+		if value == nil then
+			return false -- round3 `H-444`: same contract as the real backend
+		end
 		-- (a) inst-scoped 경로: bindLifetime이 복사해둔 gcconn을 value 자신에게서 찾음
 		local gcconn = BindData:GetWeak(value, "gcconn")
 		if gcconn ~= nil and gcconn.Connected then
@@ -551,6 +560,12 @@ local function mockProvider(quad: any): { [any]: any }
 	end
 
 	local function bindLifetime(inst: any, value: any)
+		if inst == nil then
+			Err.errorBefore("bindLifetime: inst must not be nil", SURFACE) -- round3 `H-447`
+		end
+		if value == nil then
+			Err.errorBefore("bindLifetime: value must not be nil", SURFACE) -- round3 `H-447`
+		end
 		if not isMockInstance(inst) then
 			Err.errorBefore("bindLifetime: inst is not a mock instance", SURFACE)
 		end
@@ -561,9 +576,14 @@ local function mockProvider(quad: any): { [any]: any }
 			if isGlobal then
 				isGlobal = value.Subscribed == true
 			end
+			-- 5순회 `H-395`: same-Instance arm, mirrored from quad-roblox (the
+			-- lazy claim may not have run yet — then the inst holds nothing)
+			local held = BindData:GetWeak(value, "gchold")
+			local sameInst = held ~= nil and held == InstData:GetWeak(inst, "gchold")
 			Err.errorBefore(
 				if isGlobal
 					then "bindLifetime: value is already subscribed"
+					elseif sameInst then "bindLifetime: value is already bound to this Instance (the same handle at two positions?)"
 					else "bindLifetime: value is already bound to another Instance",
 				SURFACE
 			)
@@ -591,6 +611,9 @@ local function mockProvider(quad: any): { [any]: any }
 	end
 
 	local function unbindLifetime(value: any)
+		if value == nil then
+			return -- no-op if unbound (round3 `H-444`)
+		end
 		-- bind의 대칭 — cleanup은 부르지 않고, Ref 콜백/내부 Observer도 안 뗀다.
 		if isEffect(value) then
 			value:_unbindDestroying() -- Destroying 연결만 끊는다 (단위 3)
@@ -612,16 +635,36 @@ local function mockProvider(quad: any): { [any]: any }
 		return inst.Destroying:Connect(fn)
 	end
 
+	-- 2순회 `H-374`: the explicit `nativeClaim` op the real provider installs
+	-- (`H-305` (d′) "전부 같은 형태" — mock is a backend too, `H-294`). The
+	-- lazy internal `claim` stays idempotent (bindLifetime claims on demand);
+	-- the explicit op mirrors the real one's double-claim contract (§7-10).
+	-- 3순회 note: the "already claimed" marker (`gchold`) is SHARED with the
+	-- lazy claim, so `bindLifetime(inst, v)` then `Claim(inst, …)` reads as
+	-- "already claimed" here while the real provider rejects that order one
+	-- step earlier ("not claimed") — valid programs are unaffected, only the
+	-- error trajectory differs (the header's intended lazy divergence).
+	local function nativeClaim(inst: any)
+		if not isMockInstance(inst) then
+			Err.errorBefore("nativeClaim: inst is not a mock instance", SURFACE)
+		end
+		if InstData:GetWeak(inst, "gchold") ~= nil then
+			Err.errorBefore("nativeClaim: Instance is already claimed by quad", SURFACE)
+		end
+		claim(inst)
+	end
+
 	quad.bindLifetime = bindLifetime
 	quad.unbindLifetime = unbindLifetime
 	quad.canBound = canBound
 	quad.canExecute = canExecute
 	quad.onDestroying = onDestroying
+	quad.nativeClaim = nativeClaim
 
 	-- `H-238`: 백엔드는 자기 교체 함수들을 공유 에러 네임스페이스에 태그한다
 	-- (`LifetimeHandle.luau` 계약 — 안 하면 이 경로 아래의 errorBeforeNearest가
 	-- 표면 프레임을 못 찾아 blame이 엉뚱한 바깥/raise 자리로 간다).
-	for _, fn in { bindLifetime, unbindLifetime, canBound, canExecute, onDestroying } :: { any } do
+	for _, fn in { bindLifetime, unbindLifetime, canBound, canExecute, onDestroying, nativeClaim } :: { any } do
 		quad.errorNamespace.setFuncLevel(fn, QuadTypes.ERROR_LEVEL_SURFACE)
 	end
 	installNative(quad) -- [M6 편입] native*+isInst도 mock 백엔드의 일부 — 한 프로바이더가 전부 설치(H-305 (d′) "전부 같은 형태")

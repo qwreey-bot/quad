@@ -34,7 +34,6 @@
 ]]
 
 local Brand = require("./Brand")
-local NoneModule = require("./Dispatch/None")
 local ImplRegistry = require("./ImplRegistry")
 local Err = require("./ErrorNamespace")
 local Relate = require("./Relate")
@@ -54,6 +53,11 @@ local implsOf = ImplRegistry.implsOf
 local function createImpl(module: any)
 	local Impl = {}
 	Impl.__index = Impl
+	-- `ObserverMarker` (quad-types) — the type promises the marker, so the value carries it
+	-- (`H-300`); read through `__index`, zero per-instance slots. Identity stays the brand —
+	-- the field is the input-position type's evidence (user decision 2026-09-07: Tag/
+	-- Attribute/Observer/EffectHandle go marker like State/Slot, typing-limits 8.11).
+	Impl.__quadObserver = true
 
 	-- Registries — owned here, shared with `Effect.luau` (`H-99`). Per quad
 	-- instance because the gates that read `.Subscribed` are per instance.
@@ -91,11 +95,14 @@ local function createImpl(module: any)
 	end
 
 	-- `H-184`: `bindLifetime` asks this BEFORE committing the binding — a refusal
-	-- must not leave a half-bound handle. Blame: nearest SURFACE frame past this
-	-- and `bindLifetime` (`H-231` walker — the old hand-counted 3 is gone).
+	-- must not leave a half-bound handle. Blame: OUTERMOST (4순회 `H-384`) — the
+	-- only in-tree chain is leaf `process` (tagged) → `bindLifetime` (tagged by the
+	-- backend) → here, so "nearest" stopped at `bindLifetime` and blamed
+	-- `Observer.luau`; outermost reaches the user's entry (`effect-plan.md` 의사코드:
+	-- "사용자 호출부"), the `H-378` lesson for a tagged intermediate frame.
 	function Impl._assertBindable(self: any)
 		if self._running then
-			Err.errorBeforeNearest("Observer: cannot bind an Observer from inside its own fn", SURFACE) -- `H-183`
+			Err.errorBefore("Observer: cannot bind an Observer from inside its own fn", SURFACE) -- `H-183`
 		end
 	end
 
@@ -226,7 +233,7 @@ local function registerDispatchHandlers(module: any)
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
 			-- `H-39`: terminal handlers register their array position — this
 			-- leaf contributes no physical element, so the pair is None/0.
-			NoneModule.registerEmptySlot(dispatch, inst, k) -- `H-39` (리뷰 — 한 본문, `None.luau`)
+			dispatch.setEmpty(inst, k) -- `H-39` (한 본문 — Bookkeeping `setEmpty`)
 
 			local old = relate:GetWeak(inst, k) -- read Weak to match the SetWeak write (`H-71`)
 			if old ~= v then

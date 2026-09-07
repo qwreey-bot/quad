@@ -33,7 +33,6 @@
 ]]
 
 local Brand = require("./Brand")
-local NoneModule = require("./Dispatch/None")
 local EpochMap = require("./EpochMap")
 local Err = require("./ErrorNamespace")
 local QuadTypes = require("../luau_packages/quad_types")
@@ -61,6 +60,11 @@ local function createImpl(module: any)
 
 	local Impl = {}
 	Impl.__index = Impl
+	-- `EffectHandleMarker` (quad-types) — the type promises the marker, so the value carries it
+	-- (`H-300`); read through `__index`, zero per-instance slots. Identity stays the brand —
+	-- the field is the input-position type's evidence (user decision 2026-09-07: Tag/
+	-- Attribute/Observer/EffectHandle go marker like State/Slot, typing-limits 8.11).
+	Impl.__quadEffect = true
 
 	-- ── local helpers, declared before their callers ─────────────────
 	local function isRunning(self: any): boolean -- predicate only; the raise stays in each body (nearest-SURFACE walker)
@@ -102,11 +106,12 @@ local function createImpl(module: any)
 
 	-- `H-184`: `bindLifetime` asks this BEFORE committing the binding, so a refusal
 	-- cannot leave a half-bound handle (bound, `canExecute` true, no Destroying
-	-- connection). Blame: nearest SURFACE frame past this and `bindLifetime`
-	-- (`H-231` walker — the old hand-counted 3 is gone).
+	-- connection). Blame: OUTERMOST (4순회 `H-384`, same as Observer) — the in-tree
+	-- chain `process` → `bindLifetime` (both tagged) → here made "nearest" stop
+	-- at `bindLifetime` and blame `Effect.luau`.
 	function Impl._assertBindable(self: any)
 		if isRunning(self) then
-			Err.errorBeforeNearest("Effect: cannot bind an Effect from inside its own fn or cleanup", SURFACE) -- `H-147` (A)
+			Err.errorBefore("Effect: cannot bind an Effect from inside its own fn or cleanup", SURFACE) -- `H-147` (A)
 		end
 	end
 
@@ -314,7 +319,7 @@ local function registerDispatchHandlers(module: any)
 		end,
 		priority = dispatch.HANDLER_PRIORITY_HIGH,
 		process = function(inst: any, k: any, v: any, _index: number): (any?, boolean) -> ()
-			NoneModule.registerEmptySlot(dispatch, inst, k) -- `H-39` (리뷰 — 한 본문, `None.luau`)
+			dispatch.setEmpty(inst, k) -- `H-39` (한 본문 — Bookkeeping `setEmpty`)
 
 			local old = relate:GetWeak(inst, k) -- `H-71`; load-bearing dedup (`H-266`)
 			if old ~= v then

@@ -120,8 +120,10 @@ Modifier 타입의 메소드 목록에 끼워 넣도록 챙기면 됨, 새로 �
 ref 저장보단 비쌈. spring 등으로 움직일 수도 있다 생각하면 릴레이션으로
 저장하는것도 좋은 생각."*
 
-- **조회 경로**: `(inst, 숏핸드키) → child`를 `Relate`에 저장해두고 그걸로
-  되찾는다. `Relate`는 `inst`를 weak 키로 쓰므로 부모가 죽으면 항목도
+- **조회 경로**: `(inst, 자식 이름) → child`를 `Relate`에 저장해두고 그걸로
+  되찾는다(**[2026-09-07 5순회 정정]** 키는 숏핸드 키가 아니라 `entry.childName` —
+  `H-335`의 공유 `_quad_padding` 자식이 두 숏핸드 키에서 같은 항목을 요구한다;
+  코드 `managed:GetStrong(inst, entry.childName)`). `Relate`는 `inst`를 weak 키로 쓰므로 부모가 죽으면 항목도
   자연히 빠진다(`base/relate-plan.md`).
 - **고정 이름 규약을 없애자는 뜻은 아님** — 이름(`_quad_corner`류)은
   디버깅 가시성(`research/debug-tooling-plan.md`)과 "사용자가 만든
@@ -226,8 +228,7 @@ end
   `base/dispatch-core-plan.md`의 "인덱스의 의미" 절에 같이 명문화해뒀음.
 - **Tween 해석 코드를 여기 복제하지 않는 게 핵심 이득** — `Tween<T>`를
   실제로 읽는 코드는 여전히 `PropertyHandler` 하나뿐이라는
-  `base/tween-plan.md`의 불변식이 유지됨. 3-상태 릴레이션 슬롯
-  (`{Tween, Value} | true | nil`), `"Cancel"`/`"Finish"`(옛 표기 `Tween.Cancel`/`Tween.Finish` — `H-343`) override
+  `base/tween-plan.md`의 불변식이 유지됨. 3-상태 릴레이션 슬롯(`{Tween, Value, Source} | true | nil` — **[2026-09-07 Q12]** 셋째 필드), `"Cancel"`/`"Finish"`(옛 표기 `Tween.Cancel`/`Tween.Finish` — `H-343`) override
   정책, "첫 세팅은 애니메이션 없이 즉시" 규칙까지 전부 `(child, prop)`
   자리에서 그대로 재사용됨 — 이 문서가 따로 정할 게 없음.
 - **타입 대수도 그대로** — 숏핸드 키의 값 타입이 `number`였다면 이제
@@ -262,14 +263,15 @@ end
 ```
 
 - `UIScale`처럼 `wrap`이 항등(스칼라를 그대로 `Scale`에 씀)인 키는 이
-  헬퍼를 거쳐도 결과가 같으므로 분기 없이 일관되게 씀.
+  헬퍼를 거쳐도 결과가 같으므로 분기 없이 일관되게 씀 — **[2026-09-07 정정]**
+  구현은 round19 `H-342` ③(항등 단락 승인)대로 분기한다(관측 불가한 순수 최적화).
 - `UIPadding`처럼 **자식의 프로퍼티 여러 개**(`PaddingTop`/`Bottom`/
   `Left`/`Right`)에 같은 값을 쓰는 키는 각 프로퍼티마다 `Dispatch.process`를
   따로 부름 — 각자 독립된 `(child, prop)` 체인이 되고, PropertyHandler의
   트윈 슬롯도 프로퍼티별로 따로 잡혀서 자연스럽게 4개가 같이 애니메이션됨.
-- **`Tween` 값 자체는 `quad-base`, 이 숏핸드 Handler는 `quad-roblox`** —
-  `isTween`/`Tween()`을 base에서 가져다 쓰는 것뿐이라 패키지 경계
-  (`tween-plan.md` "패키지 경계" 절)와 안 부딪힘.
+- **`Tween` 값과 이 숏핸드 Handler는 둘 다 `quad-roblox`**(**[2026-09-07]** Tween이
+  quad-base에서 이동 — `tween-plan.md` "패키지 경계" 절) — 핸들러는 설치 시점에
+  모듈의 `isTween`을 읽는다(Tween 설치가 먼저, `RobloxFactory.luau`).
 
 **캐비엇 — 자식이 새로 만들어진 사이클에서는 트윈이 안 걸린다(의도된 동작).**
 PropertyHandler의 "첫 세팅은 애니메이션 없이 즉시"(`prev == nil`) 규칙이
@@ -316,7 +318,11 @@ PropertyHandler의 "첫 세팅은 애니메이션 없이 즉시"(`prev == nil`) 
 
 **[2026-09-07 `H-353`]** `UICorner: number | UDim`은 생성 D에서 유일한 유니언 타입이라
 `State<number | UDim>` 한 팔로는 store-bind가 strict에서 거부됐다(`State<X>` 불변) —
-멤버별 팔로 정정, 근거는 `typing-limits.md` 8.9절 (3).
+멤버별 팔로 정정, 근거는 `typing-limits.md` 8.9절 (3). **[2026-09-07 마커 — 사용자 결정]** 그 멤버별 팔은
+같은 날 8.11의 공변 마커로 대체됐다 — 실물 `PV`는 `number | UDim | TweenData<…> | StateMarker<number | UDim |
+Tween<…>> | None` 네 팔 하나이고 setter도 `Field<number | UDim>` 하나(`SHF0` 소멸); 위 문장은 그 사이의 우회.
+**[2026-09-07 회신 3차 Q17 (a) 사용자 확정]** 핸들러의 값 게이트(`numberOnly` — 승인 없이 들어온 다섯째 필드, `H-402`)는
+제거. 타입이 1차 방어이고 최종 프로퍼티 대입이 다른 프로퍼티처럼 raise한다(*"다른 프로퍼티와 같게 되어도 좋음"*).
 
 v1에서도 `Corner`/`PaddingAll`/`Scale`은 store 값으로 바인드 가능했음
 (`myStore "key"` 체이닝으로 다른 프로퍼티와 동일하게 취급됨) — quad-v2도

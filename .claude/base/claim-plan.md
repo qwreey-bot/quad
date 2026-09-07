@@ -79,7 +79,7 @@ local cloned = Claim(template:Clone(), M.Frame(M.Root) {   -- 루트는 이름 �
   않았다 → **[같은 날 확정, §7-12] 원소 타입을 파라미터로**: `type FrameParam<E> =
   { [number]: E, …필드 }`, `D.Frame`은 `E` = children 원소 유니언(생성 별칭 `<Class>Elem` — Instance·Slot·
   State…), `D.Mapper.Frame`은 거기에 `| MapperDescriptor`. `base/bind-system-plan.md`의
-  `D` 생성기 절엔 포인터만 — 생성기 구현(`ROADMAP.md` M5 `D/init.luau`)이 이 문서를 본다.
+  `D` 생성기 절엔 포인터만 — 생성기 구현(`archive/v2-initial-implementation/roadmap.md` M5 `D/init.luau`)이 이 문서를 본다.
 
 - **`Claim(inst, descriptor) -> inst`가 최상위이고 타입 인자를 받지 않는다.**
   사용자: *"Claim 자체는 타입을 받는건 말이 안되어보임. New 와는 완전 다른
@@ -308,7 +308,7 @@ derive 를 걸어야해. 이건 derive 에선 구현하지 않고, 그 위의 �
     `luau-analyze` 스파이크로(§9). **[2026-09-02]** 그 스파이크는
     `luau-test/done/28-type-class-param-shared-generic.luau`로 통과했다
     (기대 음성 3건만 — 상태는 `STATUS.md`).
-13. **[2026-09-02, round14 `H-293` — 사용자 기각·UB 확정] 이미 Destroy된
+13. **[2026-09-07 회신 4차 Q20 — 사용자 확정]** 파괴된 quad Instance와 외부 Instance는 **가를 수 없다**(생성 직후·Clone 직후엔 Parent가 nil이라 game 조상 검사가 안 선다 — 전에 도입했다 철회). 그래서 `bindLifetime`의 미claim 메시지 하나가 둘을 함께 말한다(*"죽은것에 시도하거나 quad가 만진게 아니다"*), 파괴 요소 claim도 막지 않는다(아래 `H-293` UB 그대로). **[2026-09-02, round14 `H-293` — 사용자 기각·UB 확정] 이미 Destroy된
     inst를 claim(직접 `nativeClaim` 포함)하는 것은 UB다 — 가드를 만들지
     않는다.** 실기기 실측으로 증상은 확정돼 있다(Destroy된 inst에 새
     Connect가 성공하고 `Connected`가 영원히 true — 영구 발화 가능 판정 +
@@ -358,7 +358,7 @@ derive 를 걸어야해. 이건 derive 에선 구현하지 않고, 그 위의 �
   예외 — 조회라 조합으로 만들 수 없어 `isInst`처럼 미주입이면 명확한 error"는
   **에이전트 분류**(사용자 발언은 "필요 핸들을 구현하라고 남기는 건 괜찮다"까지).
 - debug 모드 `seen` 맵(범위는 `research/debug-tooling-plan.md`가 소스).
-- `ROADMAP.md` M5 체크박스가 진행의 소스.
+- `archive/v2-initial-implementation/roadmap.md` M5 체크박스가 진행의 소스.
 - **문서화 대상**(`research/documentation-content-map.md` §4): "전부 매핑" 계약과
   숏핸드 (i)/(ii) 규칙, 루트 `.Parent =`는 밖에서 / 그 아래는 절대 직접 하지 말 것,
   여러 스크립트의 PlayerGui는 각자 `ScreenGui` + 중간 모듈 패턴, claim된 inst에선

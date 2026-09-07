@@ -123,7 +123,7 @@ local wrong: number = s:Get()   -- ❌이어야 하는데 에러 안 남
 
 **[2026-09-03 실측 각주, M6 `Slot<T>` 타입(round15 `H6-18`)]** 위 표의 첫 행
 "같은 인자로만 재귀"에는 **상호 재귀 alias 그룹**도 포함된다 —
-`Slot<T>` ↔ `SlotElement<T> = T | State<T> | Slot<T>`는 정상이다. 단 그
+`Slot<T>` ↔ `SlotElement<T> = T | State<T> | Slot<T>`(**[2026-09-07 마커 — 사용자 결정]** 지금은 입력 `SlotElement<T> = T | StateMarker<T> | SlotMarker<T>` / 출력 `SlotItem<T> = T | State<T> | Slot<T>` 둘, 8.11)는 정상이다. 단 그
 그룹 안에서 **메소드 제네릭을 인자로 받는 alias**(`SlotUpdateFn<Item, T, UD>`를
 `List: <Item, UD>(…)` 안에서 쓰는 형태)는 "Recursive type being used with
 different parameters"로 **거부**된다(에러 — 조용한 손실은 아님). 처방은 그
@@ -181,7 +181,7 @@ export type State<T> = StateData<T> & {
   유니온 하나(`((State<T>) -> U) | { __apply: … -> U }`)로 두면 `Blocker`처럼 필드가
   더 있는 객체가 제네릭 `U` 자리에서 너비 서브타이핑을 못 받아 `state:Apply(blocker)`가
   strict에서 막힌다(인덱서 `[string]: any`로 열어도 같다 — `luau-test/done/26-*`).
-  객체 쪽 반환이 `any`라 결과는 명시 주석(①과 같은 관례). `qa-request/m2-implementation-round11.md` `H-179`.
+  객체 쪽 반환이 `any`라 결과는 명시 주석(①과 같은 관례). `archive/v2-initial-implementation/m2-implementation-round11.md` `H-179`.
 - **캐비엇**: 콜백이 받는 `s`는 `StateData<T>`라 `Compute`/`With`가
   없습니다. 콜백 안에서 다시 `s:Compute(...)`를 부르는 자리
   (`:Apply`의 factory가 대표적)는 이 방식으로 못 풀고
@@ -640,7 +640,7 @@ local extended = checked:AddPlugin(somePlugin) -- 안 깨짐 — checked의 T �
 **[2026-09-06 보강 — round20 `H-337`]** 한도 플래그는 증상별로 다르다: GuiObject 계열
 10클래스의 Param/Modifier에 숏핸드 키 넷을 얹자 `export type D`가 "too complex"였고,
 Tarjan·TypeInfer 상향은 무효, **`LuauSolverConstraintLimit`**(기본값 작음)을 100만으로
-올리면 클린(1.9s, 음성 5/5 유지) — `scripts/test.sh` 넷째 플래그. 8.8절의 "올리면
+올리면 클린(1.9s, 음성 5/5 유지) — `scripts/test.sh` 넷째 플래그였다(**[2026-09-07 마커, round3 `H-435`]** 8.11로 슬롯 유니언이 줄자 이 플래그 없이 클린이라 test.sh에서 제거 — 다시 나면 되살린다). 8.8절의 "올리면
 지점만 옮겨감"은 재귀 메소드 테이블을 유니언에 넣었을 때(M7 ③)의 관측이고, `State<T
 | Tween<T>>` 멤버(M11 `H-334`)는 이 플래그로도 안 풀렸다 — 증상마다 한 번씩 재봐야 한다.
 
@@ -752,7 +752,7 @@ enum은 문자열 싱글톤 `"a" | "b"`로 — Fusion 관례와 같다).
    (**[2026-09-03 기준] 아직 안 얹음**).
 5. **`State<T>`는 `Set` 파라미터 때문에 불변** — `Source<{Name: "Visible",
    …}>`는 `State<FrameOnChange>`에 안 맞는다. 클래스 유니언으로 캐스트해
-   만든다(`q.Source(OnChange(...) :: FrameOnChange)`). 반응형 자식
+   만든다(`q.Source(OnChange(...) :: FrameOnChange)`). **[2026-09-07 마커 — 사용자 결정]** `<Class>Elem`의 팔이 `StateMarker<FrameOnChange>`가 되면서(8.11) 캐스트 없이도 공변으로 든다 — `State<Ref>`의 `:: FrameRefMarker` 캐스트도 같이 불필요(`spec.componenttypes`). 반응형 자식
    `q.Source(frame)` vs `State<Instance>`도 같은 규칙이다(선행 한계 —
    `q.Source(frame :: Instance)`).
 
@@ -783,7 +783,7 @@ base는 `{ read __quadModifier: true }`(`QuadTypes.ModifierMarker`, `NewChild`),
 
 ## 8.9. 재귀 함수 필드 + 유니언 멤버의 같은 이름 메소드 = 유니언 검사가 조용히 통과한다 — `Apply`는 `any`, setter 이름은 게이트
 
-**[2026-09-06 8.8·8.5 보강 — M11 단위 ① `H-326`/`H-327`]** (1) 새 솔버 `State<X>`는
+**[2026-09-06 8.8·8.5 보강 — M11 단위 ① `H-326`/`H-327`]** **[2026-09-07 마커 — 사용자 결정]** 아래 (1)~(3)의 "State 멤버 둘을 각각 나열"·"멤버별 팔"은 **8.11의 마커로 대체됐다**(입력 자리는 `StateMarker<T | Tween<T>>` 한 팔) — 불변성 자체는 사실이고 전체형이 서는 자리(출력·`self`)엔 그대로 적용된다. (1) 새 솔버 `State<X>`는
 **불변**이다 — `State<T | Tween<T>>` 하나로 `State<T>`를 받을 수 없고, 슬롯의
 `State<X>` 멤버는 `:Compute`/`Animate`가 돌려주는 타입과 X가 글자 그대로 같아야
 한다(정밀판 별칭·데이터부 전부 거부). 그래서 생성 `D`와 `Field<T>`는 State 멤버
@@ -819,7 +819,11 @@ local v: Xn | MarkA = r3   -- 에러가 나야 하는데 조용히 통과
 둘이 **동시에** 있어야 샌다. 한도 플래그가 아니라 판정 결함이라 플래그로 못
 고친다.
 
-**quad에 걸린 자리**: children 유니언엔 `Tag.Apply`·`State.Apply`가 있고, 생성
+**quad에 걸린 자리**: (**[2026-09-07 5순회 `H-400`]** 하나 더 — 생성 `D.Modifier.<Class>(...)`의
+인자 유니언 `(<Class>Modifier | { [string]: any })`: 각 팔 단독으론 거부하는 값(형제 클래스
+Modifier·Source·Ref·AttributeKey·Attribute)이 유니언에선 무진단 통과. 런타임 `construct`가
+태그를 안 보고 병합하므로 형제 Modifier는 drive 시점 리플렉션 에러, 나머지는 construct SURFACE
+에러 — 전부 시끄럽다. `{ [string]: any }` 팔 제거는 원장 §11 갈래) children 유니언엔 `Tag.Apply`·`State.Apply`가 있고, 생성
 `<Class>Modifier.Apply`가 `(self: X, factory: (X) -> U)`로 재귀였다 — 그래서 8.8절의
 클래스 태그 마커를 넣어도 형제 클래스 Modifier가 통과했다(`self: any`만 바꿔도
 factory 인자의 재귀만으로 샌다).
@@ -828,9 +832,15 @@ factory 인자의 재귀만으로 샌다).
 1. `Apply: <U>(self: any, factory: (any) -> U) -> U` — 재귀 포기. 주석 붙인
    팩토리는 그대로 타입드, 무주석은 `any`(현행에서도 무주석은 에러였다).
 2. **생성기 게이트**: setter 이름이 children 유니언 멤버의 함수 필드(defs의
-   `Instance`/`Object` 메소드, quad-types의 `State`/`StateData`/`Tag`/`Attribute`
-   키, `Callback`)와 겹치면 `SystemExit` — 구멍이 조용히 다시 열리지 않게.
-   지금 스코프에선 충돌 0.
+   `Instance`/`Object` 메소드, quad-types의 `State`/`StateData`/`Tag`/`Attribute`/
+   **`Slot`**의 **함수 필드**(`name: (`/`name: <` — 데이터 필드 `Offset`/`Length`는
+   제외, `Offset`은 UIGradient의 실제 setter), `Callback`)와 겹치면 `SystemExit` —
+   구멍이 조용히 다시 열리지 않게. **[2026-09-07 기준]** 충돌 0. **[2026-09-07 0순회
+   `H-364`·1순회 `H-369`]** `Slot`은 `NewChild` 합류(`H-351`)로 뒤늦게 게이트에 들어갔고,
+   수확 정규식은 `re.M` 없이 돌아 주석 줄 뒤 필드(`State`의 `Compute`/`Observer`/`Gate`/
+   `Apply` — 이 절이 말하는 재귀 함수 필드 그 자체)를 조용히 놓치고 있었다; **[3순회
+   `H-381`]** 정규식은 다중행 시그니처의 파라미터 이름도 필드로 수확하므로 타입 본문의
+   depth-0 스캐너로 교체(오탐 0) — 소스는 `scripts/gen-d.py`의 게이트 블록(여기 열거는 요약).
 3. 스파이크 `31`의 "결함" 줄에 진단이 생기면 결함이 고쳐진 것 — 그때 1을
    되돌릴 수 있다.
 
@@ -874,12 +884,12 @@ factory 인자의 재귀만으로 샌다).
 — 값 팔은 멤버별, **변환 함수 팔은 전체 유니언 하나**(**[0순회 `H-362`]** `Field<number> |
 Field<UDim>`로 쪼개면 무주석 람다가 number 팔로 문맥 타이핑돼 `modifier-plan.md` 4절의
 `old` 관용구(UDim 반환·`typeof(old) == "UDim"` 분기)가 strict에서 깨진다). 별칭 `SHFn`
-하나로 13자리에 실린다. `LuauSolverConstraintLimit=1000000` 아래서 "too complex" 없음(실측). (4) strict에서
+하나로 13자리에 실린다. `LuauSolverConstraintLimit=1000000` 아래서 "too complex" 없음(실측 — 그 플래그는 2026-09-07 마커 뒤 제거됨, 8.11). (4) strict에서
 타입드 `Slot`을 만드는 관용구는 **`q.Slot() :: QuadTypes.Slot<Instance>` 캐스트뿐**
 — 생성자 `<T>(initial: { SlotElement<T> }?)`는 `T`가 `T | State<T> | Slot<T>` 안쪽이라
 인자에서 추론되지 않고, `nil :: { SlotElement<Instance> }?`·`{} :: {…}`·`local s:
 Slot<Instance> = q.Slot()`는 전부 "too complex" 또는 불일치(배열 타입 불변). 근거·
-측정은 `qa-request/handover-review-2026-09-07.md`.
+측정은 `qa-request/post-implementation-review-round1.md`.
 
 ## 9. 미해결 / 추적 중
 
@@ -901,3 +911,83 @@ Slot<Instance> = q.Slot()`는 전부 "too complex" 또는 불일치(배열 타�
   솔버 버그로 보이므로 이미 알려진 이슈인지 확인 후 업스트림 제보
   검토(최소 재현 9줄, `audit/type-recursive-issue-with-typeof/spikes/
   08-metatable-BUG-contradictory-diagnostics.luau`).
+
+## 8.10. `index<>`로 만든 파라미터 타입은 연산자 앞에서 `unknown`이다 (2026-09-07 7순회 `H-428`)
+
+`OnChange("BackgroundTransparency", function(v) print(v + 1) end)` — `v`는 `index<PropTypesRead, K>`(2026-09-07 Q19 — 읽기 표면)로
+`number`가 되지만, 무주석 람다 안에서 **연산자**를 만나면 타입 함수가 줄어들기 전에 연산자 제약이
+풀려 `Operator '+' could not be applied to operands of types unknown and number`(test.sh 플래그 셋
+실측). 검사 방향(`local s: string = v` → `Expected 'number', got 'string'`)과 멤버 접근은 흐른다.
+**규칙**: `index<>` 파라미터에 연산자를 쓰려면 주석을 단다. `luau-test/done/30`의 음성 대조군은
+연산자가 없어 이걸 못 잡았다.
+
+
+## 8.11. 읽기 전용 마커 필드는 T에 공변이다 — 입력 자리는 `StateMarker<T>`/`SlotMarker<T>`, 전체형 `State<T>`/`Slot<T>`는 출력·`self`에만 (2026-09-07, 스파이크 `34`·`35`, 사용자 결정 적용)
+
+**⭐ [2026-09-07 밤 확장 — 사용자 제안 *"None, Tag, Attribute, Observer, EffectHandle 들도 전부 사실 marker
+구조로 가도 될것 같아"*, `research/source-layout-plan.md` 10-2]** 마커 가족이 T 없는 값 타입으로도 넓어졌다 —
+`TagMarker`/`AttributeMarker`/`ObserverMarker`/`EffectHandleMarker`(`None`은 처음부터 마커, `H-300`). 규칙은
+같다: 입력 자리(`NewChild`의 직접 팔과 `StateMarker<…>` 안의 팔, Tag `names` 자리의 `TagNames`, `Tag.Merged`)는
+마커, 출력·`self`는 전체형, 런타임 값은 `Impl.__quadX = true`로 필드를 실제로 갖는다(`__index`, 무비용). 이득:
+메소드가 든 전체형이 유니언에 앉지 않으니 8.8/8.9의 함수 필드 게이트가 닿을 멤버가 줄고 검사 예산도 준다
+(사용자: *"타입 체크 비용을 아끼기 위해 마커만 두는것도 괜찮아보임"*). 필드·별칭 이름은 기존 `__quad<Type>`/
+`<Type>Marker` 패턴을 따른 메인 작명(사후 확인). quad-types 파일은 같은 날 "마커·센티널 위 / 값·핸들 타입 가운데 /
+`Quad` 표면 아래"로 순수 재배치됐다(10-3).
+
+**⭐ [2026-09-07 적용 — 사용자 결정 *"공변성/불변성 문제를 해결하기 위한 작업을 시작해볼래?"*, 원장
+`qa-request/post-implementation-review-round1.md` §16]** 이 절의 실측이 실물이 됐다. **승인의 범위(round3 Q24)**: 사용자가
+승인한 것은 **방향**(입력 자리 = 마커 + T)과 **순수 팬텀 허용**이고, 별칭 이름(`SlotItem`·`FieldOut`)·`NewChild` 팔 모양·
+`LuauSolverConstraintLimit` 제거는 **메인 제안**이다 — 아래 "[2026-09-07 마커 — 사용자 결정]" 배너들도 같은 구분으로 읽을 것. **규칙**: 값을 *받는*
+자리(children 유니언 `NewChild`·`<Class>Elem`, 생성 D 슬롯 `PVn`·이벤트 슬롯, Modifier setter `FieldV<T>`,
+Slot 요소 자리 `SlotElement<T>`, `Slot:List`/`Single`의 데이터, `AttributeSugar`, `Animate` 옵션,
+`Dispatch.setLength`)는 마커 `StateMarker<T> = { read __quadState: true, read __quadStateValue: T }` /
+`SlotMarker<T>`를 요구하고, 값을 *돌려주는* 자리·`self`·`Peek` 반환·변환 함수의 `old`(`FieldOut<T>`)·
+Slot 출력(`SlotItem<T>`)은 전체형이다. 마커 필드는 `StateData<T>`/`Slot<T>` 자신에도 들어 있어(런타임
+`Impl.__quadState = true`/`Slot_mt.__quadSlot = true`, `__quad*Value`는 **순수 팬텀**) 실제 값이 폭
+서브타이핑으로 든다. **팬텀 규칙(**[2026-09-07 사용자 확정]** 순수 팬텀 허용 — *"런타임 값에 없는 팬텀 괜찮아. 실제로 그래도 되는 부분은, 값이 싸다면 그래도 좋아"*(값을 둘 수 있고 싸면 두고, 못 두면 팬텀으로 둔다 — H-300의 "값에도"는 원칙이지 필수가 아니다))**. **결과(실측)**: `PVn`이 `T | TweenData<T> | StateMarker<T | Tween<T>> | None` 네 팔로
+통일(`PV73` 11팔·`SHF0` 소멸), `State<Frame>`·`State<Instance?>`·`State<Slot<Frame>>`·`State<number | UDim>`·
+정직한 `State<T | Tween<T>>`(8.9 (1)의 `H-334`가 포기한 팔)·캐스트 없는 `State<Ref<Frame?>>`(8.7 캐비엇 5)가
+전부 들어가고, 음성 아홉(State<number> 자식·형제 Ref의 State·`State<Modifier>`·`State<UDim2?>`를 `Size`에·
+`Slot<Frame>`에 State<TextLabel> 요소 등)은 그대로 거부. quad-roblox 타입 검사 4.96s → 3.41s,
+`LuauSolverConstraintLimit` 플래그 불필요(test.sh에서 제거). **캐비엇(round3 Q22, 사용자 확정 2026-09-07 — 그대로)**: 중첩 Slot을 `Get`/`Extract`로 꺼낸 값의 타입 `Slot<T>`는 **상한**이다 — `Slot<Frame>`을 `Slot<Instance>`에 넣었다 꺼내면 `Slot<Instance>`로 보이고 그 핸들로 `Add(folder)`가 통과한다(런타임은 요소 클래스를 안 가린다). 실제 요소 타입을 아는 사용자가 캐스트로 지킨다 — Java의 `Object`처럼(*"진짜 데이터 넣는 방법을 아는 유저가 cast 한다가 일반적"*). **바뀌지 않은 것**: `q.Slot()` 캐스트 없는 생성
+(`H-354`)은 생성자 `T` 추론 문제라 그대로; 8.9의 setter 이름 게이트는 State가 유니언 멤버에서 빠졌어도
+그대로 둔다(넓은 쪽이 안전). 아래는 결정 전 실측 원문.
+
+사용자 사고(2026-09-07 회신): *"'입력받는 곳'에 대해서는 마커 필드와 내부 구조 T 하나만 보존하는 마커 타입을
+써도 되지 않나 … 구조적으로 확장된 타입은 잘 받기 때문에 … 진짜 State<T>의 method 같은건 유저가 쓰는 부분에
+있어서 들어갈 뿐"*. 전체형 `State<T>`는 `Set(T)`/`Get(): T`가 양쪽 위치라 불변(8.9·`H-326`/`H-327`/`H-353` —
+`State<number>`가 `State<number | UDim>` 자리에 못 들어가 `PV73`이 11팔), `Slot<T>`도 같아 strict 생성은
+캐스트 관용구(`H-354`)다.
+
+`luau-test/done/34-type-state-marker-covariance.luau`(새 솔버·옛 솔버 결과 동일):
+1. `{ read __quadState: true, read __quadValue: T }`는 **T에 공변** — `Marker<number>` → `Marker<number | string>` 통과.
+   읽기·쓰기 필드(`__quadValue: T`)면 불변(대조군 에러) — `read`가 핵심.
+2. 메소드가 붙은 실제 State 모양(`Get`/`Set`/`Compute` + 마커 필드 둘)의 값이 그 마커 자리에 **폭 서브타이핑으로
+   들어간다** — 입력 자리는 마커만 요구해도 전체형 값을 받는다.
+3. 다른 T는 여전히 거부(`Marker<number>` ← `StateReal<string>` 에러) — 마커가 검사력을 잃지 않는다.
+4. 제네릭 소비자 `take<T>(m: Marker<T>): T`가 T를 복원한다(`number` 추론).
+
+함의(결정 아님): `NewChild`·`PVn`의 `State<X>`/`Slot<X>` 팔을 마커로 바꾸면 유니언 타입 자리의 멤버별 팔 나열
+(`H-353`/`H-362`)이 필요 없어지고 8.5/8.9의 예산이 줄 가능성 — 단 **생성 D 규모에서 재야 한다**(한도 플래그·
+`spec.shorthandtypes` 양·음성 유지). 값 타입에 마커 필드 둘이 들어가는 quad-types 표면 변경이라 결정 뒤 별도 단위.
+8.8의 `ModifierMarker`·스파이크 `32`의 반공변 팬텀 `__quadRefAccepts`와 같은 계열(팬텀 필드로 변성을 고르는 것).
+
+## 8.12. 큰 생성 파일 안에서의 제네릭 별칭 전개는 솔버 제약 한도를 넘긴다 — `FieldOut<T>`는 `types.luau`에서 별칭하고 D는 재별칭만 (2026-09-07 실측)
+
+**증상**: Tween을 quad-roblox로 옮기며(`tween-plan.md` "패키지 경계" 절) 생성 D의
+`FieldOut<T>`를 `QuadTypes.FieldOut<T | Tween<T>>`로 바꾸자 `export type D`(31클래스 Param
+인스턴스화 자리, `D/init.luau` 끝의 `return function(quad): D`)가 **"Code is too complex to
+typecheck"** — `LuauSolverConstraintLimit`를 크게 올리면 통과하므로 제약 *수*의 문제다(그 플래그는
+2026-09-07 마커 작업이 뺐고 "다시 나면 그때 되살릴 것"이었으나, 원인을 찾아 플래그 없이 닫았다).
+인라인 유니언(`T | Tween<T> | QuadTypes.State<T | Tween<T>> | QuadTypes.None`)도 같다. 정밀 엔진 타입
+(`TweenInfo`/`Enum.*`)이나 quad-types 쪽 정의 위치는 무관(각각 되돌려도 실패 — 이분 탐색).
+
+**통과하는 모양**: 같은 전개를 **quad-roblox `types.luau`가 `export type FieldOut<T> =
+QuadTypes.FieldOut<T | Tween<T>>`로 만들고 D는 `type FieldOut<T> = Types.FieldOut<T>`로 재별칭만**
+한다(생성기 `emit`이 그렇게 찍는다). 옛 모양(`QuadTypes.FieldOut<T>` — 외부 모듈 별칭을 T 하나로
+인스턴스화)도 같은 이유로 통과했던 것. 즉 **외부 모듈의 별칭을 단순 인자로 인스턴스화하는 건 싸고,
+D 파일 안에서 유니언을 새로 조립하거나 유니언 인자로 인스턴스화하는 건 Field/Peek가 쓰이는 수백
+자리마다 제약을 만든다.** 8.5(Tarjan)·8.9(iteration)와 같은 계열의 예산 문제이며, 생성 파일에 새
+별칭을 넣을 땐 "전개는 D 밖(types.luau)에서, D는 재별칭"을 기본으로 할 것. 실측 명령:
+`luau-lsp analyze`(test.sh 플래그 그대로) — 실패는 1.2s 만에 나고, 통과 전체는 3s대.
+

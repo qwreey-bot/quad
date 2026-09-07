@@ -10,7 +10,7 @@
 
 사용자가 **(a) 순서 교체**를 선택해 닫혔다 — 반응형이 M2, 디스패치가 M3다.
 결정과 근거는 `.claude/archive/question-resolved.md`의 "마일스톤 경계" 절,
-새 마일스톤 구성은 `ROADMAP.md`의 M2 배너가 소스.
+새 마일스톤 구성은 `archive/v2-initial-implementation/roadmap.md`의 M2 배너가 소스.
 
 **✅ [2026-08-25 해소] 그 교체로 한때 `question.md` 최우선 절에 항목 둘이
 올라왔었다** — 중간 State GC 실측과 동적 키 표면(옛 `store:GetDynamic`) 위치.
@@ -72,7 +72,7 @@ git.qwreey.moe에 제한된 계정 생성). 로컬 git 저장소는 이미 초�
 ## 2. ~~자율 작업 루프/스케줄 설정~~ **[해소됨, 2026-08-28]**
 
 **사용자가 M2를 세션 안 자율 구현 구간으로 확정**했다 — 규약은
-`.claude/qa-request/m2-implementation-round11-brief.md`, 요지는
+`.claude/archive/v2-initial-implementation/m2-implementation-round11-brief.md`, 요지는
 `.claude/conventions.md`의 "M2 자율 구현 규약" 항목. cron/`/schedule`은 안 쓴다
 (사용자 개입 지점은 단위가 끝날 때 `-round11.md` §4 표를 배치로 회신하는 것뿐).
 아래는 해소 전 원문.
@@ -275,3 +275,11 @@ GUI 작업이라 에이전트가 못 한다. 사용자 확정(2026-09-02): *"결
 
 ---
 Sources (MCP 리서치): [Roblox/studio-rust-mcp-server](https://github.com/Roblox/studio-rust-mcp-server), [How to Connect Claude Code to Roblox Studio — Clauder Navi](https://www.clauder-navi.com/en/claude-roblox-studio)
+
+## 13. [2026-09-07 7순회 `H-429`] Studio 1줄 프로브 — 기본값과 같은 props의 OnChange 초기 발화
+
+`Frame { Visible = true, OnChange("Visible", fn) }`(Frame 기본 `Visible = true`)에서 `fn`이 몇 번
+도는지. mock은 같은 값 대입에도 `Changed`를 쏘지만 실 엔진은 동일값 대입에 시그널을 안 쏘는
+것으로 알려져 있어 CLI 1회 / 엔진 0회로 갈릴 수 있다 — `onchange-plan.md` "초기값 발화 계약"
+따름정리에 셋째 헤지(기본값과 같은 값)를 넣어 두었고, 실측 결과로 그 문장을 확정/삭제할 것.
+
